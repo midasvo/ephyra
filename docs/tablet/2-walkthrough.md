@@ -47,3 +47,11 @@ Two changes, verified on the tablet AVD and on a simulated 412×915 dp phone (un
 These are stop-gaps. They make the pages readable; the design in [4-design.md](4-design.md) replaces the single column with a real tablet layout.
 
 **R6 (player orientation and edge gestures):** `PlayerActivity` no longer forces `sensorLandscape` from the manifest. It picks the orientation at runtime: forced landscape when the full-screen window's shorter side is under 600 dp (phones, folded foldables), unspecified otherwise, so a tablet plays in portrait (T7). On a player at least 840 × 480 dp, brightness and volume swipes only start within `clamp(width × 0.2, 96 dp, 240 dp)` of the left or right edge; a vertical swipe in the middle does nothing (T6, upstream #1144). Verified on a 1280×800 dp tablet AVD in both orientations and on the same AVD resized to a 411×914 dp phone.
+
+**R2 (T12).** `ItemHeader` and the new hero draw `scrimOverArt` from the top as well (10 % → 0 over 96 dp), and Movie, Show and Episode ask for light status-bar icons while the backdrop is behind the status bar, in both themes. Once the top bar has faded to the solid background the theme's default icons come back. This is the one change a phone shows (D7). Season still has T12; it is left to R5, which rewrites that page.
+
+**R3 (T4, T5).** At medium and expanded width (but not at compact height, so a phone in landscape keeps the compact page) Movie, Show and Episode use the hero layout of [4-design.md](4-design.md) §6: a full-width backdrop cropped from the top centre, `max(320 dp, min(width × 9/16, window height × 0.55))` tall, with the poster (an episode's still) and the text column, capped at 720 dp, in its bottom part. Next Up, seasons and cast run below at full width. The R0 width caps on these three pages are gone. Landscape gets a 440 dp hero with a 200 dp poster; portrait gets 450 dp with 160 dp.
+
+![](screenshots/movie-hero-landscape.jpg) ![](screenshots/movie-hero-portrait.jpg)
+
+![](screenshots/show-hero-landscape.jpg) ![](screenshots/episode-hero-landscape.jpg)
