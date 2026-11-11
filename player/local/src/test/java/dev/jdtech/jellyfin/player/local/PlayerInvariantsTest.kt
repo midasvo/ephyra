@@ -96,4 +96,28 @@ class PlayerInvariantsTest {
             mpvPlayer.contains("streamBreak.onErrorLog("),
         )
     }
+
+    @Test
+    fun `mpv deselects video before it drops the video output`() {
+        // #460: vo=null with video still selected made mpv re-create the hardware decoder for a
+        // surface that was gone; on the emulator that codec never answered and the main thread
+        // hung behind it (ANR on leaving the player). surfaceCreated must select video again.
+        val mpvPlayer = source("mpv/MPVPlayer.kt")
+        val detach =
+            Regex("""private fun detachVideoSurface\(\) \{[\s\S]*?\n    \}""").find(mpvPlayer)
+        assertTrue("MPVPlayer.detachVideoSurface not found", detach != null)
+        val body = detach!!.value
+        val deselect = body.indexOf("""selectTrack(MPVTrackType.VIDEO, "no")""")
+        val voNull = body.indexOf("""setOptionString("vo", "null")""")
+        assertTrue("detachVideoSurface must deselect video (#460)", deselect >= 0)
+        assertTrue("detachVideoSurface must deselect video before vo=null (#460)", deselect < voNull)
+        val attach =
+            Regex("""override fun surfaceCreated\(holder: SurfaceHolder\) \{[\s\S]*?\n {12}\}""")
+                .find(mpvPlayer)
+        assertTrue("MPVPlayer's surfaceCreated not found", attach != null)
+        assertTrue(
+            "surfaceCreated must select video again from the parameters (#460)",
+            attach!!.value.contains("videoTrackSelection(trackSelectionParameters)"),
+        )
+    }
 }
