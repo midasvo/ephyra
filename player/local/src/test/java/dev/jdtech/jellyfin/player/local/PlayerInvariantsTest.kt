@@ -136,6 +136,35 @@ class PlayerInvariantsTest {
     }
 
     @Test
+    fun `the start report waits for the item to load`() {
+        // #601: the start went out at the item transition and progress reports followed, so an
+        // item that never opened was counted as played, and one without a runtime marked played.
+        // PlaybackStartGateTest covers the decision; this checks PlayerViewModel still uses it.
+        val viewModel = source("presentation/PlayerViewModel.kt")
+        val transition =
+            Regex("""override fun onMediaItemTransition\([\s\S]*?\n    }""").find(viewModel)
+        assertTrue("PlayerViewModel.onMediaItemTransition not found", transition != null)
+        assertTrue(
+            "onMediaItemTransition must hand the start to startGate (#601)",
+            Regex("""startGate\s*\.onTransition\(""").containsMatchIn(transition!!.value) &&
+                !Regex("""\n\s*sendPlaybackStart\(item\)""").containsMatchIn(transition.value),
+        )
+        val ready = Regex("""ExoPlayer\.STATE_READY -> \{[\s\S]*?\n {12}}""").find(viewModel)
+        assertTrue("PlayerViewModel's STATE_READY branch not found", ready != null)
+        assertTrue(
+            "STATE_READY must send the start the gate holds (#601)",
+            ready!!.value.contains("startGate.onReady()"),
+        )
+        val progress =
+            Regex("""fun updatePlaybackProgress\(\) \{[\s\S]*?\n    }""").find(viewModel)
+        assertTrue("PlayerViewModel.updatePlaybackProgress not found", progress != null)
+        assertTrue(
+            "No progress report before the start report (#601)",
+            progress!!.value.contains("if (playing?.startJob == null) return@launch"),
+        )
+    }
+
+    @Test
     fun `the TV player reports progress`() {
         // #458: the TV player only reported start and stop, never progress, so a crash or a
         // force-stop resumed from the previous stop. app/tv's own tests are not part of the root

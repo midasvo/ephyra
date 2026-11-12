@@ -53,6 +53,7 @@ import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.domain.AudioDecoderFallback
 import dev.jdtech.jellyfin.player.local.domain.DebugSegments
 import dev.jdtech.jellyfin.player.local.domain.NetworkRecovery
+import dev.jdtech.jellyfin.player.local.domain.PlaybackStartGate
 import dev.jdtech.jellyfin.player.local.domain.PlaylistManager
 import dev.jdtech.jellyfin.player.local.domain.SegmentDecision
 import dev.jdtech.jellyfin.player.local.domain.SegmentTracker
@@ -380,6 +381,9 @@ constructor(
     )
 
     private var playing: PlayingSnapshot? = null
+
+    /** CE (#601): holds an item's start report until the player has loaded it. */
+    private val startGate = PlaybackStartGate<PlayerItem>()
 
     /**
      * Whether to start the next item by itself at the end of an item: the "Play next episode
@@ -789,6 +793,7 @@ constructor(
         refreshPlayingSnapshot()
         val stopped = playing
         playing = null
+        startGate.clear()
 
         _uiState.value.currentTrickplay?.loader?.release()
         _uiState.update { it.copy(currentTrickplay = null) }
@@ -883,7 +888,10 @@ constructor(
             // still-watching prompt). A progress report now would reopen its session on the
             // server and overwrite the position the stop stored, e.g. from onPause while the
             // player closes.
-            if (playing == null) return@launch
+            // CE (#601): nor before the start report, which waits for the item to load. The
+            // server marks an item without a runtime played at its first position report, so an
+            // item that failed to open was marked played.
+            if (playing?.startJob == null) return@launch
             val mediaItem = player.currentMediaItem ?: return@launch
             if (mediaItem.mediaId.isNotEmpty()) {
                 val itemId = UUID.fromString(mediaItem.mediaId)
@@ -1023,7 +1031,14 @@ constructor(
                         // auto-advance code did. A stop that reaches the server after the start
                         // can clear the session's now-playing item.
                         stopJob?.join()
-                        sendPlaybackStart(item)
+                        // CE (#601): the start waits for the item to load (PlaybackStartGate).
+                        startGate
+                            .onTransition(
+                                item,
+                                ready = player.playbackState == ExoPlayer.STATE_READY,
+                                current = playing?.itemId == item.itemId,
+                            )
+                            ?.let { sendPlaybackStart(it) }
 
                         segmentTracker.setSegments(emptyList())
                         if (shouldPollSegments()) {
@@ -1048,9 +1063,12 @@ constructor(
 
     /**
      * Tell the server that [item] started playing, and record the report on [playing] so that
-     * leaving the item, even before it loaded, sends the stop this start is owed (#461). Until the
-     * duration is known the snapshot holds the position playback was asked to start at, so that
-     * stop keeps a saved resume position.
+     * leaving the item sends the stop this start is owed (#461). Until the duration is known the
+     * snapshot holds the position playback was asked to start at, so that stop keeps a saved
+     * resume position.
+     *
+     * Sent once the player has loaded the item ([startGate], #601): an item that never opens
+     * sends no start, no progress and no stop.
      *
      * The report runs in [GlobalScope] so that closing the player does not cut it off halfway;
      * [reportStopped] waits for it (with a time limit) to keep the stop behind it.
@@ -1576,6 +1594,10 @@ constructor(
                 // CE (#450): loaded again after the connection was lost.
                 if (networkRecovery.isWaiting) endNetworkWait()
                 _uiState.update { it.copy(fileLoaded = true) }
+                // CE (#601): the item loaded, so its start report is due.
+                startGate.onReady()?.let { item ->
+                    viewModelScope.launch { sendPlaybackStart(item) }
+                }
                 runDeferredWork()
             }
             ExoPlayer.STATE_ENDED -> {
