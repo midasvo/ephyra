@@ -134,4 +134,12 @@ interface Downloader {
      * just finalized successfully).
      */
     suspend fun finalizeDownload(downloadId: Long): Boolean
+
+    /**
+     * CE (#573): renames the external subtitles of finished downloads that still have their
+     * `.download` name, and updates their rows. Builds before #573 never finalized them. A
+     * subtitle whose transfer the engine still runs, or reports failed, is left alone. Runs at
+     * every start (DownloadQueue.restoreAll) and before the orphan sweep.
+     */
+    suspend fun finalizeFinishedMediaStreams()
 }

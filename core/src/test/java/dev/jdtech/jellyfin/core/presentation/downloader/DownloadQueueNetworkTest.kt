@@ -188,6 +188,8 @@ class DownloadQueueNetworkTest {
 
         override suspend fun sweepOrphans() = Unit
 
+        override suspend fun finalizeFinishedMediaStreams() = Unit
+
         override suspend fun finalizeDownload(downloadId: Long) = false
 
         private val running = Downloader.Progress(DownloadStatus.RUNNING, 0, 0L, -1L)

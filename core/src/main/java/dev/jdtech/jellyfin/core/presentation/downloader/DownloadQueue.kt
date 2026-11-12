@@ -256,6 +256,12 @@ constructor(
      * pendings via their addedAt timestamp.
      */
     suspend fun restoreAll() {
+        // CE (#573): subtitles of finished downloads that older builds left as `.download`.
+        try {
+            downloader.finalizeFinishedMediaStreams()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to finalize the subtitles of finished downloads")
+        }
         val active =
             try {
                 downloader.getActiveDownloads()

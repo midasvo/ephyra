@@ -44,13 +44,21 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Provider
 import kotlin.Exception
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.ceil
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.jellyfin.sdk.model.api.MediaStreamType
 import timber.log.Timber
 
@@ -167,11 +175,21 @@ class DownloaderImpl(
     private val workManagerProvider: Provider<WorkManager>,
     private val engine: MediaDownloadEngine,
     private val dataChanges: DataChangeEvents = DataChangeEvents(),
+    // CE (#573): the subtitles still downloading when their video finished. Tests shorten both.
+    private val mediaStreamFinalizeTimeoutMs: Long = MEDIA_STREAM_FINALIZE_TIMEOUT_MS,
+    private val mediaStreamFinalizePollMs: Long = MEDIA_STREAM_FINALIZE_POLL_MS,
 ) : Downloader {
 
     companion object {
         private const val PENDING_DOWNLOAD_MAX_AGE_MS = 30L * 24 * 60 * 60 * 1000
+        private const val MEDIA_STREAM_FINALIZE_TIMEOUT_MS = 5L * 60 * 1000
+        private const val MEDIA_STREAM_FINALIZE_POLL_MS = 1_000L
     }
+
+    private val mediaStreamFinalizeScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** One job per source id: its subtitles that were not finished with the video (#573). */
+    private val mediaStreamFinalizeJobs = ConcurrentHashMap<String, Job>()
 
     // Resolved per use, never captured: which repository is active (online vs offline) can
     // change at runtime without this @Singleton being recreated. Capturing a fixed instance
@@ -658,7 +676,6 @@ class DownloaderImpl(
             return
         }
         restartExternalMediaStreamRows(
-            item = item,
             // Process just died — every engine task is gone, so every still-incomplete
             // row needs restarting, regardless of what state it was last left in.
             rows = rows.filter { it.path.endsWith(".download") },
@@ -719,7 +736,6 @@ class DownloaderImpl(
             return
         } ?: return
         restartExternalMediaStreamRows(
-            item = item,
             rows = failedRows,
             serverSource = serverSource,
             allowMetered = appPreferences.getValue(appPreferences.downloadOverMobileData),
@@ -735,7 +751,6 @@ class DownloaderImpl(
      * simply dropped (its partial discarded).
      */
     private suspend fun restartExternalMediaStreamRows(
-        item: FindroidItem,
         rows: List<FindroidMediaStreamDto>,
         serverSource: FindroidSource,
         allowMetered: Boolean,
@@ -915,6 +930,14 @@ class DownloaderImpl(
     override suspend fun sweepOrphans() = withContext(Dispatchers.IO) {
         val userId = jellyfinRepository.getUserId()
 
+        // CE (#573): first, so the rows below have the subtitles' final names. Either name is
+        // safe: the sweep keeps a file a row names with or without `.download`.
+        try {
+            finalizeFinishedMediaStreams()
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to finalize the subtitles of finished downloads")
+        }
+
         // Live engine tasks: ids (to decide whether an active source is dead) and
         // destination paths (so we never delete a file the engine is still writing).
         // At startup these are empty — but partial files are protected by knownPaths
@@ -1063,6 +1086,7 @@ class DownloaderImpl(
         // just sync the DB and exit.
         if (finalFile.exists() && finalFile.length() > 0 && !downloadFile.exists()) {
             database.setSourceDownloaded(source.id, finalPath, System.currentTimeMillis())
+            finalizeMediaStreamsOf(source)
             return true
         }
 
@@ -1077,10 +1101,152 @@ class DownloaderImpl(
         // Drop the terminal task from the engine registry after successful finalize.
         source.downloadId?.let { engine.cancel(it) }
         Timber.d("Finalized download at: $finalPath")
+        finalizeMediaStreamsOf(source)
         return true
     }
 
-    private suspend fun finalizeMediaStream(mediaStream: FindroidMediaStreamDto): Boolean {
+    /**
+     * CE (#573): the queue finalizes a download by its video's id only, so its external
+     * subtitles, each with a download id of its own, kept their `.download` name. Finalizes the
+     * ones that are done, and hands the rest to one background job for [source].
+     */
+    private suspend fun finalizeMediaStreamsOf(source: FindroidSourceDto) {
+        val rows =
+            try {
+                unfinishedMediaStreams(source.id)
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to read the subtitles of ${source.path}")
+                return
+            }
+        if (rows.isEmpty()) return
+        val snapshots = engine.snapshots(rows.mapNotNull { it.downloadId })
+        var left = false
+        for (row in rows) {
+            val status = row.downloadId?.let { snapshots[it]?.status }
+            if (status == DownloadStatus.SUCCESSFUL) {
+                if (!finalizeMediaStream(row)) left = true
+            } else {
+                left = true
+            }
+        }
+        if (left) finalizeMediaStreamsLater(source)
+    }
+
+    private suspend fun unfinishedMediaStreams(sourceId: String): List<FindroidMediaStreamDto> =
+        database.getMediaStreamsBySourceId(sourceId).filter { it.path.endsWith(".download") }
+
+    /**
+     * Waits, at most [mediaStreamFinalizeTimeoutMs], for the subtitles of [source] that were not
+     * done with its video, and finalizes each one that finishes. A failed one is started once
+     * more, the way [retryFailedMediaStreams] does while the video downloads. The job stops when
+     * the rows are gone (the download was deleted). What it leaves behind keeps its `.download`
+     * name for [finalizeFinishedMediaStreams] at the next start.
+     */
+    private fun finalizeMediaStreamsLater(source: FindroidSourceDto) {
+        mediaStreamFinalizeJobs.compute(source.id) { _, running ->
+            running?.takeIf { it.isActive }
+                ?: mediaStreamFinalizeScope.launch {
+                    try {
+                        restartFailedMediaStreams(source)
+                        val done =
+                            withTimeoutOrNull(mediaStreamFinalizeTimeoutMs) {
+                                while (!finalizeFinishedOrIdle(source.id)) {
+                                    delay(mediaStreamFinalizePollMs)
+                                }
+                            }
+                        if (done == null) {
+                            Timber.w("Subtitles of ${source.path} not done; left for the next start")
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Timber.w(e, "Failed to finalize the subtitles of ${source.path}")
+                    } finally {
+                        mediaStreamFinalizeJobs.remove(source.id, coroutineContext[Job])
+                    }
+                }
+        }
+    }
+
+    /**
+     * Finalizes the subtitles of [sourceId] the engine reports done. True when none is left
+     * running: all finalized, the rows gone, or only failed or unknown ones left.
+     */
+    private suspend fun finalizeFinishedOrIdle(sourceId: String): Boolean {
+        val rows = unfinishedMediaStreams(sourceId)
+        if (rows.isEmpty()) return true
+        val snapshots = engine.snapshots(rows.mapNotNull { it.downloadId })
+        var running = false
+        for (row in rows) {
+            when (row.downloadId?.let { snapshots[it]?.status }) {
+                DownloadStatus.SUCCESSFUL -> finalizeMediaStream(row)
+                DownloadStatus.PENDING,
+                DownloadStatus.RUNNING,
+                DownloadStatus.PAUSED -> running = true
+                else -> Unit
+            }
+        }
+        return !running
+    }
+
+    /** Starts the failed or lost subtitle transfers of a finished [source] once more. */
+    private suspend fun restartFailedMediaStreams(source: FindroidSourceDto) {
+        val rows = unfinishedMediaStreams(source.id)
+        val snapshots = engine.snapshots(rows.mapNotNull { it.downloadId })
+        val failed =
+            rows.filter { row ->
+                val status = row.downloadId?.let { snapshots[it]?.status }
+                status == null || status == DownloadStatus.FAILED
+            }
+        if (failed.isEmpty()) return
+        val serverSource =
+            try {
+                jellyfinRepository
+                    .getMediaSources(
+                        source.itemId,
+                        true,
+                        appPreferences.getValue(appPreferences.downloadTranscodeDolbyVision),
+                        source.downloadMaxBitrate,
+                    )
+                    .firstOrNull { it.id == source.id }
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to re-resolve ${source.path} to restart its subtitles")
+                null
+            } ?: return
+        restartExternalMediaStreamRows(
+            rows = failed,
+            serverSource = serverSource,
+            allowMetered = appPreferences.getValue(appPreferences.downloadOverMobileData),
+            allowRoaming = appPreferences.getValue(appPreferences.downloadWhenRoaming),
+        )
+    }
+
+    override suspend fun finalizeFinishedMediaStreams() =
+        withContext(Dispatchers.IO) {
+            for (source in database.getCompletedDownloadSources()) {
+                if (mediaStreamFinalizeJobs[source.id]?.isActive == true) continue
+                for (row in unfinishedMediaStreams(source.id)) {
+                    val status = row.downloadId?.let { engine.snapshot(it)?.status }
+                    // Running, or failed: the file may be incomplete, so it keeps its name. A task
+                    // the engine does not know is from an earlier start: an older build that
+                    // never finalized subtitles, or a job that gave up.
+                    if (status != null && status != DownloadStatus.SUCCESSFUL) continue
+                    if (finalizeMediaStream(row, taskGone = status == null)) {
+                        Timber.i("Finalized the subtitle at ${row.path.removeSuffix(".download")}")
+                    }
+                }
+            }
+        }
+
+    /**
+     * Renames a finished subtitle from `<path>.download` to `<path>` and updates its row. With
+     * [taskGone], the engine no longer knows the transfer (#573): the file is taken as it is,
+     * and a failed rename keeps the row, which still points at a readable file.
+     */
+    private suspend fun finalizeMediaStream(
+        mediaStream: FindroidMediaStreamDto,
+        taskGone: Boolean = false,
+    ): Boolean {
         if (!mediaStream.path.endsWith(".download")) return true
         val finalPath = mediaStream.path.removeSuffix(".download")
         val downloadFile = File(mediaStream.path)
@@ -1091,11 +1257,15 @@ class DownloaderImpl(
             return true
         }
 
-        if (!isDownloadSuccessful(mediaStream.downloadId)) return false
+        if (taskGone) {
+            if (!downloadFile.exists() || downloadFile.length() == 0L) return false
+        } else if (!isDownloadSuccessful(mediaStream.downloadId)) {
+            return false
+        }
 
         if (!renameDownloadFile(mediaStream.path, finalPath)) {
             Timber.e("Failed to rename media stream download. path=${mediaStream.path}")
-            database.deleteMediaStream(mediaStream.id)
+            if (!taskGone) database.deleteMediaStream(mediaStream.id)
             return false
         }
         database.setMediaStreamPath(mediaStream.id, finalPath)

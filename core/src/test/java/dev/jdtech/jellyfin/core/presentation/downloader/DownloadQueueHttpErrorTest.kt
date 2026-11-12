@@ -195,6 +195,8 @@ class DownloadQueueHttpErrorTest {
 
         override suspend fun sweepOrphans() = Unit
 
+        override suspend fun finalizeFinishedMediaStreams() = Unit
+
         override suspend fun finalizeDownload(downloadId: Long) = false
     }
 
