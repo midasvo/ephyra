@@ -13,6 +13,27 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v2.4.4] — 2026-11-12
+
+Playback with ExoPlayer starts faster for files with Dolby Digital Plus audio in an mp4: they
+now play directly instead of going through the server, which on a TV box could take ten seconds
+or more before a picture. The rest are small fixes to the phone player, offline Home and the
+item pages.
+
+### Fixed
+- Player (ExoPlayer): an mp4 with Dolby Digital Plus (E-AC-3) audio plays directly. When a file
+  does go through the server, HEVC video is passed on as it is where the device can decode it,
+  instead of being re-encoded, and leaving the player ends the server's conversion at once
+  instead of a minute later (#589).
+- Player: the first key after a tap on the player works. Space pauses and an arrow seeks,
+  where that first key used to do nothing (#448).
+- Player: in a window too narrow for all the buttons in the top row, the row starts at its end,
+  so audio, subtitles and episodes are in view, and a fading edge shows there is more (#456).
+- Player: at a large font size the title no longer leaves the window at the top (#585).
+- Home: offline with nothing downloaded, Home says so and points to Downloads (#585).
+- Item pages: the back and home buttons are readable on a page without artwork, also in the
+  light theme (#585).
+
 ## [v2.4.3] — 2026-11-12
 
 A quick follow-up to v2.4.2. Progress watched from a download after the network dropped in the
@@ -900,6 +921,7 @@ Initial CE fork off findroid `1.0.2`. These rapid early iterations established t
 `nl.midasvo.findroid.ce` application ID, downloads and SD-card storage improvements, and ongoing
 tracking of upstream. See the git history between the corresponding tags for commit-level detail.
 
+[v2.4.4]: https://github.com/midasvo/ephyra/releases/tag/v2.4.4
 [v2.4.3]: https://github.com/midasvo/ephyra/releases/tag/v2.4.3
 [v2.4.2]: https://github.com/midasvo/ephyra/releases/tag/v2.4.2
 [v2.4.1]: https://github.com/midasvo/ephyra/releases/tag/v2.4.1
