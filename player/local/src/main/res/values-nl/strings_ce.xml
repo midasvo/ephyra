@@ -28,4 +28,5 @@
     </plurals>
     <string name="ce_track_forced">Geforceerd</string>
     <string name="ce_player_connection_lost">Verbinding verbroken. Het afspelen gaat verder zodra het netwerk terug is.</string>
+    <string name="ce_player_try_again">Opnieuw proberen</string>
 </resources>

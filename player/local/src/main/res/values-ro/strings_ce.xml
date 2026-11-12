@@ -30,4 +30,5 @@
     </plurals>
     <string name="ce_track_forced">Forțate</string>
     <string name="ce_player_connection_lost">Conexiunea s-a pierdut. Redarea continuă când revine rețeaua.</string>
+    <string name="ce_player_try_again">Încearcă din nou</string>
 </resources>

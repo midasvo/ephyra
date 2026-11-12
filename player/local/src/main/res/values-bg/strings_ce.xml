@@ -28,4 +28,5 @@
     </plurals>
     <string name="ce_track_forced">Принудителни</string>
     <string name="ce_player_connection_lost">Връзката е прекъсната. Възпроизвеждането ще продължи, когато мрежата се върне.</string>
+    <string name="ce_player_try_again">Опитай отново</string>
 </resources>
