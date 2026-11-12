@@ -3,7 +3,6 @@ package dev.jdtech.jellyfin.setup.presentation.addserver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.models.DiscoveredServer
 import dev.jdtech.jellyfin.models.ExceptionUiText
 import dev.jdtech.jellyfin.models.ExceptionUiTexts
@@ -13,6 +12,7 @@ import dev.jdtech.jellyfin.setup.R as SetupR
 import dev.jdtech.jellyfin.setup.domain.LocalNetworkAccess
 import dev.jdtech.jellyfin.setup.domain.SetupRepository
 import dev.jdtech.jellyfin.setup.domain.blocks
+import dev.jdtech.jellyfin.utils.LoadErrorText
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
@@ -111,15 +111,9 @@ constructor(
             } catch (e: ExceptionUiTexts) {
                 _state.emit(_state.value.copy(isLoading = false, error = e.uiTexts))
             } catch (e: Exception) {
+                // CE (#606): plain words, never the exception's own text (#377).
                 _state.emit(
-                    _state.value.copy(
-                        isLoading = false,
-                        error =
-                            listOf(
-                                if (e.message != null) UiText.DynamicString(e.message!!)
-                                else UiText.StringResource(CoreR.string.unknown_error)
-                            ),
-                    )
+                    _state.value.copy(isLoading = false, error = listOf(LoadErrorText.reason(e)))
                 )
             }
         }

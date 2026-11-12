@@ -3,6 +3,7 @@ package dev.jdtech.jellyfin.setup.presentation
 import android.app.Application
 import android.provider.Settings
 import com.sun.net.httpserver.HttpServer
+import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.Server
 import dev.jdtech.jellyfin.models.ServerAddress
@@ -49,6 +50,9 @@ class ServerAddressesFeedbackTest {
     private val addresses = Collections.synchronizedList(mutableListOf(inUse, other))
     private val deleted = Collections.synchronizedList(mutableListOf<UUID>())
 
+    /** Thrown by getServerWithAddresses once set. */
+    @Volatile private var failure: RuntimeException? = null
+
     // The ViewModel calls only these; suspend functions that do not suspend can return directly.
     private val database =
         Proxy.newProxyInstance(
@@ -62,12 +66,14 @@ class ServerAddressesFeedbackTest {
                     addresses.removeAll { it.id == args[0] }
                     Unit
                 }
-                "getServerWithAddresses" ->
+                "getServerWithAddresses" -> {
+                    failure?.let { throw it }
                     ServerWithAddresses(
                         server = Server(serverId, "Ephyra Test", inUse.id, null),
                         addresses = addresses.toList(),
                         user = null,
                     )
+                }
                 "toString" -> "FakeServerDatabaseDao"
                 else -> throw UnsupportedOperationException(method.name)
             }
@@ -134,6 +140,33 @@ class ServerAddressesFeedbackTest {
             val message = error.single() as UiText.StringResource
             assertEquals(SetupR.string.ce_server_address_already_added, message.resId)
             assertEquals(3, addresses.size)
+        } finally {
+            server.stop(0)
+        }
+    }
+
+    @Test
+    fun `any other failure is told in plain words, not the exception's text`() = runBlocking {
+        // CE (#606): the same stand-in server, then the address list cannot be read.
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0)
+        server.createContext("/System/Info/Public") { exchange ->
+            val body =
+                """{"Id":"$serverId","ServerName":"Ephyra Test","Version":"10.11.0",""" +
+                    """"ProductName":"Jellyfin Server","StartupWizardCompleted":true}"""
+            exchange.responseHeaders.add("Content-Type", "application/json")
+            exchange.sendResponseHeaders(200, body.toByteArray().size.toLong())
+            exchange.responseBody.use { it.write(body.toByteArray()) }
+        }
+        server.start()
+        try {
+            failure = IllegalStateException("Cannot access database on the main thread")
+
+            val stubAddress = "http://127.0.0.1:${server.address.port}"
+            viewModel.onAction(ServerAddressesAction.AddAddress(stubAddress))
+
+            val error = withTimeout(15_000) { viewModel.state.first { it.error != null } }.error!!
+            val message = error.single() as UiText.StringResource
+            assertEquals(CoreR.string.unknown_error, message.resId)
         } finally {
             server.stop(0)
         }
