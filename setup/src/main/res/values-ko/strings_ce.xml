@@ -58,4 +58,6 @@
     <string name="ce_local_network_off">로컬 네트워크 액세스가 꺼져 있습니다</string>
     <string name="ce_add_server_error_local_network">서버를 찾을 수 없습니다. 로컬 네트워크 액세스가 꺼져 있어 네트워크의 주소가 차단됩니다.</string>
     <string name="ce_permission_permanently_denied">%1$s 권한이 거부되었습니다. 사용하려면 시스템 설정의 권한에서 \"%2$s\"을(를) 허용하세요.</string>
+    <string name="ce_quick_connect_error_expired">Quick Connect 코드가 만료되었습니다. 새 코드를 받으려면 Quick Connect를 누르세요.</string>
+    <string name="ce_quick_connect_error_disabled">이 서버에서는 Quick Connect가 꺼져 있습니다. 사용자 이름과 비밀번호로 로그인하세요.</string>
 </resources>

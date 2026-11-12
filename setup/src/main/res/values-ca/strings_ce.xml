@@ -58,4 +58,6 @@
     <string name="ce_local_network_off">L\'accés a la xarxa local està desactivat</string>
     <string name="ce_add_server_error_local_network">No s\'ha trobat el servidor. L\'accés a la xarxa local està desactivat, cosa que bloqueja les adreces de la teva xarxa.</string>
     <string name="ce_permission_permanently_denied">S\'ha denegat %1$s. Per fer-lo servir, permet «%2$s» a Permisos, a la configuració del sistema.</string>
+    <string name="ce_quick_connect_error_expired">El codi de Quick Connect ha caducat. Premeu Quick Connect per obtenir un codi nou.</string>
+    <string name="ce_quick_connect_error_disabled">Quick Connect està desactivat en aquest servidor. Inicieu la sessió amb el vostre nom d\'usuari i contrasenya.</string>
 </resources>

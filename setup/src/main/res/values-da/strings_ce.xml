@@ -58,4 +58,6 @@
     <string name="ce_local_network_off">Adgang til det lokale netværk er slået fra</string>
     <string name="ce_add_server_error_local_network">Serveren blev ikke fundet. Adgang til det lokale netværk er slået fra, hvilket blokerer adresser på dit netværk.</string>
     <string name="ce_permission_permanently_denied">%1$s blev afvist. Hvis du vil bruge den, skal du tillade \"%2$s\" under Tilladelser i systemindstillingerne.</string>
+    <string name="ce_quick_connect_error_expired">Quick Connect-koden er udløbet. Tryk på Quick Connect for at få en ny kode.</string>
+    <string name="ce_quick_connect_error_disabled">Quick Connect er slået fra på denne server. Log ind med dit brugernavn og din adgangskode.</string>
 </resources>

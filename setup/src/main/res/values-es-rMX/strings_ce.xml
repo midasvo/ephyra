@@ -58,4 +58,6 @@
     <string name="ce_local_network_off">El acceso a la red local está desactivado</string>
     <string name="ce_add_server_error_local_network">No se encontró el servidor. El acceso a la red local está desactivado, lo que bloquea las direcciones de tu red.</string>
     <string name="ce_permission_permanently_denied">Se denegó %1$s. Para usarlo, permite \"%2$s\" en Permisos, en la configuración del sistema.</string>
+    <string name="ce_quick_connect_error_expired">El código de Conexión rápida expiró. Presiona \"Conexión rápida\" para obtener un código nuevo.</string>
+    <string name="ce_quick_connect_error_disabled">Conexión rápida está desactivada en este servidor. Inicia sesión con tu nombre de usuario y contraseña.</string>
 </resources>

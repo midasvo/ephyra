@@ -58,4 +58,6 @@
     <string name="ce_local_network_off">Dostęp do sieci lokalnej jest wyłączony</string>
     <string name="ce_add_server_error_local_network">Nie znaleziono serwera. Dostęp do sieci lokalnej jest wyłączony, co blokuje adresy w Twojej sieci.</string>
     <string name="ce_permission_permanently_denied">Odmówiono uprawnienia %1$s. Aby z niego korzystać, zezwól na „%2$s” w sekcji Uprawnienia w ustawieniach systemu.</string>
+    <string name="ce_quick_connect_error_expired">Kod Szybkiego połączenia wygasł. Naciśnij „Szybkie połączenie”, aby otrzymać nowy kod.</string>
+    <string name="ce_quick_connect_error_disabled">Szybkie połączenie jest wyłączone na tym serwerze. Zaloguj się, podając nazwę użytkownika i hasło.</string>
 </resources>
