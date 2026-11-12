@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Riproduci i video in orizzontale, anche quando giri il tablet in verticale</string>
     <string name="ce_pref_home_episode_images">Usa le immagini degli episodi</string>
     <string name="ce_pref_home_episode_images_summary">Mostra l\'immagine dell\'episodio invece di quella della serie in Continua a guardare e Prossimi</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Mostra l\'immagine dell\'episodio invece di quella della serie in Continua a guardare, in Prossimi e in cima alla pagina dell\'episodio</string>
 </resources>

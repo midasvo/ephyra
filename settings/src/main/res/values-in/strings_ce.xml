@@ -194,4 +194,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Putar video dalam lanskap, meskipun tablet diputar tegak</string>
     <string name="ce_pref_home_episode_images">Gunakan gambar episode</string>
     <string name="ce_pref_home_episode_images_summary">Tampilkan gambar episode, bukan gambar serial, di Lanjutkan menonton dan Berikutnya</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Tampilkan gambar episode, bukan gambar serial, di Lanjutkan menonton, di Berikutnya, dan di bagian atas halaman episode</string>
 </resources>

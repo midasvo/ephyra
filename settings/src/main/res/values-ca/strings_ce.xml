@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Reprodueix els vídeos en horitzontal, encara que posis la tauleta en vertical</string>
     <string name="ce_pref_home_episode_images">Utilitza imatges dels episodis</string>
     <string name="ce_pref_home_episode_images_summary">Mostra la imatge de l\'episodi en lloc de la imatge de la sèrie a Continua mirant i Següent</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Mostra la imatge de l\'episodi en lloc de la imatge de la sèrie a Continua mirant, a Següent i a la part superior de la pàgina de l\'episodi</string>
 </resources>

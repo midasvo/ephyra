@@ -316,4 +316,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Play videos in landscape, even when you turn the tablet upright</string>
     <string name="ce_pref_home_episode_images">Use episode images</string>
     <string name="ce_pref_home_episode_images_summary">Show the episode\'s image instead of the show\'s artwork in Continue Watching and Next Up</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Show the episode\'s image instead of the show\'s artwork in Continue Watching, in Next Up and at the top of an episode\'s page</string>
 </resources>

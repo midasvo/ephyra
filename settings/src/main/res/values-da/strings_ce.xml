@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Afspil videoer i liggende format, også når du vender tabletten på højkant</string>
     <string name="ce_pref_home_episode_images">Brug episodebilleder</string>
     <string name="ce_pref_home_episode_images_summary">Vis episodens billede i stedet for seriens billede i Fortsæt med at se og Næste</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Vis episodens billede i stedet for seriens billede i Fortsæt med at se, i Næste og øverst på episodens side</string>
 </resources>

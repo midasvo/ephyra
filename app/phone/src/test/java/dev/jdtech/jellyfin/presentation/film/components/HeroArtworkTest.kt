@@ -105,6 +105,37 @@ class HeroArtworkTest {
         )
     }
 
+    // #630
+    @Test
+    fun `an episode's header starts with the show's backdrop unless episode images are asked for`() {
+        val episode =
+            dummyEpisode.copy(images = FindroidImages(primary = still, showBackdrop = showBackdrop))
+
+        assertEquals(
+            listOf(ArtworkSource(showBackdrop), ArtworkSource(still)),
+            artworkSources(episode, ArtworkPlacement.Header, canBlur = true, episodeImageFirst = false),
+        )
+        // The hero has the still beside the text and a Suggestions card is about the episode.
+        assertEquals(
+            listOf(ArtworkSource(showBackdrop), ArtworkSource(still)),
+            artworkSources(episode, ArtworkPlacement.Hero, canBlur = true, episodeImageFirst = true),
+        )
+        assertEquals(
+            listOf(ArtworkSource(still), ArtworkSource(showBackdrop)),
+            artworkSources(episode, ArtworkPlacement.Carousel, canBlur = true, episodeImageFirst = false),
+        )
+    }
+
+    @Test
+    fun `an episode without a show backdrop keeps its still in the header`() {
+        val episode = dummyEpisode.copy(images = FindroidImages(primary = still))
+
+        assertEquals(
+            listOf(ArtworkSource(still)),
+            artworkSources(episode, ArtworkPlacement.Header, canBlur = true, episodeImageFirst = false),
+        )
+    }
+
     @Test
     fun `an image that fails moves on, and none left means no artwork`() {
         val state = ArtworkState(listOf(ArtworkSource(backdrop), ArtworkSource(poster, true)))
