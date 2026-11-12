@@ -1666,6 +1666,11 @@ class MPVPlayer(
     }
 
     private fun detachVideoSurface() {
+        // #460: deselect video first. With vo=null and video still selected, mpv re-creates the
+        // hardware decoder in copy mode for a picture nobody sees; on the emulator's decoder that
+        // new codec never answered, and every later libmpv call on the main thread waited on it.
+        selectTrack(MPVTrackType.VIDEO, "no")
+        Timber.d("Surface detached: vid=no, vo=null")
         mpvLib.setOptionString("vo", "null")
         mpvLib.setOptionString("force-window", "no")
         mpvLib.detachSurface()
@@ -1689,9 +1694,13 @@ class MPVPlayer(
         // Overrides
         val notOverriddenTypes =
             mutableSetOf(MPVTrackType.VIDEO, MPVTrackType.AUDIO, MPVTrackType.SUBTITLE)
+        // #460: without a surface, video stays deselected (see detachVideoSurface) until
+        // surfaceCreated selects it from these parameters.
+        if (currentSurface == null) notOverriddenTypes.remove(MPVTrackType.VIDEO)
         for (override in parameters.overrides) {
             val trackType = MPVTrackType.fromMedia3TrackType(override.key.type)
             notOverriddenTypes.remove(trackType)
+            if (trackType == MPVTrackType.VIDEO && currentSurface == null) continue
             val id = override.key.getFormat(0).id ?: continue
 
             selectTrack(trackType, id)
@@ -2135,6 +2144,10 @@ class MPVPlayer(
                 mpvLib.attachSurface(holder.surface)
                 mpvLib.setOptionString("force-window", "yes")
                 mpvLib.setOptionString("vo", videoOutput)
+                // #460: detaching deselected video; select what the parameters ask for again.
+                val vid = videoTrackSelection(trackSelectionParameters)
+                selectTrack(MPVTrackType.VIDEO, vid)
+                Timber.d("Surface attached: vo=$videoOutput, vid=$vid")
             }
 
             /**
