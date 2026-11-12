@@ -55,6 +55,7 @@
     <string name="ce_local_network_denied">Prístup k miestnej sieti je vypnutý. Bez neho nemožno servery vo vašej sieti nájsť ani sa k nim pripojiť.</string>
     <string name="ce_local_network_denied_where">V nastaveniach systému ho nájdete v časti Povolenia &gt; %1$s.</string>
     <string name="ce_local_network_allow">Povoliť prístup</string>
+    <string name="ce_local_network_off">Prístup k miestnej sieti je vypnutý</string>
     <string name="ce_add_server_error_local_network">Server sa nenašiel. Prístup k miestnej sieti je vypnutý, čo blokuje adresy vo vašej sieti.</string>
     <string name="ce_permission_permanently_denied">Povolenie %1$s bolo zamietnuté. Ak ho chcete používať, povoľte „%2$s“ v časti Povolenia v nastaveniach systému.</string>
 </resources>

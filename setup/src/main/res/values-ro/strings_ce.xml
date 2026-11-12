@@ -55,6 +55,7 @@
     <string name="ce_local_network_denied">Accesul la rețeaua locală este dezactivat. Fără el, serverele din rețeaua ta nu pot fi găsite sau accesate.</string>
     <string name="ce_local_network_denied_where">În setările sistemului se află la Permisiuni &gt; %1$s.</string>
     <string name="ce_local_network_allow">Permite accesul</string>
+    <string name="ce_local_network_off">Accesul la rețeaua locală este dezactivat</string>
     <string name="ce_add_server_error_local_network">Serverul nu a fost găsit. Accesul la rețeaua locală este dezactivat, ceea ce blochează adresele din rețeaua ta.</string>
     <string name="ce_permission_permanently_denied">%1$s a fost refuzat. Pentru a-l folosi, permite „%2$s” la Permisiuni, în setările sistemului.</string>
 </resources>

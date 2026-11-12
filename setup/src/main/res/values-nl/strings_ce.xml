@@ -55,6 +55,7 @@
     <string name="ce_local_network_denied">Toegang tot het lokale netwerk staat uit. Zonder die toegang kunnen servers op je netwerk niet worden gevonden of bereikt.</string>
     <string name="ce_local_network_denied_where">In de systeeminstellingen staat het onder Rechten &gt; %1$s.</string>
     <string name="ce_local_network_allow">Toegang toestaan</string>
+    <string name="ce_local_network_off">Toegang tot het lokale netwerk staat uit</string>
     <string name="ce_add_server_error_local_network">Server niet gevonden. Toegang tot het lokale netwerk staat uit, waardoor adressen op je netwerk worden geblokkeerd.</string>
     <string name="ce_permission_permanently_denied">%1$s is geweigerd. Sta \"%2$s\" toe onder Rechten in de systeeminstellingen om het te gebruiken.</string>
 </resources>

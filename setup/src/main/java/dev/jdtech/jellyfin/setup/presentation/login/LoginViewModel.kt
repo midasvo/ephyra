@@ -6,7 +6,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.setup.R as SetupR
+import dev.jdtech.jellyfin.setup.domain.ServerLocalNetworkBlock
 import dev.jdtech.jellyfin.setup.domain.SetupRepository
+import dev.jdtech.jellyfin.utils.LoadErrorText
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -21,7 +23,12 @@ import kotlinx.coroutines.launch
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(private val repository: SetupRepository) : ViewModel() {
+class LoginViewModel
+@Inject
+constructor(
+    private val repository: SetupRepository,
+    private val localNetworkBlock: ServerLocalNetworkBlock,
+) : ViewModel() {
     private val _state = MutableStateFlow(LoginState())
     val state = _state.asStateFlow()
 
@@ -69,7 +76,7 @@ class LoginViewModel @Inject constructor(private val repository: SetupRepository
                     if (e is InvalidStatusException && e.status == 401) {
                         UiText.StringResource(SetupR.string.login_error_wrong_username_password)
                     } else {
-                        UiText.StringResource(CoreR.string.unknown_error)
+                        connectionErrorText(e) ?: UiText.StringResource(CoreR.string.unknown_error)
                     }
                 _state.emit(_state.value.copy(isLoading = false, error = message))
             }
@@ -105,15 +112,28 @@ class LoginViewModel @Inject constructor(private val repository: SetupRepository
                 } catch (e: Exception) {
                     Timber.e(e, "Quick connect failed")
                     val message =
-                        if (e.message != null) {
-                            UiText.DynamicString(e.message!!)
-                        } else {
-                            UiText.StringResource(CoreR.string.unknown_error)
-                        }
+                        connectionErrorText(e)
+                            ?: if (e.message != null) {
+                                UiText.DynamicString(e.message!!)
+                            } else {
+                                UiText.StringResource(CoreR.string.unknown_error)
+                            }
                     _state.emit(_state.value.copy(quickConnectCode = null, error = message))
                 }
             }
     }
+
+    /**
+     * CE (#571): a server that could not be reached says so instead of "Unknown error", and names
+     * the local network permission when that is what blocks it. Null for any other failure.
+     */
+    private suspend fun connectionErrorText(e: Throwable): UiText? =
+        when {
+            !LoadErrorText.isConnectionError(e) -> null
+            localNetworkBlock.refresh() ->
+                UiText.StringResource(SetupR.string.ce_add_server_error_local_network)
+            else -> UiText.StringResource(CoreR.string.download_error_server_unreachable)
+        }
 
     fun onAction(action: LoginAction) {
         when (action) {

@@ -21,6 +21,7 @@ import dev.jdtech.jellyfin.presentation.utils.KeyboardShortcuts
 import dev.jdtech.jellyfin.presentation.utils.LocalNotificationPermissionRequest
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
 import dev.jdtech.jellyfin.presentation.utils.LocalPlaybackStopped
+import dev.jdtech.jellyfin.presentation.utils.ProvideLocalNetworkBlock
 import dev.jdtech.jellyfin.repository.PlaybackEvents
 import dev.jdtech.jellyfin.utils.shouldRequestNotificationPermission
 import dev.jdtech.jellyfin.viewmodels.MainViewModel
@@ -57,14 +58,18 @@ class MainActivity : AppCompatActivity() {
                         LocalPlaybackStopped provides stopped,
                         LocalNotificationPermissionRequest provides ::requestNotificationPermission,
                     ) {
-                        NavigationRoot(
-                            hasServers = state.hasServers,
-                            hasCurrentServer = state.hasCurrentServer,
-                            hasCurrentUser = state.hasCurrentUser,
-                            showFavoritesTab = state.showFavoritesTab,
-                            askUserOnStart = state.askUserOnStart,
-                            profileLocked = state.profileLocked,
-                        )
+                        // CE (#571): the error screens know when local network access is what
+                        // keeps the server out of reach, and can ask for it.
+                        ProvideLocalNetworkBlock {
+                            NavigationRoot(
+                                hasServers = state.hasServers,
+                                hasCurrentServer = state.hasCurrentServer,
+                                hasCurrentUser = state.hasCurrentUser,
+                                showFavoritesTab = state.showFavoritesTab,
+                                askUserOnStart = state.askUserOnStart,
+                                profileLocked = state.profileLocked,
+                            )
+                        }
                     }
                 }
             }

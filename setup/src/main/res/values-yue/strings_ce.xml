@@ -55,6 +55,7 @@
     <string name="ce_local_network_denied">本地網絡存取權已關閉。冇咗佢，就搵唔到亦連唔到你網絡上面嘅伺服器。</string>
     <string name="ce_local_network_denied_where">喺系統設定入面，佢喺「權限」&gt;「%1$s」。</string>
     <string name="ce_local_network_allow">允許存取</string>
+    <string name="ce_local_network_off">本地網絡存取權已關閉</string>
     <string name="ce_add_server_error_local_network">搵唔到伺服器。本地網絡存取權已關閉，所以你網絡上面嘅地址會被封鎖。</string>
     <string name="ce_permission_permanently_denied">%1$s已被拒絕。要使用嘅話，請喺系統設定嘅「權限」入面允許「%2$s」。</string>
 </resources>
