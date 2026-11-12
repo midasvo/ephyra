@@ -246,6 +246,30 @@ if [ ! -f "$ROOT/media/.generated-chapters" ]; then
   touch "$ROOT/media/.generated-chapters"
 fi
 
+# --- a movie with image subtitles (what a transcode can deliver as a file, #597) --------------
+if [ ! -f "$ROOT/media/.generated-image-subs" ]; then
+  # ffmpeg cannot draw an image subtitle from text, so pgs.py writes the PGS stream itself
+  work=$(mktemp -d)
+  python3 "$HERE/pgs.py" "$work/bar.sup" 120
+  chmod -R a+rX "$work"
+  docker run --rm --entrypoint bash -v "$ROOT/media:/media" -v "$work:/work:ro" "$IMAGE" -c '
+    set -e
+    FF=/usr/lib/jellyfin-ffmpeg/ffmpeg
+    d="/media/movies/Image Subs Movie (2026)"; mkdir -p "$d"
+    # the same picture twice: copied as PGS, and converted to VobSub, which needs an end time
+    # for every picture (-fix_sub_duration), or the file claims to last 1193 hours
+    $FF -v error -y -f lavfi -i "testsrc2=size=640x360:rate=24:duration=120" \
+        -f lavfi -i "sine=frequency=440:duration=120" -i /work/bar.sup -fix_sub_duration -i /work/bar.sup \
+        -map 0:v -map 1:a -map 2 -map 3 \
+        -c:v libx264 -preset ultrafast -pix_fmt yuv420p -g 48 -c:a aac -b:a 96k \
+        -c:s:0 copy -c:s:1 dvdsub -s:s:1 640x360 \
+        -metadata:s:s:0 language=eng -metadata:s:s:1 language=dut "$d/Image Subs Movie (2026).mkv"
+    chmod -R a+rX /media
+  '
+  rm -rf "$work"
+  touch "$ROOT/media/.generated-image-subs"
+fi
+
 # --- container -----------------------------------------------------------------------------
 if ! docker ps -a --format '{{.Names}}' | grep -qx "$NAME"; then
   docker run -d --name "$NAME" --restart unless-stopped -p "$PORT:8096" \

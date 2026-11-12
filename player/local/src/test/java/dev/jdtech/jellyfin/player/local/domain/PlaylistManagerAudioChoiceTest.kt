@@ -14,6 +14,7 @@ import kotlinx.coroutines.runBlocking
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.MediaStreamType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
@@ -94,6 +95,75 @@ class PlaylistManagerAudioChoiceTest {
     }
 
     @Test
+    fun `a transcode lists the file's audio tracks and names the one it carries`() {
+        val manager = PlaylistManager(repository(transcodes = true, saved = dutch()))
+
+        val item = runBlocking { manager.getInitialItem(episode.id, BaseItemKind.EPISODE) }!!
+
+        assertEquals(listOf(ENGLISH, DUTCH), item.audioTracks.map { it.index })
+        assertEquals(listOf("English", "Nederlands"), item.audioTracks.map { it.title })
+        assertEquals(DUTCH, item.audioStreamIndex)
+    }
+
+    @Test
+    fun `without a choice the transcode carries the server's default track`() {
+        val manager = PlaylistManager(repository(transcodes = true, saved = null))
+
+        val item = runBlocking { manager.getInitialItem(episode.id, BaseItemKind.EPISODE) }!!
+
+        assertEquals(ENGLISH, item.audioStreamIndex)
+    }
+
+    @Test
+    fun `a stream that plays directly lists no server audio tracks`() {
+        val manager = PlaylistManager(repository(transcodes = false, saved = dutch()))
+
+        val item = runBlocking { manager.getInitialItem(episode.id, BaseItemKind.EPISODE) }!!
+
+        assertEquals(emptyList<Int>(), item.audioTracks.map { it.index })
+        assertNull(item.audioStreamIndex)
+    }
+
+    @Test
+    fun `a track picked in the audio dialog of a transcode is requested by its index`() {
+        // #596: it wins over the choice saved for the series, and stays on the next switch.
+        val saved = dutch().copy(language = "eng", title = "English")
+        val manager = PlaylistManager(repository(transcodes = true, saved = saved))
+        val item = runBlocking { manager.getInitialItem(episode.id, BaseItemKind.EPISODE) }!!
+        requests.clear()
+
+        val picked = runBlocking { manager.recreatePlayerItem(item, audioStreamIndex = DUTCH) }
+
+        assertEquals(listOf(null, DUTCH), requests)
+        assertEquals(path(DUTCH), picked.mediaSourceUri)
+        assertEquals(DUTCH, picked.audioStreamIndex)
+    }
+
+    @Test
+    fun `a picked index the file does not have is ignored`() {
+        val manager = PlaylistManager(repository(transcodes = true, saved = null))
+        val item = runBlocking { manager.getInitialItem(episode.id, BaseItemKind.EPISODE) }!!
+        requests.clear()
+
+        val picked = runBlocking { manager.recreatePlayerItem(item, audioStreamIndex = 9) }
+
+        assertEquals(listOf<Int?>(null), requests)
+        assertEquals(ENGLISH, picked.audioStreamIndex)
+    }
+
+    @Test
+    fun `when the request for the picked track fails the item names the track that plays`() {
+        val manager =
+            PlaylistManager(repository(transcodes = true, saved = null, failWithAudio = true))
+        val item = runBlocking { manager.getInitialItem(episode.id, BaseItemKind.EPISODE) }!!
+
+        val picked = runBlocking { manager.recreatePlayerItem(item, audioStreamIndex = DUTCH) }
+
+        assertEquals(path(null), picked.mediaSourceUri)
+        assertEquals(ENGLISH, picked.audioStreamIndex)
+    }
+
+    @Test
     fun `a downloaded copy plays as before, whatever the server would transcode`() {
         val manager =
             PlaylistManager(repository(transcodes = true, saved = dutch(), downloaded = true))
@@ -102,6 +172,8 @@ class PlaylistManagerAudioChoiceTest {
 
         assertEquals(listOf<Int?>(null), requests)
         assertEquals(DOWNLOAD, item?.mediaSourceUri)
+        // #596: its audio dialog lists the player's tracks, as before.
+        assertEquals(0, item?.audioTracks?.size)
     }
 
     @Test

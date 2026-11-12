@@ -95,7 +95,6 @@ import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.player.local.R as PlayerR
 import dev.jdtech.jellyfin.player.local.domain.StillWatchingTracker
-import dev.jdtech.jellyfin.player.local.domain.getTrackNames
 import dev.jdtech.jellyfin.player.local.presentation.PlayerAction
 import dev.jdtech.jellyfin.player.local.presentation.PlayerEvents
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
@@ -718,11 +717,11 @@ fun TvPlayerScreen(
                 val trackType =
                     if (open == PlayerDialog.AUDIO) C.TRACK_TYPE_AUDIO else C.TRACK_TYPE_TEXT
                 // Read once when the dialog opens; the tracks don't change while it's shown.
-                val groups = remember {
-                    player.currentTracks.groups.filter { it.type == trackType && it.isSupported }
-                }
-                val names = remember { groups.getTrackNames(context).toList() }
-                val selected = groups.indexOfFirst { it.isSelected }
+                // CE (#596): the view model says what to list: during a transcode the audio
+                // tracks are the file's, not the one track the stream carries.
+                val choices = remember { viewModel.trackChoices(trackType, context) }
+                val names = choices.names
+                val selected = choices.selected
                 // Subtitles can be turned off. Audio can't: silence is never what's wanted.
                 val withNone = open == PlayerDialog.SUBTITLES
                 TvSelectionDialog(

@@ -2,6 +2,7 @@ package dev.jdtech.jellyfin.player.local.domain
 
 import androidx.media3.common.C
 import androidx.media3.common.Format
+import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
 import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -216,5 +217,29 @@ class TrackNamesTest {
     @Test
     fun `a track with nothing to name falls back to its id`() {
         assertEquals("3", name(Format.Builder().setId("3").build()))
+    }
+
+    private fun serverName(track: ServerAudioTrack) =
+        serverTrackName(track, forcedLabel = "Forced", Locale.ENGLISH)
+
+    @Test
+    fun `an audio stream of the server has the name the player gives the same track`() {
+        // #596: during a transcode the audio dialog lists the server's streams. The server says
+        // "nld" and "ac3" where ExoPlayer says "nl" and "audio/ac3".
+        assertEquals(
+            name(exoAudio("Dutch 5.1", "nl", "audio/ac3", channels = 6)),
+            serverName(ServerAudioTrack(3, "Dutch 5.1", "nld", "ac3", 6)),
+        )
+        assertEquals("Dutch 5.1 · AC3", serverName(ServerAudioTrack(3, "Dutch 5.1", "nld", "ac3", 6)))
+        assertEquals(
+            "English Stereo · AAC 2.0",
+            serverName(ServerAudioTrack(2, "English Stereo", "eng", "aac", 2)),
+        )
+        assertEquals("Dutch · E-AC3 5.1", serverName(ServerAudioTrack(1, null, "dut", "eac3", 6)))
+    }
+
+    @Test
+    fun `an audio stream of the server with nothing to name falls back to its index`() {
+        assertEquals("4", serverName(ServerAudioTrack(4, null, null, null, null)))
     }
 }

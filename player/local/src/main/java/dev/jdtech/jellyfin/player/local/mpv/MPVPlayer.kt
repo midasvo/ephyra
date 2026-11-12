@@ -408,6 +408,12 @@ class MPVPlayer(
     private var currentDurationMs: Long? = null
     private var currentCacheDurationMs: Long? = null
     private var initialCommands = mutableListOf<Array<String>>()
+
+    /**
+     * CE (#597): the subtitle files of the item being loaded that are marked forced. `sub-add`
+     * cannot pass that mark on, so the track list gets it back from here.
+     */
+    private val forcedSubtitleFiles = HashSet<String>()
     private var initialIndex: Int = 0
     private var initialSeekTo: Long = 0L
 
@@ -458,7 +464,7 @@ class MPVPlayer(
             when (property) {
                 "track-list" -> {
                     val hadVideo = currentTracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
-                    val newTracks = getTracks(value)
+                    val newTracks = getTracks(value, forcedSubtitleFiles)
                     currentTracks = newTracks
                     // The selected video track's frame rate, not the last video group's:
                     // mpv also lists attached pictures as 1fps video tracks.
@@ -1216,6 +1222,7 @@ class MPVPlayer(
         currentTracks = Tracks.EMPTY
         playbackParameters = PlaybackParameters.DEFAULT
         initialCommands.clear()
+        forcedSubtitleFiles.clear()
     }
 
     /** Prepares the player. */
@@ -1568,10 +1575,14 @@ class MPVPlayer(
                         /* command= */ "sub-add",
                         /* url= */ "${subtitle.uri}",
                         /* flags= */ "auto",
-                        /* title= */ "${subtitle.label}",
-                        /* lang= */ "${subtitle.language}",
+                        // CE (#597): a subtitle without a title has none, not the title "null".
+                        /* title= */ subtitle.label.orEmpty(),
+                        /* lang= */ subtitle.language.orEmpty(),
                     )
                 )
+                if (subtitle.selectionFlags and C.SELECTION_FLAG_FORCED != 0) {
+                    forcedSubtitleFiles.add("${subtitle.uri}")
+                }
             }
             // Only set the playlist index when the index is not the currently playing item.
             // Otherwise
@@ -2205,19 +2216,39 @@ class MPVPlayer(
             }
         }
 
-        private fun createTracksGroupfromMpvJson(json: JSONObject): Tracks.Group {
+        private fun createTracksGroupfromMpvJson(
+            json: JSONObject,
+            forcedSubtitleFiles: Set<String>,
+        ): Tracks.Group {
             val trackType = MPVTrackType.entries.first { it.type == json.optString("type") }
+
+            // CE (#597): mpv names a file added without a title after the file, and the "file" of
+            // a subtitle the server delivers is an address with the access key in it. Such a track
+            // has no title.
+            val externalFile = json.optNullableString("external-filename")
+            val title =
+                json.optNullableString("title")?.takeUnless {
+                    externalFile != null && externalFile.endsWith(it)
+                }
 
             // Base format shared between video, audio and subtitles
             val baseFormat =
                 Format.Builder()
                     .setId(json.optInt("id"))
-                    .setLabel(json.optNullableString("title"))
+                    .setLabel(title)
                     .setLanguage(json.optNullableString("lang"))
                     .setSelectionFlags(
                         (if (json.optBoolean("default")) C.SELECTION_FLAG_DEFAULT else 0) or
                             // CE (#451): the track dialog marks forced subtitles, as on ExoPlayer.
-                            (if (json.optBoolean("forced")) C.SELECTION_FLAG_FORCED else 0)
+                            // CE (#597): or a subtitle file added as forced, which mpv cannot
+                            // be told.
+                            (if (
+                                json.optBoolean("forced") || externalFile in forcedSubtitleFiles
+                            ) {
+                                C.SELECTION_FLAG_FORCED
+                            } else {
+                                0
+                            })
                     )
                     .setCodecs(json.optNullableString("codec"))
                     .build()
@@ -2264,14 +2295,17 @@ class MPVPlayer(
             )
         }
 
-        private fun getTracks(trackList: String): Tracks {
+        private fun getTracks(trackList: String, forcedSubtitleFiles: Set<String>): Tracks {
             var tracks = Tracks.EMPTY
             val trackGroups = mutableListOf<Tracks.Group>()
             try {
                 val currentTrackList = JSONArray(trackList)
                 for (index in 0 until currentTrackList.length()) {
                     val tracksGroup =
-                        createTracksGroupfromMpvJson(currentTrackList.getJSONObject(index))
+                        createTracksGroupfromMpvJson(
+                            currentTrackList.getJSONObject(index),
+                            forcedSubtitleFiles,
+                        )
                     trackGroups.add(tracksGroup)
                 }
                 if (trackGroups.isNotEmpty()) {
