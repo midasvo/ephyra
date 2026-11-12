@@ -14,6 +14,7 @@ Kept current. Follow these when you work on the matching part of the app.
 | [tablet/6-test-matrix.md](tablet/6-test-matrix.md) | The five test sizes, the AVD script and the acceptance checklist |
 | [tv-research/adr/](tv-research/adr) | The eight architecture decisions for the TV app |
 | [performance.md](performance.md) | The baseline profile, the benchmark and what to record in a performance PR |
+| [dev-environment.md](dev-environment.md) | The throwaway Jellyfin test server, its media and users, and the emulators |
 | [track-test-series.md](track-test-series.md) | Generated test series for track selection and subtitle styling |
 | [screenshots.md](screenshots.md) | How the README, website and Play listing screenshots are made |
 | [play-store.md](play-store.md) | Signing, uploading and the listing on Google Play |
