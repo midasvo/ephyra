@@ -105,4 +105,6 @@
     <string name="ce_add_server_error_local_network">Server not found. Local network access is off, which blocks addresses on your network.</string>
     <!-- %1$s is the app's name for the permission, %2$s the system's name for the setting -->
     <string name="ce_permission_permanently_denied">%1$s was denied. To use it, allow \"%2$s\" under Permissions in the system settings.</string>
+    <string name="ce_quick_connect_error_expired">The Quick Connect code has expired. Press Quick Connect for a new code.</string>
+    <string name="ce_quick_connect_error_disabled">Quick Connect is turned off on this server. Log in with your username and password.</string>
 </resources>

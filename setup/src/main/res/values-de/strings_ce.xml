@@ -58,4 +58,6 @@
     <string name="ce_local_network_off">Der Zugriff auf das lokale Netzwerk ist deaktiviert</string>
     <string name="ce_add_server_error_local_network">Server nicht gefunden. Der Zugriff auf das lokale Netzwerk ist deaktiviert, wodurch Adressen in Ihrem Netzwerk blockiert werden.</string>
     <string name="ce_permission_permanently_denied">%1$s wurde abgelehnt. Um die Funktion zu nutzen, erlauben Sie „%2$s“ unter Berechtigungen in den Systemeinstellungen.</string>
+    <string name="ce_quick_connect_error_expired">Der Code für die Schnellverbindung ist abgelaufen. Tippen Sie auf „Schnellverbindung“, um einen neuen Code zu erhalten.</string>
+    <string name="ce_quick_connect_error_disabled">Die Schnellverbindung ist auf diesem Server deaktiviert. Melden Sie sich mit Ihrem Benutzernamen und Passwort an.</string>
 </resources>

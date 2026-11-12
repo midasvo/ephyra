@@ -93,16 +93,22 @@ constructor(
         }
         quickConnectJob =
             viewModelScope.launch {
+                var step = QuickConnectStep.INITIATE
                 try {
                     var quickConnectState = repository.initiateQuickConnect()
-                    _state.emit(_state.value.copy(quickConnectCode = quickConnectState.code))
+                    // CE (#606): a new code replaces the error of the previous attempt.
+                    _state.emit(
+                        _state.value.copy(quickConnectCode = quickConnectState.code, error = null)
+                    )
 
+                    step = QuickConnectStep.POLL
                     while (!quickConnectState.authenticated) {
                         delay(5000L)
                         quickConnectState =
                             repository.getQuickConnectState(quickConnectState.secret)
                     }
 
+                    step = QuickConnectStep.LOGIN
                     repository.loginWithSecret(quickConnectState.secret)
 
                     _state.emit(_state.value.copy(quickConnectCode = null))
@@ -111,14 +117,17 @@ constructor(
                     throw e
                 } catch (e: Exception) {
                     Timber.e(e, "Quick connect failed")
-                    val message =
-                        connectionErrorText(e)
-                            ?: if (e.message != null) {
-                                UiText.DynamicString(e.message!!)
-                            } else {
-                                UiText.StringResource(CoreR.string.unknown_error)
-                            }
-                    _state.emit(_state.value.copy(quickConnectCode = null, error = message))
+                    // CE (#606): plain words, never the exception's own text.
+                    val message = connectionErrorText(e) ?: quickConnectErrorText(e, step)
+                    _state.update {
+                        it.copy(
+                            quickConnectCode = null,
+                            error = message,
+                            // Turned off on the server: the button would only fail again.
+                            quickConnectEnabled =
+                                it.quickConnectEnabled && !isQuickConnectOff(e, step),
+                        )
+                    }
                 }
             }
     }

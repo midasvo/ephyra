@@ -58,4 +58,6 @@
     <string name="ce_local_network_off">L\'accesso alla rete locale è disattivato</string>
     <string name="ce_add_server_error_local_network">Server non trovato. L\'accesso alla rete locale è disattivato e questo blocca gli indirizzi sulla tua rete.</string>
     <string name="ce_permission_permanently_denied">%1$s è stato negato. Per usarlo, consenti \"%2$s\" in Autorizzazioni nelle impostazioni di sistema.</string>
+    <string name="ce_quick_connect_error_expired">Il codice di Connessione Rapida è scaduto. Premi Connessione Rapida per ottenerne uno nuovo.</string>
+    <string name="ce_quick_connect_error_disabled">La Connessione Rapida è disattivata su questo server. Accedi con nome utente e password.</string>
 </resources>

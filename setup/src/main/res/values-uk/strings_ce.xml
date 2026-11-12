@@ -58,4 +58,6 @@
     <string name="ce_local_network_off">Доступ до локальної мережі вимкнено</string>
     <string name="ce_add_server_error_local_network">Сервер не знайдено. Доступ до локальної мережі вимкнено, тому адреси у вашій мережі заблоковано.</string>
     <string name="ce_permission_permanently_denied">Дозвіл «%1$s» відхилено. Щоб користуватися ним, дозвольте «%2$s» у розділі «Дозволи» в налаштуваннях системи.</string>
+    <string name="ce_quick_connect_error_expired">Термін дії коду Quick Connect минув. Натисніть Quick Connect, щоб отримати новий код.</string>
+    <string name="ce_quick_connect_error_disabled">Quick Connect вимкнено на цьому сервері. Увійдіть з іменем користувача та паролем.</string>
 </resources>

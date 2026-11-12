@@ -58,4 +58,6 @@
     <string name="ce_local_network_off">लोकल नेटवर्क की एक्सेस बंद है</string>
     <string name="ce_add_server_error_local_network">सर्वर नहीं मिला। लोकल नेटवर्क की एक्सेस बंद है, जिससे आपके नेटवर्क के पते ब्लॉक हो जाते हैं।</string>
     <string name="ce_permission_permanently_denied">%1$s की अनुमति नहीं दी गई। इसे इस्तेमाल करने के लिए सिस्टम सेटिंग में अनुमतियाँ के अंतर्गत \"%2$s\" की अनुमति दें।</string>
+    <string name="ce_quick_connect_error_expired">Quick Connect कोड की समय-सीमा समाप्त हो गई है। नया कोड पाने के लिए Quick Connect दबाएँ।</string>
+    <string name="ce_quick_connect_error_disabled">इस सर्वर पर Quick Connect बंद है। अपने उपयोगकर्ता नाम और पासवर्ड से लॉग इन करें।</string>
 </resources>
