@@ -55,6 +55,9 @@
     <string name="ce_local_network_denied">הגישה לרשת המקומית כבויה. בלעדיה אי אפשר למצוא שרתים ברשת שלך או להגיע אליהם.</string>
     <string name="ce_local_network_denied_where">בהגדרות המערכת היא נמצאת תחת הרשאות &gt; %1$s.</string>
     <string name="ce_local_network_allow">אישור גישה</string>
+    <string name="ce_local_network_off">הגישה לרשת המקומית כבויה</string>
     <string name="ce_add_server_error_local_network">השרת לא נמצא. הגישה לרשת המקומית כבויה, ולכן כתובות ברשת שלך חסומות.</string>
     <string name="ce_permission_permanently_denied">ההרשאה %1$s נדחתה. כדי להשתמש בה, יש לאשר את \"%2$s\" תחת הרשאות בהגדרות המערכת.</string>
+    <string name="ce_quick_connect_error_expired">תוקף הקוד של החיבור המהיר פג. לחצו על \"חיבור מהיר\" כדי לקבל קוד חדש.</string>
+    <string name="ce_quick_connect_error_disabled">החיבור המהיר כבוי בשרת הזה. התחברו עם שם המשתמש והסיסמה.</string>
 </resources>

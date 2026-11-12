@@ -111,4 +111,6 @@
         <item quantity="one">%d sikertelen</item>
         <item quantity="other">%d sikertelen</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Még nincs semmi letöltve</string>
+    <string name="ce_home_offline_empty_body">Nincs kapcsolat. A letöltött filmek és epizódok itt és a Letöltések között jelennek meg.</string>
 </resources>

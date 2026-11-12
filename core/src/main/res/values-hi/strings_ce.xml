@@ -111,4 +111,6 @@
         <item quantity="one">%d विफल</item>
         <item quantity="other">%d विफल</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">अभी तक कुछ भी डाउनलोड नहीं हुआ</string>
+    <string name="ce_home_offline_empty_body">आप ऑफ़लाइन हैं। आपकी डाउनलोड की गई फ़िल्में और एपिसोड यहाँ और डाउनलोड में दिखते हैं।</string>
 </resources>

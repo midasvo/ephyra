@@ -251,6 +251,15 @@ class SettingsViewModel @Inject constructor(
                                                     suffixPluralsRes = R.plurals.ce_days_count,
                                                     zeroLabelRes = R.string.ce_number_no_limit,
                                                 ),
+                                                // CE (#608)
+                                                PreferenceSwitch(
+                                                    nameStringResource =
+                                                        R.string.ce_pref_home_episode_images,
+                                                    descriptionStringRes =
+                                                        R.string.ce_pref_home_episode_images_summary,
+                                                    backendPreference =
+                                                        appPreferences.homeEpisodeImages,
+                                                ),
                                                 PreferenceSwitch(
                                                     nameStringResource = R.string.pref_tv_watch_next,
                                                     descriptionStringRes =

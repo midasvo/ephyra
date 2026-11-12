@@ -192,4 +192,6 @@
     <string name="ce_number_off">關閉</string>
     <string name="ce_pref_player_keep_landscape">播放器保持橫向</string>
     <string name="ce_pref_player_keep_landscape_summary">就算將平板電腦轉直，影片都係橫向播放</string>
+    <string name="ce_pref_home_episode_images">使用劇集圖片</string>
+    <string name="ce_pref_home_episode_images_summary">喺「繼續觀看」同「下一集」顯示單集嘅圖片，而唔係劇集嘅圖片</string>
 </resources>

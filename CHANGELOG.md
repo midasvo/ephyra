@@ -13,6 +13,63 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v2.4.4] — 2026-11-12
+
+Playback with ExoPlayer starts faster for files with Dolby Digital Plus audio in an mp4: they
+now play directly instead of going through the server, which on a TV box could take ten seconds
+or more before a picture. The rest are small fixes to the phone player, offline Home and the
+item pages.
+
+### Fixed
+- Player (ExoPlayer): an mp4 with Dolby Digital Plus (E-AC-3) audio plays directly. When a file
+  does go through the server, HEVC video is passed on as it is where the device can decode it,
+  instead of being re-encoded, and leaving the player ends the server's conversion at once
+  instead of a minute later (#589).
+- Player: the first key after a tap on the player works. Space pauses and an arrow seeks,
+  where that first key used to do nothing (#448).
+- Player: in a window too narrow for all the buttons in the top row, the row starts at its end,
+  so audio, subtitles and episodes are in view, and a fading edge shows there is more (#456).
+- Player: at a large font size the title no longer leaves the window at the top (#585).
+- Home: offline with nothing downloaded, Home says so and points to Downloads (#585).
+- Item pages: the back and home buttons are readable on a page without artwork, also in the
+  light theme (#585).
+
+## [v2.4.3] — 2026-11-12
+
+A quick follow-up to v2.4.2. Progress watched from a download after the network dropped in the
+middle of playback was sent to the server and then overwritten by the server a few minutes
+later; that is fixed. Downloads finish and tidy up more reliably, the players recover better
+after a lost connection, and tablets get a switch to keep the player in landscape.
+
+### Added
+- Player: "Keep the player in landscape" in the player settings, off by default, for tablets and
+  unfolded foldables. Where the display does not allow it, the player follows the device (#363).
+
+### Fixed
+- Downloads: progress synced after the network was lost during playback is no longer replaced
+  by an older position a few minutes later. The app now ends the playback session the server
+  still had open before it sends the progress (#584).
+- Downloads: the download service runs until the queue is done and leaves no notification
+  behind, and it waits for the queue to restore when the system restarts it (#560).
+- Downloads: finished files and artwork that the database lost track of are cleaned up (#379).
+- Offline: Home no longer shows the remembered online rows, which could not be opened (#428).
+- Player: on mpv, Play and the wait for the network load the item again after a lost connection
+  (#474).
+- Player: the media notification no longer crashes a player in the background (#568).
+- Player: a pause made in the background stays after the return, a repeated end-of-item report
+  no longer prompts again, and auto-enter picture-in-picture follows a gesture setting changed
+  while the player is open (#477, #480).
+- Player: the seek bar no longer shows through the episode sheet (#523).
+- Setup: Add server says that local network access is off when that is what blocks it (#376).
+- TV: the player shows a buffering indicator, and pause works while it buffers (#486).
+- TV: the still-watching prompt counts down to the player's own deadline (#477).
+- TV: the drawer's icons and labels keep inside the safe area, Right from the expanded drawer
+  reaches a poster beside it, and its profile item shows the server name under the user (#539,
+  #567).
+- TV: the login and add-server fields open the keyboard on OK instead of on focus, Left during
+  a cold start opens the drawer on Home, and the overview has no focus ring while its full text
+  is open (#583).
+
 ## [v2.4.2] — 2026-11-11
 
 A second release of fixes from the run-through of the app on phone, tablet and TV. What you
@@ -864,6 +921,8 @@ Initial CE fork off findroid `1.0.2`. These rapid early iterations established t
 `nl.midasvo.findroid.ce` application ID, downloads and SD-card storage improvements, and ongoing
 tracking of upstream. See the git history between the corresponding tags for commit-level detail.
 
+[v2.4.4]: https://github.com/midasvo/ephyra/releases/tag/v2.4.4
+[v2.4.3]: https://github.com/midasvo/ephyra/releases/tag/v2.4.3
 [v2.4.2]: https://github.com/midasvo/ephyra/releases/tag/v2.4.2
 [v2.4.1]: https://github.com/midasvo/ephyra/releases/tag/v2.4.1
 [v2.4.0]: https://github.com/midasvo/ephyra/releases/tag/v2.4.0

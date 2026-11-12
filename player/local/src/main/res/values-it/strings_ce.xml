@@ -30,4 +30,5 @@
     </plurals>
     <string name="ce_track_forced">Forzati</string>
     <string name="ce_player_connection_lost">Connessione persa. La riproduzione riprenderà quando la rete tornerà disponibile.</string>
+    <string name="ce_player_try_again">Riprova</string>
 </resources>

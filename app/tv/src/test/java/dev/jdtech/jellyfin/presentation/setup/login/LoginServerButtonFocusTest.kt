@@ -3,10 +3,10 @@ package dev.jdtech.jellyfin.presentation.setup.login
 import android.app.Application
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasClickAction
-import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
@@ -33,7 +33,9 @@ import org.robolectric.annotation.Config
 class LoginServerButtonFocusTest {
     @get:Rule val rule = createComposeRule()
 
-    private val username = hasSetTextAction() and hasText("Username")
+    // A text field, also while it is read-only (it takes text after OK).
+    private val username =
+        SemanticsMatcher.keyIsDefined(SemanticsProperties.EditableText) and hasText("Username")
     private val loginButton = hasText("Login") and hasClickAction()
     private val quickConnectButton = hasText("Quick Connect") and hasClickAction()
 

@@ -85,6 +85,64 @@ class MpvErrorRecoveryTest {
     }
 
     @Test
+    fun `a first load that cannot connect is a network error (#576)`() {
+        // The lines mpv logged on the emulator for the next episode of a queue: with the server
+        // gone, and in airplane mode. The last line, which is the message, does not say why.
+        val failedToOpen = "stream: Failed to open http://10.0.2.2:8096/videos/1/master.m3u8"
+        for (reason in listOf("Connection refused", "Network is unreachable")) {
+            recovery.onPrepare(itemCount = 2)
+            val connect = "ffmpeg: tcp: Connection to tcp://10.0.2.2:8096 failed: $reason"
+
+            assertEquals(
+                PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+                recovery.loadErrorCode(failedToOpen, listOf(connect, failedToOpen)),
+            )
+        }
+        // END_FILE came first and the report was held for this line alone.
+        assertEquals(
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+            recovery.loadErrorCode("ffmpeg: tcp: Failed to resolve hostname jellyfin.example: ..."),
+        )
+    }
+
+    @Test
+    fun `a first load the server answers with an error keeps its plain error`() {
+        recovery.onPrepare(itemCount = 1)
+
+        // Seen for a file that is no video, whose transcode the server answers with a 500.
+        assertEquals(
+            PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+            recovery.loadErrorCode("lavf: avformat_open_input() failed"),
+        )
+        val failedToOpen = "stream: Failed to open http://10.0.2.2:8096/videos/1/stream"
+        assertEquals(
+            PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+            recovery.loadErrorCode(
+                failedToOpen,
+                listOf("ffmpeg: http: HTTP error 404 Not Found", failedToOpen),
+            ),
+        )
+        // A URL that only mentions tcp is no line from ffmpeg's TCP layer.
+        assertEquals(
+            PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+            recovery.loadErrorCode("stream: Failed to open http://host/ffmpeg: tcp: x"),
+        )
+    }
+
+    @Test
+    fun `a first load that could not connect is loaded again as after a lost connection`() {
+        val code = recovery.loadErrorCode("ffmpeg: tcp: Connection to tcp://h:1 failed: x")
+        recovery.onError(1, code)
+
+        assertEquals(1, recovery.onPrepare(itemCount = 2))
+        // The retry fails before mpv logs anything: still a network error, so the wait goes on.
+        assertEquals(
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+            recovery.loadErrorCode(null),
+        )
+    }
+
+    @Test
     fun `Play after a plain load error retries with the plain error again`() {
         recovery.onError(0, PlaybackException.ERROR_CODE_IO_UNSPECIFIED)
         recovery.onPrepare(itemCount = 1)

@@ -121,4 +121,6 @@
         <item quantity="few">Neuspešno: %d</item>
         <item quantity="other">Neuspešno: %d</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Prenesenega še ni nič</string>
+    <string name="ce_home_offline_empty_body">Brez povezave ste. Filmi in epizode, ki jih prenesete, so prikazani tukaj in v Prenosih.</string>
 </resources>

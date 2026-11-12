@@ -106,4 +106,6 @@
     <plurals name="ce_downloads_failed_count">
         <item quantity="other">%d件失敗</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">まだ何もダウンロードしていません</string>
+    <string name="ce_home_offline_empty_body">オフラインです。ダウンロードした映画やエピソードはここと「ダウンロード」に表示されます。</string>
 </resources>

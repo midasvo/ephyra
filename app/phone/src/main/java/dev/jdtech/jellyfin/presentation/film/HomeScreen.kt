@@ -25,7 +25,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
@@ -51,6 +53,7 @@ import dev.jdtech.jellyfin.models.HomeItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.film.components.EmptyState
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
+import dev.jdtech.jellyfin.presentation.film.components.ErrorCardInitialHeight
 import dev.jdtech.jellyfin.presentation.film.components.ErrorState
 import dev.jdtech.jellyfin.presentation.film.components.HomeCarousel
 import dev.jdtech.jellyfin.presentation.film.components.HomeHeader
@@ -132,9 +135,18 @@ internal fun HomeScreenLayout(
     // Library do, so the header keeps its width and the server name its room. With nothing on
     // screen the list shows ErrorState instead.
     val showErrorCard = state.error != null && !state.isEmpty
+    // CE (#571): the rows start under the card at its real height, which is more than one row with
+    // a large font or with the "Allow access" button.
+    val density = LocalDensity.current
+    var errorCardHeight by remember { mutableStateOf(ErrorCardInitialHeight) }
     val contentPaddingTop by
         animateDpAsState(
-            targetValue = if (showErrorCard) safePadding.top + 144.dp else scrimHeight,
+            targetValue =
+                if (showErrorCard) {
+                    safePadding.top + 80.dp + errorCardHeight + MaterialTheme.spacings.medium
+                } else {
+                    scrimHeight
+                },
             label = "content_padding",
         )
 
@@ -195,6 +207,7 @@ internal fun HomeScreenLayout(
                                 itemsPadding = itemsPadding,
                                 onAction = onAction,
                                 modifier = Modifier.animateItem(),
+                                preferThumb = !state.useEpisodeImages,
                             )
                         is HomeItem.ViewItem ->
                             HomeView(
@@ -216,6 +229,14 @@ internal fun HomeScreenLayout(
                                 error = error,
                                 onRetryClick = { onAction(HomeAction.OnRetryClick) },
                                 modifier = placeholderModifier,
+                            )
+                        } else if (state.nothingDownloaded) {
+                            // CE: offline, Home's rows are the downloads.
+                            EmptyState(
+                                icon = CoreR.drawable.ic_download,
+                                title = stringResource(CoreR.string.ce_home_offline_empty_title),
+                                modifier = placeholderModifier,
+                                body = stringResource(CoreR.string.ce_home_offline_empty_body),
                             )
                         } else {
                             EmptyState(
@@ -241,7 +262,9 @@ internal fun HomeScreenLayout(
                             start = paddingStart,
                             top = safePadding.top + 80.dp,
                             end = paddingEnd,
-                        ),
+                        )
+                        .onSizeChanged { errorCardHeight = with(density) { it.height.toDp() } },
+                error = state.error,
             )
         }
 

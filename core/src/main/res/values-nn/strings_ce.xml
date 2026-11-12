@@ -111,4 +111,6 @@
         <item quantity="one">%d mislukka</item>
         <item quantity="other">%d mislukka</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Ingenting lasta ned enno</string>
+    <string name="ce_home_offline_empty_body">Du er fråkopla. Filmar og episodar du lastar ned, viser seg her og under Nedlastingar.</string>
 </resources>

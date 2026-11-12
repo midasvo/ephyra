@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin
 
 import android.animation.TimeInterpolator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.AppOpsManager
 import android.app.PictureInPictureParams
@@ -26,6 +27,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Space
@@ -37,6 +39,7 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModelProvider
+import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -407,6 +410,20 @@ class PlayerActivity : BasePlayerActivity() {
                                 updateControlsUnderEpisodeSheet()
                             }
                         },
+                        wantsFocus = episodeSheetWantsFocus.value,
+                        mayTakeFocus = {
+                            episodeSheetTakesFocus(
+                                requested = episodeSheetWantsFocus.value,
+                                sheetOpen = episodeSheetBackCallback.isEnabled,
+                                focusParked = currentFocus.let { it == null || it === binding.playerView },
+                            )
+                        },
+                        onFocusSettled = { focused ->
+                            episodeSheetWantsFocus.value = false
+                            // The user opened the sheet from the keyboard, so the row is a
+                            // control they chose: the arrows and Space go to it (#448).
+                            if (focused) keyboardFocusChosen = true
+                        },
                     )
                 }
             }
@@ -424,60 +441,166 @@ class PlayerActivity : BasePlayerActivity() {
     private fun closeEpisodeSheet(animate: Boolean = true) {
         if (!episodeSheetBackCallback.isEnabled) return
         episodeSheetBackCallback.isEnabled = false
+        episodeSheetWantsFocus.value = false
+        val hadFocus = binding.episodeSheet.hasFocus()
         episodeSheetVisible.targetState = false
         if (!animate) binding.episodeSheet.isVisible = false
         // Restarts the hide timer when the controls are showing.
         binding.playerView.controllerShowTimeoutMs = controlsHideTimeoutMs
         updateControlsUnderEpisodeSheet(animate)
+        // CE (#588): focus goes back where it came from, not to whatever Android finds first.
+        if (hadFocus && !episodesButton.requestFocus()) parkFocusOnPlayerView(force = true)
     }
+
+    /**
+     * CE (#588): the sheet was opened from the keyboard and has yet to focus the playing episode's
+     * row. A Compose state: the sheet acts on it when its rows are there.
+     */
+    private val episodeSheetWantsFocus = mutableStateOf(false)
 
     /** CE (#456): the sheet's bounds in the window, from the sheet; null until it is laid out. */
     private var episodeSheetBounds: Rect? = null
 
     /**
-     * CE (#456): the sheet is 92 % opaque (design §9), so the top-row controls under it showed
-     * through. While it is open, those fade out with the sheet's motion and leave the focus order;
-     * closing brings them back, at once when [animate] is false. The seek bar is left as it is.
+     * CE (#456, #523): the sheet is 92 % opaque (design §9), so the controls under it showed
+     * through. While it is open, the top-row and transport buttons it covers or cuts, the skip
+     * button and the whole seek row (the time labels and the seek bar, so the bar is never half
+     * visible) fade out with the sheet's motion and leave the focus order; closing brings them
+     * back, at once when [animate] is false.
      */
     private fun updateControlsUnderEpisodeSheet(animate: Boolean = true) {
-        val sheet = episodeSheetBounds?.takeIf { episodeSheetBackCallback.isEnabled }
-        val duration =
-            (if (sheet != null) EphyraMotion.DURATION_MEDIUM else EphyraMotion.DURATION_SHORT)
-                .toLong()
-        val easing = if (sheet != null) EphyraMotion.EasingEnter else EphyraMotion.EasingExit
-        val interpolator = TimeInterpolator { easing.transform(it) }
-        val location = IntArray(2)
-
-        val extraButtons = binding.playerView.findViewById<ViewGroup>(R.id.extra_buttons)
-        val topRow = extraButtons.getChildAt(0) as ViewGroup
-        for (i in 0 until topRow.childCount) {
-            val view = topRow.getChildAt(i)
-            if (view is Space) continue
-            view.getLocationInWindow(location)
-            val bounds =
-                Rect(location[0], location[1], location[0] + view.width, location[1] + view.height)
-            val covered = sheet != null && isUnderEpisodeSheet(bounds, sheet)
-            if (covered && view.isFocused) {
-                // Opened from the keyboard: the Episodes button has focus. It moves into the
-                // sheet once the sheet is laid out, or to the player view while the season is
-                // still loading, rather than to the first control.
-                binding.episodeSheet.post {
-                    if (!binding.episodeSheet.requestFocus()) parkFocusOnPlayerView()
-                    if (episodeSheetBackCallback.isEnabled) view.isFocusable = false
+        // The sheet also counts for what lies past the window's edge on its side: top-row buttons
+        // scrolled out of a narrow window there would come under the sheet with the focus.
+        val sheet =
+            episodeSheetBounds
+                ?.takeIf { episodeSheetBackCallback.isEnabled }
+                ?.let { Rect(it) }
+                ?.apply {
+                    if (right >= binding.root.width) right = Int.MAX_VALUE
+                    else if (left <= 0) left = Int.MIN_VALUE
                 }
-            } else if (view is ImageButton) {
-                view.isFocusable = !covered
+        val playerView = binding.playerView
+        val topRow =
+            playerView.findViewById<ViewGroup>(R.id.extra_buttons).getChildAt(0) as ViewGroup
+        val transport = playerView.findViewById<ViewGroup>(R.id.transport_controls)
+        val seekRow = playerView.findViewById<View>(R.id.seek_row)
+        val controls =
+            (topRow.children + transport.children).filter { it !is Space } +
+                seekRow +
+                skipSegmentButton
+        val bounds = controls.associateWith { it.boundsInWindow() }
+        val covered = controlsUnderEpisodeSheet(bounds, sheet)
+        for (view in bounds.keys) setUnderEpisodeSheet(view, view in covered, animate)
+    }
+
+    /**
+     * CE: a top row too narrow for every button starts scrolled to its end, and stays there through
+     * a resize or rotation until the user scrolls it (by touch, or by moving focus to a button out
+     * of view, which the scroll view brings in). Scrolling also moves buttons under or out from
+     * under the open episode sheet (#456).
+     */
+    private fun configureTopRowScroll() {
+        val topRow = binding.playerView.findViewById<HorizontalScrollView>(R.id.extra_buttons)
+        val buttons = topRow.getChildAt(0)
+        fun maxScroll() =
+            topRowMaxScroll(
+                contentWidth = buttons.width,
+                viewportWidth = topRow.width - topRow.paddingLeft - topRow.paddingRight,
+            )
+        var followsEnd = true
+        topRow.setOnScrollChangeListener { _, scrollX, _, _, _ ->
+            followsEnd = topRowFollowsEnd(scrollX, maxScroll())
+            if (episodeSheetBackCallback.isEnabled) updateControlsUnderEpisodeSheet()
+        }
+        val keepAtEnd =
+            View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                if (followsEnd) topRow.scrollTo(maxScroll(), 0)
             }
-            view.importantForAccessibility =
-                if (covered) View.IMPORTANT_FOR_ACCESSIBILITY_NO
-                else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
-            val alpha = if (covered) 0f else 1f
-            view.animate().cancel()
-            if (animate) {
-                view.animate().alpha(alpha).setDuration(duration).setInterpolator(interpolator)
-            } else {
-                view.alpha = alpha
+        topRow.addOnLayoutChangeListener(keepAtEnd)
+        buttons.addOnLayoutChangeListener(keepAtEnd)
+    }
+
+    private fun View.boundsInWindow(): Rect {
+        val location = IntArray(2)
+        getLocationInWindow(location)
+        return Rect(location[0], location[1], location[0] + width, location[1] + height)
+    }
+
+    /** The running fade of each control the episode sheet hides or brings back. */
+    private val episodeSheetFades = HashMap<View, ValueAnimator>()
+
+    /** The controls the episode sheet hides now, faded out or on their way. */
+    private val hiddenUnderEpisodeSheet = HashSet<View>()
+
+    /**
+     * Hides [view] under the open episode sheet, or brings it back. The fade is the view's
+     * transition alpha, which multiplies its alpha: media3 sets the alpha of the transport
+     * buttons itself (a disabled Next is dimmed), and the visibility other code sets is not
+     * touched either. A hidden control takes no focus and is not in the accessibility tree.
+     * Nothing happens to a control that is already where it should be, so a fade goes on.
+     */
+    private fun setUnderEpisodeSheet(view: View, covered: Boolean, animate: Boolean) {
+        val changed =
+            if (covered) hiddenUnderEpisodeSheet.add(view) else hiddenUnderEpisodeSheet.remove(view)
+        if (!changed && animate) return
+        val hadFocus = view.hasFocus()
+        if (covered && view is ViewGroup) {
+            // CE (#523): a drag on the seek bar that is still going on ends without a seek;
+            // disabling the bar is media3's way to cancel one.
+            val timeBar = view.findViewById<DefaultTimeBar>(R.id.exo_progress)
+            if (timeBar.isEnabled) {
+                timeBar.isEnabled = false
+                timeBar.isEnabled = true
             }
+        }
+        if (covered && hadFocus) {
+            // Opened from the keyboard: the Episodes button has focus. It moves to the player
+            // view, rather than to the first control.
+            // CE (#588): the sheet takes it from there, for the playing episode's row, once the
+            // rows are there. Asking the sheet's view for focus instead found nothing to focus
+            // on the first open, and the first row on a later one.
+            binding.episodeSheet.post {
+                parkFocusOnPlayerView()
+                if (episodeSheetBackCallback.isEnabled) {
+                    view.setFocusBlocked(true)
+                    episodeSheetWantsFocus.value = true
+                }
+            }
+        } else {
+            view.setFocusBlocked(covered)
+        }
+        view.importantForAccessibility =
+            when {
+                !covered -> View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                view is ViewGroup -> View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+                else -> View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }
+
+        val alpha = if (covered) 0f else 1f
+        episodeSheetFades.remove(view)?.cancel()
+        if (!animate || view.transitionAlpha == alpha) {
+            view.transitionAlpha = alpha
+            return
+        }
+        val easing = if (covered) EphyraMotion.EasingEnter else EphyraMotion.EasingExit
+        val fade = ValueAnimator.ofFloat(view.transitionAlpha, alpha)
+        fade.duration =
+            (if (covered) EphyraMotion.DURATION_MEDIUM else EphyraMotion.DURATION_SHORT).toLong()
+        fade.interpolator = TimeInterpolator { easing.transform(it) }
+        fade.addUpdateListener { view.transitionAlpha = it.animatedValue as Float }
+        episodeSheetFades[view] = fade
+        fade.start()
+    }
+
+    /** Keeps focus off a control, or off everything in a group, or lets it back. */
+    private fun View.setFocusBlocked(blocked: Boolean) {
+        when (this) {
+            is ViewGroup ->
+                descendantFocusability =
+                    if (blocked) ViewGroup.FOCUS_BLOCK_DESCENDANTS
+                    else ViewGroup.FOCUS_BEFORE_DESCENDANTS
+            is ImageButton,
+            is Button -> isFocusable = !blocked
         }
     }
 
@@ -558,8 +681,10 @@ class PlayerActivity : BasePlayerActivity() {
         // touch mode (the back button, with the controls up), play/pause when the controls show,
         // the next control when the focused one hides. Move focus back to the player view, so only
         // a control the user moved to with Tab or the arrows has focus.
-        binding.playerView.viewTreeObserver.addOnTouchModeChangeListener {
+        binding.playerView.isFocusableInTouchMode = true
+        binding.playerView.viewTreeObserver.addOnTouchModeChangeListener { inTouchMode ->
             keyboardFocusChosen = false
+            keepFocusThroughTouchMode(inTouchMode)
         }
         binding.playerView.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
             val playerView = binding.playerView
@@ -609,6 +734,17 @@ class PlayerActivity : BasePlayerActivity() {
         val qualityButton = binding.playerView.findViewById<ImageButton>(R.id.btn_quality)
         val qualitySpace = binding.playerView.findViewById<Space>(R.id.space_quality)
         skipSegmentButton = binding.playerView.findViewById(R.id.btn_skip_segment)
+        // CE (#523): the skip button can appear while the episode sheet is open, and never shows
+        // under it; the other controls can move under it or away, when the window is resized.
+        skipSegmentButton.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+            val sheet = episodeSheetBounds?.takeIf { episodeSheetBackCallback.isEnabled }
+            val covered = sheet != null && isUnderEpisodeSheet(view.boundsInWindow(), sheet)
+            setUnderEpisodeSheet(view, covered, animate = false)
+        }
+        binding.playerView.viewTreeObserver.addOnGlobalLayoutListener {
+            if (episodeSheetBackCallback.isEnabled) updateControlsUnderEpisodeSheet()
+        }
+        configureTopRowScroll()
         val pipButton = binding.playerView.findViewById<ImageButton>(R.id.btn_pip)
         val lockButton = binding.playerView.findViewById<ImageButton>(R.id.btn_lockview)
         val unlockButton = binding.playerView.findViewById<ImageButton>(R.id.btn_unlock)
@@ -988,7 +1124,8 @@ class PlayerActivity : BasePlayerActivity() {
      *
      * Any key but the media keys and Escape also shows the controls, or keeps them up. While the
      * controls are showing and the user moved focus to one of them (with Tab), the arrows and Space
-     * go to that control; focus Android gave a control by itself does not count (#448). With the
+     * go to that control; focus Android gave a control by itself does not count (#448). A row of
+     * the open episode sheet is such a control too (#588). With the
      * controls locked only L, Escape and the media keys do anything, and Space presses Unlock or a
      * skip button only when the user moved to it.
      */
@@ -1020,7 +1157,14 @@ class PlayerActivity : BasePlayerActivity() {
             keyGoesToFocusedControl(
                 focusChosenByKeyboard = keyboardFocusChosen,
                 focusOnControl =
-                    currentFocus.let { it != null && it !== playerView && it.isInside(playerView) },
+                    focusIsOnControl(
+                        insideControls =
+                            currentFocus.let {
+                                it != null && it !== playerView && it.isInside(playerView)
+                            },
+                        insideEpisodeSheet = currentFocus?.isInside(binding.episodeSheet) == true,
+                        episodeSheetOpen = episodeSheetBackCallback.isEnabled,
+                    ),
                 controlsShowing = playerView.isControllerFullyVisible,
             )
         viewModel.markUserInteraction()
@@ -1093,14 +1237,33 @@ class PlayerActivity : BasePlayerActivity() {
      * Moves focus from a control to the player view itself, not its first focusable child, so no
      * control has focus until the user moves to one (#448). Focus outside the player stays put.
      */
-    private fun parkFocusOnPlayerView() {
+    private fun parkFocusOnPlayerView(force: Boolean = false) {
         keyboardFocusChosen = false
         val playerView = binding.playerView
-        if (currentFocus?.isInside(playerView) != true) return
+        if (!force && currentFocus?.isInside(playerView) != true) return
         val focusability = playerView.descendantFocusability
         playerView.descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
         playerView.requestFocus()
         playerView.descendantFocusability = focusability
+    }
+
+    /**
+     * CE: the first Space (or arrow, Tab, Enter) after a touch did nothing. That key ends touch
+     * mode, and when nothing has focus, or a group that hands focus on to its children, Android
+     * gives a control focus and drops the key before [onPlayerKey] sees it. So the player view
+     * keeps focus in touch mode (Android moves a control's focus to it, as it is focusable in touch
+     * mode), and for the key that ends touch mode it keeps focus itself, so the key goes on.
+     */
+    private fun keepFocusThroughTouchMode(inTouchMode: Boolean) {
+        val playerView = binding.playerView
+        if (inTouchMode) {
+            if (currentFocus == null) playerView.requestFocus()
+            return
+        }
+        if (currentFocus !== playerView) return
+        val focusability = playerView.descendantFocusability
+        playerView.descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
+        playerView.post { playerView.descendantFocusability = focusability }
     }
 
     private fun isArrowKey(keyCode: Int): Boolean =

@@ -116,4 +116,6 @@
         <item quantity="few">%d zlyhali</item>
         <item quantity="other">%d zlyhalo</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Zatiaľ nič stiahnuté</string>
+    <string name="ce_home_offline_empty_body">Ste offline. Filmy a epizódy, ktoré si stiahnete, sa zobrazia tu a v Stiahnutých.</string>
 </resources>

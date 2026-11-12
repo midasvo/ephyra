@@ -74,6 +74,7 @@ import dev.jdtech.jellyfin.ce.presentation.film.SearchScreen
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
 import dev.jdtech.jellyfin.ce.ui.components.UserAvatar
+import dev.jdtech.jellyfin.ce.ui.focus.DirectionKeyClock
 import dev.jdtech.jellyfin.ce.ui.focus.LocalRestoreFocusSuppressed
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraFocusedBorder
 import dev.jdtech.jellyfin.ce.ui.tvSafeAreaPadding
@@ -381,13 +382,31 @@ fun MainScreenLayout(
                     Modifier.fillMaxHeight()
                         .focusProperties {
                             right = contentFocusRequester
+                            // A D-pad key while nothing had focus lands on the shown destination,
+                            // as a move from the content does, not on the first item (profile).
+                            onEnter = {
+                                if (
+                                    requestedFocusDirection != FocusDirection.Enter &&
+                                        !drawerFocus.contentHasFocus &&
+                                        drawerFocus.keyJustPressed()
+                                ) {
+                                    drawerRequester(activeDestinationKey).tryRequestFocus()
+                                }
+                            }
                             exit = { direction ->
                                 if (direction == FocusDirection.Right) contentFocusRequester
                                 else FocusRequester.Default
                             }
                         }
                         .focusGroup()
-                        .onFocusChanged { drawerFocus.onFocusChanged(it.hasFocus) }
+                        .onFocusChanged {
+                            drawerFocus.onFocusChanged(it.hasFocus)
+                            // A key at the very start of the app can put focus here before the
+                            // drawer follows it: it stayed collapsed, holding focus.
+                            if (it.hasFocus && drawerState.currentValue == DrawerValue.Closed) {
+                                coroutineScope.launch { drawerState.setValue(DrawerValue.Open) }
+                            }
+                        }
                         // #539: the expanded items end at 292 dp, right of a 150 dp poster at the
                         // page's 128 dp (Favorites), so a plain Right can find nothing right of the
                         // item and leave focus in the drawer. Then the content is entered instead.
@@ -410,16 +429,18 @@ fun MainScreenLayout(
                         .testTag("main_drawer_content"),
                 horizontalAlignment = Alignment.Start,
             ) {
-                // Profile header: user + server, OK opens user switch
-                NavigationDrawerItem(
-                    selected = false,
+                // Profile header: user + server, OK opens user switch. Two lines, so its own item
+                // (#567).
+                DrawerProfileItem(
+                    userName = user?.name.orEmpty(),
+                    serverName = server?.name,
                     onClick = {
                         returnFocusTo = ITEM_PROFILE
                         navigateToUsers()
                     },
                     leadingContent = {
-                        // The drawer gives leading content a 24 dp box; the 32 dp face overflows it
-                        // evenly (requiredSize centres), so the rail and the item height stay put.
+                        // The 32 dp face overflows the 24 dp box evenly (requiredSize centres), so
+                        // the rail stays put.
                         Crossfade(
                             targetState = user,
                             animationSpec =
@@ -445,29 +466,10 @@ fun MainScreenLayout(
                             }
                         }
                     },
-                    border = ephyraDrawerItemBorder(),
                     modifier =
                         Modifier.focusRequester(profileFocusRequester)
                             .testTag("drawer_item_profile"),
-                ) {
-                    Column(modifier = Modifier.padding(start = 8.dp)) {
-                        Text(
-                            text = user?.name.orEmpty(),
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        server?.name?.let { serverName ->
-                            Text(
-                                text = serverName,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -650,6 +652,7 @@ fun MainScreenLayout(
                 Modifier.fillMaxSize()
                     .padding(start = ClosedDrawerWidth)
                     .focusRequester(contentFocusRequester)
+                    .onFocusChanged { drawerFocus.contentHasFocus = it.hasFocus }
                     .focusProperties {
                         left = activeDrawerRequester
                         exit = { direction ->
@@ -721,6 +724,9 @@ private class DrawerFocus {
     private var hasFocus = false
     private var directionKeyAt: Long? = null
 
+    /** Whether the page beside the drawer has focus. */
+    var contentHasFocus = false
+
     /** Main is about to put focus on a drawer item, or moves it inside the drawer. */
     fun hold() {
         if (hasFocus) holds = true else requested = true
@@ -732,11 +738,19 @@ private class DrawerFocus {
         if (hasFocus) holds = true
     }
 
+    /**
+     * A D-pad key came just now, so focus that moves now is the user's. The activity also sees the
+     * keys that reach no key modifier here, while nothing has focus.
+     */
+    fun keyJustPressed(): Boolean {
+        val keyAt = directionKeyAt
+        return (keyAt != null && SystemClock.uptimeMillis() - keyAt < DIRECTION_KEY_MS) ||
+            DirectionKeyClock.pressedWithin(DIRECTION_KEY_MS)
+    }
+
     fun onFocusChanged(focused: Boolean) {
         if (focused && !hasFocus) {
-            val keyAt = directionKeyAt
-            val byKey = keyAt != null && SystemClock.uptimeMillis() - keyAt < DIRECTION_KEY_MS
-            holds = requested || byKey
+            holds = requested || keyJustPressed()
             requested = false
         }
         if (!focused) holds = false

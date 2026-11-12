@@ -50,6 +50,20 @@ fun ItemTopBar(
 ) {
     val safePadding = rememberSafePadding()
     val backgroundColor = MaterialTheme.colorScheme.background
+    // CE: the dark circle is made for sitting on artwork (VISION §5); on the page's own
+    // background the buttons take the surface roles, so they read in the light theme too.
+    val buttonColors =
+        if (overArtwork) {
+            IconButtonDefaults.iconButtonColors(
+                containerColor = Color.Black.copy(alpha = 0.5f),
+                contentColor = Color.White,
+            )
+        } else {
+            IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            )
+        }
 
     Box(modifier = Modifier.fillMaxWidth()) {
         // Keeps the status bar readable on top of artwork.
@@ -86,14 +100,7 @@ fun ItemTopBar(
                     )
         ) {
             if (hasBackButton) {
-                IconButton(
-                    onClick = onBackClick,
-                    colors =
-                        IconButtonDefaults.iconButtonColors(
-                            containerColor = Color.Black.copy(alpha = 0.5f),
-                            contentColor = Color.White,
-                        ),
-                ) {
+                IconButton(onClick = onBackClick, colors = buttonColors) {
                     Icon(
                         painter = painterResource(CoreR.drawable.ic_arrow_left),
                         contentDescription = stringResource(CoreR.string.navigate_back),
@@ -101,14 +108,7 @@ fun ItemTopBar(
                 }
             }
             if (hasHomeButton) {
-                IconButton(
-                    onClick = onHomeClick,
-                    colors =
-                        IconButtonDefaults.iconButtonColors(
-                            containerColor = Color.Black.copy(alpha = 0.5f),
-                            contentColor = Color.White,
-                        ),
-                ) {
+                IconButton(onClick = onHomeClick, colors = buttonColors) {
                     Icon(
                         painter = painterResource(CoreR.drawable.ic_home),
                         contentDescription = stringResource(CoreR.string.title_home),

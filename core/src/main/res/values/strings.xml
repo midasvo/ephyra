@@ -226,4 +226,7 @@
         <item quantity="one">%d failed</item>
         <item quantity="other">%d failed</item>
     </plurals>
+    <!-- CE: Home while offline, with nothing downloaded from this server -->
+    <string name="ce_home_offline_empty_title">Nothing downloaded yet</string>
+    <string name="ce_home_offline_empty_body">You\'re offline. Movies and episodes you download show up here and in Downloads.</string>
 </resources>

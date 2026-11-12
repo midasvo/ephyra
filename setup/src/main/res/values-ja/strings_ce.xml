@@ -55,6 +55,9 @@
     <string name="ce_local_network_denied">ローカルネットワークへのアクセスがオフになっています。オフのままでは、ネットワーク上のサーバーを検出することも接続することもできません。</string>
     <string name="ce_local_network_denied_where">システム設定では「権限」&gt;「%1$s」にあります。</string>
     <string name="ce_local_network_allow">アクセスを許可</string>
+    <string name="ce_local_network_off">ローカルネットワークへのアクセスがオフになっています</string>
     <string name="ce_add_server_error_local_network">サーバーが見つかりません。ローカルネットワークへのアクセスがオフのため、ネットワーク上のアドレスがブロックされています。</string>
     <string name="ce_permission_permanently_denied">%1$sは拒否されました。使用するには、システム設定の「権限」で「%2$s」を許可してください。</string>
+    <string name="ce_quick_connect_error_expired">Quick Connectのコードの有効期限が切れました。新しいコードを取得するには、Quick Connectを押してください。</string>
+    <string name="ce_quick_connect_error_disabled">このサーバーではQuick Connectが無効になっています。ユーザー名とパスワードでログインしてください。</string>
 </resources>

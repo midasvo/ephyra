@@ -55,6 +55,9 @@
     <string name="ce_local_network_denied">Juurdepääs kohtvõrgule on välja lülitatud. Ilma selleta ei saa sinu võrgus olevaid servereid leida ega nendega ühendust luua.</string>
     <string name="ce_local_network_denied_where">Süsteemi seadetes asub see jaotises Load &gt; %1$s.</string>
     <string name="ce_local_network_allow">Luba juurdepääs</string>
+    <string name="ce_local_network_off">Juurdepääs kohtvõrgule on välja lülitatud</string>
     <string name="ce_add_server_error_local_network">Serverit ei leitud. Juurdepääs kohtvõrgule on välja lülitatud, mis blokeerib sinu võrgu aadressid.</string>
     <string name="ce_permission_permanently_denied">%1$s keelati. Selle kasutamiseks luba „%2$s“ süsteemi seadete jaotises Load.</string>
+    <string name="ce_quick_connect_error_expired">Quick Connecti kood on aegunud. Uue koodi saamiseks vajutage Quick Connect.</string>
+    <string name="ce_quick_connect_error_disabled">Quick Connect on selles serveris välja lülitatud. Logige sisse oma kasutajanime ja parooliga.</string>
 </resources>

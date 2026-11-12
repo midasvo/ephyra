@@ -28,4 +28,5 @@
     </plurals>
     <string name="ce_track_forced">Sunnitud</string>
     <string name="ce_player_connection_lost">Ühendus katkes. Taasesitus jätkub, kui võrk on tagasi.</string>
+    <string name="ce_player_try_again">Proovi uuesti</string>
 </resources>

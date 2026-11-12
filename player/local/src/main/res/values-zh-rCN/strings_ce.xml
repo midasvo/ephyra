@@ -26,4 +26,5 @@
     </plurals>
     <string name="ce_track_forced">强制</string>
     <string name="ce_player_connection_lost">连接已断开。网络恢复后将继续播放。</string>
+    <string name="ce_player_try_again">重试</string>
 </resources>

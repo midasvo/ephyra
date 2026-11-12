@@ -53,6 +53,8 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
+import dev.jdtech.jellyfin.ce.ui.rememberTvTextFieldEditing
+import dev.jdtech.jellyfin.ce.ui.tvTextFieldEditing
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
 import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.models.UiText
@@ -115,6 +117,9 @@ internal fun LoginScreenLayout(
     // form puts focus back on the element that was left (Username the first time).
     val formRequester = remember { FocusRequester() }
     val doLogin = { onAction(LoginAction.OnLoginClick(username, password)) }
+    // CE: the keyboard opens on OK, not when focus moves onto a field.
+    val usernameEditing = rememberTvTextFieldEditing()
+    val passwordEditing = rememberTvTextFieldEditing()
 
     // CE (#423): everything inside the TV safe area. The form scrolls when it doesn't fit (a long
     // server disclaimer, a large font), and the last button scrolls to the end, so the disclaimer
@@ -193,9 +198,21 @@ internal fun LoginScreenLayout(
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next,
                     ),
+                // CE: Next keeps the keyboard up on the password.
+                keyboardActions =
+                    KeyboardActions(
+                        onNext = {
+                            passwordEditing.startEditing()
+                            defaultKeyboardAction(ImeAction.Next)
+                        }
+                    ),
+                readOnly = !usernameEditing.editing, // CE
                 isError = state.error != null,
                 enabled = !state.isLoading,
-                modifier = Modifier.width(360.dp).focusRequester(focusRequester),
+                modifier =
+                    Modifier.width(360.dp)
+                        .focusRequester(focusRequester)
+                        .tvTextFieldEditing(usernameEditing), // CE
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
             OutlinedTextField(
@@ -224,6 +241,7 @@ internal fun LoginScreenLayout(
                     ),
                 keyboardActions = KeyboardActions(onGo = { doLogin() }),
                 visualTransformation = PasswordVisualTransformation(),
+                readOnly = !passwordEditing.editing, // CE
                 isError = state.error != null,
                 enabled = !state.isLoading,
                 supportingText = {
@@ -234,7 +252,7 @@ internal fun LoginScreenLayout(
                         )
                     }
                 },
-                modifier = Modifier.width(360.dp),
+                modifier = Modifier.width(360.dp).tvTextFieldEditing(passwordEditing), // CE
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacings.default))
             Box {

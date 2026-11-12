@@ -37,6 +37,26 @@ class SyncWorkerDecisionsTest {
     }
 
     @Test
+    fun `a session the server still has playing is ended before its row is sent`() {
+        val item = UUID(0L, 1L)
+        assertTrue(endsStaleSession(rowItemId = item, leftPlayingOnServer = item, playingHere = null))
+        assertTrue(endsStaleSession(item, leftPlayingOnServer = item, playingHere = UUID(0L, 2L)))
+    }
+
+    @Test
+    fun `no session, or one of another item, is left alone`() {
+        val item = UUID(0L, 1L)
+        assertFalse(endsStaleSession(item, leftPlayingOnServer = null, playingHere = null))
+        assertFalse(endsStaleSession(item, leftPlayingOnServer = UUID(0L, 2L), playingHere = null))
+    }
+
+    @Test
+    fun `an item that is open in the player here keeps its session`() {
+        val item = UUID(0L, 1L)
+        assertFalse(endsStaleSession(item, leftPlayingOnServer = item, playingHere = item))
+    }
+
+    @Test
     fun `nothing left marked needs no other run`() {
         assertFalse(needsAnotherRun(sent = listOf(row(1)), stillMarked = emptyList()))
     }

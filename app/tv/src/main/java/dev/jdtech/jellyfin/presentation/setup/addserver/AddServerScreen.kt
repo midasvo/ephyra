@@ -44,6 +44,8 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import dev.jdtech.jellyfin.ce.ui.rememberTvTextFieldEditing
+import dev.jdtech.jellyfin.ce.ui.tvTextFieldEditing
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyDiscoveredServer
 import dev.jdtech.jellyfin.presentation.setup.components.DiscoveredServerItem
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
@@ -84,6 +86,8 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
     var serverAddress by rememberSaveable { mutableStateOf("") }
 
     val doConnect = { onAction(AddServerAction.OnConnectClick(serverAddress)) }
+    // CE: the keyboard opens on OK, not when focus moves onto the field.
+    val addressEditing = rememberTvTextFieldEditing()
 
     LaunchedEffect(true) { focusRequester.requestFocus() }
 
@@ -152,6 +156,7 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
                         imeAction = ImeAction.Go,
                     ),
                 keyboardActions = KeyboardActions(onGo = { doConnect() }),
+                readOnly = !addressEditing.editing, // CE
                 isError = state.error != null,
                 enabled = !state.isLoading,
                 supportingText = {
@@ -162,7 +167,10 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
                         )
                     }
                 },
-                modifier = Modifier.width(360.dp).focusRequester(focusRequester),
+                modifier =
+                    Modifier.width(360.dp)
+                        .focusRequester(focusRequester)
+                        .tvTextFieldEditing(addressEditing), // CE
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
             Box {

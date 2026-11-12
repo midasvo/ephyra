@@ -106,4 +106,6 @@
     <plurals name="ce_downloads_failed_count">
         <item quantity="other">%d uğursuz</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Hələ heç nə endirilməyib</string>
+    <string name="ce_home_offline_empty_body">Oflaynsınız. Endirdiyiniz filmlər və epizodlar burada və Endirmələrdə görünür.</string>
 </resources>

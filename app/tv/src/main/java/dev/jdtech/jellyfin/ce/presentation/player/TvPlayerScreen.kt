@@ -49,6 +49,7 @@ import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -71,7 +72,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.C
-import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import androidx.tv.material3.Button
@@ -93,10 +94,8 @@ import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.di.SubtitleStyleEntryPoint
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
-import dev.jdtech.jellyfin.player.core.domain.models.Trickplay
 import dev.jdtech.jellyfin.player.local.R as PlayerR
 import dev.jdtech.jellyfin.player.local.domain.StillWatchingTracker
-import dev.jdtech.jellyfin.player.local.domain.getTrackNames
 import dev.jdtech.jellyfin.player.local.presentation.PlayerAction
 import dev.jdtech.jellyfin.player.local.presentation.PlayerEvents
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
@@ -163,21 +162,33 @@ fun TvPlayerScreen(
     }
     val sleepTimerRemainingMs = remember { { sleepTimer.value.remainingMs } }
     val player = viewModel.player
-    var playbackError by remember { mutableStateOf<PlaybackException?>(null) }
+    // CE (#463): the last error that was not the start of a wait for the network, until playback
+    // resumes or is tried again. The wait itself is in uiState.
+    var playbackError by remember { mutableStateOf<PlayerEvents.PlayerError?>(null) }
+    val problem =
+        playbackProblem(
+            waitingForNetwork = uiState.waitingForNetwork,
+            hasError = playbackError != null,
+            nothingLoaded = playbackError?.nothingLoaded == true,
+        )
     var controlsVisible by remember { mutableStateOf(true) }
     var interactions by remember { mutableIntStateOf(0) }
+    // CE (#462): play again after Home or standby if it was playing, or show the controls.
+    val resumeOnReturn = remember { TvResumeOnReturn() }
 
     ObserveAsEvents(viewModel.eventsChannelFlow) { event ->
         when (event) {
             // Sent when the queue ends, or when an episode ends with autoplay off.
             is PlayerEvents.NavigateBack -> navigateBack()
             // CE (#131): shown as a message with a way out, instead of a black screen.
-            is PlayerEvents.PlayerError -> playbackError = event.error
+            is PlayerEvents.PlayerError -> if (!event.waitingForNetwork) playbackError = event
             is PlayerEvents.IsPlayingChanged -> Unit
             // CE (#298): paused by the sleep timer; the controls come up with focus on Play.
             is PlayerEvents.SleepTimerFired -> {
                 controlsVisible = true
                 interactions++
+                // #462: fired while the app was away: the return must not undo its pause.
+                resumeOnReturn.cancel()
             }
         }
     }
@@ -221,11 +232,43 @@ fun TvPlayerScreen(
     // The media session is owned by PlayerViewModel; building a second one here would crash,
     // as Media3 requires session IDs to be unique.
     var lifecycle by remember { mutableStateOf(Lifecycle.Event.ON_CREATE) }
+    val currentShowStillWatching by rememberUpdatedState(uiState.showStillWatching)
+    val currentPlaybackError by rememberUpdatedState(playbackError)
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event -> lifecycle = event }
+        val observer = LifecycleEventObserver { _, event ->
+            // #462: the PlayerView's update below pauses on ON_PAUSE; this decides what the
+            // return does. Before the update runs, so playWhenReady is still the user's.
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> resumeOnReturn.onPause(player.playWhenReady)
+                Lifecycle.Event.ON_RESUME -> {
+                    val blocked = currentShowStillWatching || currentPlaybackError != null
+                    when (resumeOnReturn.onResume(blocked)) {
+                        TvResumeOnReturn.Action.PLAY -> player.play()
+                        TvResumeOnReturn.Action.SHOW_CONTROLS ->
+                            if (!player.isPlaying) {
+                                controlsVisible = true
+                                interactions++
+                            }
+                        TvResumeOnReturn.Action.NONE -> Unit
+                    }
+                }
+                else -> Unit
+            }
+            lifecycle = event
+        }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        val playerListener =
+            object : Player.Listener {
+                override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                    resumeOnReturn.onPlayWhenReadyChanged(playWhenReady)
+                }
+            }
+        player.addListener(playerListener)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            player.removeListener(playerListener)
+        }
     }
 
     // #458: progress reports to the server, as the phone player sends them: every
@@ -361,9 +404,13 @@ fun TvPlayerScreen(
             }
 
             // #486: on what the player means to do, so a press during buffering pauses.
+            // #463: Play on a player that stopped on an error loads again.
             override fun togglePlayPause() {
-                if (showsPlayButton(player.playWhenReady, player.playbackState)) player.play()
-                else player.pause()
+                if (showsPlayButton(player.playWhenReady, player.playbackState)) {
+                    retryPlayback(player)
+                } else {
+                    player.pause()
+                }
                 showControls()
             }
 
@@ -464,7 +511,7 @@ fun TvPlayerScreen(
                 bufferingShown(
                     playbackState = playerState,
                     fileLoaded = uiState.fileLoaded,
-                    hasError = playbackError != null,
+                    hasError = problem != null,
                     pendingSeek = pendingSeekMs != null,
                     stillWatching = uiState.showStillWatching,
                 ),
@@ -542,6 +589,11 @@ fun TvPlayerScreen(
             Clock()
         }
 
+        // CE (#464): while the seek bar's thumbnail shows, what it can cover gives way.
+        val seekPreview = rememberTrickplayFrame(uiState.currentTrickplay, pendingSeekMs)
+        val giveWayAlpha =
+            rememberGiveWayAlpha(seekPreviewShown(pendingSeekMs != null, seekPreview != null))
+
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(),
@@ -561,7 +613,8 @@ fun TvPlayerScreen(
                             playPauseFocus.requestFocus()
                         },
                         modifier =
-                            Modifier.padding(
+                            Modifier.givesWayToSeekPreview(giveWayAlpha)
+                                .padding(
                                     end = MaterialTheme.spacings.default * 2,
                                     bottom = MaterialTheme.spacings.medium,
                                 )
@@ -578,7 +631,8 @@ fun TvPlayerScreen(
                             playPauseFocus.requestFocus()
                         },
                         modifier =
-                            Modifier.padding(
+                            Modifier.givesWayToSeekPreview(giveWayAlpha)
+                                .padding(
                                     end = MaterialTheme.spacings.default * 2,
                                     bottom = MaterialTheme.spacings.medium,
                                 )
@@ -598,7 +652,8 @@ fun TvPlayerScreen(
                     durationMs = durationMs,
                     showPause = !showsPlayButton(playerPlayWhenReady, playerState),
                     pendingSeekMs = pendingSeekMs,
-                    trickplay = uiState.currentTrickplay,
+                    seekPreview = seekPreview,
+                    giveWayAlpha = giveWayAlpha,
                     seekSettings = seekSettings,
                     chapterMarkers =
                         remember(uiState.currentChapters, durationMs) {
@@ -642,9 +697,24 @@ fun TvPlayerScreen(
         onDispose { player.removeListener(recoveryListener) }
     }
 
-    playbackError?.let { error ->
-        PlaybackErrorDialog(
-            message = error.message?.takeIf { it.isNotBlank() } ?: error.errorCodeName,
+    problem?.let {
+        TvPlaybackProblemDialog(
+            problem = it,
+            retrying = playerState == androidx.media3.common.Player.STATE_BUFFERING,
+            onRetry = {
+                playbackError = null
+                if (it == PlaybackProblem.START_FAILED) {
+                    viewModel.initializePlayer(
+                        itemId = itemId,
+                        itemKind = itemKind,
+                        startFromBeginning = startFromBeginning,
+                        mediaSourceId = mediaSourceId,
+                        shuffle = shuffle,
+                    )
+                } else {
+                    retryPlayback(player)
+                }
+            },
             onExit = navigateBack,
         )
     }
@@ -684,11 +754,11 @@ fun TvPlayerScreen(
                 val trackType =
                     if (open == PlayerDialog.AUDIO) C.TRACK_TYPE_AUDIO else C.TRACK_TYPE_TEXT
                 // Read once when the dialog opens; the tracks don't change while it's shown.
-                val groups = remember {
-                    player.currentTracks.groups.filter { it.type == trackType && it.isSupported }
-                }
-                val names = remember { groups.getTrackNames(context).toList() }
-                val selected = groups.indexOfFirst { it.isSelected }
+                // CE (#596): the view model says what to list: during a transcode the audio
+                // tracks are the file's, not the one track the stream carries.
+                val choices = remember { viewModel.trackChoices(trackType, context) }
+                val names = choices.names
+                val selected = choices.selected
                 // Subtitles can be turned off. Audio can't: silence is never what's wanted.
                 val withNone = open == PlayerDialog.SUBTITLES
                 TvSelectionDialog(
@@ -758,7 +828,8 @@ private fun PlayerControls(
     durationMs: Long,
     showPause: Boolean,
     pendingSeekMs: Long?,
-    trickplay: Trickplay?,
+    seekPreview: ImageBitmap?,
+    giveWayAlpha: () -> Float,
     seekSettings: TvSeekSettings,
     chapterMarkers: List<Float>,
     hasChapters: Boolean,
@@ -787,6 +858,7 @@ private fun PlayerControls(
                     color = Color.White.copy(alpha = 0.8f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.givesWayToSeekPreview(giveWayAlpha),
                 )
             }
             Text(
@@ -795,6 +867,7 @@ private fun PlayerControls(
                 color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.givesWayToSeekPreview(giveWayAlpha),
             )
             // A pending seek shows where it lands: the remaining time and end time follow it.
             val shownPositionMs =
@@ -832,10 +905,9 @@ private fun PlayerControls(
                         chapterMarkers = chapterMarkers,
                     )
                 }
-                val frame = rememberTrickplayFrame(trickplay, pendingSeekMs)
-                if (frame != null && pendingSeekMs != null) {
+                if (seekPreview != null && pendingSeekMs != null) {
                     TrickplayThumbnail(
-                        frame = frame,
+                        frame = seekPreview,
                         timeText = formatTime(pendingSeekMs),
                         modifier =
                             Modifier.aboveAt(
@@ -1153,38 +1225,6 @@ private fun Clock() {
             style = MaterialTheme.typography.titleLarge,
             color = Color.White,
         )
-    }
-}
-
-@Composable
-private fun PlaybackErrorDialog(message: String, onExit: () -> Unit) {
-    Dialog(onDismissRequest = onExit) {
-        Surface(
-            modifier = Modifier.width(560.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-        ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
-                modifier = Modifier.padding(MaterialTheme.spacings.large),
-            ) {
-                Text(
-                    text = stringResource(PlayerR.string.player_error_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                val focusRequester = remember { FocusRequester() }
-                LaunchedEffect(Unit) { focusWhenReady(focusRequester) }
-                Button(onClick = onExit, modifier = Modifier.focusRequester(focusRequester)) {
-                    Text(text = stringResource(PlayerR.string.player_controls_exit))
-                }
-            }
-        }
     }
 }
 

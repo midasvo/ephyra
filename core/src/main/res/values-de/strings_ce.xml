@@ -111,4 +111,6 @@
         <item quantity="one">%d fehlgeschlagen</item>
         <item quantity="other">%d fehlgeschlagen</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Noch nichts heruntergeladen</string>
+    <string name="ce_home_offline_empty_body">Du bist offline. Filme und Folgen, die du herunterlädst, erscheinen hier und unter Downloads.</string>
 </resources>

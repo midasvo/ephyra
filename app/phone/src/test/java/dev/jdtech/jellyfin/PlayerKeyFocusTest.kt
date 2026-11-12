@@ -69,4 +69,62 @@ class PlayerKeyFocusTest {
             spaceKeyAction(locked = true, goesToFocusedControl = true),
         )
     }
+
+    /** #588: Up and Down changed the volume instead of moving through the episode sheet. */
+    @Test
+    fun `a row of the open episode sheet takes the arrows and Space`() {
+        val onRow =
+            focusIsOnControl(
+                insideControls = false,
+                insideEpisodeSheet = true,
+                episodeSheetOpen = true,
+            )
+        assertTrue(onRow)
+        assertTrue(
+            keyGoesToFocusedControl(
+                focusChosenByKeyboard = true,
+                focusOnControl = onRow,
+                controlsShowing = true,
+            )
+        )
+    }
+
+    @Test
+    fun `with the sheet closed or focus on the player the arrows stay volume and seek`() {
+        // Focus left behind in a sheet that has closed.
+        assertFalse(
+            focusIsOnControl(
+                insideControls = false,
+                insideEpisodeSheet = true,
+                episodeSheetOpen = false,
+            )
+        )
+        // The sheet opened by touch: focus is on the player view.
+        assertFalse(
+            focusIsOnControl(
+                insideControls = false,
+                insideEpisodeSheet = false,
+                episodeSheetOpen = true,
+            )
+        )
+        assertTrue(
+            focusIsOnControl(
+                insideControls = true,
+                insideEpisodeSheet = false,
+                episodeSheetOpen = false,
+            )
+        )
+    }
+
+    /** #588: the first open found no row to focus, and nothing tried again. */
+    @Test
+    fun `the sheet takes focus for its row only when opened from the keyboard and still wanted`() {
+        assertTrue(episodeSheetTakesFocus(requested = true, sheetOpen = true, focusParked = true))
+        // Opened by touch.
+        assertFalse(episodeSheetTakesFocus(requested = false, sheetOpen = true, focusParked = true))
+        // Closed while the season loaded.
+        assertFalse(episodeSheetTakesFocus(requested = true, sheetOpen = false, focusParked = true))
+        // The user tabbed to another control while the season loaded.
+        assertFalse(episodeSheetTakesFocus(requested = true, sheetOpen = true, focusParked = false))
+    }
 }

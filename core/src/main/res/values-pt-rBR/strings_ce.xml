@@ -111,4 +111,6 @@
         <item quantity="one">%d com falha</item>
         <item quantity="other">%d com falha</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Nada baixado ainda</string>
+    <string name="ce_home_offline_empty_body">Você está offline. Os filmes e episódios que você baixar aparecem aqui e em Downloads.</string>
 </resources>

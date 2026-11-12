@@ -111,4 +111,6 @@
         <item quantity="one">%d неуспешно</item>
         <item quantity="other">%d неуспешни</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Още няма изтеглени</string>
+    <string name="ce_home_offline_empty_body">Нямате връзка. Филмите и епизодите, които изтеглите, се показват тук и в Изтегляния.</string>
 </resources>

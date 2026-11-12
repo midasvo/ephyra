@@ -111,4 +111,6 @@
         <item quantity="one">%d נכשלה</item>
         <item quantity="other">%d נכשלו</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">עדיין לא הורד דבר</string>
+    <string name="ce_home_offline_empty_body">אין חיבור. סרטים ופרקים שתוריד יופיעו כאן ובהורדות.</string>
 </resources>

@@ -55,6 +55,9 @@
     <string name="ce_local_network_denied">O acesso à rede local está desativado. Sem ele, não é possível encontrar nem alcançar os servidores na sua rede.</string>
     <string name="ce_local_network_denied_where">Nas definições do sistema, está em Autorizações &gt; %1$s.</string>
     <string name="ce_local_network_allow">Permitir acesso</string>
+    <string name="ce_local_network_off">O acesso à rede local está desativado</string>
     <string name="ce_add_server_error_local_network">Servidor não encontrado. O acesso à rede local está desativado, o que bloqueia os endereços na sua rede.</string>
     <string name="ce_permission_permanently_denied">%1$s foi recusado. Para o utilizar, permita \"%2$s\" em Autorizações nas definições do sistema.</string>
+    <string name="ce_quick_connect_error_expired">O código de Conexão rápida expirou. Prima \"Conexão rápida\" para obter um novo código.</string>
+    <string name="ce_quick_connect_error_disabled">A Conexão rápida está desativada neste servidor. Inicie sessão com o seu nome de utilizador e palavra-passe.</string>
 </resources>

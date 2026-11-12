@@ -111,4 +111,6 @@
         <item quantity="one">%d fallida</item>
         <item quantity="other">%d fallidas</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Todavía no descargaste nada</string>
+    <string name="ce_home_offline_empty_body">No tienes conexión. Las películas y episodios que descargues aparecen aquí y en Descargas.</string>
 </resources>

@@ -116,4 +116,6 @@
         <item quantity="few">%d selhala</item>
         <item quantity="other">%d selhalo</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Zatím nic staženo</string>
+    <string name="ce_home_offline_empty_body">Jste offline. Filmy a epizody, které si stáhnete, se zobrazí tady a ve Stažených souborech.</string>
 </resources>

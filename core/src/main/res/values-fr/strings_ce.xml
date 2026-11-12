@@ -111,4 +111,6 @@
         <item quantity="one">%d en échec</item>
         <item quantity="other">%d en échec</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Rien de téléchargé pour l\'instant</string>
+    <string name="ce_home_offline_empty_body">Vous êtes hors ligne. Les films et épisodes que vous téléchargez apparaissent ici et dans Téléchargements.</string>
 </resources>

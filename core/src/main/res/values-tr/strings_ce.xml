@@ -106,4 +106,6 @@
     <plurals name="ce_downloads_failed_count">
         <item quantity="other">%d başarısız</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Henüz hiçbir şey indirilmedi</string>
+    <string name="ce_home_offline_empty_body">Çevrimdışısınız. İndirdiğiniz filmler ve bölümler burada ve İndirilenler\'de görünür.</string>
 </resources>

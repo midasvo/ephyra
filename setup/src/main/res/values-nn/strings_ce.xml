@@ -55,6 +55,9 @@
     <string name="ce_local_network_denied">Tilgang til det lokale nettverket er slått av. Utan den kan ikkje tenarar på nettverket ditt bli funne eller nådde.</string>
     <string name="ce_local_network_denied_where">I systeminnstillingane ligg ho under Løyve &gt; %1$s.</string>
     <string name="ce_local_network_allow">Gje tilgang</string>
+    <string name="ce_local_network_off">Tilgang til det lokale nettverket er slått av</string>
     <string name="ce_add_server_error_local_network">Fann ikkje tenaren. Tilgang til det lokale nettverket er slått av, og det blokkerer adresser på nettverket ditt.</string>
     <string name="ce_permission_permanently_denied">%1$s vart avslått. For å bruke det må du tillate «%2$s» under Løyve i systeminnstillingane.</string>
+    <string name="ce_quick_connect_error_expired">Quick Connect-koden har gått ut. Trykk på Quick Connect for å få ein ny kode.</string>
+    <string name="ce_quick_connect_error_disabled">Quick Connect er slått av på denne tenaren. Logg inn med brukarnamn og passord.</string>
 </resources>

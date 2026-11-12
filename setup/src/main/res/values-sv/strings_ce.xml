@@ -55,6 +55,9 @@
     <string name="ce_local_network_denied">Åtkomst till det lokala nätverket är avstängd. Utan den går det inte att hitta eller nå servrar i ditt nätverk.</string>
     <string name="ce_local_network_denied_where">I systeminställningarna finns den under Behörigheter &gt; %1$s.</string>
     <string name="ce_local_network_allow">Tillåt åtkomst</string>
+    <string name="ce_local_network_off">Åtkomst till det lokala nätverket är avstängd</string>
     <string name="ce_add_server_error_local_network">Servern hittades inte. Åtkomst till det lokala nätverket är avstängd, vilket blockerar adresser i ditt nätverk.</string>
     <string name="ce_permission_permanently_denied">%1$s nekades. Om du vill använda det tillåter du ”%2$s” under Behörigheter i systeminställningarna.</string>
+    <string name="ce_quick_connect_error_expired">Koden för Snabbanslutning har gått ut. Tryck på Snabbanslutning för att få en ny kod.</string>
+    <string name="ce_quick_connect_error_disabled">Snabbanslutning är avstängd på den här servern. Logga in med ditt användarnamn och lösenord.</string>
 </resources>

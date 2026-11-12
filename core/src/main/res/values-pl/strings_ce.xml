@@ -121,4 +121,6 @@
         <item quantity="many">%d nieudanych</item>
         <item quantity="other">%d nieudanych</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Nic jeszcze nie pobrano</string>
+    <string name="ce_home_offline_empty_body">Jesteś offline. Pobrane filmy i odcinki pojawią się tutaj i w sekcji Pobrane.</string>
 </resources>

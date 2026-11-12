@@ -106,4 +106,6 @@
     <plurals name="ce_downloads_failed_count">
         <item quantity="other">%d개 실패</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">아직 다운로드한 항목이 없습니다</string>
+    <string name="ce_home_offline_empty_body">오프라인 상태입니다. 다운로드한 영화와 에피소드가 여기와 다운로드에 표시됩니다.</string>
 </resources>

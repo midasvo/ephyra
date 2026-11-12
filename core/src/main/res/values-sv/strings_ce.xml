@@ -111,4 +111,6 @@
         <item quantity="one">%d misslyckades</item>
         <item quantity="other">%d misslyckades</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Inget nedladdat än</string>
+    <string name="ce_home_offline_empty_body">Du är offline. Filmer och avsnitt som du laddar ned visas här och under Nedladdningar.</string>
 </resources>

@@ -10,7 +10,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.localnetwork.localNetworkBlockFor
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.utils.localNetworkDeniedText
+import dev.jdtech.jellyfin.setup.R as SetupR
 import dev.jdtech.jellyfin.utils.LoadErrorText
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 
@@ -26,9 +29,15 @@ fun ErrorDialog(
     onRetry: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
+    // CE (#571): a server out of reach because local network access is denied says so, and the
+    // dialog offers to allow it. The screen under the dialog loads again when access is back.
+    val block = localNetworkBlockFor(error = exception)
+    val request = block?.request
     val reason = LoadErrorText.reason(exception).asString()
     val text =
-        if (LoadErrorText.isConnectionError(exception)) {
+        if (block != null) {
+            localNetworkDeniedText(block)
+        } else if (LoadErrorText.isConnectionError(exception)) {
             reason + "\n\n" + stringResource(CoreR.string.error_loading_data_body)
         } else {
             reason
@@ -49,7 +58,16 @@ fun ErrorDialog(
         text = { Text(text = text) },
         onDismissRequest = onDismissRequest,
         confirmButton = {
-            if (onRetry != null) {
+            if (request != null) {
+                TextButton(
+                    onClick = {
+                        onDismissRequest()
+                        request()
+                    }
+                ) {
+                    Text(stringResource(SetupR.string.ce_local_network_allow))
+                }
+            } else if (onRetry != null) {
                 TextButton(
                     onClick = {
                         onDismissRequest()
@@ -65,7 +83,7 @@ fun ErrorDialog(
         dismissButton = {
             Row {
                 TextButton(onClick = share) { Text(stringResource(CoreR.string.share)) }
-                if (onRetry != null) {
+                if (onRetry != null || request != null) {
                     TextButton(onClick = onDismissRequest) {
                         Text(stringResource(CoreR.string.close))
                     }

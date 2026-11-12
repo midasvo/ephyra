@@ -31,6 +31,9 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     // 0 is no limit. The web client's default is 365.
     val homeNextUpMaxDays = Preference("pref_home_next_up_max_days", 0)
     val homeLatest = Preference<Boolean>("home_latest", true)
+    // CE (#608): Continue Watching and Next Up show the series' or movie's thumb (the wide art
+    // with the title on it) unless this is on, like the web client's setting of the same name.
+    val homeEpisodeImages = Preference("pref_home_episode_images", false)
     // CE (#138): the Android TV launcher's Watch Next row. Only the TV app shows and uses it.
     val tvWatchNext = Preference("pref_tv_watch_next", true)
     // CE (#140): Android TV screensaver.

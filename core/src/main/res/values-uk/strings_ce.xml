@@ -121,4 +121,6 @@
         <item quantity="many">Помилка: %d</item>
         <item quantity="other">Помилка: %d</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Ще нічого не завантажено</string>
+    <string name="ce_home_offline_empty_body">Немає з\'єднання. Завантажені фільми й епізоди з\'являться тут і в розділі «Завантаження».</string>
 </resources>

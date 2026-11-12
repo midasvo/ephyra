@@ -1,0 +1,22 @@
+# Ephyra
+
+> Ephyra is a free, open-source (GPLv3) Jellyfin client for Android phones, tablets and Android TV. It is a fork of Findroid and was called Findroid CE until version 2.0.0. It needs a Jellyfin server and Android 10 or newer.
+
+What Ephyra adds to Findroid:
+
+- Downloads: resumable, to internal storage or an SD card, with a quality per download (the original, or a server conversion from 4K down to 360p), whole seasons or series at once, and opt-in Smart Downloads that keep the next episodes of what you are watching.
+- Playback: Dolby Vision direct play where the device supports it, Dolby Atmos through the device's decoder, PGS, VobSub and DVB subtitles without transcoding, subtitle styling on ExoPlayer and mpv, a version picker, a quality switch during playback, and audio and subtitle choices remembered per series.
+- Library: Home rows you choose and order, a hide-watched filter, automatic offline mode, and profiles that can be locked with a PIN.
+- Tablets and foldables: a navigation rail, list-detail seasons, keyboard and mouse support in the player.
+- Android TV: a separate app built for the remote, with trickplay thumbnails, refresh rate switching, the Watch Next row and a screensaver. It has builds for 64-bit devices and for 32-bit boxes such as the Xiaomi Mi Box.
+
+Ephyra collects nothing and only talks to the Jellyfin servers the user adds.
+
+## Links
+
+- [Website](https://midasvo.nl/ephyra/): features, screenshots and install instructions
+- [Source code](https://github.com/midasvo/ephyra): README with the full feature list
+- [Releases](https://github.com/midasvo/ephyra/releases): APK downloads for phone, tablet and Android TV
+- [Changelog](https://github.com/midasvo/ephyra/blob/main/CHANGELOG.md)
+- [Privacy policy](https://midasvo.nl/ephyra/privacy.html)
+- [Findroid](https://github.com/jarnedemeulemeester/findroid): the app Ephyra is forked from

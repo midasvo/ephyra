@@ -111,4 +111,6 @@
         <item quantity="one">%d fallida</item>
         <item quantity="other">%d fallides</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Encara no hi ha res baixat</string>
+    <string name="ce_home_offline_empty_body">No tens connexió. Les pel·lícules i els episodis que baixis apareixen aquí i a Baixades.</string>
 </resources>

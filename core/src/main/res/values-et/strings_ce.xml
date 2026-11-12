@@ -111,4 +111,6 @@
         <item quantity="one">%d ebaõnnestus</item>
         <item quantity="other">%d ebaõnnestus</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Midagi pole veel alla laaditud</string>
+    <string name="ce_home_offline_empty_body">Oled võrguühenduseta. Allalaaditud filmid ja osad kuvatakse siin ja jaotises Allalaadimised.</string>
 </resources>

@@ -106,4 +106,6 @@
     <plurals name="ce_downloads_failed_count">
         <item quantity="other">%d không thành công</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Chưa tải xuống gì</string>
+    <string name="ce_home_offline_empty_body">Bạn đang ngoại tuyến. Phim và tập phim bạn tải xuống sẽ hiện ở đây và trong Tải xuống.</string>
 </resources>

@@ -98,6 +98,30 @@ class PlayerInvariantsTest {
     }
 
     @Test
+    fun `mpv deselects video before it drops the video output`() {
+        // #460: vo=null with video still selected made mpv re-create the hardware decoder for a
+        // surface that was gone; on the emulator that codec never answered and the main thread
+        // hung behind it (ANR on leaving the player). surfaceCreated must select video again.
+        val mpvPlayer = source("mpv/MPVPlayer.kt")
+        val detach =
+            Regex("""private fun detachVideoSurface\(\) \{[\s\S]*?\n    \}""").find(mpvPlayer)
+        assertTrue("MPVPlayer.detachVideoSurface not found", detach != null)
+        val body = detach!!.value
+        val deselect = body.indexOf("""selectTrack(MPVTrackType.VIDEO, "no")""")
+        val voNull = body.indexOf("""setOptionString("vo", "null")""")
+        assertTrue("detachVideoSurface must deselect video (#460)", deselect >= 0)
+        assertTrue("detachVideoSurface must deselect video before vo=null (#460)", deselect < voNull)
+        val attach =
+            Regex("""override fun surfaceCreated\(holder: SurfaceHolder\) \{[\s\S]*?\n {12}\}""")
+                .find(mpvPlayer)
+        assertTrue("MPVPlayer's surfaceCreated not found", attach != null)
+        assertTrue(
+            "surfaceCreated must select video again from the parameters (#460)",
+            attach!!.value.contains("videoTrackSelection(trackSelectionParameters)"),
+        )
+    }
+
+    @Test
     fun `mpv sets a network timeout`() {
         // #460: with mpv's default of 60 s a stalled read blocked recovery for over a minute
         // after the network came back. 10 s used up ffmpeg's reconnects during a longer stall.
@@ -110,7 +134,7 @@ class PlayerInvariantsTest {
     }
 
     @Test
-    fun `mpv reports a failed load at END_FILE without waiting for an error line`() {
+    fun `mpv reports a failed load at END_FILE without requiring an error line`() {
         // #446: libmpv can deliver END_FILE before the error lines that explain it. Requiring an
         // error line first left the player black and BUFFERING without an error.
         val mpvPlayer = source("mpv/MPVPlayer.kt")
@@ -119,11 +143,48 @@ class PlayerInvariantsTest {
         assertTrue("MPVPlayer's END_FILE branch not found", endFile != null)
         assertTrue(
             "END_FILE must ask MpvLoadState whether the load failed (#446)",
-            endFile!!.value.contains("loadState.endFile()"),
+            endFile!!.value.contains("loadState.endFile {"),
+        )
+        // #576: the report may wait a moment for the line, but never without a timer that
+        // reports it anyway.
+        assertTrue(
+            "A failure held for its error line must be reported when the timer runs out (#576)",
+            endFile.value.contains(
+                "handler.postDelayed(loadErrorHoldTimeout, MpvLoadState.HOLD_MS)"
+            ) && mpvPlayer.contains("if (!released && loadState.holdTimedOut()) onLoadError("),
         )
         assertFalse(
             "END_FILE must not require an error line before reporting (#446)",
             endFile.value.contains("error != null"),
+        )
+    }
+
+    @Test
+    fun `the start report waits for the item to load`() {
+        // #601: the start went out at the item transition and progress reports followed, so an
+        // item that never opened was counted as played, and one without a runtime marked played.
+        // PlaybackStartGateTest covers the decision; this checks PlayerViewModel still uses it.
+        val viewModel = source("presentation/PlayerViewModel.kt")
+        val transition =
+            Regex("""override fun onMediaItemTransition\([\s\S]*?\n    }""").find(viewModel)
+        assertTrue("PlayerViewModel.onMediaItemTransition not found", transition != null)
+        assertTrue(
+            "onMediaItemTransition must hand the start to startGate (#601)",
+            Regex("""startGate\s*\.onTransition\(""").containsMatchIn(transition!!.value) &&
+                !Regex("""\n\s*sendPlaybackStart\(item\)""").containsMatchIn(transition.value),
+        )
+        val ready = Regex("""ExoPlayer\.STATE_READY -> \{[\s\S]*?\n {12}}""").find(viewModel)
+        assertTrue("PlayerViewModel's STATE_READY branch not found", ready != null)
+        assertTrue(
+            "STATE_READY must send the start the gate holds (#601)",
+            ready!!.value.contains("startGate.onReady()"),
+        )
+        val progress =
+            Regex("""fun updatePlaybackProgress\(\) \{[\s\S]*?\n    }""").find(viewModel)
+        assertTrue("PlayerViewModel.updatePlaybackProgress not found", progress != null)
+        assertTrue(
+            "No progress report before the start report (#601)",
+            progress!!.value.contains("if (playing?.startJob == null) return@launch"),
         )
     }
 
@@ -157,6 +218,24 @@ class PlayerInvariantsTest {
         assertTrue(
             "onKeyUp must take the up of the OK whose down showed the controls (#459)",
             onKeyUp!!.value.contains("okDown == keyCode"),
+        )
+    }
+
+    @Test
+    fun `the TV player plays again after Home if it was playing`() {
+        // #462: ON_PAUSE paused the player and ON_RESUME only resumed the view, so after Home and
+        // back the player sat paused with nothing on screen. app/tv's own tests
+        // (TvResumeOnReturnTest) are not part of the root task.
+        val file = File("../../app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/player/TvPlayerScreen.kt")
+        assertTrue("missing ${file.absolutePath}", file.isFile)
+        val screen = file.readText()
+        assertTrue(
+            "TvPlayerScreen must decide the return on ON_PAUSE (#462)",
+            screen.contains("resumeOnReturn.onPause(player.playWhenReady)"),
+        )
+        assertTrue(
+            "TvPlayerScreen must play again on ON_RESUME when it was playing (#462)",
+            screen.contains("TvResumeOnReturn.Action.PLAY -> player.play()"),
         )
     }
 }

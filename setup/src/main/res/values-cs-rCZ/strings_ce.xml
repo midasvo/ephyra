@@ -55,6 +55,9 @@
     <string name="ce_local_network_denied">Přístup k místní síti je vypnutý. Bez něj nelze servery ve vaší síti najít ani se k nim připojit.</string>
     <string name="ce_local_network_denied_where">V nastavení systému ho najdete v části Oprávnění &gt; %1$s.</string>
     <string name="ce_local_network_allow">Povolit přístup</string>
+    <string name="ce_local_network_off">Přístup k místní síti je vypnutý</string>
     <string name="ce_add_server_error_local_network">Server nenalezen. Přístup k místní síti je vypnutý, což blokuje adresy ve vaší síti.</string>
     <string name="ce_permission_permanently_denied">Oprávnění %1$s bylo zamítnuto. Chcete-li ho používat, povolte „%2$s“ v části Oprávnění v nastavení systému.</string>
+    <string name="ce_quick_connect_error_expired">Platnost kódu Rychlého připojení vypršela. Pro nový kód stiskněte Rychlé připojení.</string>
+    <string name="ce_quick_connect_error_disabled">Rychlé připojení je na tomto serveru vypnuté. Přihlaste se uživatelským jménem a heslem.</string>
 </resources>

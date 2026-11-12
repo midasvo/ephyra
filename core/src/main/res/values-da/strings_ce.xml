@@ -111,4 +111,6 @@
         <item quantity="one">%d mislykkedes</item>
         <item quantity="other">%d mislykkedes</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Intet downloadet endnu</string>
+    <string name="ce_home_offline_empty_body">Du er offline. Film og afsnit, du downloader, vises her og under Downloads.</string>
 </resources>

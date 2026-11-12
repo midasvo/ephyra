@@ -32,4 +32,5 @@
     </plurals>
     <string name="ce_track_forced">Принудительные</string>
     <string name="ce_player_connection_lost">Соединение потеряно. Воспроизведение продолжится, когда сеть вернётся.</string>
+    <string name="ce_player_try_again">Повторить</string>
 </resources>

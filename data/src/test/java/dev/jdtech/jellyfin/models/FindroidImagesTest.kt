@@ -96,4 +96,39 @@ class FindroidImagesTest {
         assertEquals(Uri.parse("$base/items/$otherId/Images/Backdrop/0?tag=bd"), images.showBackdrop)
         assertEquals(Uri.parse("$base/items/$otherId/Images/Logo?tag=lg"), images.showLogo)
     }
+
+    // #608
+    @Test
+    fun `an episode names its series thumb, a movie its own`() {
+        val episode =
+            dto(BaseItemKind.EPISODE).copy(seriesThumbImageTag = "th").toFindroidImages(repository)
+        assertEquals(Uri.parse("$base/items/$seriesId/Images/Thumb?tag=th"), episode.showThumb)
+        assertNull(episode.thumb)
+
+        val movie =
+            BaseItemDto(
+                    id = otherId,
+                    type = BaseItemKind.MOVIE,
+                    imageTags = mapOf(ImageType.THUMB to "mt"),
+                )
+                .toFindroidImages(repository)
+        assertEquals(Uri.parse("$base/items/$otherId/Images/Thumb?tag=mt"), movie.thumb)
+        assertNull(movie.showThumb)
+    }
+
+    @Test
+    fun `a thumb inherited from a parent is addressed by its owner`() {
+        val images =
+            dto(BaseItemKind.SEASON)
+                .copy(parentThumbImageTag = "pt", parentThumbItemId = otherId)
+                .toFindroidImages(repository)
+        assertEquals(Uri.parse("$base/items/$otherId/Images/Thumb?tag=pt"), images.showThumb)
+    }
+
+    @Test
+    fun `without thumb tags there is no thumb`() {
+        val images = dto(BaseItemKind.EPISODE, listOf("bd"), "lg").toFindroidImages(repository)
+        assertNull(images.thumb)
+        assertNull(images.showThumb)
+    }
 }

@@ -274,6 +274,8 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
             .put("showPrimary", images.showPrimary?.toString() ?: JSONObject.NULL)
             .put("showBackdrop", images.showBackdrop?.toString() ?: JSONObject.NULL)
             .put("showLogo", images.showLogo?.toString() ?: JSONObject.NULL)
+            .put("thumb", images.thumb?.toString() ?: JSONObject.NULL)
+            .put("showThumb", images.showThumb?.toString() ?: JSONObject.NULL)
 
     private fun images(obj: JSONObject): FindroidImages {
         fun uri(key: String) = if (obj.isNull(key)) null else Uri.parse(obj.getString(key))
@@ -284,6 +286,9 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
             showPrimary = uri("showPrimary"),
             showBackdrop = uri("showBackdrop"),
             showLogo = uri("showLogo"),
+            // Absent in a cache written before #608: isNull is true for a missing key.
+            thumb = uri("thumb"),
+            showThumb = uri("showThumb"),
         )
     }
 

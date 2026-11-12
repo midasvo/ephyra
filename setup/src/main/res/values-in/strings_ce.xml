@@ -55,6 +55,9 @@
     <string name="ce_local_network_denied">Akses jaringan lokal nonaktif. Tanpa akses ini, server di jaringan Anda tidak dapat ditemukan atau dijangkau.</string>
     <string name="ce_local_network_denied_where">Di setelan sistem, letaknya di Izin &gt; %1$s.</string>
     <string name="ce_local_network_allow">Izinkan akses</string>
+    <string name="ce_local_network_off">Akses jaringan lokal nonaktif</string>
     <string name="ce_add_server_error_local_network">Server tidak ditemukan. Akses jaringan lokal nonaktif, sehingga alamat di jaringan Anda diblokir.</string>
     <string name="ce_permission_permanently_denied">%1$s ditolak. Untuk menggunakannya, izinkan \"%2$s\" di bagian Izin pada setelan sistem.</string>
+    <string name="ce_quick_connect_error_expired">Kode Quick Connect sudah kedaluwarsa. Tekan Quick Connect untuk mendapatkan kode baru.</string>
+    <string name="ce_quick_connect_error_disabled">Quick Connect dinonaktifkan di server ini. Masuk dengan nama pengguna dan kata sandi Anda.</string>
 </resources>

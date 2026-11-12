@@ -28,4 +28,5 @@
     </plurals>
     <string name="ce_track_forced">Tvingade</string>
     <string name="ce_player_connection_lost">Anslutningen bröts. Uppspelningen fortsätter när nätverket är tillbaka.</string>
+    <string name="ce_player_try_again">Försök igen</string>
 </resources>

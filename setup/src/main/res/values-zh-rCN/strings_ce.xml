@@ -55,6 +55,9 @@
     <string name="ce_local_network_denied">本地网络访问权限已关闭。没有此权限，将无法找到或连接您网络中的服务器。</string>
     <string name="ce_local_network_denied_where">在系统设置中，它位于“权限”&gt;“%1$s”。</string>
     <string name="ce_local_network_allow">允许访问</string>
+    <string name="ce_local_network_off">本地网络访问权限已关闭</string>
     <string name="ce_add_server_error_local_network">未找到服务器。本地网络访问权限已关闭，因此您网络中的地址被屏蔽。</string>
     <string name="ce_permission_permanently_denied">%1$s已被拒绝。如需使用，请在系统设置的“权限”中允许“%2$s”。</string>
+    <string name="ce_quick_connect_error_expired">快速连接代码已过期。请按“快速连接”获取新代码。</string>
+    <string name="ce_quick_connect_error_disabled">此服务器已关闭快速连接。请使用用户名和密码登录。</string>
 </resources>

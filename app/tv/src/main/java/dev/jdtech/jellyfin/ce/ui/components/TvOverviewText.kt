@@ -71,7 +71,11 @@ fun TvOverviewText(
                     pressedContainerColor = Color.Transparent,
                     pressedContentColor = textColor,
                 ),
-            border = ClickableSurfaceDefaults.border(focusedBorder = ephyraFocusedBorder()),
+            // No ring while the dialog is open: the page keeps its focus behind the dialog, and the
+            // ring's left end showed beside the 800 dp dialog.
+            border =
+                if (open) ClickableSurfaceDefaults.border()
+                else ClickableSurfaceDefaults.border(focusedBorder = ephyraFocusedBorder()),
             scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
             modifier = modifier.focusRequester(focusRequester).testTag(testTag),
         ) {

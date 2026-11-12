@@ -40,6 +40,8 @@ fun ItemCard(
     onClick: (FindroidItem) -> Unit,
     modifier: Modifier = Modifier,
     showSeriesName: Boolean = false,
+    // CE (#608): see ItemPoster.
+    preferThumb: Boolean = false,
 ) {
     val widthClass = currentWidthClass()
     val width =
@@ -57,7 +59,7 @@ fun ItemCard(
     ) {
         Surface(shape = MaterialTheme.shapes.small) {
             Box {
-                ItemPoster(item = item, direction = direction)
+                ItemPoster(item = item, direction = direction, preferThumb = preferThumb)
                 Row(
                     modifier =
                         Modifier.align(Alignment.TopEnd).padding(MaterialTheme.spacings.small),

@@ -1,5 +1,6 @@
 package dev.jdtech.jellyfin.presentation.film.components
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material3.MaterialTheme
@@ -18,24 +19,20 @@ enum class Direction {
     VERTICAL,
 }
 
+/**
+ * [preferThumb] (#608): a horizontal card shows the thumb, the wide art with the title on it, of
+ * the movie or of the episode's series. The Continue Watching and Next Up rows ask for it.
+ */
 @Composable
-fun ItemPoster(item: FindroidItem, direction: Direction, modifier: Modifier = Modifier) {
+fun ItemPoster(
+    item: FindroidItem,
+    direction: Direction,
+    modifier: Modifier = Modifier,
+    preferThumb: Boolean = false,
+) {
     val sources =
-        remember(item.images, item.id, direction) {
-        when (direction) {
-            Direction.HORIZONTAL ->
-                when (item) {
-                    is FindroidMovie -> listOf(item.images.backdrop, item.images.primary)
-                    is FindroidEpisode -> listOf(item.images.primary, item.images.showBackdrop)
-                    else -> listOf(item.images.primary)
-                }
-            Direction.VERTICAL ->
-                when (item) {
-                    is FindroidEpisode -> listOf(item.images.showPrimary)
-                    is FindroidSeason -> listOf(item.images.primary, item.images.showPrimary)
-                    else -> listOf(item.images.primary)
-                }
-        }
+        remember(item.images, item.id, direction, preferThumb) {
+            posterSources(item, direction, preferThumb)
         }
 
     ArtworkImage(
@@ -47,3 +44,41 @@ fun ItemPoster(item: FindroidItem, direction: Direction, modifier: Modifier = Mo
                 .background(MaterialTheme.colorScheme.surfaceContainer),
     )
 }
+
+/**
+ * The artwork a card tries, in order. With [preferThumb] a horizontal card starts with art that
+ * says what the item is, and an episode's own image, a frame from the episode, comes last.
+ */
+internal fun posterSources(
+    item: FindroidItem,
+    direction: Direction,
+    preferThumb: Boolean = false,
+): List<Uri?> =
+    when (direction) {
+        Direction.HORIZONTAL ->
+            when (item) {
+                is FindroidMovie ->
+                    if (preferThumb) {
+                        listOf(item.images.thumb, item.images.backdrop, item.images.primary)
+                    } else {
+                        listOf(item.images.backdrop, item.images.primary)
+                    }
+                is FindroidEpisode ->
+                    if (preferThumb) {
+                        listOf(
+                            item.images.showThumb,
+                            item.images.showBackdrop,
+                            item.images.primary,
+                        )
+                    } else {
+                        listOf(item.images.primary, item.images.showBackdrop)
+                    }
+                else -> listOf(item.images.primary)
+            }
+        Direction.VERTICAL ->
+            when (item) {
+                is FindroidEpisode -> listOf(item.images.showPrimary)
+                is FindroidSeason -> listOf(item.images.primary, item.images.showPrimary)
+                else -> listOf(item.images.primary)
+            }
+    }

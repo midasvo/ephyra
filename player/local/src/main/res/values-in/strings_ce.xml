@@ -26,4 +26,5 @@
     </plurals>
     <string name="ce_track_forced">Paksa</string>
     <string name="ce_player_connection_lost">Koneksi terputus. Pemutaran berlanjut saat jaringan kembali.</string>
+    <string name="ce_player_try_again">Coba lagi</string>
 </resources>

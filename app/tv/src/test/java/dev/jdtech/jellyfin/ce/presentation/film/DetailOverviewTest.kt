@@ -6,10 +6,15 @@ import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasParent
@@ -18,12 +23,15 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.isFocused
 import androidx.compose.ui.test.isNotFocusable
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.unit.dp
+import androidx.tv.material3.MaterialTheme
 import dev.jdtech.jellyfin.ce.ui.components.TV_OVERVIEW_TAG
 import dev.jdtech.jellyfin.ce.ui.components.TV_TEXT_DIALOG_TAG
 import dev.jdtech.jellyfin.ce.ui.components.TV_TEXT_DIALOG_TEXT_TAG
@@ -40,6 +48,9 @@ import dev.jdtech.jellyfin.film.presentation.show.ShowState
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import java.util.UUID
+import kotlin.math.abs
+import kotlin.math.roundToInt
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -160,6 +171,51 @@ class DetailOverviewTest {
         press(Key.DirectionUp)
         rule.onNodeWithText("Mark as played").assertIsFocused()
         assertOnScreen(longMovie.name)
+    }
+
+    /** Pixels in the ring's colour around the overview, on the page's window (not the dialog's). */
+    private fun ringPixelsAroundOverview(primary: Color): Int {
+        val box = rule.onNode(overview).getBoundsInRoot()
+        val area = Rect(box.left.value, box.top.value, box.right.value, box.bottom.value).inflate(8f)
+        val pixels = rule.onAllNodes(isRoot()).onFirst().captureToImage().toPixelMap()
+        var found = 0
+        for (x in area.left.roundToInt().coerceAtLeast(0) until
+            area.right.roundToInt().coerceAtMost(pixels.width)) {
+            for (y in area.top.roundToInt().coerceAtLeast(0) until
+                area.bottom.roundToInt().coerceAtMost(pixels.height)) {
+                val c = pixels[x, y]
+                if (
+                    abs(c.red - primary.red) < 0.08f &&
+                        abs(c.green - primary.green) < 0.08f &&
+                        abs(c.blue - primary.blue) < 0.08f
+                ) {
+                    found++
+                }
+            }
+        }
+        return found
+    }
+
+    @Test
+    fun `the page's overview shows no ring while its dialog is open`() {
+        var primary = Color.Unspecified
+        setTvContent {
+            primary = MaterialTheme.colorScheme.primary
+            MovieScreenLayout(state = MovieState(movie = longMovie, actors = actors), onAction = {})
+        }
+        press(Key.DirectionUp)
+        rule.onNode(overview).assertIsFocused()
+        val focused = ringPixelsAroundOverview(primary)
+        assertTrue("$focused ring pixels around the focused overview", focused > 100)
+
+        press(Key.DirectionCenter)
+        rule.onNodeWithTag(TV_TEXT_DIALOG_TEXT_TAG).assertIsFocused()
+        assertEquals(0, ringPixelsAroundOverview(primary))
+
+        rule.runOnUiThread { ShadowDialog.getLatestDialog().onBackPressed() }
+        rule.waitForIdle()
+        rule.onNode(overview).assertIsFocused()
+        assertTrue(ringPixelsAroundOverview(primary) > 100)
     }
 
     @Test

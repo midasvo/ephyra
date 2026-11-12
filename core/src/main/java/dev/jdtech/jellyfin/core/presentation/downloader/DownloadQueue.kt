@@ -40,6 +40,19 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /**
+ * CE (#560): whether [entries] hold anything the queue still has to do: a download that is running
+ * or paused, or one that waits for a free slot, its retry or the network. The pump runs for as long
+ * as this holds, and the download service runs for as long as the pump does.
+ */
+internal fun hasDownloadWork(entries: List<DownloadQueue.Entry>): Boolean =
+    entries.any { it.isDownloadWork() }
+
+internal fun DownloadQueue.Entry.isDownloadWork(): Boolean =
+    state is DownloadQueue.EntryState.Downloading ||
+        state is DownloadQueue.EntryState.Pending ||
+        state is DownloadQueue.EntryState.Paused
+
+/**
  * Central download scheduler. Holds a list of queued/active downloads, respects the
  * user's max-concurrent-downloads setting, and drives Downloader.downloadItem() as
  * slots open up. Single source of truth for download state across the app.
@@ -119,6 +132,14 @@ constructor(
 
     private val _entries = MutableStateFlow<List<Entry>>(emptyList())
     val entries: StateFlow<List<Entry>> = _entries.asStateFlow()
+
+    /**
+     * CE (#560): true from the moment the pump is started until it finds no work left. Both ends
+     * are decided under the mutex, so this is the one place that says whether the download service
+     * is needed; the service follows it instead of counting entries by itself.
+     */
+    private val _pumpActive = MutableStateFlow(false)
+    val pumpActive: StateFlow<Boolean> = _pumpActive.asStateFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
@@ -235,6 +256,12 @@ constructor(
      * pendings via their addedAt timestamp.
      */
     suspend fun restoreAll() {
+        // CE (#573): subtitles of finished downloads that older builds left as `.download`.
+        try {
+            downloader.finalizeFinishedMediaStreams()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to finalize the subtitles of finished downloads")
+        }
         val active =
             try {
                 downloader.getActiveDownloads()
@@ -464,7 +491,8 @@ constructor(
         mutex.withLock {
             if (pumpJob?.isActive == true) return
             // Keep the app process alive while we have work to pump. The service
-            // stops itself when the queue drains.
+            // stops itself once the pump is no longer active.
+            _pumpActive.value = true
             DownloadPumpService.start(context)
             pumpJob =
                 scope.launch {
@@ -472,6 +500,9 @@ constructor(
                         pump()
                     } catch (e: Exception) {
                         Timber.e(e, "DownloadQueue pump crashed")
+                        // Nothing pumps any more: let the service go. The next ensurePump()
+                        // starts both again.
+                        _pumpActive.value = false
                     }
                 }
         }
@@ -640,12 +671,6 @@ constructor(
                             )
                         }
                     }
-                    mutex.withLock {
-                        _entries.value =
-                            sort(_entries.value.map { updates[it.id] ?: it })
-                    }
-                    // A finished download changes what the screens show (#251).
-                    if (completedNow.isNotEmpty()) dataChanges.onChanged()
                     // A failed entry keeps its partial .download file and source row so
                     // the next attempt (auto-retry or manual retry) can resume from where
                     // it left off via Range. We only clear the speed sample — no file/row cleanup.
@@ -655,23 +680,20 @@ constructor(
                         val dlId = failed.downloadId ?: continue
                         lastSamples.remove(dlId)
                     }
-                    // Schedule auto-retry for eligible entries; notify for permanent failures.
-                    val retryUpdates = mutableMapOf<UUID, Entry>()
+                    // Schedule auto-retry for eligible entries. CE (#560): they go straight to
+                    // waiting for the retry, in the same update as everything else. Published as
+                    // Failed first, a queue with nothing else in flight looked finished in between.
+                    val exhausted = mutableListOf<Entry>()
                     for (failed in failedEntries) {
-                        if (
-                            failed.retryCount < MAX_AUTO_RETRIES &&
-                                failed.id !in permanentFailures
-                        ) {
-                            val backoffMs = RETRY_BACKOFF_MS[failed.retryCount.coerceAtMost(RETRY_BACKOFF_MS.lastIndex)]
-                            retryUpdates[failed.id] = failed.copy(
-                                state = EntryState.Pending,
-                                downloadId = null,
-                                startedAt = null,
-                                progress = 0,
-                                retryCount = failed.retryCount + 1,
-                                retryAt = System.currentTimeMillis() + backoffMs,
+                        val next =
+                            afterFailure(
+                                failed = failed,
+                                permanent = failed.id in permanentFailures,
+                                now = System.currentTimeMillis(),
                             )
-                            Timber.i("Auto-retry #${failed.retryCount + 1} for ${failed.item.name} in ${backoffMs / 1000}s")
+                        if (next.state is EntryState.Pending) {
+                            updates[failed.id] = next
+                            Timber.i("Auto-retry #${next.retryCount} for ${failed.item.name} in ${retryBackoffMs(failed.retryCount) / 1000}s")
                             try {
                                 downloader.savePendingDownload(
                                     failed.item,
@@ -682,16 +704,17 @@ constructor(
                                 Timber.e(e, "Failed to re-persist auto-retried download ${failed.item.name}")
                             }
                         } else {
-                            notifyFailure(failed.item)
+                            exhausted.add(failed)
                         }
                     }
-                    if (retryUpdates.isNotEmpty()) {
-                        mutex.withLock {
-                            _entries.value = sort(
-                                _entries.value.map { retryUpdates[it.id] ?: it }
-                            )
-                        }
+                    mutex.withLock {
+                        _entries.value =
+                            sort(_entries.value.map { updates[it.id] ?: it })
                     }
+                    // A finished download changes what the screens show (#251).
+                    if (completedNow.isNotEmpty()) dataChanges.onChanged()
+                    // Notify for the failures that stay failed.
+                    exhausted.forEach { notifyFailure(it.item) }
                     val completedEntries =
                         updates.values.filter { it.state is EntryState.Completed }
                     for (entry in completedEntries) {
@@ -725,15 +748,9 @@ constructor(
             //    pumpJob).
             val shouldExit =
                 mutex.withLock {
-                    val snap = _entries.value
-                    val hasWork =
-                        snap.any {
-                            it.state is EntryState.Downloading ||
-                                it.state is EntryState.Pending ||
-                                it.state is EntryState.Paused
-                        }
-                    if (!hasWork) {
+                    if (!hasDownloadWork(_entries.value)) {
                         pumpJob = null
+                        _pumpActive.value = false
                         true
                     } else {
                         false
@@ -890,5 +907,27 @@ constructor(
 
         /** Minimum gap between checks for failed external subtitle/media-stream downloads. */
         private const val MEDIA_STREAM_RETRY_INTERVAL_MS = 30_000L
+
+        private fun retryBackoffMs(retryCount: Int): Long =
+            RETRY_BACKOFF_MS[retryCount.coerceIn(0, RETRY_BACKOFF_MS.lastIndex)]
+
+        /**
+         * CE (#560): what a download the engine [failed] becomes. With auto-retries left it waits
+         * for the next one; with none left, or refused by the server for good ([permanent], #383),
+         * it stays failed.
+         */
+        internal fun afterFailure(failed: Entry, permanent: Boolean, now: Long): Entry =
+            if (permanent || failed.retryCount >= MAX_AUTO_RETRIES) {
+                failed
+            } else {
+                failed.copy(
+                    state = EntryState.Pending,
+                    downloadId = null,
+                    startedAt = null,
+                    progress = 0,
+                    retryCount = failed.retryCount + 1,
+                    retryAt = now + retryBackoffMs(failed.retryCount),
+                )
+            }
     }
 }

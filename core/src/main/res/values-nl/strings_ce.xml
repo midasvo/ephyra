@@ -111,4 +111,6 @@
         <item quantity="one">%d mislukt</item>
         <item quantity="other">%d mislukt</item>
     </plurals>
+    <string name="ce_home_offline_empty_title">Nog niets gedownload</string>
+    <string name="ce_home_offline_empty_body">Je bent offline. Films en afleveringen die je downloadt, verschijnen hier en bij Downloads.</string>
 </resources>

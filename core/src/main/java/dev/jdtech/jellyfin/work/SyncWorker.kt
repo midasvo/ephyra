@@ -10,13 +10,16 @@ import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.core.presentation.downloader.SmartDownloads
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.FindroidUserDataDto
+import dev.jdtech.jellyfin.repository.PlaybackEvents
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
+import org.jellyfin.sdk.api.client.extensions.sessionApi
 import org.jellyfin.sdk.api.client.extensions.userDataApi
+import org.jellyfin.sdk.model.api.PlaybackStopInfo
 import org.jellyfin.sdk.model.api.UpdateUserItemDataDto
 import timber.log.Timber
 
@@ -29,6 +32,7 @@ constructor(
     val database: ServerDatabaseDao,
     private val jellyfinApi: JellyfinApi,
     private val smartDownloads: SmartDownloads,
+    private val playbackEvents: PlaybackEvents,
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -96,14 +100,62 @@ constructor(
         )
     }
 
+    /**
+     * The item this device's session is playing according to the server, for the app's own client
+     * only: another user's client has no session of its own to end.
+     */
+    private suspend fun itemLeftPlaying(api: ApiClient, userId: UUID): UUID? {
+        if (api !== jellyfinApi.api) return null
+        return api.sessionApi
+            .getSessions(deviceId = api.deviceInfo.id)
+            .content
+            .firstOrNull { it.userId == userId }
+            ?.nowPlayingItem
+            ?.id
+    }
+
     private suspend fun syncUserData(
         api: ApiClient,
         userId: UUID,
         items: List<FindroidUserDataDto>,
     ): Boolean {
+        // The item the server still has "playing" for this device: its stop report did not get
+        // through. Asked first, so an unreachable server ends the run after one request.
+        val leftPlaying =
+            try {
+                itemLeftPlaying(api, userId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: InvalidStatusException) {
+                Timber.w(e, "Could not read the playback session")
+                null
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to sync user data: the server was not reached")
+                return false
+            }
+
         var allOk = true
         for (userData in items) {
             try {
+                if (
+                    endsStaleSession(
+                        rowItemId = userData.itemId,
+                        leftPlayingOnServer = leftPlaying,
+                        playingHere = playbackEvents.playingItemId.value,
+                    )
+                ) {
+                    // End it with the real position, or the server's idle check ends it minutes
+                    // later with the last position it heard, over what is written below (#584).
+                    Timber.d("Ending the server's playback session of ${userData.itemId}")
+                    api.sessionApi.reportPlaybackStopped(
+                        PlaybackStopInfo(
+                            itemId = userData.itemId,
+                            positionTicks = userData.playbackPositionTicks,
+                            failed = false,
+                        )
+                    )
+                }
+
                 api.userDataApi.updateItemUserData(
                     itemId = userData.itemId,
                     userId = userId,
@@ -154,6 +206,14 @@ constructor(
         return allOk
     }
 }
+
+/**
+ * Whether the sync of [rowItemId] has to end a playback session first: the server still has the
+ * item playing for this device ([leftPlayingOnServer]) while the player here has closed it. With
+ * the item open in the player here ([playingHere]) the session is alive and reports for itself.
+ */
+internal fun endsStaleSession(rowItemId: UUID, leftPlayingOnServer: UUID?, playingHere: UUID?): Boolean =
+    leftPlayingOnServer == rowItemId && playingHere != rowItemId
 
 internal enum class AfterStatus {
     DROP,

@@ -57,4 +57,5 @@ The drawer from #127 was padded 12 dp from the left edge, so its icons sat at 28
 - The pages beside the drawer keep their 80 dp inset (`ClosedDrawerWidth`) and their own 48 dp padding, so their content stays at 128 dp. The collapsed rail is 92 dp wide and covers 12 dp of that padding, where there is no content; a row scrolled sideways is cut at 92 dp instead of 80 dp. The rail ends at the pill, so the glow of a focused first card is not cut.
 - Expanded, the surface keeps 12 dp after the pill and grows from 280 to 304 dp; the items keep tv-material's 256 dp, so the labels truncate where they did.
 - The icons still move 4 dp to the right when the drawer opens, as before.
+- The profile item is a CE item 64 dp high (#567), so the server name fits under the user name; tv-material's drawer item is fixed at 48 dp. Same pill, colours, ring and positions; the list below it starts 16 dp lower.
 - An expanded item now ends at 292 dp, past the right edge of a 150 dp poster at 128 dp (Favorites). When Right finds nothing right of the item, the drawer enters the content instead, so focus does not stay in the drawer.
