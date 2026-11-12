@@ -49,6 +49,10 @@ data class TrickplayTiles(
         )
     }
 
+    /** The sheets before and after [sheetIndex] that exist, for loading ahead while scrubbing. */
+    fun neighbourSheets(sheetIndex: Int): List<Int> =
+        listOf(sheetIndex - 1, sheetIndex + 1).filter { it in 0 until sheetCount }
+
     companion object {
         /**
          * The largest power-of-two sample size that keeps a thumbnail at least [targetWidth] pixels

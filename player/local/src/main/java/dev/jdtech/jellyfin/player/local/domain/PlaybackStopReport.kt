@@ -16,12 +16,21 @@ data class PlaybackStopReport(val positionTicks: Long, val playedPercentage: Int
  * duration is known (the item was left while it was still loading), a stop is only owed if the
  * start was sent ([startSent]): it then goes out at [positionMs], which is the position playback
  * was asked to start at, and without a percentage, so a saved resume position is kept (#461).
+ *
+ * [finished] is an item left from its closing outro (#616): the stop goes out at the end of the
+ * item, so the server and the local database mark it played wherever the outro started.
  */
-fun playbackStopReport(positionMs: Long, durationMs: Long, startSent: Boolean): PlaybackStopReport? {
+fun playbackStopReport(
+    positionMs: Long,
+    durationMs: Long,
+    startSent: Boolean,
+    finished: Boolean = false,
+): PlaybackStopReport? {
     if (durationMs != C.TIME_UNSET && durationMs > 0) {
+        val reportedMs = if (finished) durationMs else positionMs
         return PlaybackStopReport(
-            positionTicks = positionMs.times(10000),
-            playedPercentage = positionMs.div(durationMs.toFloat()).times(100).toInt(),
+            positionTicks = reportedMs.times(10000),
+            playedPercentage = reportedMs.div(durationMs.toFloat()).times(100).toInt(),
         )
     }
     if (!startSent) return null
