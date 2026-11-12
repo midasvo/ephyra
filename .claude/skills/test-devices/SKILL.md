@@ -61,7 +61,8 @@ The server the app logs in to comes from the `test-server` skill.
 | To get | Do |
 |---|---|
 | The server unreachable, internet up | `adb root`, then the `iptables` rule in the doc (phone and tablet images only) |
-| No network at all | `adb shell cmd connectivity airplane-mode enable` |
+| The same on a TV image | `tools/test-server/forward.py` and the app logged in to `http://10.0.2.2:8097`; kill the script to drop the server (see the doc) |
+| No network at all | `adb shell cmd connectivity airplane-mode enable` (phone and tablet images only: the TV image is on Ethernet, and `adb emu network speed` does nothing there either) |
 | Portrait or landscape | `scripts/avds.sh portrait|landscape <name>` |
 | The app's database or preferences | `adb exec-out run-as nl.midasvo.findroid.ce.debug cat <path>` (debug build only) |
 | A crash, after the fact | `adb logcat -b crash -d` |

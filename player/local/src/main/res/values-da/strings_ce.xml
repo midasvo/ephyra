@@ -28,4 +28,5 @@
     </plurals>
     <string name="ce_track_forced">Tvungne</string>
     <string name="ce_player_connection_lost">Forbindelsen blev afbrudt. Afspilningen fortsætter, når netværket er tilbage.</string>
+    <string name="ce_player_try_again">Prøv igen</string>
 </resources>

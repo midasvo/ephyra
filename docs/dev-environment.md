@@ -167,7 +167,15 @@ with it.
 - **Server gone, internet still there**: on a phone or tablet AVD, `adb root`, then
   `adb shell iptables -I OUTPUT -d 10.0.2.2 -p tcp --dport 8096 -j REJECT --reject-with tcp-reset`;
   the same rule with `-D` removes it. Airplane mode: `adb shell cmd connectivity airplane-mode enable`.
-  The TV image has no root.
+- **On the TV image none of that works**: it has no root, its network is Ethernet, which airplane
+  mode leaves up, and `adb emu network speed` reports a speed without limiting anything. Take the
+  server away from one emulator with a forwarder instead: `python3 tools/test-server/forward.py`
+  (next to the server, so in WSL on Windows) listens on 8097 and passes everything to 8096. Log
+  that emulator in to `http://10.0.2.2:8097`; killing the script is "connection lost", starting it
+  again is "back", and nobody else notices. A connection to the dead port times out instead of
+  being refused, so a player takes a minute or more to give up. A third argument limits the speed
+  (`forward.py 8097 8096 600` for 600 kbit/s): without it a player has a whole test file buffered
+  within a second and plays on without the server.
 - **Scripted taps**: dump the screen (`uiautomator dump`) and check it before every tap. Keys sent
   blind land on whatever screen is open.
 - **A script that logs in to the server** needs a `DeviceId` of its own in its `Authorization`

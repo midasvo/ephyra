@@ -28,4 +28,5 @@
     </plurals>
     <string name="ce_track_forced">Tvungne</string>
     <string name="ce_player_connection_lost">Tilkoplinga vart broten. Avspelinga held fram når nettverket er tilbake.</string>
+    <string name="ce_player_try_again">Prøv på nytt</string>
 </resources>

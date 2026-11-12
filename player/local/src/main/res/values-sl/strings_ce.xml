@@ -32,4 +32,5 @@
     </plurals>
     <string name="ce_track_forced">Vsiljeni</string>
     <string name="ce_player_connection_lost">Povezava je prekinjena. Predvajanje se bo nadaljevalo, ko bo omrežje spet na voljo.</string>
+    <string name="ce_player_try_again">Poskusi znova</string>
 </resources>
