@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">Maksimaalne bitikiirus</string>
     <string name="ce_pref_cast_max_bitrate_summary">Ülekandmise ajal vähendab server kõige seda ületava kvaliteeti</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Kuva ridades Jätka vaatamist ja Järgmisena ning episoodi lehe ülaosas sarja pildi asemel episoodi pilti</string>
 </resources>

@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">Maksimum bit hızı</string>
     <string name="ce_pref_cast_max_bitrate_summary">Yayın sırasında sunucu, bunun üzerindeki her şeyin kalitesini düşürür</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">İzlemeye devam et ve Sıradaki satırlarında ve bölüm sayfasının üst kısmında dizinin görseli yerine bölümün görselini göster</string>
 </resources>

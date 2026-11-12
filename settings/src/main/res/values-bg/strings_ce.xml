@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">Максимален битрейт</string>
     <string name="ce_pref_cast_max_bitrate_summary">Докато предавате, сървърът намалява качеството на всичко над тази стойност</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Показване на изображението на епизода вместо това на сериала в „Продължете гледането“, „Следващо“ и в горната част на страницата на епизода</string>
 </resources>

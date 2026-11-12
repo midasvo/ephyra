@@ -204,4 +204,5 @@
     <string name="ce_pref_cast_max_bitrate">קצב סיביות מרבי</string>
     <string name="ce_pref_cast_max_bitrate_summary">בזמן ההעברה לטלוויזיה השרת מוריד את האיכות של כל מה שמעל הקצב הזה</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">הצגת תמונת הפרק במקום תמונת הסדרה ב\"המשך צפייה\", ב\"הבא בתור\" ובראש דף הפרק</string>
 </resources>

@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">Maximale Bitrate</string>
     <string name="ce_pref_cast_max_bitrate_summary">Beim Streamen verringert der Server die Qualität von allem, was darüber liegt</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_home_episode_images_summary_phone">In „Weiterschauen“, in „Als Nächstes“ und oben auf der Episodenseite das Bild der Episode statt des Serienbilds anzeigen</string>
 </resources>

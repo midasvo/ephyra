@@ -206,4 +206,5 @@
     <string name="ce_pref_cast_max_bitrate">Največja bitna hitrost</string>
     <string name="ce_pref_cast_max_bitrate_summary">Med predvajanjem na televizorju strežnik zniža kakovost vsega, kar jo presega</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Prikaži sliko epizode namesto slike serije v vrsticah Nadaljuj z ogledom in Naslednje ter na vrhu strani epizode</string>
 </resources>

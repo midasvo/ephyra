@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">Maximal bithastighet</string>
     <string name="ce_pref_cast_max_bitrate_summary">Servern sänker kvaliteten på allt som ligger över den medan du castar</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Visa avsnittets bild i stället för seriens bild i Fortsätt titta, i Nästa och överst på avsnittets sida</string>
 </resources>

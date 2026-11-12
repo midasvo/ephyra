@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">Maximális bitráta</string>
     <string name="ce_pref_cast_max_bitrate_summary">Átküldés közben a szerver csökkenti az ennél nagyobb bitrátájú tartalmak minőségét</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_home_episode_images_summary_phone">A sorozat képe helyett az epizód képének megjelenítése a Megtekintés folytatása és a Következő sorban, valamint az epizód oldalának tetején</string>
 </resources>

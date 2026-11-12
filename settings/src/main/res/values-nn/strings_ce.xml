@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">Maksimal bitrate</string>
     <string name="ce_pref_cast_max_bitrate_summary">Tenaren senkar kvaliteten på alt som ligg over, medan du castar</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Vis biletet til episoden i staden for biletet til serien i Hald fram å sjå, i Neste og øvst på sida til episoden</string>
 </resources>

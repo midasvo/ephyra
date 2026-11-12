@@ -55,7 +55,7 @@ At every size, in light and dark theme, check the screens below in the state tha
 
 From [§13](4-design.md#13-acceptance-criteria). Tick them per size.
 
-- [ ] No page shows a backdrop cropped tighter than 2.2:1, and no running text column is wider than 720 dp.
+- [ ] No page in a portrait window shows a backdrop cropped tighter than 2.2:1. In a landscape window at medium or expanded size the hero height of `4-design.md` §6 decides instead (45 % of the window height, or the 320 dp minimum where that is more), so that the poster, title and Play stay on the first screen: the crop there is about 3.6:1 at 10.5 inch, 3.2:1 at 8 inch and 2.6:1 on the unfolded fold. A phone in landscape has the compact page, without this hero (decided in #432; #622 is the design that would show the picture at 16:9). No running text column is wider than 720 dp.
 - [ ] Movie, Show and Episode at expanded use the hero layout with the poster; Season at expanded is list-detail; rotating a tablet keeps the selected episode and the scroll position.
 - [ ] The player opens in the device's current orientation on medium and expanded windows; volume and brightness swipes at expanded width only work within 240 dp of an edge.
 - [ ] Space, Left/Right and Esc work in the player; Tab reaches every control on Home, Media and an item page.

@@ -204,4 +204,5 @@
     <string name="ce_pref_cast_max_bitrate">Rată de biți maximă</string>
     <string name="ce_pref_cast_max_bitrate_summary">În timpul proiectării, serverul reduce calitatea a tot ce o depășește</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Afișează imaginea episodului în locul imaginii serialului în Continuă vizionarea, în Urmează și în partea de sus a paginii episodului</string>
 </resources>

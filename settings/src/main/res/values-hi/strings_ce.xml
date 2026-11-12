@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">अधिकतम बिटरेट</string>
     <string name="ce_pref_cast_max_bitrate_summary">कास्ट करते समय सर्वर इससे ज़्यादा बिटरेट वाली हर चीज़ की क्वालिटी घटा देता है</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">देखना जारी रखें और आगे देखें में, और एपिसोड के पेज के ऊपर, सीरीज़ की छवि की जगह एपिसोड की छवि दिखाएँ</string>
 </resources>

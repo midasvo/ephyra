@@ -200,4 +200,5 @@
     <string name="ce_pref_cast_max_bitrate">最高位元率</string>
     <string name="ce_pref_cast_max_bitrate_summary">投放嗰陣，伺服器會將高過呢個數值嘅內容降低畫質</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">喺「繼續觀看」、「下一集」同單集頁面頂部顯示單集嘅圖片，而唔係劇集嘅圖片</string>
 </resources>

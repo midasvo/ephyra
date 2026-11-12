@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">Bitrate massimo</string>
     <string name="ce_pref_cast_max_bitrate_summary">Durante la trasmissione il server riduce la qualità di tutto ciò che lo supera</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Mostra l\'immagine dell\'episodio invece di quella della serie in Continua a guardare, in Prossimi e in cima alla pagina dell\'episodio</string>
 </resources>

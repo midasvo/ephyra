@@ -206,4 +206,5 @@
     <string name="ce_pref_cast_max_bitrate">Maximální datový tok</string>
     <string name="ce_pref_cast_max_bitrate_summary">Při odesílání server sníží kvalitu všeho, co ho překračuje</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mb/s</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Zobrazit obrázek epizody místo obrázku seriálu v řadách Pokračovat ve sledování a Další a v horní části stránky epizody</string>
 </resources>

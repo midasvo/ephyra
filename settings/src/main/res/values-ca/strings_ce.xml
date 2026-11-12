@@ -202,4 +202,5 @@
     <string name="ce_pref_cast_max_bitrate">Taxa de bits màxima</string>
     <string name="ce_pref_cast_max_bitrate_summary">El servidor redueix la qualitat de tot el que la superi mentre emets</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Mostra la imatge de l\'episodi en lloc de la imatge de la sèrie a Continua mirant, a Següent i a la part superior de la pàgina de l\'episodi</string>
 </resources>

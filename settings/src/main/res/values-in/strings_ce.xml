@@ -200,4 +200,5 @@
     <string name="ce_pref_cast_max_bitrate">Bitrate maksimum</string>
     <string name="ce_pref_cast_max_bitrate_summary">Server menurunkan kualitas apa pun yang melebihinya saat mentransmisikan</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Tampilkan gambar episode, bukan gambar serial, di Lanjutkan menonton, di Berikutnya, dan di bagian atas halaman episode</string>
 </resources>

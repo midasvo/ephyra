@@ -206,4 +206,5 @@
     <string name="ce_pref_cast_max_bitrate">Максимальний бітрейт</string>
     <string name="ce_pref_cast_max_bitrate_summary">Під час трансляції сервер знижує якість усього, що його перевищує</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Мбіт/с</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Показувати зображення серії замість зображення серіалу в «Продовжити перегляд», у «Далі» та вгорі сторінки серії</string>
 </resources>

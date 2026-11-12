@@ -323,4 +323,5 @@
     <string name="ce_pref_cast_max_bitrate">Maximum bitrate</string>
     <string name="ce_pref_cast_max_bitrate_summary">The server lowers the quality of anything above it while casting</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Show the episode\'s image instead of the show\'s artwork in Continue Watching, in Next Up and at the top of an episode\'s page</string>
 </resources>

@@ -58,10 +58,11 @@ constructor(
             _state.emit(_state.value.copy(error = null))
             try {
                 // The preference doesn't depend on the episode, so it is read while it loads.
-                val (episode, displayCastAndCrew) = coroutineScope {
+                val (episode, displayCastAndCrew, useEpisodeImages) = coroutineScope {
                     val episodeAsync = async { repository.getEpisode(episodeId) }
                     val castAsync = async { appPreferences.getValue(appPreferences.displayCastAndCrew) }
-                    episodeAsync.await() to castAsync.await()
+                    val imagesAsync = async { appPreferences.getValue(appPreferences.homeEpisodeImages) }
+                    Triple(episodeAsync.await(), castAsync.await(), imagesAsync.await())
                 }
                 val videoMetadata = episode.sources.firstOrNull()?.let { videoMetadataParser.parse(it) }
                 val actors = if (displayCastAndCrew) getActors(episode) else emptyList()
@@ -70,6 +71,7 @@ constructor(
                         episode = episode.shownIn(appPreferences.detailSections()),
                         videoMetadata = videoMetadata,
                         actors = actors,
+                        useEpisodeImages = useEpisodeImages,
                     )
                 )
                 reloadPolicy.complete(token)

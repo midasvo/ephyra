@@ -259,12 +259,25 @@ class SettingsViewModel @Inject constructor(
                                                     suffixPluralsRes = R.plurals.ce_days_count,
                                                     zeroLabelRes = R.string.ce_number_no_limit,
                                                 ),
-                                                // CE (#608)
+                                                // CE (#608), and on the phone the header of
+                                                // the episode page follows it (#630). TV has no
+                                                // episode page, so it keeps the shorter text.
+                                                PreferenceSwitch(
+                                                    nameStringResource =
+                                                        R.string.ce_pref_home_episode_images,
+                                                    descriptionStringRes =
+                                                        R.string
+                                                            .ce_pref_home_episode_images_summary_phone,
+                                                    supportedDeviceTypes = listOf(DeviceType.PHONE),
+                                                    backendPreference =
+                                                        appPreferences.homeEpisodeImages,
+                                                ),
                                                 PreferenceSwitch(
                                                     nameStringResource =
                                                         R.string.ce_pref_home_episode_images,
                                                     descriptionStringRes =
                                                         R.string.ce_pref_home_episode_images_summary,
+                                                    supportedDeviceTypes = listOf(DeviceType.TV),
                                                     backendPreference =
                                                         appPreferences.homeEpisodeImages,
                                                 ),

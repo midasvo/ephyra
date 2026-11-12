@@ -218,7 +218,13 @@ private fun EpisodeScreenLayout(
 
     val scrollState = rememberScrollState()
     // CE (#437): the artwork under the top bar, if any; shared by the header and the bar.
-    val artwork = rememberArtworkState(state.episode, ArtworkPlacement.Header)
+    // CE (#630): the show's backdrop, or the episode's image with "Use episode images" on.
+    val artwork =
+        rememberArtworkState(
+            state.episode,
+            ArtworkPlacement.Header,
+            episodeImageFirst = state.useEpisodeImages,
+        )
 
     var downloadQualityDialogOpen by remember { mutableStateOf(false) }
 

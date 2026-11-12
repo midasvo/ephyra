@@ -33,6 +33,7 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     val homeLatest = Preference<Boolean>("home_latest", true)
     // CE (#608): Continue Watching and Next Up show the series' or movie's thumb (the wide art
     // with the title on it) unless this is on, like the web client's setting of the same name.
+    // On the phone the header of the episode page follows it too (#630).
     val homeEpisodeImages = Preference("pref_home_episode_images", false)
     // CE (#138): the Android TV launcher's Watch Next row. Only the TV app shows and uses it.
     val tvWatchNext = Preference("pref_tv_watch_next", true)

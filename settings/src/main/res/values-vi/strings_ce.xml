@@ -200,4 +200,5 @@
     <string name="ce_pref_cast_max_bitrate">Tốc độ bit tối đa</string>
     <string name="ce_pref_cast_max_bitrate_summary">Khi truyền, máy chủ sẽ giảm chất lượng của mọi nội dung vượt quá mức này</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Hiển thị hình ảnh của tập thay cho hình ảnh của phim bộ trong Tiếp tục xem, Tiếp theo và ở đầu trang của tập</string>
 </resources>
