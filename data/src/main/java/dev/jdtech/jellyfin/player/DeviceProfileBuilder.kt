@@ -245,7 +245,7 @@ class DeviceProfileBuilder(context: Context) {
 
         private val AVAILABLE_AUDIO_CODECS = arrayOf(
             // mp4
-            arrayOf("mp1", "mp2", "mp3", "aac", "alac", "ac3", "opus"),
+            arrayOf("mp1", "mp2", "mp3", "aac", "alac", "ac3", "eac3", "opus"),
             // fmp4
             arrayOf("mp3", "aac", "ac3", "eac3"),
             // webm
@@ -337,11 +337,28 @@ class DeviceProfileBuilder(context: Context) {
         private const val MAX_STATIC_BITRATE = 100_000_000
         private const val MAX_MUSIC_TRANSCODING_BITRATE = 384_000
 
-        private val TRANSCODING_PROFILES = listOf(
+        /** The container of the HLS transcode's segments. */
+        private const val HLS_CONTAINER = "ts"
+
+        /**
+         * Video codecs the server may copy into the HLS transcode, on top of the H.264
+         * it encodes to. Each is listed after `h264`: the server encodes to the first
+         * codec and copies a stream whose codec is anywhere in the list.
+         */
+        private val HLS_COPY_VIDEO_CODECS = listOf("hevc")
+
+        private val TRANSCODING_PROFILES = transcodingProfiles(emptyList())
+
+        /**
+         * H.264 over HLS, with [copyVideoCodecs] as codecs the server may copy instead
+         * of encoding: a file that only needs another container or audio codec then
+         * costs the server no video encode.
+         */
+        private fun transcodingProfiles(copyVideoCodecs: List<String>) = listOf(
             TranscodingProfile(
                 type = DlnaProfileType.VIDEO,
-                container = "ts",
-                videoCodec = "h264",
+                container = HLS_CONTAINER,
+                videoCodec = (listOf("h264") + copyVideoCodecs).joinToString(","),
                 audioCodec = "mp1,mp2,mp3,aac,ac3,eac3,dts,mlp,truehd",
                 protocol = MediaStreamProtocol.HLS,
                 conditions = emptyList(),
@@ -441,10 +458,24 @@ class DeviceProfileBuilder(context: Context) {
                 }
             }
 
+            // A stream is only copied into the HLS transcode if the device decodes it, and
+            // under the conditions direct play has. No Dolby Vision range: the segments are
+            // MPEG-TS, where media3 does not see the Dolby Vision configuration.
+            val hlsCopyVideoCodecs =
+                HLS_COPY_VIDEO_CODECS.filter { probed.videoCodecProfiles.containsKey(it) }
+            for (videoCodec in hlsCopyVideoCodecs) {
+                generateCodecProfile(
+                    HLS_CONTAINER,
+                    videoCodec,
+                    probed.videoCodecProfiles,
+                    emptyList(),
+                )?.let(codecProfiles::add)
+            }
+
             return DeviceProfile(
                 name = "Ephyra Device Profile",
                 directPlayProfiles = directPlayProfiles,
-                transcodingProfiles = TRANSCODING_PROFILES,
+                transcodingProfiles = transcodingProfiles(hlsCopyVideoCodecs),
                 containerProfiles = containerProfiles,
                 codecProfiles = codecProfiles,
                 subtitleProfiles = subtitleProfiles(),

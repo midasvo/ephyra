@@ -74,6 +74,8 @@ class JellyfinRepositoryImpl(
     private val deviceProfileBuilder: DeviceProfileBuilder,
     private val syncRequester: UserDataSyncRequester = UserDataSyncRequester.NONE,
 ) : JellyfinRepository {
+    private val playSessions = PlaySessions()
+
     private val currentUserId: UUID
         get() = jellyfinApi.userId
             ?: throw IllegalStateException("No authenticated user. userId is null — session may have expired.")
@@ -570,7 +572,7 @@ class JellyfinRepositoryImpl(
                 }
             val enableTranscoding = !useDirectPlay || maxBitrate != null
             val sources = mutableListOf<FindroidSource>()
-            sources.addAll(
+            val playbackInfo =
                 jellyfinApi.mediaInfoApi
                     .getPostedPlaybackInfo(
                         itemId,
@@ -586,10 +588,15 @@ class JellyfinRepositoryImpl(
                         ),
                     )
                     .content
-                    .mediaSources
-                    .map {
-                        it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath = true)
-                    }
+            playSessions.onPlaybackInfo(
+                itemId,
+                playbackInfo.playSessionId,
+                transcodes = playbackInfo.mediaSources.any { !it.transcodingUrl.isNullOrBlank() },
+            )
+            sources.addAll(
+                playbackInfo.mediaSources.map {
+                    it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath = true)
+                }
             )
             sources.addAll(localSources)
             sources
@@ -761,7 +768,13 @@ class JellyfinRepositoryImpl(
             }
             try {
                 jellyfinApi.sessionApi.reportPlaybackStopped(
-                    PlaybackStopInfo(itemId = itemId, positionTicks = positionTicks, failed = false)
+                    PlaybackStopInfo(
+                        itemId = itemId,
+                        positionTicks = positionTicks,
+                        failed = false,
+                        // With it the server ends the item's transcode now, not a minute later.
+                        playSessionId = playSessions.sessionOf(itemId),
+                    )
                 )
             } catch (_: Exception) {
                 // Nothing local changed without user data, so there is nothing to sync later.
