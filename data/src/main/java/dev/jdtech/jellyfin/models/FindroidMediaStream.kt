@@ -25,6 +25,8 @@ data class FindroidMediaStream(
     val frameRate: Float? = null,
     val bitDepth: Int? = null,
     val sampleRate: Int? = null,
+    /** CE (#580): the server's number for the stream, which a playback request names. */
+    val index: Int? = null,
 )
 
 fun MediaStream.toFindroidMediaStream(jellyfinRepository: JellyfinRepository): FindroidMediaStream {
@@ -48,6 +50,7 @@ fun MediaStream.toFindroidMediaStream(jellyfinRepository: JellyfinRepository): F
         frameRate = averageFrameRate ?: realFrameRate,
         bitDepth = bitDepth,
         sampleRate = sampleRate,
+        index = index,
     )
 }
 

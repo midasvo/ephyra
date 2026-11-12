@@ -205,6 +205,25 @@ if [ ! -f "$ROOT/media/.generated-extra" ]; then
   touch "$ROOT/media/.generated-extra"
 fi
 
+# --- a series with two audio tracks (the per-series track choice on a transcode, #580) -------
+if [ ! -f "$ROOT/media/.generated-tracks-show" ]; then
+  docker run --rm --entrypoint bash -v "$ROOT/media:/media" "$IMAGE" -c '
+    set -e
+    FF=/usr/lib/jellyfin-ffmpeg/ffmpeg
+    d="/media/shows/Tracks Show (2025)/Season 01"; mkdir -p "$d"
+    for e in 01 02 03; do
+      $FF -v error -y -f lavfi -i "testsrc2=size=640x360:rate=24:duration=90" \
+          -f lavfi -i "sine=frequency=440:duration=90" -f lavfi -i "sine=frequency=880:duration=90" \
+          -map 0:v -map 1:a -map 2:a -c:v libx264 -preset ultrafast -pix_fmt yuv420p -g 48 -c:a aac -b:a 96k \
+          -metadata:s:a:0 language=eng -metadata:s:a:0 title="English" \
+          -metadata:s:a:1 language=dut -metadata:s:a:1 title="Nederlands" \
+          -disposition:a:0 default -disposition:a:1 0 "$d/Tracks Show - S01E$e - Episode $e.mkv"
+    done
+    chmod -R a+rX /media
+  '
+  touch "$ROOT/media/.generated-tracks-show"
+fi
+
 # --- container -----------------------------------------------------------------------------
 if ! docker ps -a --format '{{.Names}}' | grep -qx "$NAME"; then
   docker run -d --name "$NAME" --restart unless-stopped -p "$PORT:8096" \

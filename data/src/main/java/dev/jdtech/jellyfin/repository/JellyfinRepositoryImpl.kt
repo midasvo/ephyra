@@ -15,6 +15,7 @@ import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.models.FindroidSource
+import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
 import dev.jdtech.jellyfin.models.toFindroidCollection
@@ -538,6 +539,7 @@ class JellyfinRepositoryImpl(
     override suspend fun getPlaybackSources(
         itemId: UUID,
         mediaSourceId: String?,
+        audioStreamIndex: Int?,
     ): List<FindroidSource> =
         withContext(Dispatchers.IO) {
             // A downloaded copy wins over any server source (see PlaylistManager), so do not wait
@@ -585,6 +587,9 @@ class JellyfinRepositoryImpl(
                             allowVideoStreamCopy = true,
                             allowAudioStreamCopy = true,
                             autoOpenLiveStream = enableTranscoding,
+                            // CE (#580): the server ignores the index without the source's id.
+                            mediaSourceId = mediaSourceId.takeIf { audioStreamIndex != null },
+                            audioStreamIndex = audioStreamIndex.takeIf { mediaSourceId != null },
                         ),
                     )
                     .content
@@ -601,6 +606,9 @@ class JellyfinRepositoryImpl(
             sources.addAll(localSources)
             sources
         }
+
+    override suspend fun getSeriesTrackPreferences(seriesId: UUID): List<SeriesTrackPreferenceDto> =
+        withContext(Dispatchers.IO) { database.getSeriesTrackPreferences(currentUserId, seriesId) }
 
     override suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String =
         withContext(Dispatchers.IO) {

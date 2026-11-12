@@ -24,6 +24,8 @@ data class FindroidSource(
     /** CE (#510): for the media info sheet. A downloaded source has neither. */
     val container: String? = null,
     val bitrate: Int? = null,
+    /** CE (#580): the audio stream the server plays, and puts in a transcode, for this source. */
+    val defaultAudioStreamIndex: Int? = null,
 )
 
 suspend fun MediaSourceInfo.toFindroidSource(
@@ -61,6 +63,7 @@ suspend fun MediaSourceInfo.toFindroidSource(
         transcoded = transcoded,
         container = container,
         bitrate = bitrate,
+        defaultAudioStreamIndex = defaultAudioStreamIndex,
     )
 }
 

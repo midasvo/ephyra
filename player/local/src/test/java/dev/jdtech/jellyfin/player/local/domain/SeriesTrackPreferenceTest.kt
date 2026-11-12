@@ -1,5 +1,7 @@
 package dev.jdtech.jellyfin.player.local.domain
 
+import dev.jdtech.jellyfin.models.FindroidMediaStream
+import org.jellyfin.sdk.model.api.MediaStreamType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -70,5 +72,70 @@ class SeriesTrackPreferenceTest {
     fun `title only choice has no position`() {
         val candidates = listOf(track(null, "Forced"))
         assertEquals(StoredChoice(null, "Forced", null), seriesTrackChoice(candidates, 0))
+    }
+
+    @Test
+    fun `the two ISO 639-2 codes of a language are one language`() {
+        // mpv reads "dut" from the file; ExoPlayer and the server make "nl" and "nld" of it.
+        assertEquals("nld", normalizeLanguage("dut"))
+        assertEquals("nld", normalizeLanguage("nl"))
+        assertEquals("deu", normalizeLanguage("ger"))
+        assertEquals("fra", normalizeLanguage("FRE"))
+        assertEquals("zho", normalizeLanguage("chi"))
+        assertEquals("eng", normalizeLanguage("eng"))
+
+        val candidates = listOf(track("eng"), track("dut"), track("ger"))
+        assertEquals(1, matchSeriesTrack(StoredChoice("nld", null, 0), candidates))
+        assertEquals(2, matchSeriesTrack(StoredChoice("de", null, 0), candidates))
+        assertEquals(StoredChoice("nld", null, 0), seriesTrackChoice(candidates, 1))
+    }
+
+    private fun stream(
+        index: Int?,
+        language: String,
+        title: String = "",
+        type: MediaStreamType = MediaStreamType.AUDIO,
+        external: Boolean = false,
+    ) =
+        FindroidMediaStream(
+            title = title,
+            displayTitle = null,
+            language = language,
+            type = type,
+            codec = "aac",
+            profile = null,
+            isExternal = external,
+            path = null,
+            channelLayout = null,
+            videoRangeType = null,
+            height = null,
+            width = null,
+            videoDoViTitle = null,
+            index = index,
+        )
+
+    @Test
+    fun `a choice gives the server's index of the audio stream`() {
+        val streams =
+            listOf(
+                stream(0, "", type = MediaStreamType.VIDEO),
+                stream(1, "eng", "English"),
+                stream(2, "eng", "Commentary"),
+                stream(3, "nld", "Nederlands"),
+                stream(4, "nld", type = MediaStreamType.SUBTITLE),
+            )
+        // The position is among the audio streams of the language, not among all streams.
+        assertEquals(3, audioStreamIndex(StoredChoice("dut", "Gone", 0), streams))
+        assertEquals(2, audioStreamIndex(StoredChoice("en", "commentary", 0), streams))
+        assertEquals(2, audioStreamIndex(StoredChoice("eng", null, 1), streams))
+        assertNull(audioStreamIndex(StoredChoice("jpn", null, 0), streams))
+    }
+
+    @Test
+    fun `external audio and streams without an index are not requested`() {
+        val streams = listOf(stream(1, "eng"), stream(2, "nld", external = true), stream(null, "deu"))
+        assertNull(audioStreamIndex(StoredChoice("nld", null, 0), streams))
+        assertNull(audioStreamIndex(StoredChoice("deu", null, 0), streams))
+        assertEquals(1, audioStreamIndex(StoredChoice("eng", null, 0), streams))
     }
 }

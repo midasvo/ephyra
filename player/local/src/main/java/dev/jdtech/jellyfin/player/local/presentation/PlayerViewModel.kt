@@ -1620,6 +1620,17 @@ constructor(
     private fun supportedGroups(trackType: @C.TrackType Int) =
         player.currentTracks.groups.filter { it.type == trackType && it.isSupported }
 
+    /** The audio track playing now, as the matcher describes it, or null when it has no name. */
+    private fun selectedAudioChoice(): StoredChoice? {
+        val groups = supportedGroups(C.TRACK_TYPE_AUDIO)
+        val candidates =
+            groups.map {
+                val format = it.mediaTrackGroup.getFormat(0)
+                TrackCandidate(format.language, format.label)
+            }
+        return seriesTrackChoice(candidates, groups.indexOfFirst { it.isSelected })
+    }
+
     /** Remembers a track the user picked by hand for the rest of the series. */
     private fun saveSeriesTrackPreference(trackType: @C.TrackType Int, index: Int) {
         val seriesId = currentPlayerItem()?.seriesId ?: return
@@ -1804,9 +1815,18 @@ constructor(
         appPreferences.setValue(appPreferences.playerMaxBitrate, bitrate)
 
         viewModelScope.launch {
+            // CE (#580): the playing item keeps its audio track when the switch leads to a
+            // transcode, which carries one track.
+            val playingId = player.currentMediaItem?.mediaId
+            val playingAudio = selectedAudioChoice()
             val rebuilt =
                 try {
-                    items.map { playlistManager.recreatePlayerItem(it) }
+                    items.map {
+                        playlistManager.recreatePlayerItem(
+                            it,
+                            playingAudio.takeIf { _ -> it.itemId.toString() == playingId },
+                        )
+                    }
                 } catch (e: Exception) {
                     Timber.e(e)
                     // Keep playing the current stream and roll the setting back so
