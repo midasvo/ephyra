@@ -152,12 +152,19 @@ class MpvLoadStateTest {
 
     @Test
     fun `a failure held for its line is not reported again for the next entries`() {
+        assertFalse(state.failed)
         assertEquals(End.HOLD, state.endFile(on(1)))
+        // Failed from here on, not from the report: mpv moving to the next entry while the
+        // report is held must not become the player's item (seen: Previous jumped back).
+        assertTrue(state.failed)
         state.startFile()
         assertEquals(End.NOT_A_FAILURE, state.endFile(idle))
 
         assertEquals(Logged.COMPLETES_FAILURE, state.errorLogged("ffmpeg: tcp: refused"))
         assertEquals(listOf("ffmpeg: tcp: refused"), state.failure.errors)
+        assertTrue(state.failed)
+        state.newLoad(index = 1)
+        assertFalse(state.failed)
     }
 
     @Test

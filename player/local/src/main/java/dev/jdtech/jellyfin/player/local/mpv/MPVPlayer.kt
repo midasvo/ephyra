@@ -561,8 +561,14 @@ class MPVPlayer(
                 "playlist-current-pos" -> {
                     // #474: after an error mpv may move on to the next entry before it is
                     // stopped. The item stays the one the error is on until prepare() or a seek
-                    // to another item clears the error.
-                    if (value < 0 || playerError != null || reloadingAfterError) {
+                    // to another item clears the error. #576: also while the error waits for
+                    // mpv's error line, when there is no playerError yet.
+                    if (
+                        value < 0 ||
+                            playerError != null ||
+                            reloadingAfterError ||
+                            loadState.failed
+                    ) {
                         return@post
                     }
                     val indexChanged = currentMediaItemIndex != value.toInt()

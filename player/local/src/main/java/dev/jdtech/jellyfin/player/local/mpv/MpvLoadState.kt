@@ -34,8 +34,12 @@ internal class MpvLoadState {
     /** The errors mpv logged since it started the current file, oldest first. */
     private val errors = mutableListOf<String>()
 
-    /** A failure was found and this player has not started a load since. */
-    private var failed = false
+    /**
+     * A failure was found and this player has not started a load since. True from END_FILE on, so
+     * also while the report is held: what mpv does until then is not this player's doing.
+     */
+    var failed = false
+        private set
 
     /** The failure waits for its first error line. */
     private var holding = false
