@@ -49,6 +49,7 @@ import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -93,7 +94,6 @@ import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.di.SubtitleStyleEntryPoint
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
-import dev.jdtech.jellyfin.player.core.domain.models.Trickplay
 import dev.jdtech.jellyfin.player.local.R as PlayerR
 import dev.jdtech.jellyfin.player.local.domain.StillWatchingTracker
 import dev.jdtech.jellyfin.player.local.domain.getTrackNames
@@ -542,6 +542,11 @@ fun TvPlayerScreen(
             Clock()
         }
 
+        // CE (#464): while the seek bar's thumbnail shows, what it can cover gives way.
+        val seekPreview = rememberTrickplayFrame(uiState.currentTrickplay, pendingSeekMs)
+        val giveWayAlpha =
+            rememberGiveWayAlpha(seekPreviewShown(pendingSeekMs != null, seekPreview != null))
+
         AnimatedVisibility(
             visible = controlsVisible,
             enter = fadeIn(),
@@ -561,7 +566,8 @@ fun TvPlayerScreen(
                             playPauseFocus.requestFocus()
                         },
                         modifier =
-                            Modifier.padding(
+                            Modifier.givesWayToSeekPreview(giveWayAlpha)
+                                .padding(
                                     end = MaterialTheme.spacings.default * 2,
                                     bottom = MaterialTheme.spacings.medium,
                                 )
@@ -578,7 +584,8 @@ fun TvPlayerScreen(
                             playPauseFocus.requestFocus()
                         },
                         modifier =
-                            Modifier.padding(
+                            Modifier.givesWayToSeekPreview(giveWayAlpha)
+                                .padding(
                                     end = MaterialTheme.spacings.default * 2,
                                     bottom = MaterialTheme.spacings.medium,
                                 )
@@ -598,7 +605,8 @@ fun TvPlayerScreen(
                     durationMs = durationMs,
                     showPause = !showsPlayButton(playerPlayWhenReady, playerState),
                     pendingSeekMs = pendingSeekMs,
-                    trickplay = uiState.currentTrickplay,
+                    seekPreview = seekPreview,
+                    giveWayAlpha = giveWayAlpha,
                     seekSettings = seekSettings,
                     chapterMarkers =
                         remember(uiState.currentChapters, durationMs) {
@@ -758,7 +766,8 @@ private fun PlayerControls(
     durationMs: Long,
     showPause: Boolean,
     pendingSeekMs: Long?,
-    trickplay: Trickplay?,
+    seekPreview: ImageBitmap?,
+    giveWayAlpha: () -> Float,
     seekSettings: TvSeekSettings,
     chapterMarkers: List<Float>,
     hasChapters: Boolean,
@@ -787,6 +796,7 @@ private fun PlayerControls(
                     color = Color.White.copy(alpha = 0.8f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.givesWayToSeekPreview(giveWayAlpha),
                 )
             }
             Text(
@@ -795,6 +805,7 @@ private fun PlayerControls(
                 color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.givesWayToSeekPreview(giveWayAlpha),
             )
             // A pending seek shows where it lands: the remaining time and end time follow it.
             val shownPositionMs =
@@ -832,10 +843,9 @@ private fun PlayerControls(
                         chapterMarkers = chapterMarkers,
                     )
                 }
-                val frame = rememberTrickplayFrame(trickplay, pendingSeekMs)
-                if (frame != null && pendingSeekMs != null) {
+                if (seekPreview != null && pendingSeekMs != null) {
                     TrickplayThumbnail(
-                        frame = frame,
+                        frame = seekPreview,
                         timeText = formatTime(pendingSeekMs),
                         modifier =
                             Modifier.aboveAt(
