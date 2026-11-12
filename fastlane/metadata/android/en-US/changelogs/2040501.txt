@@ -1,0 +1,8 @@
+Player fixes, mostly for files the server converts, and clearer errors on TV.
+
+- Pick another audio track or a subtitle from the file while the server transcodes.
+- A series' audio language is also used for a transcode.
+- TV: a lost connection says so, and playback problems have "Try again".
+- TV: playback continues after Home or standby.
+- Continue Watching and Next Up show the title art.
+- mpv: one clear error when a file can't be opened.

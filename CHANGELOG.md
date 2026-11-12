@@ -13,6 +13,58 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v2.4.5] — 2026-11-12
+
+Mostly player fixes, and many of them are about files the server has to convert: you can now
+pick another audio track or a subtitle from inside the file while it transcodes, and the audio
+language chosen for a series is used there too. On TV a lost connection says so and every
+playback problem has "Try again". Continue Watching and Next Up show the wide art with the
+title on it.
+
+### Changed
+- Home: the Continue Watching and Next Up cards show the title art of the movie or series, as
+  the web client does. "Use episode images" under Interface > Home brings the episode images
+  back. Phone and TV (#608).
+- Player: on the phone the seek bar's thumbnails take half the memory and the next ones are
+  loaded ahead, so they show sooner while scrubbing (#615).
+- TV: the app starts and scrolls more smoothly right after an install or update, from a
+  baseline profile (#286).
+
+### Fixed
+- Player: while the server transcodes, the audio dialog lists all of the file's audio tracks
+  and picking one switches to it. A track picked by hand in a movie is kept through a quality
+  switch (#596).
+- Player: the audio language saved for a series is also used when the server transcodes,
+  where the server's default track used to play (#580).
+- Player: the subtitles inside the file can be picked while the server transcodes (#597).
+- Player: Play on a show gives its episode the seek bar thumbnails and chapters, and an
+  episode without thumbnails no longer shows those of the one before (#594).
+- Player: moving on from the closing outro, by a skip, the "Up next" card or autoplay, marks
+  the episode watched (#616).
+- Player: a file that fails to open is no longer counted as played on the server (#601).
+- Player: the server's dashboard shows a transcode as a transcode instead of direct play
+  (#599).
+- Player (mpv): a file that cannot be opened gives one error that says what went wrong,
+  instead of two to four. When the server can't be reached the player waits for the network
+  and loads again, as ExoPlayer does (#576).
+- Player (mpv): leaving the player, or turning the screen off, could freeze the app on some
+  devices (#460).
+- Player: the episode list can be used from a keyboard: focus starts on the playing episode
+  and the arrows move through the list instead of changing the volume (#588).
+- TV: when the connection drops the player says "Connection lost" and continues by itself when
+  the network is back. Every playback problem has "Try again", and Play after an error loads
+  the item again (#463).
+- TV: after Home or standby the player plays on if it was playing, instead of sitting paused
+  with nothing on screen (#462).
+- TV: the seek bar's thumbnail no longer covers the title, the skip button or the "Up next"
+  card (#464).
+- Downloads: downloaded external subtitles are finished properly, also the ones earlier
+  versions left half-named (#573).
+- Home: on Android 17, with local network access turned off, the app says so and offers
+  "Allow access" instead of "Error loading data" (#571).
+- Login: a failed Quick Connect says why in plain words: the code expired, or Quick Connect is
+  turned off on the server. Add server no longer shows technical error text either (#606).
+
 ## [v2.4.4] — 2026-11-12
 
 Playback with ExoPlayer starts faster for files with Dolby Digital Plus audio in an mp4: they
@@ -921,6 +973,7 @@ Initial CE fork off findroid `1.0.2`. These rapid early iterations established t
 `nl.midasvo.findroid.ce` application ID, downloads and SD-card storage improvements, and ongoing
 tracking of upstream. See the git history between the corresponding tags for commit-level detail.
 
+[v2.4.5]: https://github.com/midasvo/ephyra/releases/tag/v2.4.5
 [v2.4.4]: https://github.com/midasvo/ephyra/releases/tag/v2.4.4
 [v2.4.3]: https://github.com/midasvo/ephyra/releases/tag/v2.4.3
 [v2.4.2]: https://github.com/midasvo/ephyra/releases/tag/v2.4.2
