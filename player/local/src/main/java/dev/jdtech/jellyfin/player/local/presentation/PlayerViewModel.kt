@@ -1877,12 +1877,18 @@ constructor(
             getTvTrickplay(item)
             return
         }
-        val trickplayInfo = item.trickplayInfo ?: return
+        _uiState.value.currentTrickplay?.loader?.release()
+        // CE (#594): an item without trickplay clears the previous item's, which would otherwise
+        // show its thumbnails on this item's seek bar.
+        val trickplayInfo = item.trickplayInfo
+        if (trickplayInfo == null) {
+            _uiState.update { it.copy(currentTrickplay = null) }
+            return
+        }
         Timber.d("Trickplay Resolution: ${trickplayInfo.width}")
 
         // Hand the consumer a loader instead of decoding the whole strip: a long film is
         // hundreds of bitmaps, which is a lot of memory and network while the player is starting.
-        _uiState.value.currentTrickplay?.loader?.release()
         val loader =
             TrickplayLoader(
                 repository = repository,
