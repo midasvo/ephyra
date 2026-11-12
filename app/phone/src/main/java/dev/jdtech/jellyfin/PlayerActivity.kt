@@ -72,6 +72,7 @@ import dev.jdtech.jellyfin.presentation.player.QualitySelectionDialogFragment
 import dev.jdtech.jellyfin.presentation.player.SleepTimerDialogFragment
 import dev.jdtech.jellyfin.presentation.player.SpeedSelectionDialogFragment
 import dev.jdtech.jellyfin.presentation.player.StillWatchingDialogFragment
+import dev.jdtech.jellyfin.presentation.player.SubtitleSyncDialogFragment
 import dev.jdtech.jellyfin.presentation.player.TrackSelectionDialogFragment
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
@@ -1054,8 +1055,8 @@ class PlayerActivity : BasePlayerActivity() {
         }
 
         subtitleButton.setOnClickListener {
-            TrackSelectionDialogFragment.newInstance(C.TRACK_TYPE_TEXT)
-                .show(supportFragmentManager, "trackselectiondialog")
+            SubtitleSyncDialogFragment.newInstance()
+                .show(supportFragmentManager, "subtitlesyncdialog")
         }
 
         speedButton.setOnClickListener {

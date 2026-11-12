@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
+import android.os.Looper
 import android.os.SystemClock
 import android.net.ConnectivityManager
 import android.net.Network
@@ -31,11 +32,18 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
+import androidx.media3.common.text.CueGroup
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.Renderer
+import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.ArrayList
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.math.abs
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.FindroidItem
@@ -46,11 +54,13 @@ import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerItem
 import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
+import dev.jdtech.jellyfin.player.core.domain.models.SubtitleSyncCue
 import dev.jdtech.jellyfin.player.core.domain.models.Trickplay
 import dev.jdtech.jellyfin.player.local.PlaybackService
 import dev.jdtech.jellyfin.player.local.PlaybackSessionStore
 import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.domain.AudioDecoderFallback
+import dev.jdtech.jellyfin.player.local.domain.AutoSyncSubtitleCueParser
 import dev.jdtech.jellyfin.player.local.domain.DebugSegments
 import dev.jdtech.jellyfin.player.local.domain.NetworkRecovery
 import dev.jdtech.jellyfin.player.local.domain.PlaybackStartGate
@@ -415,6 +425,89 @@ constructor(
             resolveAutoPlayNext(pref, server).also { Timber.d("Autoplay next item: $it") }
         }
 
+    val subtitleOffsetUs = AtomicLong(0L)
+    var subtitleDelayMs: Int = 0
+        private set
+
+    private val _currentTrackCues = MutableStateFlow<List<SubtitleSyncCue>>(emptyList())
+    val currentTrackCues: StateFlow<List<SubtitleSyncCue>> = _currentTrackCues.asStateFlow()
+
+    private val _isLoadingCues = MutableStateFlow(false)
+    val isLoadingCues: StateFlow<Boolean> = _isLoadingCues.asStateFlow()
+
+    private val _observedLiveCues = Collections.synchronizedList(mutableListOf<SubtitleSyncCue>())
+
+    /** CE (#619): adjusts subtitle delay for the active item. */
+    fun setSubtitleDelay(delayMs: Int) {
+        val clamped = delayMs.coerceIn(-180_000, 180_000)
+        subtitleDelayMs = clamped
+        subtitleOffsetUs.set(clamped * 1000L)
+        if (player is MPVPlayer) {
+            (player as MPVPlayer).setSubtitleDelayMs(clamped)
+        } else {
+            if (!player.isPlaying && player.playbackState == Player.STATE_READY) {
+                player.seekTo(player.currentPosition)
+            }
+        }
+    }
+
+    /** CE (#619): Returns the dialogue cues closest in time to [positionMs]. */
+    fun getNearbyCues(positionMs: Long, count: Int = 5): List<SubtitleSyncCue> {
+        val cues =
+            _currentTrackCues.value.ifEmpty {
+                synchronized(_observedLiveCues) { _observedLiveCues.toList() }
+            }
+        if (cues.isEmpty()) return emptyList()
+        return cues
+            .sortedBy { abs(it.startTimeMs - positionMs) }
+            .take(count)
+            .sortedBy { it.startTimeMs }
+    }
+
+    /** CE (#619): Asynchronously parses dialogue cues for the currently selected subtitle track. */
+    fun loadCuesForActiveTrack(trackIndex: Int) {
+        if (trackIndex < 0) {
+            _currentTrackCues.value = emptyList()
+            return
+        }
+        val item = currentPlayerItem() ?: return
+        val groups = supportedGroups(C.TRACK_TYPE_TEXT)
+        val group = groups.getOrNull(trackIndex) ?: return
+        val format = group.mediaTrackGroup.getFormat(0)
+
+        val extSub =
+            item.externalSubtitles.firstOrNull {
+                it.language.equals(format.language, ignoreCase = true) ||
+                    it.title.equals(format.label, ignoreCase = true)
+            } ?: item.externalSubtitles.getOrNull(trackIndex)
+
+        viewModelScope.launch(Dispatchers.IO) {
+            _isLoadingCues.value = true
+            try {
+                val subtitleUrl = extSub?.uri?.toString()
+                if (!subtitleUrl.isNullOrBlank()) {
+                    val text =
+                        if (extSub.uri.scheme == "file") {
+                            java.io.File(extSub.uri.path!!).readText()
+                        } else {
+                            val request = okhttp3.Request.Builder().url(subtitleUrl).build()
+                            jellyfinApi.httpClient.newCall(request).execute().use { resp ->
+                                resp.body?.string().orEmpty()
+                            }
+                        }
+                    if (text.isNotBlank()) {
+                        val parsed = AutoSyncSubtitleCueParser.parse(text, subtitleUrl)
+                        _currentTrackCues.value = parsed
+                    }
+                }
+            } catch (e: Exception) {
+                Timber.w(e, "Could not load subtitle cues for sync")
+            } finally {
+                _isLoadingCues.value = false
+            }
+        }
+    }
+
     init {
         sessionStore.onSessionCreated()
 
@@ -495,7 +588,31 @@ constructor(
                 // ffmpeg always decodes to PCM. It picks up what no platform decoder
                 // handles, and what a broken one fails on, see AudioDecoderFallback.
                 val renderersFactory =
-                    DefaultRenderersFactory(application)
+                    object : DefaultRenderersFactory(application) {
+                        override fun buildTextRenderers(
+                            context: Context,
+                            output: TextOutput,
+                            outputLooper: Looper,
+                            extensionRendererMode: Int,
+                            out: ArrayList<Renderer>,
+                        ) {
+                            val startIndex = out.size
+                            super.buildTextRenderers(
+                                context,
+                                output,
+                                outputLooper,
+                                extensionRendererMode,
+                                out,
+                            )
+                            for (index in startIndex until out.size) {
+                                out[index] =
+                                    SubtitleOffsetRenderer(
+                                        baseRenderer = out[index],
+                                        subtitleDelayUsProvider = subtitleOffsetUs::get,
+                                    )
+                            }
+                        }
+                    }
                         .setExtensionRendererMode(
                             DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
                         )
@@ -1003,6 +1120,9 @@ constructor(
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         Timber.d("Playing MediaItem: ${mediaItem?.mediaId}")
+        setSubtitleDelay(0)
+        _currentTrackCues.value = emptyList()
+        _observedLiveCues.clear()
         displayRefreshRateManager.onMediaItemTransition()
         loggedDisplayFrameRate = null
         // CE (#450): another item: no reload of the one that lost its connection.
@@ -1826,6 +1946,31 @@ constructor(
             }
             player.trackSelectionParameters = applied.build()
         }
+        val textGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_TEXT && it.isSupported }
+        val selectedTextIndex = textGroups.indexOfFirst { it.isSelected }
+        if (selectedTextIndex >= 0) {
+            loadCuesForActiveTrack(selectedTextIndex)
+        }
+    }
+
+    override fun onCues(cueGroup: CueGroup) {
+        val cues = cueGroup.cues
+        if (cues.isNotEmpty()) {
+            val currentPos = player.currentPosition
+            for (cue in cues) {
+                val text = cue.text?.toString()?.trim()
+                if (!text.isNullOrBlank()) {
+                    synchronized(_observedLiveCues) {
+                        if (_observedLiveCues.none { it.text == text && abs(it.startTimeMs - currentPos) < 2000L }) {
+                            _observedLiveCues.add(SubtitleSyncCue(startTimeMs = currentPos, text = text))
+                            if (_observedLiveCues.size > 100) {
+                                _observedLiveCues.removeAt(0)
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -1917,6 +2062,9 @@ constructor(
                     )
                     .setTrackTypeDisabled(trackType, false)
                     .build()
+        }
+        if (trackType == C.TRACK_TYPE_TEXT) {
+            loadCuesForActiveTrack(index)
         }
         rememberTrackChoice(trackType, index)
     }

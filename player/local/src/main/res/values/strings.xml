@@ -55,4 +55,11 @@
     <string name="ce_player_connection_lost">Connection lost. Playback continues when the network is back.</string>
     <!-- CE (#463): the TV player's dialog when playback stopped: load again. -->
     <string name="ce_player_try_again">Try again</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Subtitle delay</string>
+    <string name="subtitle_sync">Subtitle sync</string>
+    <string name="capture_spoken_line">Capture spoken line</string>
+    <string name="capture_line_hint">Tap when a line is spoken to match with subtitle dialogue</string>
+    <string name="no_cues_found">No subtitle lines found near this position</string>
+    <string name="reset">Reset</string>
 </resources>
