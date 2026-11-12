@@ -200,4 +200,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Воспроизводить видео в альбомной ориентации, даже если повернуть планшет вертикально</string>
     <string name="ce_pref_home_episode_images">Использовать изображения серий</string>
     <string name="ce_pref_home_episode_images_summary">Показывать изображение серии вместо изображения сериала в «Продолжить просмотр» и «Далее»</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Показывать изображение серии вместо изображения сериала в «Продолжить просмотр», в «Далее» и вверху страницы серии</string>
 </resources>

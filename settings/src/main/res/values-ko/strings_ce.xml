@@ -194,4 +194,5 @@
     <string name="ce_pref_player_keep_landscape_summary">태블릿을 세로로 돌려도 동영상을 가로 모드로 재생합니다</string>
     <string name="ce_pref_home_episode_images">에피소드 이미지 사용</string>
     <string name="ce_pref_home_episode_images_summary">이어서 보기와 다음 에피소드에서 시리즈 이미지 대신 에피소드 이미지 표시</string>
+    <string name="ce_pref_home_episode_images_summary_phone">이어서 보기와 다음 에피소드, 그리고 에피소드 페이지 상단에서 시리즈 이미지 대신 에피소드 이미지 표시</string>
 </resources>

@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Spel av videoar liggjande, òg når du snur nettbrettet på høgkant</string>
     <string name="ce_pref_home_episode_images">Bruk episodebilete</string>
     <string name="ce_pref_home_episode_images_summary">Vis biletet til episoden i staden for biletet til serien i Hald fram å sjå og Neste</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Vis biletet til episoden i staden for biletet til serien i Hald fram å sjå, i Neste og øvst på sida til episoden</string>
 </resources>

@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Esita videoid rõhtpaigutuses ka siis, kui pöörad tahvelarvuti püsti</string>
     <string name="ce_pref_home_episode_images">Kasuta episoodide pilte</string>
     <string name="ce_pref_home_episode_images_summary">Kuva ridades Jätka vaatamist ja Järgmisena sarja pildi asemel episoodi pilti</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Kuva ridades Jätka vaatamist ja Järgmisena ning episoodi lehe ülaosas sarja pildi asemel episoodi pilti</string>
 </resources>

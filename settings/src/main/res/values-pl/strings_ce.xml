@@ -200,4 +200,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Odtwarzaj filmy w poziomie, nawet gdy obrócisz tablet pionowo</string>
     <string name="ce_pref_home_episode_images">Używaj obrazów odcinków</string>
     <string name="ce_pref_home_episode_images_summary">Pokazuj obraz odcinka zamiast obrazu serialu w sekcjach Kontynuuj oglądanie i Następne</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Pokazuj obraz odcinka zamiast obrazu serialu w sekcjach Kontynuuj oglądanie i Następne oraz u góry strony odcinka</string>
 </resources>
