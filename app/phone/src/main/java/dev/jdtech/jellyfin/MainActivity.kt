@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity() {
                         LocalOfflineMode provides state.isOfflineMode,
                         LocalPlaybackStopped provides stopped,
                         LocalNotificationPermissionRequest provides ::requestNotificationPermission,
+                        LocalVolumeKeyEvents provides viewModel.volumeKeyEvents,
                     ) {
                         // CE (#571): the error screens know when local network access is what
                         // keeps the server out of reach, and can ask for it.
@@ -85,7 +86,38 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private var lastVolumeDownTime = 0L
+
     // CE (R8): shortcuts such as Ctrl+F work whether or not anything has focus.
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
-        KeyboardShortcuts.onKeyEvent(event) || super.dispatchKeyEvent(event)
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (viewModel.isCastPlayerOpen.value) {
+            val action = event.action
+            val keyCode = event.keyCode
+            when (keyCode) {
+                KeyEvent.KEYCODE_VOLUME_UP -> {
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        val isRepeat = event.repeatCount > 0
+                        val now = android.os.SystemClock.uptimeMillis()
+                        if (!isRepeat || now - lastVolumeDownTime >= 50L) {
+                            lastVolumeDownTime = now
+                            viewModel.emitVolumeKeyEvent(isUp = true, isRepeat = isRepeat)
+                        }
+                    }
+                    return true
+                }
+                KeyEvent.KEYCODE_VOLUME_DOWN -> {
+                    if (action == KeyEvent.ACTION_DOWN) {
+                        val isRepeat = event.repeatCount > 0
+                        val now = android.os.SystemClock.uptimeMillis()
+                        if (!isRepeat || now - lastVolumeDownTime >= 50L) {
+                            lastVolumeDownTime = now
+                            viewModel.emitVolumeKeyEvent(isUp = false, isRepeat = isRepeat)
+                        }
+                    }
+                    return true
+                }
+            }
+        }
+        return KeyboardShortcuts.onKeyEvent(event) || super.dispatchKeyEvent(event)
+    }
 }

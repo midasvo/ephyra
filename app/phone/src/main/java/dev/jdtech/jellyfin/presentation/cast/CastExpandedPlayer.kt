@@ -1,0 +1,329 @@
+package dev.jdtech.jellyfin.presentation.cast
+
+import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.window.core.layout.WindowSizeClass
+import dev.jdtech.jellyfin.models.FindroidSegment
+import dev.jdtech.jellyfin.player.cast.presentation.CastPlayerViewModel
+import dev.jdtech.jellyfin.player.core.domain.models.Track
+import dev.jdtech.jellyfin.presentation.cast.components.CastChaptersDialog
+import dev.jdtech.jellyfin.presentation.cast.components.CastExpandedPlayerBottomSection
+import dev.jdtech.jellyfin.presentation.cast.components.CastTrackSelectionDialog
+import dev.jdtech.jellyfin.presentation.cast.components.CastTrackType
+import dev.jdtech.jellyfin.presentation.cast.components.PlayerTopSection
+import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
+import kotlinx.coroutines.flow.distinctUntilChanged
+
+/**
+ * Main Composable for the expanded Google Cast player sheet/panel.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CastExpandedPlayer(
+    onDeviceClick: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier,
+    onDismissStarted: () -> Unit = {},
+    onDismissCanceled: () -> Unit = {},
+    viewModel: CastPlayerViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
+    val isExpandedScreen =
+        remember(windowAdaptiveInfo) {
+            windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
+                WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND
+            )
+        }
+
+    val actions =
+        remember(viewModel, onDeviceClick, onClose) {
+            CastPlayerActions(
+                onPlay = { viewModel.play() },
+                onPause = { viewModel.pause() },
+                onSeek = { viewModel.seekTo(it) },
+                onPlayPreviousItem = { viewModel.rewindOrPlayPreviousItem() },
+                onPlayNextItem = { viewModel.playNextItem() },
+                onSkipSegment = { viewModel.skipSegment(it) },
+                onVolumeChange = { viewModel.setVolume(it) },
+                onAudioTrackSelected = { viewModel.setAudioTrack(it) },
+                onSubtitleTrackSelected = { viewModel.setSubtitleTrack(it) },
+                onDeviceClick = onDeviceClick,
+                onClose = onClose,
+            )
+        }
+
+    if (!isExpandedScreen) {
+        val currentOnDismissStarted by rememberUpdatedState(onDismissStarted)
+        val currentOnDismissCanceled by rememberUpdatedState(onDismissCanceled)
+
+        val sheetState =
+            rememberModalBottomSheetState(
+                skipPartiallyExpanded = true,
+                confirmValueChange = { targetValue ->
+                    if (targetValue == SheetValue.Hidden) {
+                        currentOnDismissStarted()
+                    } else if (targetValue == SheetValue.Expanded) {
+                        currentOnDismissCanceled()
+                    }
+                    true
+                },
+            )
+
+        LaunchedEffect(sheetState) {
+            snapshotFlow { sheetState.targetValue }
+                .distinctUntilChanged()
+                .collect { targetValue ->
+                    if (targetValue == SheetValue.Hidden) {
+                        currentOnDismissStarted()
+                    } else if (targetValue == SheetValue.Expanded) {
+                        currentOnDismissCanceled()
+                    }
+                }
+        }
+
+        ModalBottomSheet(
+            onDismissRequest = onClose,
+            modifier = modifier,
+            sheetState = sheetState,
+            dragHandle = null,
+            containerColor = MaterialTheme.colorScheme.background,
+            contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+            shape = RectangleShape,
+            sheetMaxWidth = Dp.Unspecified,
+        ) {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(tween(300)),
+                exit = fadeOut(tween(300)),
+            ) {
+                CastExpandedPlayerLayout(
+                    isExpandedScreen = false,
+                    uiState = uiState,
+                    actions = actions,
+                )
+            }
+        }
+    } else {
+        Surface(
+            modifier = modifier.fillMaxHeight().width(400.dp),
+            shadowElevation = 8.dp,
+            color = MaterialTheme.colorScheme.background,
+        ) {
+            CastExpandedPlayerLayout(
+                isExpandedScreen = true,
+                uiState = uiState,
+                actions = actions,
+            )
+        }
+    }
+}
+
+@Immutable
+data class CastPlayerActions(
+    val onPlay: () -> Unit,
+    val onPause: () -> Unit,
+    val onSeek: (Long) -> Unit,
+    val onPlayPreviousItem: () -> Unit,
+    val onPlayNextItem: () -> Unit,
+    val onSkipSegment: (FindroidSegment) -> Unit,
+    val onVolumeChange: (Float) -> Unit,
+    val onAudioTrackSelected: (Track) -> Unit,
+    val onSubtitleTrackSelected: (Track?) -> Unit,
+    val onDeviceClick: () -> Unit,
+    val onClose: () -> Unit,
+)
+
+@Composable
+private fun CastExpandedPlayerLayout(
+    isExpandedScreen: Boolean,
+    uiState: CastPlayerViewModel.UiState,
+    actions: CastPlayerActions,
+    modifier: Modifier = Modifier,
+) {
+    var isScrubbing by remember { mutableStateOf(false) }
+    var scrubPosition by remember { mutableFloatStateOf(0f) }
+    var showTrackSelection by remember { mutableStateOf(false) }
+    var showChaptersSelection by remember { mutableStateOf(false) }
+    var trackType by remember { mutableStateOf(CastTrackType.AUDIO) }
+
+    val configuration = LocalConfiguration.current
+    val isLandscape =
+        remember(configuration.orientation) {
+            configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        }
+    val safePadding = rememberSafePadding()
+
+    val onScrubStart: (Float) -> Unit = remember {
+        { position ->
+            isScrubbing = true
+            scrubPosition = position
+        }
+    }
+    val onScrubStop: () -> Unit =
+        remember(actions) {
+            {
+                isScrubbing = false
+                actions.onSeek(scrubPosition.toLong())
+            }
+        }
+    val onClickAudio: () -> Unit = remember {
+        {
+            showTrackSelection = true
+            trackType = CastTrackType.AUDIO
+        }
+    }
+    val onClickSubtitle: () -> Unit = remember {
+        {
+            showTrackSelection = true
+            trackType = CastTrackType.SUBTITLE
+        }
+    }
+    val onOpenChapters: () -> Unit = remember { { showChaptersSelection = true } }
+    val onDismissTrackSelection: () -> Unit = remember { { showTrackSelection = false } }
+    val onDismissChaptersSelection: () -> Unit = remember { { showChaptersSelection = false } }
+    val onSetTrack: (Track?) -> Unit =
+        remember(actions, trackType) {
+            { track ->
+                if (trackType == CastTrackType.AUDIO) {
+                    track?.let { actions.onAudioTrackSelected(it) }
+                } else {
+                    actions.onSubtitleTrackSelected(track)
+                }
+            }
+        }
+    val currentTracks =
+        remember(trackType, uiState.audioTracks, uiState.subtitleTracks) {
+            if (trackType == CastTrackType.AUDIO) uiState.audioTracks else uiState.subtitleTracks
+        }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(
+                        top = safePadding.top,
+                        bottom = safePadding.bottom,
+                        start = safePadding.start,
+                        end = safePadding.end,
+                    ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (isLandscape && !isExpandedScreen) {
+                Row(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    PlayerTopSection(
+                        uiState = uiState,
+                        isScrubbing = isScrubbing,
+                        scrubPosition = scrubPosition,
+                        onClose = actions.onClose,
+                        onDeviceClick = actions.onDeviceClick,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    )
+
+                    CastExpandedPlayerBottomSection(
+                        uiState = uiState,
+                        isScrubbing = isScrubbing,
+                        scrubPosition = scrubPosition,
+                        onScrubStart = onScrubStart,
+                        onScrubStop = onScrubStop,
+                        onPlay = actions.onPlay,
+                        onPause = actions.onPause,
+                        onPlayPreviousItem = actions.onPlayPreviousItem,
+                        onPlayNextItem = actions.onPlayNextItem,
+                        onSkipSegment = actions.onSkipSegment,
+                        onVolumeChange = actions.onVolumeChange,
+                        onClickAudio = onClickAudio,
+                        onClickSubtitle = onClickSubtitle,
+                        modifier = Modifier.weight(1f),
+                        onOpenChapters = onOpenChapters,
+                    )
+                }
+            } else {
+                PlayerTopSection(
+                    uiState = uiState,
+                    isScrubbing = isScrubbing,
+                    scrubPosition = scrubPosition,
+                    onClose = actions.onClose,
+                    onDeviceClick = actions.onDeviceClick,
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                )
+
+                CastExpandedPlayerBottomSection(
+                    uiState = uiState,
+                    isScrubbing = isScrubbing,
+                    scrubPosition = scrubPosition,
+                    onScrubStart = onScrubStart,
+                    onScrubStop = onScrubStop,
+                    onPlay = actions.onPlay,
+                    onPause = actions.onPause,
+                    onPlayPreviousItem = actions.onPlayPreviousItem,
+                    onPlayNextItem = actions.onPlayNextItem,
+                    onSkipSegment = actions.onSkipSegment,
+                    onVolumeChange = actions.onVolumeChange,
+                    onClickAudio = onClickAudio,
+                    onClickSubtitle = onClickSubtitle,
+                    modifier = Modifier.weight(1f),
+                    onOpenChapters = onOpenChapters,
+                )
+            }
+        }
+
+        CastTrackSelectionDialog(
+            visible = showTrackSelection,
+            type = trackType,
+            tracks = currentTracks,
+            onSetTrack = onSetTrack,
+            onDismiss = onDismissTrackSelection,
+        )
+
+        CastChaptersDialog(
+            visible = showChaptersSelection,
+            chapters = uiState.currentChapters,
+            currentPositionMs = uiState.playerState.currentPosition,
+            onChapterSelected = { actions.onSeek(it) },
+            onDismiss = onDismissChaptersSelection,
+        )
+    }
+}

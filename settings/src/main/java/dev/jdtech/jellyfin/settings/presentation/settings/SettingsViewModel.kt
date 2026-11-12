@@ -956,6 +956,21 @@ class SettingsViewModel @Inject constructor(
                                             ),
                                     ),
                                     PreferenceGroup(
+                                        nameStringResource = R.string.settings_category_chromecast,
+                                        preferences =
+                                            listOf(
+                                                PreferenceSwitch(
+                                                    nameStringResource =
+                                                        R.string.pref_cast_enabled,
+                                                    descriptionStringRes =
+                                                        R.string.pref_cast_enabled_summary,
+                                                    supportedDeviceTypes = listOf(DeviceType.PHONE),
+                                                    backendPreference =
+                                                        appPreferences.castEnabled,
+                                                )
+                                            ),
+                                    ),
+                                    PreferenceGroup(
                                         nameStringResource = R.string.pref_player_background_group,
                                         preferences =
                                             listOf(

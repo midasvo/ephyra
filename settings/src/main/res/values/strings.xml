@@ -316,4 +316,11 @@
     <string name="ce_pref_player_keep_landscape_summary">Play videos in landscape, even when you turn the tablet upright</string>
     <string name="ce_pref_home_episode_images">Use episode images</string>
     <string name="ce_pref_home_episode_images_summary">Show the episode\'s image instead of the show\'s artwork in Continue Watching and Next Up</string>
+
+    <!-- Cast -->
+    <string name="settings_category_chromecast">Chromecast</string>
+    <string name="pref_cast_enabled">Enable Chromecast</string>
+    <string name="pref_cast_enabled_summary">Enable Google Cast device discovery and casting</string>
+    <string name="pref_cast_max_bitrate">Max bitrate</string>
+    <string name="pref_cast_max_bitrate_summary">Limits the maximum bitrate when casting to a Chromecast device</string>
 </resources>

@@ -229,4 +229,28 @@
     <!-- CE: Home while offline, with nothing downloaded from this server -->
     <string name="ce_home_offline_empty_title">Nothing downloaded yet</string>
     <string name="ce_home_offline_empty_body">You\'re offline. Movies and episodes you download show up here and in Downloads.</string>
+
+    <!-- Cast -->
+    <string name="cast_select_device">Select a device</string>
+    <string name="cast_searching">Searching…</string>
+    <string name="cast_available_devices">Available devices</string>
+    <string name="cast_wifi_instruction">To connect via Wi-Fi, make sure this device and your TV are connected to the same Wi-Fi network.</string>
+    <string name="cast_connect_tv">Connect TV</string>
+    <plurals name="cast_tvs_nearby">
+        <item quantity="one">%d TV nearby</item>
+        <item quantity="other">%d TVs nearby</item>
+    </plurals>
+    <string name="track_default">Default</string>
+    <string name="track_original">Original</string>
+    <string name="forced">Forced</string>
+    <string name="hearing_impaired">SDH</string>
+    <string name="track_index">Track %1$d</string>
+    <string name="chapter_title">Chapter %1$d</string>
+    <string name="segment_intro">Intro</string>
+    <string name="segment_outro">Outro</string>
+    <string name="segment_recap">Recap</string>
+    <string name="segment_preview">Preview</string>
+    <string name="segment_commercial">Commercial</string>
+    <string name="player_controls_play">Play</string>
+    <string name="player_controls_pause">Pause</string>
 </resources>

@@ -6,12 +6,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.Server
 import dev.jdtech.jellyfin.models.User
+import dev.jdtech.jellyfin.models.VolumeKeyEvent
 import dev.jdtech.jellyfin.profilelock.ProfileLock
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.utils.NetworkConnectivity
 import dev.jdtech.jellyfin.utils.UiOfflineDecision
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -34,6 +37,15 @@ constructor(
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState = _uiState.asStateFlow()
+
+    private val _volumeKeyEvents = MutableSharedFlow<VolumeKeyEvent>(extraBufferCapacity = 8)
+    val volumeKeyEvents = _volumeKeyEvents.asSharedFlow()
+
+    val isCastPlayerOpen = MutableStateFlow(false)
+
+    fun emitVolumeKeyEvent(isUp: Boolean, isRepeat: Boolean = false) {
+        _volumeKeyEvents.tryEmit(VolumeKeyEvent(isUp = isUp, isRepeat = isRepeat))
+    }
 
     sealed class UiState {
         data class Normal(val server: Server?, val user: User?) : UiState()

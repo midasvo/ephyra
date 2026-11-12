@@ -79,3 +79,30 @@ data object ColorDark {
 }
 
 val Yellow = Color(0xFFF2C94C)
+
+// Palette colors
+val PaletteGreen = Color(0xFF4CAF50)
+val PaletteLightGreen = Color(0xFF8BC34A)
+val PaletteTeal = Color(0xFF009688)
+val PaletteCyan = Color(0xFF00BCD4)
+val PaletteBlue = Color(0xFF2196F3)
+val PaletteIndigo = Color(0xFF3F51B5)
+val PalettePurple = Color(0xFF9C27B0)
+val PalettePink = Color(0xFFE91E63)
+val PaletteRed = Color(0xFFF44336)
+val PaletteDeepOrange = Color(0xFFFF5722)
+val PaletteOrange = Color(0xFFFF9800)
+val PaletteAmber = Color(0xFFFFC107)
+val PaletteYellow = Color(0xFFFFEB3B)
+val PaletteBrown = Color(0xFF795548)
+val PaletteBlueGrey = Color(0xFF607D8B)
+val PaletteGrey = Color(0xFF9E9E9E)
+
+// Player & Surface colors
+val PlayerBackground = Color(0xFF141414)
+val PlayerCardBackground = Color(0xFF141416)
+val PlayerSheetBackground = Color(0xFF1C1C1E)
+val PlayerSheetContainer = Color(0xFF0E0E10)
+val PlayerOverlayBackground = Color(0xFF262626)
+val PlayerCardCurrent = Color(0xFF182232)
+

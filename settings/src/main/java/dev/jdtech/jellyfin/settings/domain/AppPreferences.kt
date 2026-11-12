@@ -61,6 +61,10 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     // CE (#245): open on the user list when the server has more than one saved user.
     val askUserOnStart = Preference("pref_ask_user_on_start", false)
 
+    // Cast
+    val castEnabled = Preference("pref_cast_enabled", true)
+    val castMaxBitrateKbps = Preference("pref_cast_max_bitrate_kbps", 120_000)
+
     // Player
     val playerBackend = Preference("pref_player_backend", "exoplayer")
     val playerBrightness = Preference("pref_player_brightness", -1.0f)

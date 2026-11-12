@@ -2,6 +2,7 @@ package dev.jdtech.jellyfin
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -84,6 +85,46 @@ import dev.jdtech.jellyfin.presentation.utils.useDockedSearch
 import dev.jdtech.jellyfin.setup.presentation.permission.PermissionAction
 import dev.jdtech.jellyfin.setup.presentation.permission.PermissionViewModel
 import java.util.UUID
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelStoreOwner
+import dev.jdtech.jellyfin.models.VolumeKeyEvent
+import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
+import dev.jdtech.jellyfin.player.cast.presentation.CastSessionViewModel
+import dev.jdtech.jellyfin.presentation.cast.CastExpandedPlayer
+import dev.jdtech.jellyfin.presentation.cast.CastMiniPlayer
+import dev.jdtech.jellyfin.presentation.cast.components.CastBottomSheet
+import dev.jdtech.jellyfin.presentation.cast.components.CastButton
+import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
+import dev.jdtech.jellyfin.viewmodels.MainViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+
+val LocalCastPlayerHeight = compositionLocalOf { 0.dp }
+val LocalVolumeKeyEvents = compositionLocalOf<SharedFlow<VolumeKeyEvent>> { MutableSharedFlow() }
 
 private val TOP_LEVEL_ROUTES = setOf(HomeRoute, FavoritesRoute, MediaRoute, DownloadsRoute)
 private val GLOBAL_TRANSITION_SPEC = ephyraScreenTransition()
@@ -185,6 +226,10 @@ fun NavigationRoot(
     val permissionViewModel: PermissionViewModel = hiltViewModel()
     val permissionState by permissionViewModel.state.collectAsStateWithLifecycle()
 
+    val context = LocalContext.current
+    val mainViewModel: MainViewModel = hiltViewModel(context as ViewModelStoreOwner)
+    val castSessionViewModel: CastSessionViewModel = hiltViewModel(context as ViewModelStoreOwner)
+
     if (setupComplete && profileLocked) {
         // CE (#299): the profile's PIN comes before Home, and before anything Home would load.
         ProfilePinGateScreen()
@@ -208,6 +253,8 @@ fun NavigationRoot(
                 searchFromHome = searchFromHome,
                 permissionViewModel = permissionViewModel,
                 permissionApplicable = permissionState.currentRequest != null,
+                mainViewModel = mainViewModel,
+                castSessionViewModel = castSessionViewModel,
             )
         }
     } else {
@@ -387,6 +434,7 @@ private fun rememberEntryState(): EntryState {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MainNavigation(
     navigationState: NavigationState,
@@ -398,7 +446,72 @@ private fun MainNavigation(
     searchFromHome: MutableState<Boolean>,
     permissionViewModel: PermissionViewModel,
     permissionApplicable: Boolean,
+    mainViewModel: MainViewModel,
+    castSessionViewModel: CastSessionViewModel,
 ) {
+    val density = LocalDensity.current
+    val safePadding = rememberSafePadding()
+    var castPlayerHeight by remember { mutableStateOf(0.dp) }
+    var showCastSheet by remember { mutableStateOf(false) }
+    var showCastExpandedPlayer by remember { mutableStateOf(false) }
+    var isDismissingCastExpandedPlayer by remember { mutableStateOf(false) }
+    var castExpanded by remember { mutableStateOf(true) }
+
+    LaunchedEffect(showCastExpandedPlayer, isDismissingCastExpandedPlayer) {
+        mainViewModel.isCastPlayerOpen.value = (showCastExpandedPlayer && !isDismissingCastExpandedPlayer)
+    }
+
+    val connectionState by castSessionViewModel.connectionState.collectAsStateWithLifecycle()
+    val currentRoute = navigationState.currentBackStack().lastOrNull()
+    val isCastRoute =
+        when (currentRoute) {
+            is HomeRoute,
+            is ShowRoute,
+            is MovieRoute,
+            is LibraryRoute,
+            is EpisodeRoute,
+            is SeasonRoute,
+            is FavoritesRoute,
+            is CollectionRoute -> true
+            else -> false
+        }
+    val showCastButton =
+        isCastRoute && !isOfflineMode && castSessionViewModel.sessionManager.isSupported
+
+    val showCastMiniPlayer by
+        remember(
+            showCastButton,
+            connectionState,
+            showCastExpandedPlayer,
+            isDismissingCastExpandedPlayer,
+        ) {
+            derivedStateOf {
+                val connected = showCastButton && connectionState == CastConnectionState.CONNECTED
+                connected && (!showCastExpandedPlayer || isDismissingCastExpandedPlayer)
+            }
+        }
+
+    LaunchedEffect(showCastMiniPlayer) {
+        if (!showCastMiniPlayer) castPlayerHeight = 0.dp
+    }
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                if (consumed.y < -15f) {
+                    castExpanded = false
+                } else if (consumed.y > 15f) {
+                    castExpanded = true
+                }
+                return Offset.Zero
+            }
+        }
+    }
+
     val mediaSearch =
         remember(searchExpanded, searchFromHome) { MediaSearch(searchExpanded, searchFromHome) }
     val navigationItems =
@@ -464,38 +577,146 @@ private fun MainNavigation(
         )
     }
 
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-            navigationItems.forEach { item ->
-                item(
-                    selected = topLevelRoute == item.route,
-                    onClick = {
-                        mediaSearch.onTabClick(item.route, topLevelRoute)
-                        navigator.navigate(item.route)
-                    },
-                    icon = {
-                        Icon(
-                            painter = painterResource(item.icon),
-                            contentDescription = stringResource(item.title),
+    CompositionLocalProvider(LocalCastPlayerHeight provides castPlayerHeight) {
+        NavigationSuiteScaffold(
+            navigationSuiteItems = {
+                navigationItems.forEach { item ->
+                    item(
+                        selected = topLevelRoute == item.route,
+                        onClick = {
+                            mediaSearch.onTabClick(item.route, topLevelRoute)
+                            navigator.navigate(item.route)
+                        },
+                        icon = {
+                            Icon(
+                                painter = painterResource(item.icon),
+                                contentDescription = stringResource(item.title),
+                            )
+                        },
+                        enabled = item.enabled,
+                        label = { Text(text = stringResource(item.title)) },
+                        // #442: the hidden bar stays composed; Tab must not stop on it.
+                        modifier = Modifier.focusProperties { canFocus = showBottomBar },
+                    )
+                }
+            },
+            layoutType = customNavSuiteType,
+            state = navigationSuiteScaffoldState,
+        ) {
+            val isExpandedScreen =
+                windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
+                    WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND
+                )
+            val isMediumScreen =
+                windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
+                    WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
+                )
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    Box(
+                        modifier =
+                            Modifier.weight(1f)
+                                .fillMaxHeight()
+                                .nestedScroll(nestedScrollConnection)
+                    ) {
+                        NavDisplay(
+                            entries = navigationState.toDecoratedEntries(entryDecorators, entryProvider),
+                            onBack = { navigator.goBack() },
+                            transitionSpec = { GLOBAL_TRANSITION_SPEC },
+                            popTransitionSpec = { GLOBAL_TRANSITION_SPEC },
+                            predictivePopTransitionSpec = { _ -> GLOBAL_TRANSITION_SPEC },
                         )
+
+                        if (showCastButton && connectionState != CastConnectionState.CONNECTED) {
+                            CastButton(
+                                expanded = castExpanded,
+                                onClick = { showCastSheet = true },
+                                modifier = Modifier.align(Alignment.BottomEnd),
+                                handleBottomInsets = !showBottomBar,
+                            )
+                        }
+                    }
+
+                    AnimatedVisibility(
+                        visible = showCastExpandedPlayer && isExpandedScreen,
+                        enter =
+                            slideInHorizontally(initialOffsetX = { it }) +
+                                expandHorizontally(expandFrom = Alignment.End) +
+                                fadeIn(),
+                        exit =
+                            slideOutHorizontally(targetOffsetX = { it }) +
+                                shrinkHorizontally(shrinkTowards = Alignment.End) +
+                                fadeOut(),
+                    ) {
+                        CastExpandedPlayer(
+                            onDeviceClick = { showCastSheet = true },
+                            onClose = {
+                                showCastExpandedPlayer = false
+                                isDismissingCastExpandedPlayer = false
+                            },
+                        )
+                    }
+                }
+
+                // Cast Mini Player
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment =
+                        if (isMediumScreen) Alignment.BottomEnd else Alignment.BottomCenter,
+                ) {
+                    AnimatedVisibility(
+                        visible = showCastMiniPlayer,
+                        enter =
+                            (if (isExpandedScreen) {
+                                slideInHorizontally(initialOffsetX = { it })
+                            } else {
+                                slideInVertically(initialOffsetY = { it })
+                            }) + fadeIn(),
+                        exit =
+                            (if (isExpandedScreen) {
+                                slideOutHorizontally(targetOffsetX = { it })
+                            } else {
+                                slideOutVertically(targetOffsetY = { it })
+                            }) + fadeOut(),
+                    ) {
+                        CastMiniPlayer(
+                            onClick = {
+                                isDismissingCastExpandedPlayer = false
+                                showCastExpandedPlayer = true
+                            },
+                            modifier =
+                                Modifier.onSizeChanged { size ->
+                                    val measuredHeight = with(density) { size.height.toDp() }
+                                    castPlayerHeight =
+                                        if (!isMediumScreen) {
+                                            measuredHeight - safePadding.bottom
+                                        } else {
+                                            0.dp
+                                        }
+                                },
+                            handleBottomInsets = !showBottomBar,
+                        )
+                    }
+                }
+            }
+
+            if (showCastSheet) {
+                CastBottomSheet(onDismissRequest = { showCastSheet = false })
+            }
+
+            if (showCastExpandedPlayer && !isExpandedScreen) {
+                CastExpandedPlayer(
+                    onDeviceClick = { showCastSheet = true },
+                    onClose = {
+                        showCastExpandedPlayer = false
+                        isDismissingCastExpandedPlayer = false
                     },
-                    enabled = item.enabled,
-                    label = { Text(text = stringResource(item.title)) },
-                    // #442: the hidden bar stays composed; Tab must not stop on it.
-                    modifier = Modifier.focusProperties { canFocus = showBottomBar },
+                    onDismissStarted = { isDismissingCastExpandedPlayer = true },
+                    onDismissCanceled = { isDismissingCastExpandedPlayer = false },
                 )
             }
-        },
-        layoutType = customNavSuiteType,
-        state = navigationSuiteScaffoldState,
-    ) {
-        NavDisplay(
-            entries = navigationState.toDecoratedEntries(entryDecorators, entryProvider),
-            onBack = { navigator.goBack() },
-            transitionSpec = { GLOBAL_TRANSITION_SPEC },
-            popTransitionSpec = { GLOBAL_TRANSITION_SPEC },
-            predictivePopTransitionSpec = { _ -> GLOBAL_TRANSITION_SPEC },
-        )
+        }
     }
 }
 

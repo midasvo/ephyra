@@ -48,6 +48,9 @@ import dev.jdtech.jellyfin.film.domain.withMediaInfo
 import dev.jdtech.jellyfin.film.presentation.movie.MovieAction
 import dev.jdtech.jellyfin.film.presentation.movie.MovieState
 import dev.jdtech.jellyfin.film.presentation.movie.MovieViewModel
+import dev.jdtech.jellyfin.LocalCastPlayerHeight
+import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
+import dev.jdtech.jellyfin.player.cast.presentation.CastSessionViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
@@ -95,6 +98,8 @@ fun MovieScreen(
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val isOfflineMode = LocalOfflineMode.current
+    val castSessionViewModel: CastSessionViewModel = hiltViewModel()
+    val castConnectionState by castSessionViewModel.connectionState.collectAsStateWithLifecycle()
 
     val state by viewModel.state.collectAsStateWithLifecycle()
     // Not read here: a progress tick must only recompose the download card.
@@ -135,12 +140,16 @@ fun MovieScreen(
         onAction = { action ->
             when (action) {
                 is MovieAction.Play -> {
-                    val intent = Intent(context, PlayerActivity::class.java)
-                    intent.putExtra("itemId", movieId.toString())
-                    intent.putExtra("itemKind", BaseItemKind.MOVIE.serialName)
-                    intent.putExtra("startFromBeginning", action.startFromBeginning)
-                    intent.putExtra("mediaSourceId", action.mediaSourceId)
-                    context.startActivity(intent)
+                    if (castConnectionState == CastConnectionState.CONNECTED) {
+                        castSessionViewModel.playItem(movieId, BaseItemKind.MOVIE.serialName, action.startFromBeginning)
+                    } else {
+                        val intent = Intent(context, PlayerActivity::class.java)
+                        intent.putExtra("itemId", movieId.toString())
+                        intent.putExtra("itemKind", BaseItemKind.MOVIE.serialName)
+                        intent.putExtra("startFromBeginning", action.startFromBeginning)
+                        intent.putExtra("mediaSourceId", action.mediaSourceId)
+                        context.startActivity(intent)
+                    }
                 }
                 is MovieAction.PlayTrailer -> {
                     try {
@@ -201,7 +210,7 @@ private fun MovieScreenLayout(
 
     val paddingStart = safePadding.start + MaterialTheme.spacings.default
     val paddingEnd = safePadding.end + MaterialTheme.spacings.default
-    val paddingBottom = safePadding.bottom + MaterialTheme.spacings.default
+    val paddingBottom = safePadding.bottom + MaterialTheme.spacings.default + LocalCastPlayerHeight.current
 
     val scrollState = rememberScrollState()
     // CE (#437): the artwork under the top bar, if any; shared by the header and the bar.
