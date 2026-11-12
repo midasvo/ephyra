@@ -285,9 +285,31 @@ class PlayerInvariantsTest {
             "loadSubtitles must evaluate targetSubtitleTrack after command completes (#617)",
             loadSubtitles.value.contains("targetSubtitleTrack(trackSelectionParameters)"),
         )
+        val commandIdx = loadSubtitles.value.indexOf("mpvLib.command(command)")
+        val targetTrackIdx =
+            loadSubtitles.value.indexOf("targetSubtitleTrack(trackSelectionParameters)")
+        assertTrue(
+            "loadSubtitles must execute the command before sampling targetSubtitleTrack (#617)",
+            commandIdx in 0..<targetTrackIdx,
+        )
         assertTrue(
             "loadSubtitles must restore the target track using selectTrack (#617)",
             loadSubtitles.value.contains("selectTrack(MPVTrackType.SUBTITLE, targetSid)"),
+        )
+
+        assertTrue(
+            "subtitleExecutor must be a single thread executor with daemon threads (#617)",
+            mpvPlayer.contains("Executors.newSingleThreadExecutor") &&
+                mpvPlayer.contains("isDaemon = true"),
+        )
+
+        val releaseMethod =
+            Regex("""override fun release\(\)\s*\{[\s\S]*?\n    \}""").find(mpvPlayer)
+        assertTrue("MPVPlayer.release not found", releaseMethod != null)
+        assertTrue(
+            "release must shut down and await termination of subtitleExecutor before destroying mpvLib (#617)",
+            releaseMethod!!.value.contains("subtitleExecutor.shutdownNow()") &&
+                releaseMethod.value.contains("subtitleExecutor.awaitTermination"),
         )
     }
 }

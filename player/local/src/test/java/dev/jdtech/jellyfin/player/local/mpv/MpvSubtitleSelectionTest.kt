@@ -52,6 +52,17 @@ class MpvSubtitleSelectionTest {
     }
 
     @Test
+    fun `multiple text overrides return the last override matching setTrackSelectionParameters`() {
+        val parameters =
+            TrackSelectionParameters.DEFAULT.buildUpon()
+                .addOverride(TrackSelectionOverride(group(MimeTypes.TEXT_VTT, "3"), 0))
+                .addOverride(TrackSelectionOverride(group(MimeTypes.TEXT_VTT, "7"), 0))
+                .build()
+
+        assertEquals("7", targetSubtitleTrack(parameters))
+    }
+
+    @Test
     fun `overrides of other track types do not touch subtitles`() {
         val parameters =
             TrackSelectionParameters.DEFAULT.buildUpon()

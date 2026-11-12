@@ -48,6 +48,7 @@ import java.io.IOException
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -407,7 +408,10 @@ class MPVPlayer(
     // MPV Custom
     private var isPlayerReady: Boolean = false
     private var isSeekable: Boolean = false
+    @Volatile
     private var currentMediaItemIndex: Int = 0
+    @Volatile
+    private var targetMediaItemIndex: Int = 0
     private var currentPositionMs: Long? = null
     private var currentDurationMs: Long? = null
     private var currentCacheDurationMs: Long? = null
@@ -421,10 +425,11 @@ class MPVPlayer(
 
     /**
      * CE (#617): runs `sub-add` commands off the main thread so slow subtitle downloads do not
-     * block the UI.
+     * block the UI. A single-thread executor serializes subtitle jobs so concurrent workers do not
+     * race or overlap across item transitions.
      */
     private val subtitleExecutor =
-        Executors.newCachedThreadPool { runnable ->
+        Executors.newSingleThreadExecutor { runnable ->
             Thread(runnable, "mpv-subtitles").apply { isDaemon = true }
         }
     @Volatile
@@ -643,7 +648,7 @@ class MPVPlayer(
                         subtitlesLoadedGeneration = loadGeneration
                         val commands = initialCommands.toList()
                         val currentGen = loadGeneration
-                        val expectedIndex = currentMediaItemIndex
+                        val expectedIndex = targetMediaItemIndex
                         activeSubtitleJob =
                             subtitleExecutor.submit {
                                 loadSubtitles(commands, currentGen, expectedIndex)
@@ -867,7 +872,7 @@ class MPVPlayer(
                     Thread.interrupted() ||
                         released ||
                         loadGeneration != generation ||
-                        currentMediaItemIndex != expectedIndex
+                        targetMediaItemIndex != expectedIndex
                 ) {
                     return
                 }
@@ -878,13 +883,8 @@ class MPVPlayer(
                     Thread.interrupted() ||
                         released ||
                         loadGeneration != generation ||
-                        currentMediaItemIndex != expectedIndex
+                        targetMediaItemIndex != expectedIndex
                 ) {
-                    // Item transitioned or playback stopped while sub-add was downloading; remove the
-                    // subtitle so it does not attach to the newly selected item.
-                    try {
-                        mpvLib.command(arrayOf("sub-remove"))
-                    } catch (_: Throwable) {}
                     return
                 }
 
@@ -892,10 +892,22 @@ class MPVPlayer(
                 // made while sub-add was in flight is honored and not overwritten.
                 val targetSid = targetSubtitleTrack(trackSelectionParameters)
                 if (targetSid != null && mpvLib.getPropertyString("sid") != targetSid) {
-                    selectTrack(MPVTrackType.SUBTITLE, targetSid)
+                    val currentTarget = targetSubtitleTrack(trackSelectionParameters)
+                    if (currentTarget == targetSid) {
+                        selectTrack(MPVTrackType.SUBTITLE, targetSid)
+                    }
                 }
-            } catch (_: Throwable) {
-                return
+            } catch (e: Throwable) {
+                Timber.w(e, "Failed to load external subtitle: ${command.joinToString(" ")}")
+                if (
+                    e is InterruptedException ||
+                        Thread.interrupted() ||
+                        released ||
+                        loadGeneration != generation ||
+                        targetMediaItemIndex != expectedIndex
+                ) {
+                    return
+                }
             }
         }
     }
@@ -1644,6 +1656,7 @@ class MPVPlayer(
 
     private fun prepareMediaItem(index: Int) {
         internalMediaItems.getOrNull(index)?.let { mediaItem ->
+            targetMediaItemIndex = index
             startNewLoad(index)
             resetInternalState()
             mediaItem.localConfiguration?.subtitleConfigurations?.forEach { subtitle ->
@@ -1742,6 +1755,11 @@ class MPVPlayer(
         activeSubtitleJob?.cancel(true)
         activeSubtitleJob = null
         subtitleExecutor.shutdownNow()
+        try {
+            subtitleExecutor.awaitTermination(2, TimeUnit.SECONDS)
+        } catch (_: InterruptedException) {
+            Thread.currentThread().interrupt()
+        }
         mpvLib.destroy()
     }
 
