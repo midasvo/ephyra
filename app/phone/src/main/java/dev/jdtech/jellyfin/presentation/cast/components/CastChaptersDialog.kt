@@ -1,8 +1,8 @@
 package dev.jdtech.jellyfin.presentation.cast.components
 
-import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,13 +55,17 @@ import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-import dev.jdtech.jellyfin.core.presentation.theme.CentralShapes
+import dev.jdtech.jellyfin.core.presentation.ephyra.EphyraMotion
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
+import dev.jdtech.jellyfin.player.local.R as PlayerR
 import dev.jdtech.jellyfin.presentation.components.ChapterCard
+import dev.jdtech.jellyfin.presentation.utils.WidthClass
+import dev.jdtech.jellyfin.presentation.utils.currentWidthClass
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -88,9 +92,11 @@ fun CastChaptersDialog(
         }
     }
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val screenHeight = configuration.screenHeightDp.dp
+    // A bottom sheet at Compact width, a centred dialog on anything wider (a phone in landscape,
+    // a tablet): docs/tablet/4-design.md §1.
+    val isCentered = currentWidthClass() != WidthClass.Compact
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val currentOnDismiss by rememberUpdatedState(onDismiss)
     val density = LocalDensity.current
     val dismissThresholdPx = with(density) { 150.dp.toPx() }
 
@@ -109,19 +115,31 @@ fun CastChaptersDialog(
 
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
-        exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+        enter =
+            fadeIn(tween(EphyraMotion.DURATION_MEDIUM, easing = EphyraMotion.EasingEnter)) +
+                slideInVertically(
+                    tween(EphyraMotion.DURATION_MEDIUM, easing = EphyraMotion.EasingEnter)
+                ) {
+                    it
+                },
+        exit =
+            fadeOut(tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingExit)) +
+                slideOutVertically(
+                    tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingExit)
+                ) {
+                    it
+                },
     ) {
         Box(
             modifier =
                 Modifier.fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
                         onClick = onDismiss,
                     ),
-            contentAlignment = if (isLandscape) Alignment.Center else Alignment.BottomCenter,
+            contentAlignment = if (isCentered) Alignment.Center else Alignment.BottomCenter,
         ) {
             val nestedScrollConnection = remember {
                 object : NestedScrollConnection {
@@ -150,7 +168,7 @@ fun CastChaptersDialog(
 
                     override suspend fun onPreFling(available: Velocity): Velocity {
                         if (offsetY > dismissThresholdPx) {
-                            onDismiss()
+                            currentOnDismiss()
                         } else {
                             offsetY = 0f
                         }
@@ -177,7 +195,7 @@ fun CastChaptersDialog(
                                     if (change.changedToUp()) {
                                         if (isDragging) {
                                             if (offsetY > dismissThresholdPx) {
-                                                onDismiss()
+                                                currentOnDismiss()
                                             } else {
                                                 offsetY = 0f
                                             }
@@ -202,7 +220,7 @@ fun CastChaptersDialog(
                             }
                         }
                         .then(
-                            if (isLandscape) {
+                            if (isCentered) {
                                 Modifier.widthIn(max = 480.dp)
                                     .fillMaxWidth(0.6f)
                                     .heightIn(max = screenHeight * 0.85f)
@@ -215,13 +233,13 @@ fun CastChaptersDialog(
                             indication = null,
                             onClick = {},
                         ),
-                shape = CentralShapes.Dialog,
+                shape = MaterialTheme.shapes.large,
                 color = MaterialTheme.colorScheme.surface,
             ) {
                 Column(
                     modifier =
                         Modifier.padding(top = 16.dp, bottom = 24.dp)
-                            .then(if (isLandscape) Modifier.statusBarsPadding() else Modifier),
+                            .then(if (isCentered) Modifier.statusBarsPadding() else Modifier),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
@@ -237,7 +255,7 @@ fun CastChaptersDialog(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Chapters",
+                        text = stringResource(PlayerR.string.select_chapter),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -253,6 +271,7 @@ fun CastChaptersDialog(
                                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                                 .drawWithContent {
                                     drawContent()
+                                    // An alpha mask (DstIn) that fades the list edges, not a colour.
                                     val fadeLength = 16.dp.toPx()
                                     val topFade = listState.firstVisibleItemIndex > 0 ||
                                         listState.firstVisibleItemScrollOffset > 0

@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Midagi pole veel alla laaditud</string>
     <string name="ce_home_offline_empty_body">Oled võrguühenduseta. Allalaaditud filmid ja osad kuvatakse siin ja jaotises Allalaadimised.</string>
+    <string name="ce_cast_select_device">Vali seade</string>
+    <string name="ce_cast_searching">Otsimine…</string>
+    <string name="ce_cast_available_devices">Saadaolevad seadmed</string>
+    <string name="ce_cast_wifi_instruction">Wi-Fi kaudu ühendamiseks veendu, et see seade ja teler on samas Wi-Fi-võrgus.</string>
+    <string name="ce_cast_connect_tv">Ühenda teleriga</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d teler läheduses</item>
+        <item quantity="other">%d telerit läheduses</item>
+    </plurals>
+    <string name="ce_cast_connected">Ühendatud</string>
+    <string name="ce_cast_playback_failed">Seda ei saanud teleris esitada</string>
+    <string name="ce_cast_disconnect">Katkesta ühendus</string>
+    <string name="ce_cast_pause">Paus</string>
+    <string name="ce_cast_volume">Helitugevus</string>
+    <string name="ce_track_default">Vaikimisi</string>
+    <string name="ce_track_original">Originaal</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Rada %1$d</string>
 </resources>

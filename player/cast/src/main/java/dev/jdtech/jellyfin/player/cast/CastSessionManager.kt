@@ -1,6 +1,5 @@
 package dev.jdtech.jellyfin.player.cast
 
-import androidx.mediarouter.media.MediaRouter
 import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
 import dev.jdtech.jellyfin.player.cast.models.Device
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +12,11 @@ interface CastSessionManager {
 
     fun init()
 
-    fun updateDiscovery(flags: Int = MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY)
+    /**
+     * Keeps the device list up to date. An [activeScan] searches the network and costs battery, so
+     * it is for while the device list is on screen.
+     */
+    fun updateDiscovery(activeScan: Boolean = false)
 
     fun connect(device: Device)
 

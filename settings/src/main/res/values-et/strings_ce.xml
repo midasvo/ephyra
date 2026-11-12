@@ -196,4 +196,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Esita videoid rõhtpaigutuses ka siis, kui pöörad tahvelarvuti püsti</string>
     <string name="ce_pref_home_episode_images">Kasuta episoodide pilte</string>
     <string name="ce_pref_home_episode_images_summary">Kuva ridades Jätka vaatamist ja Järgmisena sarja pildi asemel episoodi pilti</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Kanna üle telerisse</string>
+    <string name="ce_pref_cast_enabled_summary">Otsi oma võrgust Chromecasti seadmeid. Ülekandmiseks on vaja serverit, millega ühendutakse HTTPS-i kaudu</string>
+    <string name="ce_pref_cast_max_bitrate">Maksimaalne bitikiirus</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Ülekandmise ajal vähendab server kõige seda ületava kvaliteeti</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
 </resources>

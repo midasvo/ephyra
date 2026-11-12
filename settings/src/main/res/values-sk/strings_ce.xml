@@ -200,4 +200,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Prehrávať videá na šírku, aj keď tablet otočíte na výšku</string>
     <string name="ce_pref_home_episode_images">Používať obrázky epizód</string>
     <string name="ce_pref_home_episode_images_summary">Zobraziť obrázok epizódy namiesto obrázka seriálu v radoch Pokračovať v sledovaní a Ďalšie</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Prenášať do televízora</string>
+    <string name="ce_pref_cast_enabled_summary">Hľadať zariadenia Chromecast vo vašej sieti. Prenášanie vyžaduje server dostupný cez HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">Maximálny dátový tok</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Pri prenášaní server zníži kvalitu všetkého, čo ho prekračuje</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mb/s</string>
 </resources>

@@ -38,12 +38,13 @@ dependencies {
     implementation(projects.settings)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.kotlinx.serialization.json)
-    api(libs.androidx.mediarouter)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.jellyfin.core)
     implementation(libs.timber)
 
+    // Only the proprietary flavor has Google Cast; libre gets none of it.
+    "proprietaryImplementation"(libs.androidx.mediarouter)
     "proprietaryImplementation"(libs.play.services.cast.framework)
 }

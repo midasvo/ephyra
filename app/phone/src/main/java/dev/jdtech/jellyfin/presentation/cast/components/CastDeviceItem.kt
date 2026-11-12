@@ -1,8 +1,7 @@
 package dev.jdtech.jellyfin.presentation.cast.components
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -24,9 +23,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.ephyra.EphyraMotion
 import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
 import dev.jdtech.jellyfin.player.cast.models.Device
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -43,9 +44,9 @@ fun CastDeviceItem(
         animateIntAsState(
             targetValue = if (connected) 50 else 15,
             animationSpec =
-                spring(
-                    dampingRatio = 0.4f,
-                    stiffness = Spring.StiffnessMediumLow,
+                tween(
+                    durationMillis = EphyraMotion.DURATION_MEDIUM,
+                    easing = EphyraMotion.EasingStandard,
                 ),
             label = "shapeAnimation",
         )
@@ -112,7 +113,8 @@ fun CastDeviceItem(
                     } else {
                         Icon(
                             painter = painterResource(CoreR.drawable.ic_x),
-                            contentDescription = null,
+                            contentDescription =
+                                stringResource(CoreR.string.ce_cast_disconnect),
                             tint = MaterialTheme.colorScheme.onPrimary,
                         )
                     }

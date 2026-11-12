@@ -2,7 +2,6 @@ package dev.jdtech.jellyfin.presentation.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,21 +23,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import dev.jdtech.jellyfin.core.R as CoreR
-import dev.jdtech.jellyfin.core.presentation.theme.CentralShapes
-import dev.jdtech.jellyfin.core.presentation.theme.PlayerCardBackground
-import dev.jdtech.jellyfin.core.presentation.theme.PlayerCardCurrent
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
+import dev.jdtech.jellyfin.player.local.R as PlayerR
 import dev.jdtech.jellyfin.presentation.cast.components.formatDuration
-
-private val ChapterThumbShape = CentralShapes.SmallCard
 
 /**
  * Shared chapter item card with preview thumbnail, title, timestamp, and current playback selection
@@ -57,19 +50,16 @@ fun ChapterCard(
 
     val chapterTitle =
         chapter.name?.takeIf { it.isNotBlank() }
-            ?: stringResource(id = CoreR.string.chapter_title, index + 1)
+            ?: stringResource(id = PlayerR.string.chapter_number, index + 1)
 
     var isImageError by remember(chapter.imageUri) { mutableStateOf(false) }
 
-    val thumbBorder = BorderStroke(1.dp, Color.White.copy(alpha = 0.12f))
-
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = CentralShapes.GroupSingle,
-        color = if (isCurrent) PlayerCardCurrent else PlayerCardBackground,
-        border =
-            if (isCurrent) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
-            else BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        // The chapter that is playing is alive, so it gets the one cyan ring (VISION §1.2).
+        border = if (isCurrent) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
         onClick = onClick,
     ) {
         Row(
@@ -84,9 +74,8 @@ fun ChapterCard(
                 modifier =
                     Modifier.height(42.dp)
                         .aspectRatio(16f / 9f)
-                        .clip(ChapterThumbShape)
-                        .border(thumbBorder, ChapterThumbShape)
-                        .background(Color.Black),
+                        .clip(MaterialTheme.shapes.extraSmall)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest),
                 contentAlignment = Alignment.Center,
             ) {
                 if (hasServerImage) {
@@ -101,7 +90,7 @@ fun ChapterCard(
                     Text(
                         text = "${index + 1}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -111,7 +100,7 @@ fun ChapterCard(
                     text = chapterTitle,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -119,7 +108,7 @@ fun ChapterCard(
                 Text(
                     text = formattedTime,
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.65f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

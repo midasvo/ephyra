@@ -118,4 +118,23 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Nimic descărcat încă</string>
     <string name="ce_home_offline_empty_body">Ești offline. Filmele și episoadele pe care le descarci apar aici și în Descărcări.</string>
+    <string name="ce_cast_select_device">Selectează un dispozitiv</string>
+    <string name="ce_cast_searching">Se caută…</string>
+    <string name="ce_cast_available_devices">Dispozitive disponibile</string>
+    <string name="ce_cast_wifi_instruction">Pentru a te conecta prin Wi-Fi, asigură-te că acest dispozitiv și televizorul sunt în aceeași rețea Wi-Fi.</string>
+    <string name="ce_cast_connect_tv">Conectează la un televizor</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d televizor în apropiere</item>
+        <item quantity="few">%d televizoare în apropiere</item>
+        <item quantity="other">%d de televizoare în apropiere</item>
+    </plurals>
+    <string name="ce_cast_connected">Conectat</string>
+    <string name="ce_cast_playback_failed">Nu s-a putut reda pe televizor</string>
+    <string name="ce_cast_disconnect">Deconectează</string>
+    <string name="ce_cast_pause">Pauză</string>
+    <string name="ce_cast_volume">Volum</string>
+    <string name="ce_track_default">Implicit</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Pista %1$d</string>
 </resources>

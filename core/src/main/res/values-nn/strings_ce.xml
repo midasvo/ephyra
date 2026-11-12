@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Ingenting lasta ned enno</string>
     <string name="ce_home_offline_empty_body">Du er fråkopla. Filmar og episodar du lastar ned, viser seg her og under Nedlastingar.</string>
+    <string name="ce_cast_select_device">Vel ei eining</string>
+    <string name="ce_cast_searching">Søkjer…</string>
+    <string name="ce_cast_available_devices">Tilgjengelege einingar</string>
+    <string name="ce_cast_wifi_instruction">For å kople til over Wi-Fi må denne eininga og TV-en din vere på det same Wi-Fi-nettverket.</string>
+    <string name="ce_cast_connect_tv">Kople til ein TV</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d TV i nærleiken</item>
+        <item quantity="other">%d TV-ar i nærleiken</item>
+    </plurals>
+    <string name="ce_cast_connected">Tilkopla</string>
+    <string name="ce_cast_playback_failed">Kunne ikkje spele av dette på TV-en</string>
+    <string name="ce_cast_disconnect">Kople frå</string>
+    <string name="ce_cast_pause">Pause</string>
+    <string name="ce_cast_volume">Volum</string>
+    <string name="ce_track_default">Standard</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Spor %1$d</string>
 </resources>

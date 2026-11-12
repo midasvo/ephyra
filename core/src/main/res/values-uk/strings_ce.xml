@@ -123,4 +123,24 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Ще нічого не завантажено</string>
     <string name="ce_home_offline_empty_body">Немає з\'єднання. Завантажені фільми й епізоди з\'являться тут і в розділі «Завантаження».</string>
+    <string name="ce_cast_select_device">Виберіть пристрій</string>
+    <string name="ce_cast_searching">Пошук…</string>
+    <string name="ce_cast_available_devices">Доступні пристрої</string>
+    <string name="ce_cast_wifi_instruction">Щоб підключитися через Wi-Fi, переконайтеся, що цей пристрій і телевізор перебувають в одній мережі Wi-Fi.</string>
+    <string name="ce_cast_connect_tv">Підключитися до ТВ</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d телевізор поруч</item>
+        <item quantity="few">%d телевізори поруч</item>
+        <item quantity="many">%d телевізорів поруч</item>
+        <item quantity="other">%d телевізора поруч</item>
+    </plurals>
+    <string name="ce_cast_connected">Підключено</string>
+    <string name="ce_cast_playback_failed">Не вдалося відтворити на телевізорі</string>
+    <string name="ce_cast_disconnect">Відключитися</string>
+    <string name="ce_cast_pause">Пауза</string>
+    <string name="ce_cast_volume">Гучність</string>
+    <string name="ce_track_default">Типова</string>
+    <string name="ce_track_original">Оригінал</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Доріжка %1$d</string>
 </resources>

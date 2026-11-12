@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Encara no hi ha res baixat</string>
     <string name="ce_home_offline_empty_body">No tens connexió. Les pel·lícules i els episodis que baixis apareixen aquí i a Baixades.</string>
+    <string name="ce_cast_select_device">Selecciona un dispositiu</string>
+    <string name="ce_cast_searching">S\'està cercant…</string>
+    <string name="ce_cast_available_devices">Dispositius disponibles</string>
+    <string name="ce_cast_wifi_instruction">Per connectar-te per Wi-Fi, assegura\'t que aquest dispositiu i el televisor són a la mateixa xarxa Wi-Fi.</string>
+    <string name="ce_cast_connect_tv">Connecta a un televisor</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d televisor a prop</item>
+        <item quantity="other">%d televisors a prop</item>
+    </plurals>
+    <string name="ce_cast_connected">Connectat</string>
+    <string name="ce_cast_playback_failed">No s\'ha pogut reproduir al televisor</string>
+    <string name="ce_cast_disconnect">Desconnecta</string>
+    <string name="ce_cast_pause">Pausa</string>
+    <string name="ce_cast_volume">Volum</string>
+    <string name="ce_track_default">Per defecte</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Pista %1$d</string>
 </resources>

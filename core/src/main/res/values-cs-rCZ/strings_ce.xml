@@ -118,4 +118,23 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Zatím nic staženo</string>
     <string name="ce_home_offline_empty_body">Jste offline. Filmy a epizody, které si stáhnete, se zobrazí tady a ve Stažených souborech.</string>
+    <string name="ce_cast_select_device">Vyberte zařízení</string>
+    <string name="ce_cast_searching">Hledání…</string>
+    <string name="ce_cast_available_devices">Dostupná zařízení</string>
+    <string name="ce_cast_wifi_instruction">Chcete-li se připojit přes Wi-Fi, ujistěte se, že jsou toto zařízení a televize ve stejné síti Wi-Fi.</string>
+    <string name="ce_cast_connect_tv">Připojit k televizi</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d televize poblíž</item>
+        <item quantity="few">%d televize poblíž</item>
+        <item quantity="other">%d televizí poblíž</item>
+    </plurals>
+    <string name="ce_cast_connected">Připojeno</string>
+    <string name="ce_cast_playback_failed">Na televizi se to nepodařilo přehrát</string>
+    <string name="ce_cast_disconnect">Odpojit</string>
+    <string name="ce_cast_pause">Pozastavit</string>
+    <string name="ce_cast_volume">Hlasitost</string>
+    <string name="ce_track_default">Výchozí</string>
+    <string name="ce_track_original">Původní</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Stopa %1$d</string>
 </resources>

@@ -123,4 +123,24 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Пока ничего не загружено</string>
     <string name="ce_home_offline_empty_body">Нет подключения. Загруженные фильмы и эпизоды появятся здесь и в разделе «Загрузки».</string>
+    <string name="ce_cast_select_device">Выберите устройство</string>
+    <string name="ce_cast_searching">Поиск…</string>
+    <string name="ce_cast_available_devices">Доступные устройства</string>
+    <string name="ce_cast_wifi_instruction">Чтобы подключиться по Wi-Fi, убедитесь, что это устройство и телевизор находятся в одной сети Wi-Fi.</string>
+    <string name="ce_cast_connect_tv">Подключиться к ТВ</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d телевизор рядом</item>
+        <item quantity="few">%d телевизора рядом</item>
+        <item quantity="many">%d телевизоров рядом</item>
+        <item quantity="other">%d телевизора рядом</item>
+    </plurals>
+    <string name="ce_cast_connected">Подключено</string>
+    <string name="ce_cast_playback_failed">Не удалось воспроизвести на телевизоре</string>
+    <string name="ce_cast_disconnect">Отключиться</string>
+    <string name="ce_cast_pause">Пауза</string>
+    <string name="ce_cast_volume">Громкость</string>
+    <string name="ce_track_default">По умолчанию</string>
+    <string name="ce_track_original">Оригинал</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Дорожка %1$d</string>
 </resources>

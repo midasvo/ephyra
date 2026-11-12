@@ -123,4 +123,24 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Prenesenega še ni nič</string>
     <string name="ce_home_offline_empty_body">Brez povezave ste. Filmi in epizode, ki jih prenesete, so prikazani tukaj in v Prenosih.</string>
+    <string name="ce_cast_select_device">Izberite napravo</string>
+    <string name="ce_cast_searching">Iskanje…</string>
+    <string name="ce_cast_available_devices">Razpoložljive naprave</string>
+    <string name="ce_cast_wifi_instruction">Za povezavo prek omrežja Wi-Fi poskrbite, da sta ta naprava in televizor v istem omrežju Wi-Fi.</string>
+    <string name="ce_cast_connect_tv">Poveži s televizorjem</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d televizor v bližini</item>
+        <item quantity="two">%d televizorja v bližini</item>
+        <item quantity="few">%d televizorji v bližini</item>
+        <item quantity="other">%d televizorjev v bližini</item>
+    </plurals>
+    <string name="ce_cast_connected">Povezano</string>
+    <string name="ce_cast_playback_failed">Tega ni bilo mogoče predvajati na televizorju</string>
+    <string name="ce_cast_disconnect">Prekini povezavo</string>
+    <string name="ce_cast_pause">Premor</string>
+    <string name="ce_cast_volume">Glasnost</string>
+    <string name="ce_track_default">Privzeto</string>
+    <string name="ce_track_original">Izvirnik</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Steza %1$d</string>
 </resources>

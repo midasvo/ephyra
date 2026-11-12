@@ -51,6 +51,7 @@ data             — JellyfinRepository interface + Room database + online/offli
 modes/film       — Feature ViewModels and State/Action classes for home, library, search, episode, movie, show, season
 player/core      — Player models shared by the player and its callers (PlayerItem, Track, Trickplay)
 player/local     — ExoPlayer + mpv PlayerViewModel and playback logic
+player/cast      — Google Cast: session and playback on a receiver (real in the proprietary flavor, stubs in libre)
 setup            — Server discovery and login onboarding flow
 settings         — AppPreferences (DataStore) and settings screen
 baselineprofile  — Macrobenchmark module for app/phone: baseline profile and startup benchmark
@@ -87,7 +88,9 @@ Events that fire once (navigation, toasts) use a `Channel<FooEvent>` exposed as 
 
 **ItemButtonsBar:** The shared download/play/favorite buttons component. Accepts `canDownload` and `isDownloaded` overrides so aggregate items (seasons, shows) can pass computed values instead of deriving from the item directly.
 
-**Build variants:** Only one flavor (`libre`). Build types are `debug`, `release`, `staging`. Always use `Libre` variants (e.g. `assembleLibreDebug`, `compileLibreDebugKotlin`).
+**Build variants:** Build types are `debug`, `release`, `staging`. The default flavor is `libre`: use its variants (e.g. `assembleLibreDebug`, `compileLibreDebugKotlin`) unless the change is about Cast. Every release, the beta, F-Droid and Google Play ship `libre`, and it must stay free of Google code.
+
+**Cast (#626):** `app/phone` and `player/cast` have a second flavor, `proprietary`, with Google Cast (Play Services). Everything that touches the Cast SDK is in `player/cast/src/proprietary`; `player/cast/src/libre` has stubs that say Cast is not supported, and `player/cast/src/main` (interfaces, models, ViewModels) and the Cast UI in `app/phone/.../presentation/cast` compile in both. A change there must compile in both flavors (`compileLibreDebugKotlin` and `compileProprietaryDebugKotlin`). Nothing publishes the `proprietary` flavor yet.
 
 **App ID:** `nl.midasvo.findroid.ce` (this is a fork — do not revert to the upstream `dev.jdtech.jellyfin` ID, and do not change it to match the Ephyra name: existing installs update over it).
 

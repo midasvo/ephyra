@@ -108,4 +108,21 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Henüz hiçbir şey indirilmedi</string>
     <string name="ce_home_offline_empty_body">Çevrimdışısınız. İndirdiğiniz filmler ve bölümler burada ve İndirilenler\'de görünür.</string>
+    <string name="ce_cast_select_device">Bir cihaz seçin</string>
+    <string name="ce_cast_searching">Aranıyor…</string>
+    <string name="ce_cast_available_devices">Kullanılabilir cihazlar</string>
+    <string name="ce_cast_wifi_instruction">Wi-Fi üzerinden bağlanmak için bu cihazın ve TV\'nizin aynı Wi-Fi ağında olduğundan emin olun.</string>
+    <string name="ce_cast_connect_tv">TV\'ye bağlan</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="other">Yakında %d TV</item>
+    </plurals>
+    <string name="ce_cast_connected">Bağlandı</string>
+    <string name="ce_cast_playback_failed">Bu, TV\'de oynatılamadı</string>
+    <string name="ce_cast_disconnect">Bağlantıyı kes</string>
+    <string name="ce_cast_pause">Duraklat</string>
+    <string name="ce_cast_volume">Ses düzeyi</string>
+    <string name="ce_track_default">Varsayılan</string>
+    <string name="ce_track_original">Orijinal</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Parça %1$d</string>
 </resources>

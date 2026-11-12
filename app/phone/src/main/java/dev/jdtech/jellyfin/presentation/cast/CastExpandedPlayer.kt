@@ -1,6 +1,5 @@
 package dev.jdtech.jellyfin.presentation.cast
 
-import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -20,7 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -35,12 +34,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.window.core.layout.WindowSizeClass
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.player.cast.presentation.CastPlayerViewModel
 import dev.jdtech.jellyfin.player.core.domain.models.Track
@@ -49,6 +46,9 @@ import dev.jdtech.jellyfin.presentation.cast.components.CastExpandedPlayerBottom
 import dev.jdtech.jellyfin.presentation.cast.components.CastTrackSelectionDialog
 import dev.jdtech.jellyfin.presentation.cast.components.CastTrackType
 import dev.jdtech.jellyfin.presentation.cast.components.PlayerTopSection
+import dev.jdtech.jellyfin.presentation.utils.WidthClass
+import dev.jdtech.jellyfin.presentation.utils.currentWidthClass
+import dev.jdtech.jellyfin.presentation.utils.isCompactHeight
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -66,13 +66,8 @@ fun CastExpandedPlayer(
     viewModel: CastPlayerViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
-    val isExpandedScreen =
-        remember(windowAdaptiveInfo) {
-            windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
-                WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND
-            )
-        }
+    val widthClass = currentWidthClass()
+    val isExpandedScreen = widthClass == WidthClass.Expanded
 
     val actions =
         remember(viewModel, onDeviceClick, onClose) {
@@ -127,8 +122,14 @@ fun CastExpandedPlayer(
             dragHandle = null,
             containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-            shape = RectangleShape,
-            sheetMaxWidth = Dp.Unspecified,
+            // The whole screen on a phone; a sheet of the usual width on anything wider, where a
+            // sheet must not span the window (docs/tablet/4-design.md).
+            shape =
+                if (widthClass == WidthClass.Compact) RectangleShape
+                else BottomSheetDefaults.ExpandedShape,
+            sheetMaxWidth =
+                if (widthClass == WidthClass.Compact) Dp.Unspecified
+                else BottomSheetDefaults.SheetMaxWidth,
         ) {
             AnimatedVisibility(
                 visible = true,
@@ -185,11 +186,7 @@ private fun CastExpandedPlayerLayout(
     var showChaptersSelection by remember { mutableStateOf(false) }
     var trackType by remember { mutableStateOf(CastTrackType.AUDIO) }
 
-    val configuration = LocalConfiguration.current
-    val isLandscape =
-        remember(configuration.orientation) {
-            configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        }
+    val isLandscape = isCompactHeight()
     val safePadding = rememberSafePadding()
 
     val onScrubStart: (Float) -> Unit = remember {

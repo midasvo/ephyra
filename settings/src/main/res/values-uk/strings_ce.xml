@@ -200,4 +200,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Відтворювати відео в альбомній орієнтації, навіть якщо повернути планшет вертикально</string>
     <string name="ce_pref_home_episode_images">Використовувати зображення серій</string>
     <string name="ce_pref_home_episode_images_summary">Показувати зображення серії замість зображення серіалу в «Продовжити перегляд» і «Далі»</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Трансляція на телевізор</string>
+    <string name="ce_pref_cast_enabled_summary">Шукати пристрої Chromecast у вашій мережі. Для трансляції потрібен сервер, доступний через HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">Максимальний бітрейт</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Під час трансляції сервер знижує якість усього, що його перевищує</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Мбіт/с</string>
 </resources>

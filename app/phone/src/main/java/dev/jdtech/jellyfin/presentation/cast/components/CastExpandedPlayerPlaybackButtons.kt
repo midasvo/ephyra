@@ -2,7 +2,7 @@ package dev.jdtech.jellyfin.presentation.cast.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +29,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.ephyra.EphyraMotion
 import dev.jdtech.jellyfin.player.cast.presentation.CastPlayerViewModel
+import dev.jdtech.jellyfin.player.local.R as PlayerR
 
 @Composable
 fun PlaybackButtons(
@@ -58,6 +60,13 @@ fun PlaybackButtons(
         val isBackPressed by backInteractionSource.collectIsPressedAsState()
         val isNextPressed by nextInteractionSource.collectIsPressedAsState()
 
+        // VISION §6: nothing overshoots, so the weights ease instead of springing.
+        val weightSpec =
+            tween<Float>(
+                durationMillis = EphyraMotion.DURATION_SHORT,
+                easing = EphyraMotion.EasingStandard,
+            )
+
         val playPauseWeight by
             animateFloatAsState(
                 targetValue =
@@ -68,11 +77,7 @@ fun PlaybackButtons(
                     else if (isNextPressed && !skippableSegment) 1.1f
                     else if (isNextPressed && skippableSegment) 0.25f
                     else if (skippableSegment) 0.45f else 1.3f,
-                animationSpec =
-                    spring(
-                        dampingRatio = 0.6f,
-                        stiffness = 500f,
-                    ),
+                animationSpec = weightSpec,
                 label = "playPauseWeight",
             )
 
@@ -82,11 +87,7 @@ fun PlaybackButtons(
                     if (isBackPressed) 0.65f
                     else if (isPlayPausePressed && !skippableSegment) 0.25f
                     else if (isPlayPausePressed && skippableSegment) 0.35f else 0.45f,
-                animationSpec =
-                    spring(
-                        dampingRatio = 0.6f,
-                        stiffness = 500f,
-                    ),
+                animationSpec = weightSpec,
                 label = "backButtonWeight",
             )
 
@@ -98,11 +99,7 @@ fun PlaybackButtons(
                     else if (isPlayPausePressed && !skippableSegment) 0.25f
                     else if (isPlayPausePressed && skippableSegment) 1.2f
                     else if (skippableSegment) 1.3f else 0.45f,
-                animationSpec =
-                    spring(
-                        dampingRatio = 0.6f,
-                        stiffness = 500f,
-                    ),
+                animationSpec = weightSpec,
                 label = "nextButtonWeight",
             )
 
@@ -120,7 +117,7 @@ fun PlaybackButtons(
         ) {
             Icon(
                 painter = painterResource(CoreR.drawable.ic_skip_back),
-                contentDescription = null,
+                contentDescription = stringResource(PlayerR.string.player_controls_previous),
                 modifier = Modifier.size(32.dp),
             )
         }
@@ -139,6 +136,8 @@ fun PlaybackButtons(
                 ),
             modifier = Modifier.height(68.dp).weight(playPauseWeight),
         ) {
+            val playPauseLabel =
+                stringResource(if (isPlaying) CoreR.string.ce_cast_pause else CoreR.string.play)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
@@ -148,23 +147,14 @@ fun PlaybackButtons(
                         painterResource(
                             if (isPlaying) CoreR.drawable.ic_pause else CoreR.drawable.ic_play
                         ),
-                    contentDescription =
-                        stringResource(
-                            if (isPlaying) CoreR.string.player_controls_pause
-                            else CoreR.string.player_controls_play
-                        ),
+                    // The label beside the icon names the button, unless the skip button took
+                    // its room.
+                    contentDescription = if (skippableSegment) playPauseLabel else null,
                     modifier = Modifier.size(32.dp),
                 )
                 if (!skippableSegment) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text =
-                            stringResource(
-                                if (isPlaying) CoreR.string.player_controls_pause
-                                else CoreR.string.player_controls_play
-                            ),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
+                    Text(text = playPauseLabel, style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
@@ -204,7 +194,10 @@ fun PlaybackButtons(
                 }
                 Icon(
                     painter = painterResource(CoreR.drawable.ic_skip_forward),
-                    contentDescription = null,
+                    // The skip label names the button while a segment can be skipped.
+                    contentDescription =
+                        if (skippableSegment) null
+                        else stringResource(PlayerR.string.player_controls_next_episode),
                     modifier = Modifier.size(32.dp),
                 )
             }

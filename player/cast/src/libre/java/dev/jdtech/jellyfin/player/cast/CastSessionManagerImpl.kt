@@ -23,7 +23,7 @@ class CastSessionManagerImpl @Inject constructor() : CastSessionManager {
 
     override fun init() {}
 
-    override fun updateDiscovery(flags: Int) {}
+    override fun updateDiscovery(activeScan: Boolean) {}
 
     override fun connect(device: Device) {}
 

@@ -196,4 +196,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Video\'s liggend afspelen, ook als je de tablet rechtop draait</string>
     <string name="ce_pref_home_episode_images">Afleveringsafbeeldingen gebruiken</string>
     <string name="ce_pref_home_episode_images_summary">Toon in Verder kijken en Volgende de afbeelding van de aflevering in plaats van die van de serie</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Casten naar een tv</string>
+    <string name="ce_pref_cast_enabled_summary">Zoek naar Chromecast-apparaten in je netwerk. Voor casten is een server nodig die via HTTPS bereikbaar is</string>
+    <string name="ce_pref_cast_max_bitrate">Maximale bitrate</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Tijdens het casten verlaagt de server de kwaliteit van alles wat daarboven zit</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
 </resources>

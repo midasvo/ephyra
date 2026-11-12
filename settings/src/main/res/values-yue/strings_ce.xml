@@ -194,4 +194,10 @@
     <string name="ce_pref_player_keep_landscape_summary">就算將平板電腦轉直，影片都係橫向播放</string>
     <string name="ce_pref_home_episode_images">使用劇集圖片</string>
     <string name="ce_pref_home_episode_images_summary">喺「繼續觀看」同「下一集」顯示單集嘅圖片，而唔係劇集嘅圖片</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">投放去電視</string>
+    <string name="ce_pref_cast_enabled_summary">喺你嘅網絡搵 Chromecast 裝置。投放需要用 HTTPS 連接嘅伺服器</string>
+    <string name="ce_pref_cast_max_bitrate">最高位元率</string>
+    <string name="ce_pref_cast_max_bitrate_summary">投放嗰陣，伺服器會將高過呢個數值嘅內容降低畫質</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
 </resources>

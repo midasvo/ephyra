@@ -28,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
-import dev.jdtech.jellyfin.LocalCastPlayerHeight
 import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
@@ -230,7 +229,7 @@ fun ShowWideLayout(
                     Spacer(Modifier.height(MaterialTheme.spacings.medium))
                 }
                 ShowRelatedRows(state = state, onAction = onAction, contentPadding = rowPadding)
-                Spacer(Modifier.height(safePadding.bottom + margin + LocalCastPlayerHeight.current))
+                Spacer(Modifier.height(safePadding.bottom + margin))
             }
         }
             ?: run {

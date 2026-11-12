@@ -108,4 +108,21 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Belum ada yang diunduh</string>
     <string name="ce_home_offline_empty_body">Anda sedang offline. Film dan episode yang Anda unduh muncul di sini dan di Unduhan.</string>
+    <string name="ce_cast_select_device">Pilih perangkat</string>
+    <string name="ce_cast_searching">Mencari…</string>
+    <string name="ce_cast_available_devices">Perangkat yang tersedia</string>
+    <string name="ce_cast_wifi_instruction">Untuk terhubung melalui Wi-Fi, pastikan perangkat ini dan TV Anda berada di jaringan Wi-Fi yang sama.</string>
+    <string name="ce_cast_connect_tv">Hubungkan ke TV</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="other">%d TV di sekitar</item>
+    </plurals>
+    <string name="ce_cast_connected">Terhubung</string>
+    <string name="ce_cast_playback_failed">Tidak dapat memutar ini di TV</string>
+    <string name="ce_cast_disconnect">Putuskan sambungan</string>
+    <string name="ce_cast_pause">Jeda</string>
+    <string name="ce_cast_volume">Volume</string>
+    <string name="ce_track_default">Default</string>
+    <string name="ce_track_original">Asli</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Trek %1$d</string>
 </resources>

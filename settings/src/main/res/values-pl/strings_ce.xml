@@ -200,4 +200,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Odtwarzaj filmy w poziomie, nawet gdy obrócisz tablet pionowo</string>
     <string name="ce_pref_home_episode_images">Używaj obrazów odcinków</string>
     <string name="ce_pref_home_episode_images_summary">Pokazuj obraz odcinka zamiast obrazu serialu w sekcjach Kontynuuj oglądanie i Następne</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Przesyłaj na telewizor</string>
+    <string name="ce_pref_cast_enabled_summary">Szukaj urządzeń Chromecast w swojej sieci. Przesyłanie wymaga serwera dostępnego przez HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">Maksymalny bitrate</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Podczas przesyłania serwer obniża jakość wszystkiego, co go przekracza</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mb/s</string>
 </resources>

@@ -196,4 +196,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Afspil videoer i liggende format, også når du vender tabletten på højkant</string>
     <string name="ce_pref_home_episode_images">Brug episodebilleder</string>
     <string name="ce_pref_home_episode_images_summary">Vis episodens billede i stedet for seriens billede i Fortsæt med at se og Næste</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Cast til et tv</string>
+    <string name="ce_pref_cast_enabled_summary">Søg efter Chromecast-enheder på dit netværk. Casting kræver en server, der nås via HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">Maksimal bitrate</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Serveren sænker kvaliteten af alt, der ligger over, mens du caster</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
 </resources>

@@ -200,4 +200,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Predvajaj videoposnetke v ležeči postavitvi, tudi ko tablico obrnete pokonci</string>
     <string name="ce_pref_home_episode_images">Uporabi slike epizod</string>
     <string name="ce_pref_home_episode_images_summary">Prikaži sliko epizode namesto slike serije v vrsticah Nadaljuj z ogledom in Naslednje</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Predvajaj na televizorju</string>
+    <string name="ce_pref_cast_enabled_summary">Poišči naprave Chromecast v omrežju. Za predvajanje na televizorju je potreben strežnik, dosegljiv prek HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">Največja bitna hitrost</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Med predvajanjem na televizorju strežnik zniža kakovost vsega, kar jo presega</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
 </resources>

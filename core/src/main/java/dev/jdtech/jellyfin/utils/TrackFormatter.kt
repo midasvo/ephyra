@@ -39,21 +39,21 @@ object TrackFormatter {
             c.contains("hevc") || c.contains("h265") -> "HEVC"
             c.contains("h264") || c.contains("avc") -> "AVC"
             c.contains("av1") -> "AV1"
-            c.contains("dvd_subtitle") || c.contains("dvdsub") -> "DVD Subtitle"
+            c.contains("dvd_subtitle") || c.contains("dvdsub") -> "VobSub"
             else -> codec.uppercase(Locale.US)
         }
     }
 
     /**
-     * Formats audio channel layout or channel count into a standardized string (e.g. "Stereo",
-     * "5.1").
+     * Formats audio channel layout or channel count as the local player names it ("2.0", "5.1"), so
+     * nothing here needs translating.
      */
     fun formatChannelLayout(channelLayout: String? = null, channelCount: Int? = null): String? {
         if (!channelLayout.isNullOrBlank()) {
             val layout = channelLayout.trim().lowercase(Locale.US)
             return when {
-                layout == "stereo" || layout == "2.0" -> "Stereo"
-                layout == "mono" || layout == "1.0" -> "Mono"
+                layout == "stereo" || layout == "2.0" -> "2.0"
+                layout == "mono" || layout == "1.0" -> "1.0"
                 layout.startsWith("5.1") -> "5.1"
                 layout.startsWith("7.1") -> "7.1"
                 layout.startsWith("2.1") -> "2.1"
@@ -66,13 +66,15 @@ object TrackFormatter {
             }
         }
         return when (channelCount) {
-            1 -> "Mono"
-            2 -> "Stereo"
+            1 -> "1.0"
+            2 -> "2.0"
             3 -> "2.1"
+            4 -> "4.0"
+            5 -> "5.0"
             6 -> "5.1"
             7 -> "6.1"
             8 -> "7.1"
-            else -> if (channelCount != null && channelCount > 0) "$channelCount ch" else null
+            else -> null
         }
     }
 
@@ -101,11 +103,13 @@ object TrackFormatter {
 
     /**
      * Creates formatted track display information including localized names and status tags/chips
-     * for UI display.
+     * for UI display. [forcedLabel] marks a forced subtitle track: the caller passes the player's
+     * own string, as the local player's track names do.
      */
     fun getTrackDisplayInfo(
         track: Track,
         context: Context,
+        forcedLabel: String,
         isSubtitle: Boolean,
         displayExtraInfo: Boolean = false,
         currentLocale: Locale = Locale.getDefault(),
@@ -116,27 +120,27 @@ object TrackFormatter {
             localizedLanguage
                 ?: track.label?.takeIf { it.isNotBlank() }
                 ?: track.language?.takeIf { it.isNotBlank() && it != "und" }
-                ?: context.getString(R.string.track_index, fallbackIndex)
+                ?: context.getString(R.string.ce_track_number, fallbackIndex)
 
         val chips = mutableListOf<String>()
 
         if (track.isDefault == true) {
-            chips.add(context.getString(R.string.track_default))
+            chips.add(context.getString(R.string.ce_track_default))
         }
 
         if (isSubtitle) {
             val subtitleAttributes = mutableListOf<String>()
             if (track.isForced == true) {
-                subtitleAttributes.add(context.getString(R.string.forced))
+                subtitleAttributes.add(forcedLabel)
             }
             if (track.isHearingImpaired == true) {
-                subtitleAttributes.add(context.getString(R.string.hearing_impaired))
+                subtitleAttributes.add(context.getString(R.string.ce_track_sdh))
             }
             if (subtitleAttributes.isNotEmpty()) {
                 name = "$name (${subtitleAttributes.joinToString(", ")})"
             }
             if (track.isOriginal == true) {
-                chips.add(context.getString(R.string.track_original))
+                chips.add(context.getString(R.string.ce_track_original))
             }
             val formattedCodec = formatCodec(track.codec)
             if (!formattedCodec.isNullOrBlank()) {
@@ -155,7 +159,7 @@ object TrackFormatter {
                 chips.add(formattedCodec)
             }
             if (track.isOriginal == true) {
-                chips.add(context.getString(R.string.track_original))
+                chips.add(context.getString(R.string.ce_track_original))
             }
             if (displayExtraInfo && track.isExternal == true) {
                 chips.add(context.getString(R.string.external))

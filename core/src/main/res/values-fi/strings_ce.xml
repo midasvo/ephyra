@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Mitään ei ole vielä ladattu</string>
     <string name="ce_home_offline_empty_body">Olet offline-tilassa. Lataamasi elokuvat ja jaksot näkyvät täällä ja Latauksissa.</string>
+    <string name="ce_cast_select_device">Valitse laite</string>
+    <string name="ce_cast_searching">Etsitään…</string>
+    <string name="ce_cast_available_devices">Käytettävissä olevat laitteet</string>
+    <string name="ce_cast_wifi_instruction">Jos haluat yhdistää Wi-Fin kautta, varmista, että tämä laite ja televisio ovat samassa Wi-Fi-verkossa.</string>
+    <string name="ce_cast_connect_tv">Yhdistä televisioon</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d televisio lähellä</item>
+        <item quantity="other">%d televisiota lähellä</item>
+    </plurals>
+    <string name="ce_cast_connected">Yhdistetty</string>
+    <string name="ce_cast_playback_failed">Tätä ei voitu toistaa televisiossa</string>
+    <string name="ce_cast_disconnect">Katkaise yhteys</string>
+    <string name="ce_cast_pause">Tauko</string>
+    <string name="ce_cast_volume">Äänenvoimakkuus</string>
+    <string name="ce_track_default">Oletus</string>
+    <string name="ce_track_original">Alkuperäinen</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Raita %1$d</string>
 </resources>

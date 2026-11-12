@@ -6,7 +6,10 @@ import dev.jdtech.jellyfin.player.core.domain.models.Track
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import dev.jdtech.jellyfin.player.cast.models.CastError
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -18,7 +21,14 @@ class CastPlayerControllerImpl @Inject constructor() : CastPlayerController {
     private val _playerState = MutableStateFlow(CastPlayerState())
     override val playerState: StateFlow<CastPlayerState> = _playerState.asStateFlow()
 
-    override fun playItem(itemId: UUID, itemKind: String, startFromBeginning: Boolean) {}
+    override val errors: Flow<CastError> = emptyFlow()
+
+    override fun playItem(
+        itemId: UUID,
+        itemKind: String,
+        startFromBeginning: Boolean,
+        mediaSourceId: String?,
+    ) {}
 
     override fun play() {}
 

@@ -1,6 +1,5 @@
 package dev.jdtech.jellyfin.presentation.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -32,10 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R as CoreR
-import dev.jdtech.jellyfin.core.presentation.theme.CentralShapes
-import dev.jdtech.jellyfin.core.presentation.theme.PlayerCardBackground
-
-val TrackItemShape = CentralShapes.GroupSingle
 
 /**
  * Selectable list row displaying track name, characteristic badges, checkmark indicator, and
@@ -46,8 +41,7 @@ val TrackItemShape = CentralShapes.GroupSingle
  * @param isSelected Whether this row is currently chosen.
  * @param onClick Callback when the row is tapped.
  * @param modifier Optional modifier for the row. Defaults to [Modifier].
- * @param shape Corner [Shape] defining rounded edges according to list styling. Defaults to
- *   [TrackItemShape].
+ * @param shape Corner [Shape] of the row. Defaults to `MaterialTheme.shapes.medium`.
  */
 @Composable
 fun SelectableTrackItem(
@@ -56,34 +50,29 @@ fun SelectableTrackItem(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    shape: Shape = TrackItemShape,
+    shape: Shape = MaterialTheme.shapes.medium,
 ) {
+    // A selection is a state, not something alive: the nav indicator's roles, not cyan
+    // (VISION §3.4).
     val containerColor =
         if (isSelected) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+            MaterialTheme.colorScheme.secondaryContainer
         } else {
-            PlayerCardBackground
-        }
-    val borderColor =
-        if (isSelected) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+            MaterialTheme.colorScheme.surfaceContainerHigh
         }
     val contentColor =
         if (isSelected) {
-            MaterialTheme.colorScheme.onPrimaryContainer
+            MaterialTheme.colorScheme.onSecondaryContainer
         } else {
             MaterialTheme.colorScheme.onSurface
         }
 
     Surface(
+        selected = isSelected,
+        onClick = onClick,
         modifier = modifier.fillMaxWidth().heightIn(min = 52.dp),
         shape = shape,
         color = containerColor,
-        border =
-            if (isSelected) BorderStroke(1.5.dp, borderColor) else BorderStroke(1.dp, borderColor),
-        onClick = onClick,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
@@ -95,7 +84,7 @@ fun SelectableTrackItem(
                     painter = painterResource(id = CoreR.drawable.ic_check),
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = contentColor,
                 )
             } else {
                 Spacer(modifier = Modifier.size(20.dp))
@@ -118,6 +107,7 @@ fun SelectableTrackItem(
                         Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                             .drawWithContent {
                                 drawContent()
+                                // An alpha mask (DstIn) that fades the chip row's edges, not a colour.
                                 val edgeWidth = 14.dp.toPx()
                                 if (scrollState.value > 0) {
                                     drawRect(
@@ -149,20 +139,14 @@ fun SelectableTrackItem(
                     for (chip in chips) {
                         Box(
                             modifier =
-                                Modifier.clip(CentralShapes.Chip)
-                                    .background(
-                                        if (isSelected)
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                                    )
+                                Modifier.clip(MaterialTheme.shapes.extraSmall)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = chip,
                                 style = MaterialTheme.typography.labelSmall,
-                                color =
-                                    if (isSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                             )
                         }

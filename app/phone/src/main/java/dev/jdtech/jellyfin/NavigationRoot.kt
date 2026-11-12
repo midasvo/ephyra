@@ -100,7 +100,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -116,14 +115,18 @@ import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
 import dev.jdtech.jellyfin.player.cast.presentation.CastSessionViewModel
 import dev.jdtech.jellyfin.presentation.cast.CastExpandedPlayer
 import dev.jdtech.jellyfin.presentation.cast.CastMiniPlayer
+import dev.jdtech.jellyfin.presentation.cast.CastPlayback
+import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
+import android.widget.Toast
+import androidx.compose.foundation.layout.padding
 import dev.jdtech.jellyfin.presentation.cast.components.CastBottomSheet
 import dev.jdtech.jellyfin.presentation.cast.components.CastButton
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
+import dev.jdtech.jellyfin.utils.ObserveAsEvents
 import dev.jdtech.jellyfin.viewmodels.MainViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 
-val LocalCastPlayerHeight = compositionLocalOf { 0.dp }
 val LocalVolumeKeyEvents = compositionLocalOf<SharedFlow<VolumeKeyEvent>> { MutableSharedFlow() }
 
 private val TOP_LEVEL_ROUTES = setOf(HomeRoute, FavoritesRoute, MediaRoute, DownloadsRoute)
@@ -478,18 +481,38 @@ private fun MainNavigation(
     val showCastButton =
         isCastRoute && !isOfflineMode && castSessionViewModel.sessionManager.isSupported
 
-    val showCastMiniPlayer by
-        remember(
-            showCastButton,
-            connectionState,
-            showCastExpandedPlayer,
-            isDismissingCastExpandedPlayer,
-        ) {
-            derivedStateOf {
-                val connected = showCastButton && connectionState == CastConnectionState.CONNECTED
-                connected && (!showCastExpandedPlayer || isDismissingCastExpandedPlayer)
-            }
+    // On every route while connected, not only those with the Cast button: the session goes on
+    // wherever the user is, and this is the only way back to its controls.
+    val showCastMiniPlayer =
+        connectionState == CastConnectionState.CONNECTED &&
+            (!showCastExpandedPlayer || isDismissingCastExpandedPlayer)
+
+    LaunchedEffect(connectionState) {
+        if (connectionState != CastConnectionState.CONNECTED) {
+            showCastExpandedPlayer = false
+            isDismissingCastExpandedPlayer = false
         }
+    }
+
+    val context = LocalContext.current
+    ObserveAsEvents(castSessionViewModel.errors) {
+        Toast.makeText(context, CoreR.string.ce_cast_playback_failed, Toast.LENGTH_LONG).show()
+    }
+    val castPlayback = remember(castSessionViewModel) {
+        CastPlayback { itemId, itemKind, startFromBeginning, mediaSourceId ->
+            val connected =
+                castSessionViewModel.connectionState.value == CastConnectionState.CONNECTED
+            if (connected) {
+                castSessionViewModel.playItem(
+                    itemId,
+                    itemKind.serialName,
+                    startFromBeginning,
+                    mediaSourceId,
+                )
+            }
+            connected
+        }
+    }
 
     LaunchedEffect(showCastMiniPlayer) {
         if (!showCastMiniPlayer) castPlayerHeight = 0.dp
@@ -577,7 +600,7 @@ private fun MainNavigation(
         )
     }
 
-    CompositionLocalProvider(LocalCastPlayerHeight provides castPlayerHeight) {
+    CompositionLocalProvider(LocalCastPlayback provides castPlayback) {
         NavigationSuiteScaffold(
             navigationSuiteItems = {
                 navigationItems.forEach { item ->
@@ -618,6 +641,8 @@ private fun MainNavigation(
                         modifier =
                             Modifier.weight(1f)
                                 .fillMaxHeight()
+                                // The docked mini player takes its height off every screen.
+                                .padding(bottom = castPlayerHeight)
                                 .nestedScroll(nestedScrollConnection)
                     ) {
                         NavDisplay(

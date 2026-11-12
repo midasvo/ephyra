@@ -23,6 +23,8 @@ import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -80,6 +82,9 @@ constructor(
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private var currentMediaItemSegments: List<FindroidSegment> = emptyList()
+    /** The item [currentMediaItemSegments] belongs to, or is being loaded for. */
+    private var segmentsItemId: UUID? = null
+    private var segmentsJob: Job? = null
     var currentItemId: UUID? =
         savedStateHandle.get<String>(KEY_CURRENT_ITEM_ID)?.let {
             try {
@@ -147,10 +152,10 @@ constructor(
                 val index = item.indexNumber.toString().padStart(2, '0')
                 val episodeInfo =
                     if (item.indexNumberEnd == null) {
-                        "S$parentIndex · E$index"
+                        "S${parentIndex}E$index"
                     } else {
                         val indexEnd = item.indexNumberEnd.toString().padStart(2, '0')
-                        "S$parentIndex · E$index:$indexEnd"
+                        "S${parentIndex}E$index-E$indexEnd"
                     }
 
                 CurrentItemTitle(
@@ -173,19 +178,32 @@ constructor(
             )
         }
 
-        viewModelScope.launch {
-            try {
-                currentMediaItemSegments = repository.getSegments(item.itemId)
-                _uiState.update { it.copy(segments = currentMediaItemSegments) }
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to load segments for item ${item.itemId}")
-                currentMediaItemSegments = emptyList()
-                _uiState.update { it.copy(segments = emptyList()) }
+        if (item.itemId == segmentsItemId) return
+        segmentsItemId = item.itemId
+        currentMediaItemSegments = emptyList()
+        _uiState.update { it.copy(segments = emptyList(), currentSegment = null) }
+        segmentsJob?.cancel()
+        segmentsJob =
+            viewModelScope.launch {
+                val segments =
+                    try {
+                        repository.getSegments(item.itemId)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to load segments for item ${item.itemId}")
+                        emptyList()
+                    }
+                // Another item took over, or the session ended, while these were loading.
+                if (segmentsItemId != item.itemId) return@launch
+                currentMediaItemSegments = segments
+                _uiState.update { it.copy(segments = segments) }
             }
-        }
     }
 
     private fun onMediaItemCleared() {
+        segmentsJob?.cancel()
+        segmentsItemId = null
         currentItemId = null
         savedStateHandle.remove<String>(KEY_CURRENT_ITEM_ID)
         currentMediaItemSegments = emptyList()

@@ -1,9 +1,9 @@
 package dev.jdtech.jellyfin.presentation.cast
 
 import android.net.Uri
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -22,7 +23,6 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,7 +37,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.window.core.layout.WindowSizeClass
 import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.player.cast.models.CastPlaybackStatus
@@ -45,6 +44,9 @@ import dev.jdtech.jellyfin.player.cast.models.CastPlayerState
 import dev.jdtech.jellyfin.player.cast.models.Device
 import dev.jdtech.jellyfin.player.cast.presentation.CastPlayerViewModel
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.WidthClass
+import dev.jdtech.jellyfin.presentation.utils.currentWidthClass
+import dev.jdtech.jellyfin.presentation.utils.isCompactHeight
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 
 @Composable
@@ -82,11 +84,10 @@ fun CastMiniPlayerLayout(
     modifier: Modifier = Modifier,
     handleBottomInsets: Boolean = true,
 ) {
-    val windowAdaptiveInfo = currentWindowAdaptiveInfo()
-    val isMediumScreen =
-        windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
-            WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
-        )
+    // Medium and Expanded windows get a half-width card; the taller thumbnail needs the height
+    // too, so a phone in landscape keeps the small one (docs/tablet/4-design.md §1).
+    val isMediumScreen = currentWidthClass() != WidthClass.Compact
+    val largeThumbnail = isMediumScreen && !isCompactHeight()
 
     val safePadding = rememberSafePadding()
 
@@ -124,7 +125,7 @@ fun CastMiniPlayerLayout(
                     MiniPlayerThumbnail(
                         artworkUri = uiState.currentItemArtwork,
                         defaultAspectRatio = uiState.defaultAspectRatio,
-                        isMediumScreen = isMediumScreen,
+                        large = largeThumbnail,
                     )
 
                     MiniPlayerMediaInfo(
@@ -172,15 +173,20 @@ fun CastMiniPlayerLayout(
 private fun MiniPlayerThumbnail(
     artworkUri: Uri?,
     defaultAspectRatio: Float,
-    isMediumScreen: Boolean,
+    large: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    BoxWithConstraints(
+    // A missing or broken ratio would crash aspectRatio(): fall back to 16:9.
+    val aspectRatio =
+        if (defaultAspectRatio.isFinite() && defaultAspectRatio > 0f) defaultAspectRatio
+        else 16f / 9f
+    Box(
         modifier =
             modifier
-                .height(if (isMediumScreen) 80.dp else 64.dp)
-                .aspectRatio(defaultAspectRatio)
-                .clip(MaterialTheme.shapes.medium)
+                .height(if (large) 80.dp else 64.dp)
+                .aspectRatio(aspectRatio)
+                .clip(MaterialTheme.shapes.small)
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
     ) {
         AsyncImage(
             model = artworkUri,
@@ -256,7 +262,8 @@ private fun MiniPlayerPlayPauseButton(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
-            shape = MaterialTheme.shapes.medium,
+            // Buttons are full pills (VISION §5).
+            shape = CircleShape,
             modifier = Modifier.size(48.dp),
         ) {
             Icon(
@@ -265,9 +272,9 @@ private fun MiniPlayerPlayPauseButton(
                     else painterResource(CoreR.drawable.ic_play),
                 contentDescription =
                     if (isPlaying) {
-                        stringResource(CoreR.string.player_controls_pause)
+                        stringResource(CoreR.string.ce_cast_pause)
                     } else {
-                        stringResource(CoreR.string.player_controls_play)
+                        stringResource(CoreR.string.play)
                     },
             )
         }
@@ -287,7 +294,7 @@ private fun MiniPlayerIdleInfo(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = "Connected",
+            text = stringResource(CoreR.string.ce_cast_connected),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

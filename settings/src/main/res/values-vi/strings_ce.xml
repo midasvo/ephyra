@@ -194,4 +194,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Phát video ở chế độ ngang, kể cả khi bạn xoay máy tính bảng theo chiều dọc</string>
     <string name="ce_pref_home_episode_images">Dùng hình ảnh của tập</string>
     <string name="ce_pref_home_episode_images_summary">Hiển thị hình ảnh của tập thay cho hình ảnh của phim bộ trong Tiếp tục xem và Tiếp theo</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Truyền tới TV</string>
+    <string name="ce_pref_cast_enabled_summary">Tìm thiết bị Chromecast trên mạng của bạn. Để truyền cần có máy chủ được truy cập qua HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">Tốc độ bit tối đa</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Khi truyền, máy chủ sẽ giảm chất lượng của mọi nội dung vượt quá mức này</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
 </resources>

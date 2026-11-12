@@ -198,4 +198,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Redă videoclipurile în modul peisaj, chiar și când rotești tableta pe verticală</string>
     <string name="ce_pref_home_episode_images">Folosește imaginile episoadelor</string>
     <string name="ce_pref_home_episode_images_summary">Afișează imaginea episodului în locul imaginii serialului în Continuă vizionarea și Urmează</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Proiectează pe un televizor</string>
+    <string name="ce_pref_cast_enabled_summary">Caută dispozitive Chromecast în rețeaua ta. Proiectarea necesită un server accesat prin HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">Rată de biți maximă</string>
+    <string name="ce_pref_cast_max_bitrate_summary">În timpul proiectării, serverul reduce calitatea a tot ce o depășește</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
 </resources>

@@ -196,4 +196,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Reprodueix els vídeos en horitzontal, encara que posis la tauleta en vertical</string>
     <string name="ce_pref_home_episode_images">Utilitza imatges dels episodis</string>
     <string name="ce_pref_home_episode_images_summary">Mostra la imatge de l\'episodi en lloc de la imatge de la sèrie a Continua mirant i Següent</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Emet a un televisor</string>
+    <string name="ce_pref_cast_enabled_summary">Cerca dispositius Chromecast a la xarxa. Per emetre cal un servidor accessible per HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">Taxa de bits màxima</string>
+    <string name="ce_pref_cast_max_bitrate_summary">El servidor redueix la qualitat de tot el que la superi mentre emets</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
 </resources>

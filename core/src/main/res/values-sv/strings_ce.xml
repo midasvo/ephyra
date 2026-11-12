@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Inget nedladdat än</string>
     <string name="ce_home_offline_empty_body">Du är offline. Filmer och avsnitt som du laddar ned visas här och under Nedladdningar.</string>
+    <string name="ce_cast_select_device">Välj en enhet</string>
+    <string name="ce_cast_searching">Söker…</string>
+    <string name="ce_cast_available_devices">Tillgängliga enheter</string>
+    <string name="ce_cast_wifi_instruction">För att ansluta via Wi-Fi måste den här enheten och din tv vara på samma Wi-Fi-nätverk.</string>
+    <string name="ce_cast_connect_tv">Anslut till en tv</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d tv i närheten</item>
+        <item quantity="other">%d tv-apparater i närheten</item>
+    </plurals>
+    <string name="ce_cast_connected">Ansluten</string>
+    <string name="ce_cast_playback_failed">Det gick inte att spela upp detta på tv:n</string>
+    <string name="ce_cast_disconnect">Koppla från</string>
+    <string name="ce_cast_pause">Pausa</string>
+    <string name="ce_cast_volume">Volym</string>
+    <string name="ce_track_default">Standard</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Spår %1$d</string>
 </resources>

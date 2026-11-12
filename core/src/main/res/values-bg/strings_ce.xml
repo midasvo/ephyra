@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Още няма изтеглени</string>
     <string name="ce_home_offline_empty_body">Нямате връзка. Филмите и епизодите, които изтеглите, се показват тук и в Изтегляния.</string>
+    <string name="ce_cast_select_device">Изберете устройство</string>
+    <string name="ce_cast_searching">Търсене…</string>
+    <string name="ce_cast_available_devices">Налични устройства</string>
+    <string name="ce_cast_wifi_instruction">За да се свържете през Wi-Fi, уверете се, че това устройство и телевизорът ви са в една и съща Wi-Fi мрежа.</string>
+    <string name="ce_cast_connect_tv">Свързване с телевизор</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d телевизор наблизо</item>
+        <item quantity="other">%d телевизора наблизо</item>
+    </plurals>
+    <string name="ce_cast_connected">Свързано</string>
+    <string name="ce_cast_playback_failed">Неуспешно възпроизвеждане на телевизора</string>
+    <string name="ce_cast_disconnect">Прекъсване на връзката</string>
+    <string name="ce_cast_pause">Пауза</string>
+    <string name="ce_cast_volume">Сила на звука</string>
+    <string name="ce_track_default">По подразбиране</string>
+    <string name="ce_track_original">Оригинал</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Писта %1$d</string>
 </resources>

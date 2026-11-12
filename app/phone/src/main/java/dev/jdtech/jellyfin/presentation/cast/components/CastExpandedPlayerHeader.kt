@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -49,7 +49,7 @@ fun CastExpandedPlayerHeader(
         // Device Pill
         Surface(
             modifier = Modifier.align(Alignment.Center).padding(horizontal = 56.dp),
-            shape = RoundedCornerShape(24.dp),
+            shape = CircleShape,
             color = MaterialTheme.colorScheme.primaryContainer,
             onClick = onDeviceClick,
         ) {
@@ -67,7 +67,7 @@ fun CastExpandedPlayerHeader(
                 Text(
                     text =
                         deviceName?.ifBlank { null }
-                            ?: stringResource(CoreR.string.cast_select_device),
+                            ?: stringResource(CoreR.string.ce_cast_select_device),
                     modifier = Modifier.weight(1f, fill = false),
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     maxLines = 1,

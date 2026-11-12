@@ -123,4 +123,24 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Nic jeszcze nie pobrano</string>
     <string name="ce_home_offline_empty_body">Jesteś offline. Pobrane filmy i odcinki pojawią się tutaj i w sekcji Pobrane.</string>
+    <string name="ce_cast_select_device">Wybierz urządzenie</string>
+    <string name="ce_cast_searching">Wyszukiwanie…</string>
+    <string name="ce_cast_available_devices">Dostępne urządzenia</string>
+    <string name="ce_cast_wifi_instruction">Aby połączyć się przez Wi-Fi, upewnij się, że to urządzenie i telewizor są w tej samej sieci Wi-Fi.</string>
+    <string name="ce_cast_connect_tv">Połącz z telewizorem</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d telewizor w pobliżu</item>
+        <item quantity="few">%d telewizory w pobliżu</item>
+        <item quantity="many">%d telewizorów w pobliżu</item>
+        <item quantity="other">%d telewizora w pobliżu</item>
+    </plurals>
+    <string name="ce_cast_connected">Połączono</string>
+    <string name="ce_cast_playback_failed">Nie udało się odtworzyć tego na telewizorze</string>
+    <string name="ce_cast_disconnect">Rozłącz</string>
+    <string name="ce_cast_pause">Wstrzymaj</string>
+    <string name="ce_cast_volume">Głośność</string>
+    <string name="ce_track_default">Domyślna</string>
+    <string name="ce_track_original">Oryginalna</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Ścieżka %1$d</string>
 </resources>

@@ -108,4 +108,21 @@
     </plurals>
     <string name="ce_home_offline_empty_title">尚未下載任何內容</string>
     <string name="ce_home_offline_empty_body">你目前離線。你下載的電影和單集會顯示在這裡和「下載」中。</string>
+    <string name="ce_cast_select_device">選取裝置</string>
+    <string name="ce_cast_searching">搜尋中…</string>
+    <string name="ce_cast_available_devices">可用的裝置</string>
+    <string name="ce_cast_wifi_instruction">如要透過 Wi-Fi 連線，請確認這部裝置和電視連上同一個 Wi-Fi 網路。</string>
+    <string name="ce_cast_connect_tv">連線到電視</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="other">附近有 %d 台電視</item>
+    </plurals>
+    <string name="ce_cast_connected">已連線</string>
+    <string name="ce_cast_playback_failed">無法在電視上播放</string>
+    <string name="ce_cast_disconnect">中斷連線</string>
+    <string name="ce_cast_pause">暫停</string>
+    <string name="ce_cast_volume">音量</string>
+    <string name="ce_track_default">預設</string>
+    <string name="ce_track_original">原版</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">軌道 %1$d</string>
 </resources>

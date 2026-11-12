@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.mediarouter.media.MediaRouter
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
 import dev.jdtech.jellyfin.player.cast.models.Device
@@ -47,8 +46,8 @@ fun CastBottomSheet(
     val connectionState = uiState.connectionState
 
     DisposableEffect(viewModel.sessionManager) {
-        viewModel.sessionManager.updateDiscovery(MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN)
-        onDispose { viewModel.sessionManager.updateDiscovery() }
+        viewModel.sessionManager.updateDiscovery(activeScan = true)
+        onDispose { viewModel.sessionManager.updateDiscovery(activeScan = false) }
     }
 
     ModalBottomSheet(
@@ -93,9 +92,9 @@ fun CastBottomSheetLayout(
         Text(
             text =
                 if (devices.isEmpty()) {
-                    stringResource(CoreR.string.cast_searching)
+                    stringResource(CoreR.string.ce_cast_searching)
                 } else {
-                    stringResource(CoreR.string.cast_select_device)
+                    stringResource(CoreR.string.ce_cast_select_device)
                 },
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
@@ -116,9 +115,9 @@ fun CastBottomSheetLayout(
 
         if (devices.isNotEmpty()) {
             Text(
-                text = stringResource(CoreR.string.cast_available_devices).uppercase(),
+                text = stringResource(CoreR.string.ce_cast_available_devices),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.secondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = MaterialTheme.spacings.default),
             )
 
@@ -159,7 +158,7 @@ fun CastBottomSheetLayout(
         }
 
         Text(
-            text = stringResource(CoreR.string.cast_wifi_instruction),
+            text = stringResource(CoreR.string.ce_cast_wifi_instruction),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = MaterialTheme.spacings.default),

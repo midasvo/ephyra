@@ -61,9 +61,10 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     // CE (#245): open on the user list when the server has more than one saved user.
     val askUserOnStart = Preference("pref_ask_user_on_start", false)
 
-    // Cast
+    // CE (#626): Cast, in builds that have it. 0 Mbps is no limit of the user's: the receiver's
+    // device profile still has its own.
     val castEnabled = Preference("pref_cast_enabled", true)
-    val castMaxBitrateKbps = Preference("pref_cast_max_bitrate_kbps", 120_000)
+    val castMaxBitrateMbps = Preference("pref_cast_max_bitrate_mbps", 0)
 
     // Player
     val playerBackend = Preference("pref_player_backend", "exoplayer")

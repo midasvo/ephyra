@@ -2,23 +2,11 @@ package dev.jdtech.jellyfin.presentation.cast.components
 
 import android.content.Context
 import androidx.annotation.StringRes
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import dev.jdtech.jellyfin.core.R
-import dev.jdtech.jellyfin.core.presentation.theme.PaletteBlue
-import dev.jdtech.jellyfin.core.presentation.theme.PaletteBrown
-import dev.jdtech.jellyfin.core.presentation.theme.PaletteGreen
-import dev.jdtech.jellyfin.core.presentation.theme.PaletteOrange
-import dev.jdtech.jellyfin.core.presentation.theme.PalettePurple
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.models.FindroidSegmentType
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
+import dev.jdtech.jellyfin.player.local.R as PlayerR
+import dev.jdtech.jellyfin.settings.R as SettingsR
 import java.util.Locale
 
 /**
@@ -29,28 +17,13 @@ val FindroidSegmentType.labelRes: Int?
     @StringRes
     get() =
         when (this) {
-            FindroidSegmentType.INTRO -> R.string.segment_intro
-            FindroidSegmentType.OUTRO -> R.string.segment_outro
-            FindroidSegmentType.RECAP -> R.string.segment_recap
-            FindroidSegmentType.PREVIEW -> R.string.segment_preview
-            FindroidSegmentType.COMMERCIAL -> R.string.segment_commercial
+            FindroidSegmentType.INTRO -> SettingsR.string.media_segments_type_intro
+            FindroidSegmentType.OUTRO -> SettingsR.string.media_segments_type_outro
+            FindroidSegmentType.RECAP -> SettingsR.string.media_segments_type_recap
+            FindroidSegmentType.PREVIEW -> SettingsR.string.media_segments_type_preview
+            FindroidSegmentType.COMMERCIAL -> SettingsR.string.media_segments_type_commercial
             FindroidSegmentType.UNKNOWN -> null
         }
-
-/**
- * Returns the distinctive UI accent [Color] assigned to each [FindroidSegmentType], or null if
- * unstyled.
- */
-fun getSegmentColor(type: FindroidSegmentType?): Color? {
-    return when (type) {
-        FindroidSegmentType.INTRO -> PaletteGreen
-        FindroidSegmentType.OUTRO -> PaletteOrange
-        FindroidSegmentType.RECAP -> PaletteBlue
-        FindroidSegmentType.PREVIEW -> PalettePurple
-        FindroidSegmentType.COMMERCIAL -> PaletteBrown
-        else -> null
-    }
-}
 
 /**
  * Computes a user-facing label for the media position, combining chapter name and segment label if
@@ -72,7 +45,7 @@ fun getSectionTitle(
             if (!chapter.name.isNullOrBlank()) {
                 chapter.name
             } else {
-                context.getString(R.string.chapter_title, chapterIndex + 1)
+                context.getString(PlayerR.string.chapter_number, chapterIndex + 1)
             }
         } else {
             null
@@ -81,7 +54,7 @@ fun getSectionTitle(
     return when {
         chapterLabel != null && segmentLabel != null -> {
             if (chapterLabel.equals(segmentLabel, ignoreCase = true)) {
-                val fallback = context.getString(R.string.chapter_title, chapterIndex + 1)
+                val fallback = context.getString(PlayerR.string.chapter_number, chapterIndex + 1)
                 "$fallback • $segmentLabel"
             } else if (chapterLabel.contains(segmentLabel, ignoreCase = true)) {
                 chapterLabel
@@ -112,29 +85,4 @@ fun formatDuration(millis: Long): String {
 fun calculateProgressFromX(x: Float, width: Float): Float {
     if (width <= 0f) return 0f
     return (x / width).coerceIn(0f, 1f)
-}
-
-/** Renders a rounded rectangle path with individual corner radii on a [DrawScope]. */
-fun DrawScope.drawCustomRoundRect(
-    color: Color,
-    topLeft: Offset,
-    size: Size,
-    topLeftRadius: CornerRadius = CornerRadius.Zero,
-    topRightRadius: CornerRadius = CornerRadius.Zero,
-    bottomRightRadius: CornerRadius = CornerRadius.Zero,
-    bottomLeftRadius: CornerRadius = CornerRadius.Zero,
-) {
-    val path =
-        Path().apply {
-            addRoundRect(
-                RoundRect(
-                    rect = Rect(offset = topLeft, size = size),
-                    topLeft = topLeftRadius,
-                    topRight = topRightRadius,
-                    bottomRight = bottomRightRadius,
-                    bottomLeft = bottomLeftRadius,
-                )
-            )
-        }
-    drawPath(path = path, color = color)
 }

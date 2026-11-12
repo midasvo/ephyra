@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Még nincs semmi letöltve</string>
     <string name="ce_home_offline_empty_body">Nincs kapcsolat. A letöltött filmek és epizódok itt és a Letöltések között jelennek meg.</string>
+    <string name="ce_cast_select_device">Válassz eszközt</string>
+    <string name="ce_cast_searching">Keresés…</string>
+    <string name="ce_cast_available_devices">Elérhető eszközök</string>
+    <string name="ce_cast_wifi_instruction">A Wi-Fi-n keresztüli csatlakozáshoz ennek az eszköznek és a tévének ugyanazon a Wi-Fi-hálózaton kell lennie.</string>
+    <string name="ce_cast_connect_tv">Csatlakozás tévéhez</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d tévé a közelben</item>
+        <item quantity="other">%d tévé a közelben</item>
+    </plurals>
+    <string name="ce_cast_connected">Csatlakoztatva</string>
+    <string name="ce_cast_playback_failed">Nem sikerült lejátszani a tévén</string>
+    <string name="ce_cast_disconnect">Leválasztás</string>
+    <string name="ce_cast_pause">Szünet</string>
+    <string name="ce_cast_volume">Hangerő</string>
+    <string name="ce_track_default">Alapértelmezett</string>
+    <string name="ce_track_original">Eredeti</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">%1$d. sáv</string>
 </resources>

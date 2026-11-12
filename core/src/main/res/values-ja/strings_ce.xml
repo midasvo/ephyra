@@ -108,4 +108,21 @@
     </plurals>
     <string name="ce_home_offline_empty_title">まだ何もダウンロードしていません</string>
     <string name="ce_home_offline_empty_body">オフラインです。ダウンロードした映画やエピソードはここと「ダウンロード」に表示されます。</string>
+    <string name="ce_cast_select_device">デバイスを選択</string>
+    <string name="ce_cast_searching">検索中…</string>
+    <string name="ce_cast_available_devices">利用可能なデバイス</string>
+    <string name="ce_cast_wifi_instruction">Wi-Fi で接続するには、このデバイスとテレビが同じ Wi-Fi ネットワークに接続されていることを確認してください。</string>
+    <string name="ce_cast_connect_tv">テレビに接続</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="other">近くのテレビ %d 台</item>
+    </plurals>
+    <string name="ce_cast_connected">接続済み</string>
+    <string name="ce_cast_playback_failed">テレビで再生できませんでした</string>
+    <string name="ce_cast_disconnect">接続を解除</string>
+    <string name="ce_cast_pause">一時停止</string>
+    <string name="ce_cast_volume">音量</string>
+    <string name="ce_track_default">デフォルト</string>
+    <string name="ce_track_original">オリジナル</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">トラック %1$d</string>
 </resources>

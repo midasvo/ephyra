@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">अभी तक कुछ भी डाउनलोड नहीं हुआ</string>
     <string name="ce_home_offline_empty_body">आप ऑफ़लाइन हैं। आपकी डाउनलोड की गई फ़िल्में और एपिसोड यहाँ और डाउनलोड में दिखते हैं।</string>
+    <string name="ce_cast_select_device">डिवाइस चुनें</string>
+    <string name="ce_cast_searching">खोजा जा रहा है…</string>
+    <string name="ce_cast_available_devices">उपलब्ध डिवाइस</string>
+    <string name="ce_cast_wifi_instruction">Wi-Fi से कनेक्ट करने के लिए, पक्का करें कि यह डिवाइस और आपका टीवी एक ही Wi-Fi नेटवर्क पर हों।</string>
+    <string name="ce_cast_connect_tv">टीवी से कनेक्ट करें</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">आस-पास %d टीवी</item>
+        <item quantity="other">आस-पास %d टीवी</item>
+    </plurals>
+    <string name="ce_cast_connected">कनेक्ट है</string>
+    <string name="ce_cast_playback_failed">इसे टीवी पर नहीं चलाया जा सका</string>
+    <string name="ce_cast_disconnect">डिसकनेक्ट करें</string>
+    <string name="ce_cast_pause">रोकें</string>
+    <string name="ce_cast_volume">वॉल्यूम</string>
+    <string name="ce_track_default">डिफ़ॉल्ट</string>
+    <string name="ce_track_original">मूल</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">ट्रैक %1$d</string>
 </resources>

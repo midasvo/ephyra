@@ -196,4 +196,10 @@
     <string name="ce_pref_player_keep_landscape_summary">Reproducir los videos en horizontal, aunque gires la tableta en vertical</string>
     <string name="ce_pref_home_episode_images">Usar imágenes de episodios</string>
     <string name="ce_pref_home_episode_images_summary">Mostrar la imagen del episodio en lugar de la imagen de la serie en Seguir viendo y A continuación</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Transmitir a una TV</string>
+    <string name="ce_pref_cast_enabled_summary">Buscar dispositivos Chromecast en tu red. Para transmitir se necesita un servidor accesible por HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">Tasa de bits máxima</string>
+    <string name="ce_pref_cast_max_bitrate_summary">El servidor reduce la calidad de todo lo que la supere mientras transmites</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
 </resources>

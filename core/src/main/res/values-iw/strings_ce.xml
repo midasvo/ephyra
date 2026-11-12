@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">עדיין לא הורד דבר</string>
     <string name="ce_home_offline_empty_body">אין חיבור. סרטים ופרקים שתוריד יופיעו כאן ובהורדות.</string>
+    <string name="ce_cast_select_device">בחירת מכשיר</string>
+    <string name="ce_cast_searching">מחפש…</string>
+    <string name="ce_cast_available_devices">מכשירים זמינים</string>
+    <string name="ce_cast_wifi_instruction">כדי להתחבר דרך Wi-Fi, יש לוודא שהמכשיר הזה והטלוויזיה מחוברים לאותה רשת Wi-Fi.</string>
+    <string name="ce_cast_connect_tv">התחברות לטלוויזיה</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">טלוויזיה %d בקרבת מקום</item>
+        <item quantity="other">%d טלוויזיות בקרבת מקום</item>
+    </plurals>
+    <string name="ce_cast_connected">מחובר</string>
+    <string name="ce_cast_playback_failed">לא ניתן היה להפעיל את זה בטלוויזיה</string>
+    <string name="ce_cast_disconnect">התנתקות</string>
+    <string name="ce_cast_pause">השהיה</string>
+    <string name="ce_cast_volume">עוצמת קול</string>
+    <string name="ce_track_default">ברירת מחדל</string>
+    <string name="ce_track_original">מקורי</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">רצועה %1$d</string>
 </resources>

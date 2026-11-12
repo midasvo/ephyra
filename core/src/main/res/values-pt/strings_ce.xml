@@ -113,4 +113,22 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Ainda não transferiu nada</string>
     <string name="ce_home_offline_empty_body">Está offline. Os filmes e episódios que transferir aparecem aqui e em Downloads.</string>
+    <string name="ce_cast_select_device">Selecionar um dispositivo</string>
+    <string name="ce_cast_searching">A procurar…</string>
+    <string name="ce_cast_available_devices">Dispositivos disponíveis</string>
+    <string name="ce_cast_wifi_instruction">Para ligar por Wi-Fi, certifique-se de que este dispositivo e a sua TV estão na mesma rede Wi-Fi.</string>
+    <string name="ce_cast_connect_tv">Ligar a uma TV</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="one">%d TV por perto</item>
+        <item quantity="other">%d TVs por perto</item>
+    </plurals>
+    <string name="ce_cast_connected">Ligado</string>
+    <string name="ce_cast_playback_failed">Não foi possível reproduzir na TV</string>
+    <string name="ce_cast_disconnect">Desligar</string>
+    <string name="ce_cast_pause">Pausa</string>
+    <string name="ce_cast_volume">Volume</string>
+    <string name="ce_track_default">Predefinida</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Faixa %1$d</string>
 </resources>

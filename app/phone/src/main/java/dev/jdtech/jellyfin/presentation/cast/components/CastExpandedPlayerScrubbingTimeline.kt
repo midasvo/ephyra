@@ -1,9 +1,7 @@
 package dev.jdtech.jellyfin.presentation.cast.components
 
 import android.text.format.DateFormat
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,24 +15,24 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R as CoreR
-import dev.jdtech.jellyfin.core.presentation.theme.PlayerOverlayBackground
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.player.cast.models.CastPlaybackStatus
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
+import dev.jdtech.jellyfin.player.local.R as PlayerR
 import java.util.Date
 
 /**
@@ -85,8 +83,10 @@ fun CastScrubbingTimeline(
         }
     val endsAtText = formattedEndTime?.let { stringResource(CoreR.string.ends_at, it) }
 
-    val pillBackground = PlayerOverlayBackground.copy(alpha = 0.75f)
-    val pillBorder = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+    // VISION §3.4: chips and badges are surfaceContainerHigh with onSurfaceVariant.
+    val pillBackground = MaterialTheme.colorScheme.surfaceContainerHigh
+    val pillContent = MaterialTheme.colorScheme.onSurfaceVariant
+    val pillContentStrong = MaterialTheme.colorScheme.onSurface
 
     Column(modifier = modifier.padding(horizontal = 24.dp)) {
         Box(
@@ -106,10 +106,16 @@ fun CastScrubbingTimeline(
                     if (chapters.isNotEmpty() && onOpenChapters != null) {
                         Box(
                             modifier =
-                                Modifier.clip(CircleShape)
+                                // The pill is about 28 dp tall: reserve a 48 dp touch target.
+                                Modifier.minimumInteractiveComponentSize()
+                                    .clip(CircleShape)
                                     .background(pillBackground)
-                                    .border(pillBorder, CircleShape)
-                                    .clickable(onClick = onOpenChapters)
+                                    .clickable(
+                                        onClickLabel =
+                                            stringResource(PlayerR.string.select_chapter),
+                                        role = Role.Button,
+                                        onClick = onOpenChapters,
+                                    )
                                     .padding(horizontal = 14.dp, vertical = 6.dp),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -120,8 +126,7 @@ fun CastScrubbingTimeline(
                                 Text(
                                     text = sectionTitle,
                                     style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
+                                    color = pillContentStrong,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
@@ -129,7 +134,7 @@ fun CastScrubbingTimeline(
                                     painter = painterResource(id = CoreR.drawable.ic_arrow_right),
                                     contentDescription = null,
                                     modifier = Modifier.size(12.dp),
-                                    tint = Color.White.copy(alpha = 0.85f),
+                                    tint = pillContent,
                                 )
                             }
                         }
@@ -138,15 +143,13 @@ fun CastScrubbingTimeline(
                             modifier =
                                 Modifier.clip(CircleShape)
                                     .background(pillBackground)
-                                    .border(pillBorder, CircleShape)
                                     .padding(horizontal = 14.dp, vertical = 6.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
                                 text = sectionTitle,
                                 style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White.copy(alpha = 0.85f),
+                                color = pillContent,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
@@ -158,7 +161,6 @@ fun CastScrubbingTimeline(
                     modifier =
                         Modifier.clip(CircleShape)
                             .background(pillBackground)
-                            .border(pillBorder, CircleShape)
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -169,20 +171,18 @@ fun CastScrubbingTimeline(
                         Text(
                             text = contentProgressString,
                             style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White,
+                            color = pillContentStrong,
                         )
                         Box(
                             modifier =
                                 Modifier.size(4.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.6f))
+                                    .background(pillContent)
                         )
                         Text(
                             text = contentDurationString,
                             style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White.copy(alpha = 0.85f),
+                            color = pillContent,
                         )
                     }
                 }
@@ -194,15 +194,13 @@ fun CastScrubbingTimeline(
                         Modifier.align(Alignment.BottomEnd)
                             .clip(CircleShape)
                             .background(pillBackground)
-                            .border(pillBorder, CircleShape)
                             .padding(horizontal = 14.dp, vertical = 6.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = endsAtText,
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White.copy(alpha = 0.85f),
+                        color = pillContent,
                     )
                 }
             }

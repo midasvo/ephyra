@@ -196,4 +196,10 @@
     <string name="ce_pref_player_keep_landscape_summary">टैबलेट को सीधा घुमाने पर भी वीडियो लैंडस्केप में चलाएं</string>
     <string name="ce_pref_home_episode_images">एपिसोड की छवियाँ इस्तेमाल करें</string>
     <string name="ce_pref_home_episode_images_summary">देखना जारी रखें और आगे देखें में सीरीज़ की छवि की जगह एपिसोड की छवि दिखाएँ</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">टीवी पर कास्ट करें</string>
+    <string name="ce_pref_cast_enabled_summary">अपने नेटवर्क पर Chromecast डिवाइस खोजें। कास्ट करने के लिए ऐसा सर्वर चाहिए जिस तक HTTPS से पहुंचा जाता हो</string>
+    <string name="ce_pref_cast_max_bitrate">अधिकतम बिटरेट</string>
+    <string name="ce_pref_cast_max_bitrate_summary">कास्ट करते समय सर्वर इससे ज़्यादा बिटरेट वाली हर चीज़ की क्वालिटी घटा देता है</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
 </resources>

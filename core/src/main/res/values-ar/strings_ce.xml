@@ -133,4 +133,26 @@
     </plurals>
     <string name="ce_home_offline_empty_title">لم يتم تنزيل أي شيء بعد</string>
     <string name="ce_home_offline_empty_body">أنت غير متصل. الأفلام والحلقات التي تنزّلها تظهر هنا وفي التنزيلات.</string>
+    <string name="ce_cast_select_device">اختر جهازًا</string>
+    <string name="ce_cast_searching">جارٍ البحث…</string>
+    <string name="ce_cast_available_devices">الأجهزة المتاحة</string>
+    <string name="ce_cast_wifi_instruction">للاتصال عبر Wi-Fi، تأكد من أن هذا الجهاز والتلفزيون متصلان بشبكة Wi-Fi نفسها.</string>
+    <string name="ce_cast_connect_tv">الاتصال بتلفزيون</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="zero">%d تلفزيون قريب</item>
+        <item quantity="one">%d تلفزيون قريب</item>
+        <item quantity="two">%d تلفزيون قريب</item>
+        <item quantity="few">%d تلفزيونات قريبة</item>
+        <item quantity="many">%d تلفزيونًا قريبًا</item>
+        <item quantity="other">%d تلفزيون قريب</item>
+    </plurals>
+    <string name="ce_cast_connected">متصل</string>
+    <string name="ce_cast_playback_failed">تعذّر تشغيل هذا على التلفزيون</string>
+    <string name="ce_cast_disconnect">قطع الاتصال</string>
+    <string name="ce_cast_pause">إيقاف مؤقت</string>
+    <string name="ce_cast_volume">مستوى الصوت</string>
+    <string name="ce_track_default">افتراضي</string>
+    <string name="ce_track_original">أصلي</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">المسار %1$d</string>
 </resources>

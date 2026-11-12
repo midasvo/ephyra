@@ -204,4 +204,10 @@
     <string name="ce_pref_player_keep_landscape_summary">تشغيل الفيديوهات بالوضع الأفقي حتى عند تدوير الجهاز اللوحي عموديًا</string>
     <string name="ce_pref_home_episode_images">استخدام صور الحلقات</string>
     <string name="ce_pref_home_episode_images_summary">عرض صورة الحلقة بدلًا من صورة المسلسل في «متابعة المشاهدة» و«التالي»</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">البث إلى تلفزيون</string>
+    <string name="ce_pref_cast_enabled_summary">البحث عن أجهزة Chromecast على شبكتك. يتطلب البث خادمًا يمكن الوصول إليه عبر HTTPS</string>
+    <string name="ce_pref_cast_max_bitrate">أقصى معدل بت</string>
+    <string name="ce_pref_cast_max_bitrate_summary">يخفّض الخادم جودة كل ما يتجاوزه أثناء البث</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
 </resources>

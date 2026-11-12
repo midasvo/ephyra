@@ -10,6 +10,10 @@ enum class CastConnectionState {
     CONNECTED,
 }
 
+enum class CastError {
+    PLAYBACK_FAILED
+}
+
 enum class CastPlaybackStatus {
     IDLE,
     BUFFERING,

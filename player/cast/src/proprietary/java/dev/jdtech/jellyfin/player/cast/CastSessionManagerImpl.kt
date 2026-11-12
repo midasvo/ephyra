@@ -146,21 +146,21 @@ constructor(
                 Timber.d("Session started (sessionId: $sessionId)")
                 _connectionState.value = CastConnectionState.CONNECTED
                 updateConnectedDevice()
-                updateDiscovery(0)
+                updateDiscovery()
             }
 
             override fun onSessionResuming(session: CastSession, sessionId: String) {
                 Timber.d("Resuming session (sessionId: $sessionId)")
                 _connectionState.value = CastConnectionState.CONNECTING
                 updateConnectedDevice()
-                updateDiscovery(MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN)
+                updateDiscovery(activeScan = true)
             }
 
             override fun onSessionResumed(session: CastSession, wasSuspended: Boolean) {
                 Timber.d("Session resumed (wasSuspended: $wasSuspended)")
                 _connectionState.value = CastConnectionState.CONNECTED
                 updateConnectedDevice()
-                updateDiscovery(0)
+                updateDiscovery()
             }
 
             override fun onSessionEnding(session: CastSession) {
@@ -270,7 +270,10 @@ constructor(
         _availableDevices.value = routes.map { route -> ChromeCastDevice(route) }
     }
 
-    override fun updateDiscovery(flags: Int) {
+    override fun updateDiscovery(activeScan: Boolean) {
+        val flags =
+            if (activeScan) MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN
+            else MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY
         if (!appPreferences.getValue(appPreferences.castEnabled)) {
             mediaRouter.removeCallback(routeCallback)
             _availableDevices.value = emptyList()

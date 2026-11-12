@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -103,7 +102,6 @@ private fun CastPlayerTitles(uiState: CastPlayerViewModel.UiState) {
             Text(
                 text = seriesName,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -112,7 +110,6 @@ private fun CastPlayerTitles(uiState: CastPlayerViewModel.UiState) {
                 text = titleInfo.episodeInfo ?: "",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.secondary,
-                fontWeight = FontWeight.Medium,
             )
             Text(
                 text = titleInfo.title,
@@ -124,7 +121,6 @@ private fun CastPlayerTitles(uiState: CastPlayerViewModel.UiState) {
             Text(
                 text = titleInfo.title,
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
             )
         }

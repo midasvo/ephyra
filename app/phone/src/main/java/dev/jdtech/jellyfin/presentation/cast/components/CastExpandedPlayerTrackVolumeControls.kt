@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.LocalVolumeKeyEvents
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.ephyra.EphyraMotion
 import dev.jdtech.jellyfin.player.cast.presentation.CastPlayerViewModel
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -66,24 +67,31 @@ fun CastTrackVolumeControls(
     val isAudioPressed by audioInteractionSource.collectIsPressedAsState()
     val isSubtitlePressed by subtitlesInteractionSource.collectIsPressedAsState()
 
+    val pressSpec =
+        tween<Dp>(
+            durationMillis = EphyraMotion.DURATION_SHORT,
+            easing = EphyraMotion.EasingStandard,
+        )
+
     val audioButtonCornerShape by
         animateDpAsState(
-            targetValue = if (isAudioPressed) 50.dp else 3.dp,
-            animationSpec = tween(durationMillis = 200),
+            targetValue = if (isAudioPressed) 50.dp else InnerCorner,
+            animationSpec = pressSpec,
             label = "audioShapeAnimation",
         )
 
     val subtitleButtonCornerShape by
         animateDpAsState(
-            targetValue = if (isSubtitlePressed) 50.dp else 3.dp,
-            animationSpec = tween(durationMillis = 200),
+            targetValue = if (isSubtitlePressed) 50.dp else InnerCorner,
+            animationSpec = pressSpec,
             label = "subtitleShapeAnimation",
         )
 
+    // Static buttons are not cyan (VISION §1.2): the same roles as the previous and next buttons.
     val buttonColors =
         IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
     Row(
@@ -147,6 +155,9 @@ fun CastTrackVolumeControls(
     }
 }
 
+/** Where the two track buttons meet. VISION §5: no corner under 8 dp. */
+private val InnerCorner = 8.dp
+
 private object VolumeSliderDefaults {
     val TrackHeight: Dp = 40.dp
     val InsetIconSize: Dp = 24.dp
@@ -202,9 +213,8 @@ fun VolumeSlider(
     val iconRes =
         when {
             isMuted || localVolume <= 0f -> CoreR.drawable.ic_volume_0
-            localVolume < 0.33f -> CoreR.drawable.ic_volume_33
-            localVolume < 0.66f -> CoreR.drawable.ic_volume_66
-            else -> CoreR.drawable.ic_volume_100
+            localVolume < 0.5f -> CoreR.drawable.ic_volume_50
+            else -> CoreR.drawable.ic_volume
         }
     val currentIcon = painterResource(iconRes)
 
@@ -215,7 +225,7 @@ fun VolumeSlider(
             thumbColor = MaterialTheme.colorScheme.primary,
         )
 
-    val volumeContentDescription = stringResource(CoreR.string.audio)
+    val volumeContentDescription = stringResource(CoreR.string.ce_cast_volume)
 
     Slider(
         value = localVolume,

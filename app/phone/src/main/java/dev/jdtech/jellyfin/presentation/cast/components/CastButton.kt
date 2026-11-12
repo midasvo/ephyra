@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -65,10 +66,10 @@ fun CastButtonContent(
     val safePadding = rememberSafePadding()
     val label =
         if (deviceCount <= 0) {
-            stringResource(CoreR.string.cast_connect_tv)
+            stringResource(CoreR.string.ce_cast_connect_tv)
         } else {
             pluralStringResource(
-                CoreR.plurals.cast_tvs_nearby,
+                CoreR.plurals.ce_cast_tvs_nearby,
                 deviceCount,
                 deviceCount,
             )
@@ -86,7 +87,9 @@ fun CastButtonContent(
         text = { Text(text = label) },
         modifier =
             modifier.padding(
-                bottom = if (handleBottomInsets) safePadding.bottom + MaterialTheme.spacings.medium else MaterialTheme.spacings.medium,
+                bottom =
+                    (if (handleBottomInsets) safePadding.bottom else 0.dp) +
+                        MaterialTheme.spacings.medium,
                 end = safePadding.end + MaterialTheme.spacings.medium,
             ),
     )

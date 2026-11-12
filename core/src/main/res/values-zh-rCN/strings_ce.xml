@@ -108,4 +108,21 @@
     </plurals>
     <string name="ce_home_offline_empty_title">尚未下载任何内容</string>
     <string name="ce_home_offline_empty_body">你处于离线状态。你下载的电影和剧集会显示在这里和“下载”中。</string>
+    <string name="ce_cast_select_device">选择设备</string>
+    <string name="ce_cast_searching">正在搜索…</string>
+    <string name="ce_cast_available_devices">可用设备</string>
+    <string name="ce_cast_wifi_instruction">如需通过 Wi-Fi 连接，请确保此设备和电视连接到同一个 Wi-Fi 网络。</string>
+    <string name="ce_cast_connect_tv">连接到电视</string>
+    <plurals name="ce_cast_tvs_nearby">
+        <item quantity="other">附近有 %d 台电视</item>
+    </plurals>
+    <string name="ce_cast_connected">已连接</string>
+    <string name="ce_cast_playback_failed">无法在电视上播放</string>
+    <string name="ce_cast_disconnect">断开连接</string>
+    <string name="ce_cast_pause">暂停</string>
+    <string name="ce_cast_volume">音量</string>
+    <string name="ce_track_default">默认</string>
+    <string name="ce_track_original">原版</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">轨道 %1$d</string>
 </resources>
