@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Koppintson, amikor elhangzik egy mondat, hogy szinkronizálja a felirattal</string>
     <string name="no_cues_found">Nem találhatók feliratsorok ezen pozíció közelében</string>
     <string name="reset">Visszaállítás</string>
+    <string name="recapture_spoken_line">Újrarögzítés</string>
+    <string name="dialogue_near_position">Párbeszéd %1$s közelében:</string>
+    <string name="loading_dialogue">Párbeszéd betöltése…</string>
+    <string name="decrease_delay">Késleltetés csökkentése</string>
+    <string name="increase_delay">Késleltetés növelése</string>
 </resources>

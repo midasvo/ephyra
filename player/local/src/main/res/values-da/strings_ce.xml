@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Tryk, når en linje siges, for at matche med undertekstdialogen</string>
     <string name="no_cues_found">Ingen undertekstlinjer fundet i nærheden af denne position</string>
     <string name="reset">Nulstil</string>
+    <string name="recapture_spoken_line">Genoptag</string>
+    <string name="dialogue_near_position">Dialog nær %1$s:</string>
+    <string name="loading_dialogue">Indlæser dialog…</string>
+    <string name="decrease_delay">Formindsk forsinkelse</string>
+    <string name="increase_delay">Forøg forsinkelse</string>
 </resources>

@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Puuduta rea rääkimisel, et see subtiitritega sobitada</string>
     <string name="no_cues_found">Selle asukoha lähedalt ei leitud subtiitriridu</string>
     <string name="reset">Lähtesta</string>
+    <string name="recapture_spoken_line">Püüa uuesti</string>
+    <string name="dialogue_near_position">Dialoog kellaaja %1$s lähedal:</string>
+    <string name="loading_dialogue">Dialoogi laadimine…</string>
+    <string name="decrease_delay">Vähenda viivitust</string>
+    <string name="increase_delay">Suurenda viivitust</string>
 </resources>

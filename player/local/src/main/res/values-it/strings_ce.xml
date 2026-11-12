@@ -38,4 +38,9 @@
     <string name="capture_line_hint">Tocca quando una battuta viene pronunciata per sincronizzarla con i sottotitoli</string>
     <string name="no_cues_found">Nessuna riga di sottotitoli trovata vicino a questa posizione</string>
     <string name="reset">Ripristina</string>
+    <string name="recapture_spoken_line">Ricattura</string>
+    <string name="dialogue_near_position">Battuta vicino a %1$s:</string>
+    <string name="loading_dialogue">Caricamento dialogo…</string>
+    <string name="decrease_delay">Riduci ritardo</string>
+    <string name="increase_delay">Aumenta ritardo</string>
 </resources>

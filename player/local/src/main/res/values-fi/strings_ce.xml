@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Napauta, kun vuorosana lausutaan, sovittaaksesi tekstitykseen</string>
     <string name="no_cues_found">Tämän kohdan läheltä ei löytynyt tekstitysrivejä</string>
     <string name="reset">Palauta</string>
+    <string name="recapture_spoken_line">Tallenna uudelleen</string>
+    <string name="dialogue_near_position">Vuorosana kohdassa %1$s:</string>
+    <string name="loading_dialogue">Ladataan vuorosanoja…</string>
+    <string name="decrease_delay">Vähennä viivettä</string>
+    <string name="increase_delay">Lisää viivettä</string>
 </resources>

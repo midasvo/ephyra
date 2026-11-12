@@ -40,4 +40,9 @@
     <string name="capture_line_hint">Klepněte při vyslovení řádku pro spárování s dialogem titulků</string>
     <string name="no_cues_found">Poblíž této pozice nebyly nalezeny žádné řádky titulků</string>
     <string name="reset">Obnovit</string>
+    <string name="recapture_spoken_line">Znovu zachytit</string>
+    <string name="dialogue_near_position">Dialog poblíž %1$s:</string>
+    <string name="loading_dialogue">Načítání dialogu…</string>
+    <string name="decrease_delay">Snížit zpoždění</string>
+    <string name="increase_delay">Zvýšit zpoždění</string>
 </resources>

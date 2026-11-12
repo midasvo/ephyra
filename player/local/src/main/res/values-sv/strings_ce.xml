@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Tryck när en rad sägs för att matcha med undertextdialogen</string>
     <string name="no_cues_found">Inga undertextrader hittades nära den här positionen</string>
     <string name="reset">Återställ</string>
+    <string name="recapture_spoken_line">Fånga igen</string>
+    <string name="dialogue_near_position">Dialog nära %1$s:</string>
+    <string name="loading_dialogue">Läser in dialog…</string>
+    <string name="decrease_delay">Minska fördröjning</string>
+    <string name="increase_delay">Öka fördröjning</string>
 </resources>

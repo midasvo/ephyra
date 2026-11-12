@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Trykk når ei linje vert sagt for å samsvara med underteksten</string>
     <string name="no_cues_found">Fann inge undertekstlinjer nær denne posisjonen</string>
     <string name="reset">Tilbakestill</string>
+    <string name="recapture_spoken_line">Fang opp på nytt</string>
+    <string name="dialogue_near_position">Dialog nær %1$s:</string>
+    <string name="loading_dialogue">Lastar inn dialog…</string>
+    <string name="decrease_delay">Reduser forseinking</string>
+    <string name="increase_delay">Auk forseinking</string>
 </resources>

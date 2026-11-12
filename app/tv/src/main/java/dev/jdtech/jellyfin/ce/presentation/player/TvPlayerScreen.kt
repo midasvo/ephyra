@@ -749,30 +749,31 @@ fun TvPlayerScreen(
             interactions++
         }
         when (open) {
-            PlayerDialog.AUDIO,
-            PlayerDialog.SUBTITLES -> {
-                val trackType =
-                    if (open == PlayerDialog.AUDIO) C.TRACK_TYPE_AUDIO else C.TRACK_TYPE_TEXT
-                // Read once when the dialog opens; the tracks don't change while it's shown.
-                // CE (#596): the view model says what to list: during a transcode the audio
-                // tracks are the file's, not the one track the stream carries.
-                val choices = remember { viewModel.trackChoices(trackType, context) }
-                val names = choices.names
-                val selected = choices.selected
-                // Subtitles can be turned off. Audio can't: silence is never what's wanted.
-                val withNone = open == PlayerDialog.SUBTITLES
+            PlayerDialog.AUDIO -> {
+                val choices = remember { viewModel.trackChoices(C.TRACK_TYPE_AUDIO, context) }
                 TvSelectionDialog(
-                    title =
-                        stringResource(
-                            if (withNone) PlayerR.string.select_subtitle_track
-                            else PlayerR.string.select_audio_track
-                        ),
-                    options =
-                        if (withNone) listOf(stringResource(PlayerR.string.none)) + names
-                        else names,
-                    selectedIndex = if (withNone) selected + 1 else selected.coerceAtLeast(0),
+                    title = stringResource(PlayerR.string.select_audio_track),
+                    options = choices.names,
+                    selectedIndex = choices.selected.coerceAtLeast(0),
                     onSelect = { index ->
-                        viewModel.switchToTrack(trackType, if (withNone) index - 1 else index)
+                        viewModel.switchToTrack(C.TRACK_TYPE_AUDIO, index)
+                    },
+                    onDismiss = close,
+                )
+            }
+            PlayerDialog.SUBTITLES -> {
+                val choices = remember { viewModel.trackChoices(C.TRACK_TYPE_TEXT, context) }
+                var delayMs by remember { mutableIntStateOf(viewModel.subtitleDelayMs) }
+                TvSubtitleDialog(
+                    options = listOf(stringResource(PlayerR.string.none)) + choices.names,
+                    selectedIndex = choices.selected + 1,
+                    subtitleDelayMs = delayMs,
+                    onSelectTrack = { index ->
+                        viewModel.switchToTrack(C.TRACK_TYPE_TEXT, index - 1)
+                    },
+                    onDelayChanged = { newDelay ->
+                        delayMs = newDelay
+                        viewModel.setSubtitleDelay(newDelay)
                     },
                     onDismiss = close,
                 )

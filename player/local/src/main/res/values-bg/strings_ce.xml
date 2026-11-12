@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Докоснете при изричане на реплика, за да я напаснете със субтитрите</string>
     <string name="no_cues_found">Не са намерени субтитри близо до тази позиция</string>
     <string name="reset">Нулиране</string>
+    <string name="recapture_spoken_line">Повторно заснемане</string>
+    <string name="dialogue_near_position">Реплики близо до %1$s:</string>
+    <string name="loading_dialogue">Зареждане на реплики…</string>
+    <string name="decrease_delay">Намаляване на забавянето</string>
+    <string name="increase_delay">Увеличаване на забавянето</string>
 </resources>

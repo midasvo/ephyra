@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Altyazı diyaloğuyla eşleştirmek için bir satır konuşulduğunda dokunun</string>
     <string name="no_cues_found">Bu konumun yakınında altyazı satırı bulunamadı</string>
     <string name="reset">Sıfırla</string>
+    <string name="recapture_spoken_line">Yeniden yakala</string>
+    <string name="dialogue_near_position">%1$s yakınındaki diyalog:</string>
+    <string name="loading_dialogue">Diyalog yükleniyor…</string>
+    <string name="decrease_delay">Gecikmeyi azalt</string>
+    <string name="increase_delay">Gecikmeyi artır</string>
 </resources>

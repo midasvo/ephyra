@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Tik wanneer een zin wordt uitgesproken om te koppelen aan de ondertiteling</string>
     <string name="no_cues_found">Geen ondertitelregels gevonden bij deze positie</string>
     <string name="reset">Resetten</string>
+    <string name="recapture_spoken_line">Opnieuw vastleggen</string>
+    <string name="dialogue_near_position">Dialoog rond %1$s:</string>
+    <string name="loading_dialogue">Dialoog laden…</string>
+    <string name="decrease_delay">Vertraging verminderen</string>
+    <string name="increase_delay">Vertraging verhogen</string>
 </resources>

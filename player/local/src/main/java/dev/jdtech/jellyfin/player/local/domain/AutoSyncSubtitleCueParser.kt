@@ -9,6 +9,7 @@ import kotlin.math.max
  */
 object AutoSyncSubtitleCueParser {
     private val timestampRegex = Regex("""(?:(\d+):)?(\d{1,2}):(\d{2})([.,](\d+))?""")
+    private val offsetTimeRegex = Regex("""^(\d+(?:\.\d+)?)(h|m|s|ms)$""", RegexOption.IGNORE_CASE)
     private val assOverrideBlockRegex = Regex("""\{[^}]*\}""")
     private val assEventsHeaderRegex =
         Regex("""^[ \t]*\[Events\][ \t]*$""", setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
@@ -193,7 +194,7 @@ object AutoSyncSubtitleCueParser {
 
     private fun parseTtml(text: String): List<SubtitleSyncCue> {
         val cues =
-            Regex("""(?is)<p\b([^>]*)>(.*?)</p>""")
+            Regex("""(?is)<(?:[a-zA-Z0-9_\-]+:)?p\b([^>]*)>(.*?)</(?:[a-zA-Z0-9_\-]+:)?p>""")
                 .findAll(text)
                 .mapNotNull { match ->
                     val attrs = match.groupValues[1]
@@ -230,7 +231,19 @@ object AutoSyncSubtitleCueParser {
     }
 
     private fun parseTimestampMs(rawTimestamp: String): Long? {
-        val match = timestampRegex.matchEntire(rawTimestamp.trim()) ?: return null
+        val trimmed = rawTimestamp.trim()
+        val offsetMatch = offsetTimeRegex.matchEntire(trimmed)
+        if (offsetMatch != null) {
+            val num = offsetMatch.groupValues[1].toDoubleOrNull() ?: return null
+            return when (offsetMatch.groupValues[2].lowercase()) {
+                "h" -> (num * 3_600_000.0).toLong()
+                "m" -> (num * 60_000.0).toLong()
+                "s" -> (num * 1_000.0).toLong()
+                "ms" -> num.toLong()
+                else -> null
+            }
+        }
+        val match = timestampRegex.matchEntire(trimmed) ?: return null
         val hours = match.groupValues[1].toLongOrNull() ?: 0L
         val minutes = match.groupValues[2].toLongOrNull() ?: 0L
         val seconds = match.groupValues[3].toLongOrNull() ?: 0L

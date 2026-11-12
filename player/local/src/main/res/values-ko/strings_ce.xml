@@ -34,4 +34,9 @@
     <string name="capture_line_hint">대사가 나올 때 탭하여 자막과 동기화합니다</string>
     <string name="no_cues_found">이 위치 근처에서 자막을 찾을 수 없습니다</string>
     <string name="reset">초기화</string>
+    <string name="recapture_spoken_line">다시 캡처</string>
+    <string name="dialogue_near_position">%1$s 부근 대사:</string>
+    <string name="loading_dialogue">대사 불러오는 중…</string>
+    <string name="decrease_delay">지연 줄이기</string>
+    <string name="increase_delay">지연 늘리기</string>
 </resources>

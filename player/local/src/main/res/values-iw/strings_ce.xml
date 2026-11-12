@@ -38,4 +38,9 @@
     <string name="capture_line_hint">הקש כאשר נאמרת שורה כדי להתאים אותה לכתוביות</string>
     <string name="no_cues_found">לא נמצאו שורות כתוביות ליד מיקום זה</string>
     <string name="reset">איפוס</string>
+    <string name="recapture_spoken_line">לכידה מחדש</string>
+    <string name="dialogue_near_position">דיאלוג ליד %1$s:</string>
+    <string name="loading_dialogue">טוען דיאלוג…</string>
+    <string name="decrease_delay">הקטנת השהיה</string>
+    <string name="increase_delay">הגדלת השהיה</string>
 </resources>

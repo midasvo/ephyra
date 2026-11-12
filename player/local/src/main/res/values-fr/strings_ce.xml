@@ -38,4 +38,9 @@
     <string name="capture_line_hint">Appuyez lorsqu\'une réplique est prononcée pour la synchroniser avec les sous-titres</string>
     <string name="no_cues_found">Aucune réplique trouvée près de cette position</string>
     <string name="reset">Réinitialiser</string>
+    <string name="recapture_spoken_line">Capturer à nouveau</string>
+    <string name="dialogue_near_position">Dialogue près de %1$s :</string>
+    <string name="loading_dialogue">Chargement du dialogue…</string>
+    <string name="decrease_delay">Diminuer le délai</string>
+    <string name="increase_delay">Augmenter le délai</string>
 </resources>

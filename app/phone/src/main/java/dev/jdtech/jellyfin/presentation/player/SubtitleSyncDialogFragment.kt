@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.view.Window
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,48 +35,50 @@ class SubtitleSyncDialogFragment : DialogFragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 FindroidTheme(darkTheme = true) {
-                    val choices = remember { viewModel.trackChoices(C.TRACK_TYPE_TEXT, context) }
-                    var selectedTrackIndex by remember { mutableIntStateOf(choices.selected) }
-                    var delayMs by remember { mutableIntStateOf(viewModel.subtitleDelayMs) }
-                    val currentPos = viewModel.player.currentPosition.coerceAtLeast(0L)
+                    val currentItemId = viewModel.player.currentMediaItem?.mediaId
+                    key(currentItemId) {
+                        val choices = remember { viewModel.trackChoices(C.TRACK_TYPE_TEXT, context) }
+                        var selectedTrackIndex by remember { mutableIntStateOf(choices.selected) }
+                        var delayMs by remember { mutableIntStateOf(viewModel.subtitleDelayMs) }
 
-                    val cues by viewModel.currentTrackCues.collectAsStateWithLifecycle()
-                    val isLoadingCues by viewModel.isLoadingCues.collectAsStateWithLifecycle()
+                        val cues by viewModel.activeCues.collectAsStateWithLifecycle()
+                        val isLoadingCues by viewModel.isLoadingCues.collectAsStateWithLifecycle()
 
-                    LaunchedEffect(selectedTrackIndex) {
-                        if (selectedTrackIndex >= 0) {
-                            viewModel.loadCuesForActiveTrack(selectedTrackIndex)
-                        }
-                    }
-
-                    val tracks =
-                        remember(choices, selectedTrackIndex) {
-                            choices.names.mapIndexed { index, name ->
-                                SubtitleTrackItem(
-                                    index = index,
-                                    name = name,
-                                    isSelected = index == selectedTrackIndex,
-                                )
+                        LaunchedEffect(Unit) {
+                            if (selectedTrackIndex >= 0 && cues.isEmpty()) {
+                                viewModel.loadCuesForActiveTrack(selectedTrackIndex)
                             }
                         }
 
-                    PlayerSubtitleSyncSheet(
-                        tracks = tracks,
-                        selectedTrackIndex = selectedTrackIndex,
-                        subtitleDelayMs = delayMs,
-                        currentPlaybackPositionMs = currentPos,
-                        availableCues = cues,
-                        isLoadingCues = isLoadingCues,
-                        onTrackSelected = { newIndex ->
-                            selectedTrackIndex = newIndex
-                            viewModel.switchToTrack(C.TRACK_TYPE_TEXT, newIndex)
-                        },
-                        onDelayChanged = { newDelay ->
-                            delayMs = newDelay
-                            viewModel.setSubtitleDelay(newDelay)
-                        },
-                        onDismiss = { dismiss() },
-                    )
+                        val tracks =
+                            remember(choices, selectedTrackIndex) {
+                                choices.names.mapIndexed { index, name ->
+                                    SubtitleTrackItem(
+                                        index = index,
+                                        name = name,
+                                        isSelected = index == selectedTrackIndex,
+                                    )
+                                }
+                            }
+
+                        PlayerSubtitleSyncSheet(
+                            tracks = tracks,
+                            selectedTrackIndex = selectedTrackIndex,
+                            subtitleDelayMs = delayMs,
+                            getCurrentPositionMs = { viewModel.player.currentPosition.coerceAtLeast(0L) },
+                            availableCues = cues,
+                            isLoadingCues = isLoadingCues,
+                            onTrackSelected = { newIndex ->
+                                selectedTrackIndex = newIndex
+                                viewModel.switchToTrack(C.TRACK_TYPE_TEXT, newIndex)
+                            },
+                            onDelayChanged = { newDelay ->
+                                delayMs = newDelay
+                                viewModel.setSubtitleDelay(newDelay)
+                            },
+                            onDismiss = { dismiss() },
+                        )
+                    }
                 }
             }
         }

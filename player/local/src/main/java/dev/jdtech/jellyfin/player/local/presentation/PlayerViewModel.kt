@@ -118,6 +118,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -436,6 +441,16 @@ constructor(
     val isLoadingCues: StateFlow<Boolean> = _isLoadingCues.asStateFlow()
 
     private val _observedLiveCues = Collections.synchronizedList(mutableListOf<SubtitleSyncCue>())
+    private val _liveTrackCues = MutableStateFlow<List<SubtitleSyncCue>>(emptyList())
+
+    /** CE (#619): Combined cues from parsed external file or observed live stream. */
+    val activeCues: StateFlow<List<SubtitleSyncCue>> =
+        combine(_currentTrackCues, _liveTrackCues) { parsed, live ->
+            parsed.ifEmpty { live }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private var cueLoadingJob: Job? = null
+    private var loadedTrackIndex: Int? = null
 
     /** CE (#619): adjusts subtitle delay for the active item. */
     fun setSubtitleDelay(delayMs: Int) {
@@ -443,7 +458,7 @@ constructor(
         subtitleDelayMs = clamped
         subtitleOffsetUs.set(clamped * 1000L)
         if (player is MPVPlayer) {
-            (player as MPVPlayer).setSubtitleDelayMs(clamped)
+            player.setSubtitleDelayMs(clamped)
         } else {
             if (!player.isPlaying && player.playbackState == Player.STATE_READY) {
                 player.seekTo(player.currentPosition)
@@ -453,10 +468,7 @@ constructor(
 
     /** CE (#619): Returns the dialogue cues closest in time to [positionMs]. */
     fun getNearbyCues(positionMs: Long, count: Int = 5): List<SubtitleSyncCue> {
-        val cues =
-            _currentTrackCues.value.ifEmpty {
-                synchronized(_observedLiveCues) { _observedLiveCues.toList() }
-            }
+        val cues = activeCues.value
         if (cues.isEmpty()) return emptyList()
         return cues
             .sortedBy { abs(it.startTimeMs - positionMs) }
@@ -467,46 +479,131 @@ constructor(
     /** CE (#619): Asynchronously parses dialogue cues for the currently selected subtitle track. */
     fun loadCuesForActiveTrack(trackIndex: Int) {
         if (trackIndex < 0) {
+            cueLoadingJob?.cancel()
+            loadedTrackIndex = null
             _currentTrackCues.value = emptyList()
+            synchronized(_observedLiveCues) { _observedLiveCues.clear() }
+            _liveTrackCues.value = emptyList()
+            _isLoadingCues.value = false
             return
         }
-        val item = currentPlayerItem() ?: return
+
+        if (trackIndex == loadedTrackIndex && _currentTrackCues.value.isNotEmpty()) {
+            return
+        }
+
+        cueLoadingJob?.cancel()
+        synchronized(_observedLiveCues) { _observedLiveCues.clear() }
+        _liveTrackCues.value = emptyList()
+        _currentTrackCues.value = emptyList()
+        loadedTrackIndex = trackIndex
+
+        val item = currentPlayerItem() ?: run {
+            _isLoadingCues.value = false
+            return
+        }
         val groups = supportedGroups(C.TRACK_TYPE_TEXT)
-        val group = groups.getOrNull(trackIndex) ?: return
+        val group = groups.getOrNull(trackIndex) ?: run {
+            _isLoadingCues.value = false
+            return
+        }
         val format = group.mediaTrackGroup.getFormat(0)
 
         val extSub =
-            item.externalSubtitles.firstOrNull {
-                it.language.equals(format.language, ignoreCase = true) ||
-                    it.title.equals(format.label, ignoreCase = true)
-            } ?: item.externalSubtitles.getOrNull(trackIndex)
+            item.externalSubtitles.firstOrNull { it.uri.toString() == format.id }
+                ?: item.externalSubtitles.firstOrNull {
+                    it.language.equals(format.language, ignoreCase = true) &&
+                        it.title.equals(format.label, ignoreCase = true)
+                }
 
-        viewModelScope.launch(Dispatchers.IO) {
+        val subtitleUrl = extSub?.uri?.toString()
+        if (subtitleUrl.isNullOrBlank()) {
+            _isLoadingCues.value = false
+            return
+        }
+
+        val currentJob = viewModelScope.launch(Dispatchers.IO) {
             _isLoadingCues.value = true
             try {
-                val subtitleUrl = extSub?.uri?.toString()
-                if (!subtitleUrl.isNullOrBlank()) {
-                    val text =
-                        if (extSub.uri.scheme == "file") {
-                            java.io.File(extSub.uri.path!!).readText()
-                        } else {
-                            val request = okhttp3.Request.Builder().url(subtitleUrl).build()
-                            jellyfinApi.httpClient.newCall(request).execute().use { resp ->
-                                resp.body?.string().orEmpty()
-                            }
-                        }
-                    if (text.isNotBlank()) {
-                        val parsed = AutoSyncSubtitleCueParser.parse(text, subtitleUrl)
-                        _currentTrackCues.value = parsed
+                val text =
+                    if (extSub.uri.scheme == "file") {
+                        val file = java.io.File(extSub.uri.path!!)
+                        if (file.exists() && file.length() <= 5L * 1024 * 1024) {
+                            file.readText()
+                        } else ""
+                    } else {
+                        fetchSubtitleTextSafely(subtitleUrl)
                     }
+                if (isActive && text.isNotBlank()) {
+                    val parsed = AutoSyncSubtitleCueParser.parse(text, subtitleUrl)
+                    _currentTrackCues.value = parsed
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.w(e, "Could not load subtitle cues for sync")
             } finally {
-                _isLoadingCues.value = false
+                if (cueLoadingJob == coroutineContext[Job]) {
+                    _isLoadingCues.value = false
+                }
             }
         }
+        cueLoadingJob = currentJob
     }
+
+    private suspend fun fetchSubtitleTextSafely(url: String): String =
+        suspendCancellableCoroutine { continuation ->
+            val client =
+                jellyfinApi.httpClient
+                    .newBuilder()
+                    .followRedirects(false)
+                    .followSslRedirects(false)
+                    .callTimeout(java.time.Duration.ofSeconds(8))
+                    .readTimeout(java.time.Duration.ofSeconds(5))
+                    .build()
+
+            val request = okhttp3.Request.Builder().url(url).build()
+            val call = client.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+
+            call.enqueue(
+                object : okhttp3.Callback {
+                    override fun onFailure(call: okhttp3.Call, e: java.io.IOException) {
+                        if (continuation.isActive) {
+                            continuation.resume("")
+                        }
+                    }
+
+                    override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                        response.use { resp ->
+                            if (!resp.isSuccessful) {
+                                if (continuation.isActive) continuation.resume("")
+                                return
+                            }
+                            val body = resp.body
+                            if (body == null) {
+                                if (continuation.isActive) continuation.resume("")
+                                return
+                            }
+                            val maxBytes = 5L * 1024 * 1024
+                            val length = body.contentLength()
+                            if (length > maxBytes) {
+                                if (continuation.isActive) continuation.resume("")
+                                return
+                            }
+                            val source = body.source()
+                            source.request(maxBytes)
+                            val buffer = source.buffer
+                            val toRead = minOf(buffer.size, maxBytes)
+                            val string = buffer.clone().readString(toRead, java.nio.charset.StandardCharsets.UTF_8)
+                            if (continuation.isActive) {
+                                continuation.resume(string)
+                            }
+                        }
+                    }
+                }
+            )
+        }
 
     init {
         sessionStore.onSessionCreated()
@@ -785,6 +882,7 @@ constructor(
         val mediaSubtitles =
             externalSubtitles.map { externalSubtitle ->
                 MediaItem.SubtitleConfiguration.Builder(externalSubtitle.uri)
+                    .setId(externalSubtitle.uri.toString())
                     .setLabel(
                         // CE (#597): a track of the file itself that the server delivers apart
                         // (during a transcode) is named as it is when the stream carries it.
@@ -1120,9 +1218,13 @@ constructor(
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         Timber.d("Playing MediaItem: ${mediaItem?.mediaId}")
+        cueLoadingJob?.cancel()
+        loadedTrackIndex = null
         setSubtitleDelay(0)
         _currentTrackCues.value = emptyList()
-        _observedLiveCues.clear()
+        synchronized(_observedLiveCues) { _observedLiveCues.clear() }
+        _liveTrackCues.value = emptyList()
+        _isLoadingCues.value = false
         displayRefreshRateManager.onMediaItemTransition()
         loggedDisplayFrameRate = null
         // CE (#450): another item: no reload of the one that lost its connection.
@@ -1957,6 +2059,7 @@ constructor(
         val cues = cueGroup.cues
         if (cues.isNotEmpty()) {
             val currentPos = player.currentPosition
+            var addedAny = false
             for (cue in cues) {
                 val text = cue.text?.toString()?.trim()
                 if (!text.isNullOrBlank()) {
@@ -1966,9 +2069,13 @@ constructor(
                             if (_observedLiveCues.size > 100) {
                                 _observedLiveCues.removeAt(0)
                             }
+                            addedAny = true
                         }
                     }
                 }
+            }
+            if (addedAny && _currentTrackCues.value.isEmpty()) {
+                _liveTrackCues.value = synchronized(_observedLiveCues) { _observedLiveCues.toList() }
             }
         }
     }

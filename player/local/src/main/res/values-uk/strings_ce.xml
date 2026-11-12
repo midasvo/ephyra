@@ -40,4 +40,9 @@
     <string name="capture_line_hint">Торкніться при виголошенні фрази для зіставлення із субтитрами</string>
     <string name="no_cues_found">Поруч із цією позицією не знайдено рядків субтитрів</string>
     <string name="reset">Скинути</string>
+    <string name="recapture_spoken_line">Захопити знову</string>
+    <string name="dialogue_near_position">Діалог поблизу %1$s:</string>
+    <string name="loading_dialogue">Завантаження діалогу…</string>
+    <string name="decrease_delay">Зменшити затримку</string>
+    <string name="increase_delay">Збільшити затримку</string>
 </resources>

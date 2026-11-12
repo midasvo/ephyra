@@ -40,4 +40,9 @@
     <string name="capture_line_hint">Klepnite pri vyslovení riadka pre zosúladenie s titulkami</string>
     <string name="no_cues_found">V blízkosti tejto pozície sa nenašli žiadne riadky titulkov</string>
     <string name="reset">Resetovať</string>
+    <string name="recapture_spoken_line">Znova zachytiť</string>
+    <string name="dialogue_near_position">Dialóg v blízkosti %1$s:</string>
+    <string name="loading_dialogue">Načítava sa dialóg…</string>
+    <string name="decrease_delay">Znížiť oneskorenie</string>
+    <string name="increase_delay">Zvýšiť oneskorenie</string>
 </resources>

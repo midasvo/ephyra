@@ -44,4 +44,9 @@
     <string name="capture_line_hint">اضغط عند نطق السطر لمطابقته مع نص الترجمة</string>
     <string name="no_cues_found">لم يتم العثور على أسطر ترجمة بالقرب من هذا الموضع</string>
     <string name="reset">إعادة تعيين</string>
+    <string name="recapture_spoken_line">إعادة الالتقاط</string>
+    <string name="dialogue_near_position">الحوار بالقرب من %1$s:</string>
+    <string name="loading_dialogue">جارٍ تحميل الحوار…</string>
+    <string name="decrease_delay">تقليل التأخير</string>
+    <string name="increase_delay">زيادة التأخير</string>
 </resources>

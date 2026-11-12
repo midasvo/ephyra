@@ -33,6 +33,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -107,7 +108,8 @@ fun PlayerSubtitleSyncSheet(
     tracks: List<SubtitleTrackItem>,
     selectedTrackIndex: Int,
     subtitleDelayMs: Int,
-    currentPlaybackPositionMs: Long,
+    currentPlaybackPositionMs: Long = 0L,
+    getCurrentPositionMs: () -> Long = { currentPlaybackPositionMs },
     availableCues: List<SubtitleSyncCue>,
     isLoadingCues: Boolean = false,
     onTrackSelected: (Int) -> Unit,
@@ -140,7 +142,7 @@ fun PlayerSubtitleSyncSheet(
                 tracks = tracks,
                 selectedTrackIndex = selectedTrackIndex,
                 subtitleDelayMs = subtitleDelayMs,
-                currentPlaybackPositionMs = currentPlaybackPositionMs,
+                getCurrentPositionMs = getCurrentPositionMs,
                 availableCues = availableCues,
                 isLoadingCues = isLoadingCues,
                 onTrackSelected = onTrackSelected,
@@ -156,7 +158,7 @@ private fun SubtitleSyncSheetContent(
     tracks: List<SubtitleTrackItem>,
     selectedTrackIndex: Int,
     subtitleDelayMs: Int,
-    currentPlaybackPositionMs: Long,
+    getCurrentPositionMs: () -> Long,
     availableCues: List<SubtitleSyncCue>,
     isLoadingCues: Boolean,
     onTrackSelected: (Int) -> Unit,
@@ -183,7 +185,7 @@ private fun SubtitleSyncSheetContent(
                 Icon(
                     painter = painterResource(CoreR.drawable.ic_closed_caption),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp),
                 )
                 Text(
@@ -217,8 +219,8 @@ private fun SubtitleSyncSheetContent(
                 modifier = Modifier.weight(1f),
                 colors =
                     FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
                     ),
             )
             FilterChip(
@@ -234,12 +236,12 @@ private fun SubtitleSyncSheetContent(
                         if (subtitleDelayMs != 0) {
                             Surface(
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = MaterialTheme.colorScheme.secondaryContainer,
                             ) {
                                 Text(
                                     text = formatSubtitleDelay(subtitleDelayMs),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 )
                             }
@@ -249,8 +251,8 @@ private fun SubtitleSyncSheetContent(
                 modifier = Modifier.weight(1f),
                 colors =
                     FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        selectedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
                     ),
             )
         }
@@ -270,7 +272,7 @@ private fun SubtitleSyncSheetContent(
         } else {
             SubtitleTimingPanel(
                 subtitleDelayMs = subtitleDelayMs,
-                currentPlaybackPositionMs = currentPlaybackPositionMs,
+                getCurrentPositionMs = getCurrentPositionMs,
                 cues = availableCues,
                 isLoadingCues = isLoadingCues,
                 onDelayChanged = onDelayChanged,
@@ -369,7 +371,7 @@ private fun TrackRow(
 @Composable
 private fun SubtitleTimingPanel(
     subtitleDelayMs: Int,
-    currentPlaybackPositionMs: Long,
+    getCurrentPositionMs: () -> Long,
     cues: List<SubtitleSyncCue>,
     isLoadingCues: Boolean,
     onDelayChanged: (Int) -> Unit,
@@ -451,7 +453,7 @@ private fun SubtitleTimingPanel(
                         Icon(
                             painter = painterResource(CoreR.drawable.ic_sparkles),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp),
                         )
                         Text(
@@ -471,37 +473,43 @@ private fun SubtitleTimingPanel(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Button(
+                    FilledTonalButton(
                         onClick = {
-                            capturedPositionMs = currentPlaybackPositionMs.coerceAtLeast(0L)
+                            capturedPositionMs = getCurrentPositionMs().coerceAtLeast(0L)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
+                            ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
                             ),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = CircleShape,
                     ) {
                         Icon(
                             painter = painterResource(CoreR.drawable.ic_sparkles),
                             contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             if (capturedPositionMs == null)
                                 stringResource(PlayerR.string.capture_spoken_line)
-                            else "Recapture (${formatCueTimestamp(currentPlaybackPositionMs)})"
+                            else stringResource(PlayerR.string.recapture_spoken_line)
                         )
                     }
 
                     if (capturedPositionMs != null) {
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = "Dialogue near ${formatCueTimestamp(capturedPositionMs!!)}:",
+                            text =
+                                stringResource(
+                                    PlayerR.string.dialogue_near_position,
+                                    formatCueTimestamp(capturedPositionMs!!),
+                                ),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -514,7 +522,7 @@ private fun SubtitleTimingPanel(
                                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = "Loading dialogue...",
+                                    text = stringResource(PlayerR.string.loading_dialogue),
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }
@@ -627,7 +635,7 @@ private fun HoldToRepeatStepper(
     ) {
         HoldToRepeatButton(
             iconRes = CoreR.drawable.ic_minus_fat,
-            contentDescription = "Decrease delay",
+            contentDescription = stringResource(PlayerR.string.decrease_delay),
             onAction = onDecrease,
         )
 
@@ -652,7 +660,7 @@ private fun HoldToRepeatStepper(
 
         HoldToRepeatButton(
             iconRes = CoreR.drawable.ic_plus,
-            contentDescription = "Increase delay",
+            contentDescription = stringResource(PlayerR.string.increase_delay),
             onAction = onIncrease,
         )
     }
@@ -667,10 +675,15 @@ private fun HoldToRepeatButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val latestAction by rememberUpdatedState(onAction)
+    var didRepeat by remember { mutableStateOf(false) }
 
     LaunchedEffect(isPressed) {
-        if (!isPressed) return@LaunchedEffect
+        if (!isPressed) {
+            didRepeat = false
+            return@LaunchedEffect
+        }
         delay(STEPPER_HOLD_START_MS)
+        didRepeat = true
         while (isActive) {
             latestAction()
             delay(STEPPER_HOLD_REPEAT_MS)
@@ -678,7 +691,11 @@ private fun HoldToRepeatButton(
     }
 
     FilledTonalIconButton(
-        onClick = onAction,
+        onClick = {
+            if (!didRepeat) {
+                onAction()
+            }
+        },
         interactionSource = interactionSource,
         modifier = Modifier.size(48.dp),
         shape = CircleShape,

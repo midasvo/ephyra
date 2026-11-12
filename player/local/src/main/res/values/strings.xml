@@ -62,4 +62,9 @@
     <string name="capture_line_hint">Tap when a line is spoken to match with subtitle dialogue</string>
     <string name="no_cues_found">No subtitle lines found near this position</string>
     <string name="reset">Reset</string>
+    <string name="recapture_spoken_line">Recapture</string>
+    <string name="dialogue_near_position">Dialogue near %1$s:</string>
+    <string name="loading_dialogue">Loading dialogue…</string>
+    <string name="decrease_delay">Decrease delay</string>
+    <string name="increase_delay">Increase delay</string>
 </resources>

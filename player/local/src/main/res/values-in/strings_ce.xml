@@ -34,4 +34,9 @@
     <string name="capture_line_hint">Ketuk saat kalimat diucapkan untuk mencocokkan dengan dialog subtitle</string>
     <string name="no_cues_found">Tidak ada baris subtitle yang ditemukan di dekat posisi ini</string>
     <string name="reset">Atur ulang</string>
+    <string name="recapture_spoken_line">Rekam ulang</string>
+    <string name="dialogue_near_position">Dialog dekat %1$s:</string>
+    <string name="loading_dialogue">Memuat dialog…</string>
+    <string name="decrease_delay">Kurangi penundaan</string>
+    <string name="increase_delay">Tambah penundaan</string>
 </resources>

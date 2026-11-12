@@ -40,4 +40,9 @@
     <string name="capture_line_hint">Stuknij, gdy kwestia zostanie wypowiedziana, aby dopasować ją do napisów</string>
     <string name="no_cues_found">Nie znaleziono linii dialogowych w pobliżu tej pozycji</string>
     <string name="reset">Resetuj</string>
+    <string name="recapture_spoken_line">Przechwyć ponownie</string>
+    <string name="dialogue_near_position">Kwestia w okolicy %1$s:</string>
+    <string name="loading_dialogue">Wczytywanie dialogu…</string>
+    <string name="decrease_delay">Zmniejsz opóźnienie</string>
+    <string name="increase_delay">Zwiększ opóźnienie</string>
 </resources>

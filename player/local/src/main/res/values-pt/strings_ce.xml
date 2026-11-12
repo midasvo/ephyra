@@ -38,4 +38,9 @@
     <string name="capture_line_hint">Toque quando uma linha for dita para corresponder ao diálogo das legendas</string>
     <string name="no_cues_found">Nenhuma linha de legendas encontrada perto desta posição</string>
     <string name="reset">Repor</string>
+    <string name="recapture_spoken_line">Recapturar</string>
+    <string name="dialogue_near_position">Diálogo perto de %1$s:</string>
+    <string name="loading_dialogue">A carregar diálogo…</string>
+    <string name="decrease_delay">Diminuir atraso</string>
+    <string name="increase_delay">Aumentar atraso</string>
 </resources>

@@ -34,4 +34,9 @@
     <string name="capture_line_hint">Altyazı mətni ilə uyğunlaşdırmaq üçün sətir deyiləndə toxunun</string>
     <string name="no_cues_found">Bu mövqenin yaxınlığında altyazı sətri tapılmadı</string>
     <string name="reset">Sıfırla</string>
+    <string name="recapture_spoken_line">Yenidən qeyd et</string>
+    <string name="dialogue_near_position">%1$s yaxınlığındakı dialoq:</string>
+    <string name="loading_dialogue">Dialoq yüklənir…</string>
+    <string name="decrease_delay">Gecikməni azalt</string>
+    <string name="increase_delay">Gecikməni artır</string>
 </resources>

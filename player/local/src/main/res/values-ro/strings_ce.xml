@@ -38,4 +38,9 @@
     <string name="capture_line_hint">Atinge când este rostită o replică pentru a o potrivi cu subtitrarea</string>
     <string name="no_cues_found">Nu s-au găsit linii de subtitrare în apropierea acestei poziții</string>
     <string name="reset">Resetare</string>
+    <string name="recapture_spoken_line">Reînregistrează</string>
+    <string name="dialogue_near_position">Dialog în apropiere de %1$s:</string>
+    <string name="loading_dialogue">Se încarcă dialogul…</string>
+    <string name="decrease_delay">Redu decalajul</string>
+    <string name="increase_delay">Crește decalajul</string>
 </resources>

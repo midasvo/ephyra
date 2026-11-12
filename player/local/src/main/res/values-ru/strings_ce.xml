@@ -40,4 +40,9 @@
     <string name="capture_line_hint">Нажмите при произнесении фразы для сопоставления с субтитрами</string>
     <string name="no_cues_found">Рядом с этой позицией не найдено строк субтитров</string>
     <string name="reset">Сброс</string>
+    <string name="recapture_spoken_line">Захватить снова</string>
+    <string name="dialogue_near_position">Диалог около %1$s:</string>
+    <string name="loading_dialogue">Загрузка диалога…</string>
+    <string name="decrease_delay">Уменьшить задержку</string>
+    <string name="increase_delay">Увеличить задержку</string>
 </resources>

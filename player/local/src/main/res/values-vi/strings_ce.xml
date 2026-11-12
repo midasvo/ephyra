@@ -34,4 +34,9 @@
     <string name="capture_line_hint">Nhấn khi nghe câu thoại để khớp với phụ đề</string>
     <string name="no_cues_found">Không tìm thấy dòng phụ đề nào gần vị trí này</string>
     <string name="reset">Đặt lại</string>
+    <string name="recapture_spoken_line">Bắt lại</string>
+    <string name="dialogue_near_position">Lời thoại gần %1$s:</string>
+    <string name="loading_dialogue">Đang tải lời thoại…</string>
+    <string name="decrease_delay">Giảm độ trễ</string>
+    <string name="increase_delay">Tăng độ trễ</string>
 </resources>

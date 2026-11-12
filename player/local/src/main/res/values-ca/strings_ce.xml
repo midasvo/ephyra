@@ -36,4 +36,9 @@
     <string name="capture_line_hint">Toqueu quan es digui una frase per sincronitzar-la amb el diàleg</string>
     <string name="no_cues_found">No s\'han trobat línies de subtítols a prop d\'aquesta posició</string>
     <string name="reset">Restableix</string>
+    <string name="recapture_spoken_line">Torna a capturar</string>
+    <string name="dialogue_near_position">Diàleg a prop de %1$s:</string>
+    <string name="loading_dialogue">S\'està carregant el diàleg…</string>
+    <string name="decrease_delay">Redueix el retard</string>
+    <string name="increase_delay">Augmenta el retard</string>
 </resources>
