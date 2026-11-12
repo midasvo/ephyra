@@ -93,6 +93,20 @@ internal fun parseContentRangeTotal(header: String?): Long {
     return totalStr.toLongOrNull() ?: -1L
 }
 
+/**
+ * True when the server's [code] will not change by asking again: every 4xx except 408 (request
+ * timeout) and 429 (too many requests). Those two and every 5xx are worth retrying later.
+ */
+internal fun isPermanentHttpFailure(code: Int): Boolean =
+    code in 400..499 && code != 408 && code != 429
+
+/**
+ * The server answered with an HTTP error. Not a lost connection, so it must not be treated as one
+ * (#383): the engine fails at once and keeps [code] for the queue to show.
+ */
+internal class HttpStatusException(val code: Int, id: Long) :
+    IOException("HTTP $code for download id=$id")
+
 // Private exception used for mid-transfer pause ---------------------------------
 
 private class PausedMidTransfer : Exception()
@@ -114,7 +128,13 @@ class MediaDownloadEngine @Inject constructor(
 ) {
     // Public API types ---------------------------------------------------------
 
-    data class Snapshot(val status: Int, val bytesDownloaded: Long, val totalBytes: Long)
+    data class Snapshot(
+        val status: Int,
+        val bytesDownloaded: Long,
+        val totalBytes: Long,
+        /** The HTTP status the server failed the download with, or null. */
+        val httpStatus: Int? = null,
+    )
 
     data class Request(
         val id: Long,
@@ -151,6 +171,7 @@ class MediaDownloadEngine @Inject constructor(
         @Volatile var status: Int = DownloadStatus.PENDING
         @Volatile var bytesDownloaded: Long = 0L
         @Volatile var totalBytes: Long = -1L
+        @Volatile var httpStatus: Int? = null
         var job: Job? = null
 
         /**
@@ -221,6 +242,7 @@ class MediaDownloadEngine @Inject constructor(
             status = state.status,
             bytesDownloaded = state.bytesDownloaded,
             totalBytes = state.totalBytes,
+            httpStatus = state.httpStatus,
         )
     }
 
@@ -275,6 +297,13 @@ class MediaDownloadEngine @Inject constructor(
             } catch (e: PausedMidTransfer) {
                 // Network became metered/roaming mid-transfer; loop back to top to re-evaluate.
                 continue
+            } catch (e: HttpStatusException) {
+                // The server answered, so the network is fine: fail now with the status instead
+                // of showing "Waiting for network" (#383). The queue decides whether to retry.
+                Timber.w(e, "Server refused download id=${req.id}")
+                state.httpStatus = e.code
+                state.status = DownloadStatus.FAILED
+                return
             } catch (e: IOException) {
                 // Connectivity dropping (or turning metered/roaming-disallowed) under an
                 // active read surfaces here as an IOException before any mid-transfer
@@ -348,7 +377,7 @@ class MediaDownloadEngine @Inject constructor(
 
             when (code) {
                 200, 206, 416 -> Unit // handled below
-                else -> throw IOException("HTTP $code for download id=${req.id}")
+                else -> throw HttpStatusException(code, req.id)
             }
 
             val plan = resolveResumePlan(code, existingLen, contentLength, contentRangeTotal)

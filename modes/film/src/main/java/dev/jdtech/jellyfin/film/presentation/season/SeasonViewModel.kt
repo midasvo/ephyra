@@ -7,6 +7,7 @@ import dev.jdtech.jellyfin.core.presentation.downloader.DownloadProgress
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadStatus
 import dev.jdtech.jellyfin.film.presentation.downloads.downloadDeletionScope
+import dev.jdtech.jellyfin.film.presentation.selectEpisodesToDownload
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidSourceType
 import dev.jdtech.jellyfin.models.isDownloaded
@@ -134,7 +135,7 @@ constructor(
         loadJob = viewModelScope.launch {
             val token = reloadPolicy.begin()
             val previous = _state.value
-            _state.emit(previous.copy(error = null))
+            _state.emit(previous.copy(error = null, isLoading = true))
             // Another season of the same series (TV season chips) shares the series id.
             val knownSeriesId =
                 seriesId
@@ -195,6 +196,7 @@ constructor(
                             seriesSeasons = seriesSeasons,
                             episodeDownloadProgress =
                                 buildDownloadProgressMap(episodes, downloadQueue.entries.value),
+                            isLoading = false,
                         )
                     )
                 }
@@ -202,7 +204,7 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _state.emit(_state.value.copy(error = e))
+                _state.emit(_state.value.copy(error = e, isLoading = false))
             }
         }
     }
@@ -284,15 +286,7 @@ constructor(
                     }
                     .map { it.id }
                     .toSet()
-            val toQueue = mutableListOf<FindroidEpisode>()
-            var skipped = 0
-            for (episode in _state.value.episodes) {
-                if (episode.isDownloaded() || episode.id in liveQueuedIds) {
-                    skipped++
-                } else {
-                    toQueue.add(episode)
-                }
-            }
+            val (toQueue, skipped) = selectEpisodesToDownload(_state.value.episodes, liveQueuedIds)
 
             if (toQueue.isEmpty()) {
                 eventsChannel.send(SeasonEvent.DownloadResult(0, skipped, 0))

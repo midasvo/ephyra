@@ -1,5 +1,6 @@
 package dev.jdtech.jellyfin.setup.data
 
+import androidx.annotation.VisibleForTesting
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
@@ -131,7 +132,8 @@ class SetupRepositoryImpl(
         }
     }
 
-    private suspend fun saveServerInDatabase(recommendedServerInfo: RecommendedServerInfo): Server {
+    @VisibleForTesting
+    internal suspend fun saveServerInDatabase(recommendedServerInfo: RecommendedServerInfo): Server {
         val serverInfo =
             recommendedServerInfo.systemInfo.getOrNull()
                 ?: throw ExceptionUiText(
@@ -191,8 +193,12 @@ class SetupRepositoryImpl(
                 server
             }
 
+        // CE (#425): a server that was saved before keeps its signed-in user, so the client keeps
+        // that user's token. Clearing it signed the app out until a restart.
+        val currentUser = serverInDatabase?.let { database.getServerCurrentUser(it.id) }
         jellyfinApi.apply {
-            api.update(baseUrl = recommendedServerInfo.address, accessToken = null)
+            api.update(baseUrl = recommendedServerInfo.address, accessToken = currentUser?.accessToken)
+            userId = currentUser?.id
         }
 
         return server

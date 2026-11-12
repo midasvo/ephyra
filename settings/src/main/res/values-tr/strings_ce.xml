@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">Bir filmin dahil olduğu koleksiyonlar</string>
     <string name="ce_pref_detail_similar">Buna benzer</string>
     <string name="ce_pref_detail_similar_summary">Kitaplığınızdaki benzer yapımlar</string>
+    <string name="ce_pref_detail_credits">Yönetmen ve yazarlar</string>
+    <string name="ce_pref_detail_credits_summary">Film ve dizi sayfalarında özetin altında</string>
+    <string name="ce_media_segments_auto_skip_pip">Yalnızca resim içinde resim modunda</string>
+    <string name="ce_media_segments_auto_skip_always">Her zaman</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d bölüm</item>
+        <item quantity="other">%d bölüm</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d gün</item>
+        <item quantity="other">%d gün</item>
+    </plurals>
+    <string name="ce_number_no_limit">Sınır yok</string>
+    <string name="ce_number_off">Kapalı</string>
+    <string name="ce_pref_player_keep_landscape">Oynatıcıyı yatay tut</string>
+    <string name="ce_pref_player_keep_landscape_summary">Tableti dik çevirseniz bile videoları yatay oynat</string>
+    <string name="ce_pref_home_episode_images">Bölüm görsellerini kullan</string>
+    <string name="ce_pref_home_episode_images_summary">İzlemeye devam et ve Sıradaki satırlarında dizinin görseli yerine bölümün görselini göster</string>
 </resources>

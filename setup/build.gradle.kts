@@ -38,4 +38,6 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // CE (#425): the repository tests build a real JellyfinApi, which needs a Context.
+    testImplementation(libs.robolectric)
 }

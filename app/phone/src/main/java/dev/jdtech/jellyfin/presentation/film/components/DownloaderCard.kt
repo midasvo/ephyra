@@ -47,13 +47,12 @@ fun DownloaderCard(state: DownloaderState, onCancelClick: () -> Unit, onRetryCli
             else -> MaterialTheme.colorScheme.onSurface
         }
 
+    // CE (#558): the same words as the Downloads row, "Waiting for network" rather than "Paused".
     val statusText =
-        when (state.status) {
-            DownloadStatus.PENDING -> stringResource(CoreR.string.download_pending)
-            DownloadStatus.PAUSED -> stringResource(CoreR.string.download_paused)
-            DownloadStatus.FAILED -> stringResource(CoreR.string.download_failed)
-            else -> stringResource(CoreR.string.download_downloading)
-        }
+        stringResource(
+            downloadStatusTextRes(downloadStatusOf(state.status))
+                ?: CoreR.string.download_downloading
+        )
 
     val progressIndicatorColor =
         when (state.status) {

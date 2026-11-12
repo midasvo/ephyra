@@ -31,6 +31,9 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     // 0 is no limit. The web client's default is 365.
     val homeNextUpMaxDays = Preference("pref_home_next_up_max_days", 0)
     val homeLatest = Preference<Boolean>("home_latest", true)
+    // CE (#608): Continue Watching and Next Up show the series' or movie's thumb (the wide art
+    // with the title on it) unless this is on, like the web client's setting of the same name.
+    val homeEpisodeImages = Preference("pref_home_episode_images", false)
     // CE (#138): the Android TV launcher's Watch Next row. Only the TV app shows and uses it.
     val tvWatchNext = Preference("pref_tv_watch_next", true)
     // CE (#140): Android TV screensaver.
@@ -39,12 +42,14 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     val tvScreensaverShowClock = Preference("pref_tv_screensaver_show_clock", true)
     // CE (#141): play a series' theme song on the TV show page. Only the TV app shows and uses it.
     val tvThemeMusic = Preference("pref_tv_theme_music", false)
-    val displayExtraInfo = Preference("pref_display_extra_info", false)
     val displayCastAndCrew = Preference("pref_display_cast_and_crew", true)
     // CE (#332): which of the server's metadata the detail pages show.
     val detailCriticRating = Preference("pref_detail_critic_rating", true)
     val detailTagline = Preference("pref_detail_tagline", true)
-    val detailStudios = Preference("pref_detail_studios", true)
+    // CE (#510): the credits under the overview are off until asked for. The director and the
+    // writers also need "Display cast and crew", which they were part of before.
+    val detailCredits = Preference("pref_detail_credits", false)
+    val detailStudios = Preference("pref_detail_studios", false)
     val detailAirSchedule = Preference("pref_detail_air_schedule", true)
     val detailWatchHistory = Preference("pref_detail_watch_history", true)
     val detailExternalLinks = Preference("pref_detail_external_links", true)
@@ -60,6 +65,10 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     val playerBackend = Preference("pref_player_backend", "exoplayer")
     val playerBrightness = Preference("pref_player_brightness", -1.0f)
     val playerBackgroundAudio = Preference("pref_player_background_audio", false)
+
+    // CE (#363): a wide window (tablet, unfolded foldable) plays in landscape, as up to v2.1.
+    // Off: it follows the device (R6). See KeepPlayerLandscape for where it applies.
+    val playerKeepLandscape = Preference("pref_player_keep_landscape", false)
 
     // Maximum streaming bitrate in bits per second; the server transcodes
     // anything above it. 0 means no cap (original quality). Set from the

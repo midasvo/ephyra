@@ -14,6 +14,38 @@
         app:animation_enabled="false"
         app:show_buffering="always" />
 
+    <!-- CE (#450): the connection was lost; playback goes on by itself when it is back. Between
+         the title row and the centre controls (85dp above the centre), so it covers no control and
+         Play (retry now) stays free; touches pass through. -->
+    <LinearLayout
+        android:id="@+id/connection_lost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="85dp"
+        android:background="@drawable/overlay_background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <ProgressBar
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:indeterminate="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="@string/ce_player_connection_lost"
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+
     <LinearLayout
         android:id="@+id/progress_scrubber_layout"
         android:layout_width="wrap_content"

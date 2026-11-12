@@ -178,4 +178,20 @@
     <string name="ce_pref_detail_collections_summary">Koleksi yang memuat film ini</string>
     <string name="ce_pref_detail_similar">Lainnya yang serupa</string>
     <string name="ce_pref_detail_similar_summary">Judul serupa dari pustaka Anda</string>
+    <string name="ce_pref_detail_credits">Sutradara dan penulis</string>
+    <string name="ce_pref_detail_credits_summary">Di bawah sinopsis pada halaman film dan serial</string>
+    <string name="ce_media_segments_auto_skip_pip">Hanya dalam gambar-dalam-gambar</string>
+    <string name="ce_media_segments_auto_skip_always">Selalu</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="other">%d episode</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="other">%d hari</item>
+    </plurals>
+    <string name="ce_number_no_limit">Tanpa batas</string>
+    <string name="ce_number_off">Nonaktif</string>
+    <string name="ce_pref_player_keep_landscape">Pertahankan pemutar dalam lanskap</string>
+    <string name="ce_pref_player_keep_landscape_summary">Putar video dalam lanskap, meskipun tablet diputar tegak</string>
+    <string name="ce_pref_home_episode_images">Gunakan gambar episode</string>
+    <string name="ce_pref_home_episode_images_summary">Tampilkan gambar episode, bukan gambar serial, di Lanjutkan menonton dan Berikutnya</string>
 </resources>

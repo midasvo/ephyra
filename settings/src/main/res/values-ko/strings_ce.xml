@@ -178,4 +178,20 @@
     <string name="ce_pref_detail_collections_summary">영화가 속한 컬렉션</string>
     <string name="ce_pref_detail_similar">비슷한 콘텐츠</string>
     <string name="ce_pref_detail_similar_summary">라이브러리의 비슷한 타이틀</string>
+    <string name="ce_pref_detail_credits">감독 및 작가</string>
+    <string name="ce_pref_detail_credits_summary">영화 및 시리즈 페이지의 줄거리 아래에 표시</string>
+    <string name="ce_media_segments_auto_skip_pip">PIP 모드에서만</string>
+    <string name="ce_media_segments_auto_skip_always">항상</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="other">에피소드 %d개</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="other">%d일</item>
+    </plurals>
+    <string name="ce_number_no_limit">제한 없음</string>
+    <string name="ce_number_off">사용 안 함</string>
+    <string name="ce_pref_player_keep_landscape">플레이어를 가로 모드로 유지</string>
+    <string name="ce_pref_player_keep_landscape_summary">태블릿을 세로로 돌려도 동영상을 가로 모드로 재생합니다</string>
+    <string name="ce_pref_home_episode_images">에피소드 이미지 사용</string>
+    <string name="ce_pref_home_episode_images_summary">이어서 보기와 다음 에피소드에서 시리즈 이미지 대신 에피소드 이미지 표시</string>
 </resources>

@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">Les collections dont fait partie un film</string>
     <string name="ce_pref_detail_similar">Dans le même genre</string>
     <string name="ce_pref_detail_similar_summary">Titres similaires de votre bibliothèque</string>
+    <string name="ce_pref_detail_credits">Réalisation et scénario</string>
+    <string name="ce_pref_detail_credits_summary">Sous le synopsis sur les pages des films et des séries</string>
+    <string name="ce_media_segments_auto_skip_pip">Seulement en fenêtre flottante</string>
+    <string name="ce_media_segments_auto_skip_always">Toujours</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d épisode</item>
+        <item quantity="other">%d épisodes</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d jour</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
+    <string name="ce_number_no_limit">Illimité</string>
+    <string name="ce_number_off">Désactivé</string>
+    <string name="ce_pref_player_keep_landscape">Garder le lecteur en paysage</string>
+    <string name="ce_pref_player_keep_landscape_summary">Lire les vidéos en mode paysage, même quand vous tournez la tablette à la verticale</string>
+    <string name="ce_pref_home_episode_images">Utiliser les images des épisodes</string>
+    <string name="ce_pref_home_episode_images_summary">Afficher l\'image de l\'épisode au lieu de celle de la série dans Reprendre la lecture et À suivre</string>
 </resources>

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.recalculateWindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ButtonDefaults
@@ -33,6 +34,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -57,6 +59,7 @@ import dev.jdtech.jellyfin.presentation.film.components.downloadRowSize
 import dev.jdtech.jellyfin.presentation.film.components.groupedItemShape
 import dev.jdtech.jellyfin.presentation.film.components.playDownloadedItem
 import dev.jdtech.jellyfin.presentation.film.components.rememberUndoController
+import dev.jdtech.jellyfin.presentation.utils.Layout
 import java.util.UUID
 
 /** The downloaded episodes of one show, by season, with per-episode and remove-all actions. */
@@ -134,10 +137,13 @@ fun DownloadedShowScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         contentWindowInsets = WindowInsets.statusBars.union(WindowInsets.displayCutout),
     ) { innerPadding ->
+        val rowWidth = Modifier.widthIn(max = Layout.textMaxWidth).fillMaxWidth()
         LazyColumn(
             modifier = Modifier.padding(innerPadding).fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
+            // A row never exceeds 720 dp (4-design.md §5), so each item is capped and centred.
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (episodes.isNotEmpty()) {
                 item(key = "summary") {
@@ -151,7 +157,7 @@ fun DownloadedShowScreen(
                             ) + " · " + Formatter.formatShortFileSize(context, totalBytes),
                         style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 4.dp).animateItem(),
+                        modifier = rowWidth.padding(horizontal = 4.dp).animateItem(),
                     )
                 }
             }
@@ -161,7 +167,9 @@ fun DownloadedShowScreen(
                         text = season.name ?: stringResource(CoreR.string.season_number, season.number),
                         style = MaterialTheme.typography.titleMedium,
                         modifier =
-                            Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp).animateItem(),
+                            rowWidth
+                                .padding(start = 4.dp, top = 20.dp, bottom = 8.dp)
+                                .animateItem(),
                     )
                 }
                 itemsIndexed(items = season.episodes, key = { _, ep -> ep.id }) { index, episode ->
@@ -172,7 +180,7 @@ fun DownloadedShowScreen(
                         onClick = { onEpisodeClick(episode) },
                         onPlayClick = { context.playDownloadedItem(episode) },
                         onRemove = { removeEpisodes(listOf(episode)) },
-                        modifier = Modifier.animateItem(),
+                        modifier = rowWidth.animateItem(),
                     )
                 }
             }
@@ -184,7 +192,7 @@ fun DownloadedShowScreen(
                             ButtonDefaults.textButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error
                             ),
-                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp).animateItem(),
+                        modifier = rowWidth.padding(top = 16.dp).animateItem(),
                     ) {
                         Text(stringResource(CoreR.string.downloads_remove_all))
                     }

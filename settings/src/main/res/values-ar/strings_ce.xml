@@ -178,4 +178,30 @@
     <string name="ce_pref_detail_collections_summary">المجموعات التي ينتمي إليها الفيلم</string>
     <string name="ce_pref_detail_similar">المزيد من هذا القبيل</string>
     <string name="ce_pref_detail_similar_summary">عناوين مشابهة من مكتبتك</string>
+    <string name="ce_pref_detail_credits">المخرج والكتّاب</string>
+    <string name="ce_pref_detail_credits_summary">تحت الملخص في صفحات الأفلام والمسلسلات</string>
+    <string name="ce_media_segments_auto_skip_pip">فقط في وضع صورة داخل صورة</string>
+    <string name="ce_media_segments_auto_skip_always">دائمًا</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="zero">%d حلقة</item>
+        <item quantity="one">حلقة واحدة</item>
+        <item quantity="two">حلقتان</item>
+        <item quantity="few">%d حلقات</item>
+        <item quantity="many">%d حلقة</item>
+        <item quantity="other">%d حلقة</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="zero">%d يوم</item>
+        <item quantity="one">يوم واحد</item>
+        <item quantity="two">يومان</item>
+        <item quantity="few">%d أيام</item>
+        <item quantity="many">%d يومًا</item>
+        <item quantity="other">%d يوم</item>
+    </plurals>
+    <string name="ce_number_no_limit">بلا حد</string>
+    <string name="ce_number_off">إيقاف</string>
+    <string name="ce_pref_player_keep_landscape">إبقاء المشغّل بالوضع الأفقي</string>
+    <string name="ce_pref_player_keep_landscape_summary">تشغيل الفيديوهات بالوضع الأفقي حتى عند تدوير الجهاز اللوحي عموديًا</string>
+    <string name="ce_pref_home_episode_images">استخدام صور الحلقات</string>
+    <string name="ce_pref_home_episode_images_summary">عرض صورة الحلقة بدلًا من صورة المسلسل في «متابعة المشاهدة» و«التالي»</string>
 </resources>

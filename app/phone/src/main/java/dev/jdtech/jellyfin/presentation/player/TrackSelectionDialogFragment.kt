@@ -9,7 +9,6 @@ import androidx.fragment.app.DialogFragment
 import androidx.media3.common.C
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dev.jdtech.jellyfin.player.local.R
-import dev.jdtech.jellyfin.player.local.domain.getTrackNames
 import dev.jdtech.jellyfin.BasePlayerActivity
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
 import java.lang.IllegalStateException
@@ -27,15 +26,15 @@ class TrackSelectionDialogFragment : DialogFragment() {
                 C.TRACK_TYPE_TEXT -> R.string.select_subtitle_track
                 else -> throw IllegalStateException("TrackType must be AUDIO or TEXT")
             }
-        val tracksGroups =
-            viewModel.player.currentTracks.groups.filter { it.type == type && it.isSupported }
         return activity?.let { activity ->
+            // CE (#596): the view model says what to list: during a transcode the audio tracks
+            // are the file's, not the one track the stream carries.
+            val choices = viewModel.trackChoices(type, activity)
             val builder = MaterialAlertDialogBuilder(activity)
             builder.setTitle(getString(titleResource)).setSingleChoiceItems(
                 arrayOf(getString(R.string.none)) +
-                    tracksGroups.getTrackNames(), // Add "None" at the top of the list
-                tracksGroups.indexOfFirst { it.isSelected } +
-                    1, // Add 1 to the index to account for the "None" item
+                    choices.names, // Add "None" at the top of the list
+                choices.selected + 1, // Add 1 to the index to account for the "None" item
             ) { dialog, which ->
                 viewModel.switchToTrack(
                     type,

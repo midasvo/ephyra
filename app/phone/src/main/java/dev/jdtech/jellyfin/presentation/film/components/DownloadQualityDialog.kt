@@ -20,16 +20,22 @@ import dev.jdtech.jellyfin.presentation.components.BaseDialog
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.VideoQualities
+import dev.jdtech.jellyfin.presentation.utils.LocalNotificationPermissionRequest
 
 /**
  * Quality picker shown when starting a download. Tapping an option starts the
  * download immediately: [onSelect] receives the bitrate cap in bits/sec, or null
  * for original quality. Files under the cap still download as the original;
  * files over it are transcoded down to it by the server.
+ *
+ * CE (#372): every download the user starts passes here, so this is where the notification
+ * permission is asked for, right after the download has started. The download never waits for
+ * the answer.
  */
 @Composable
 fun DownloadQualityDialog(onSelect: (maxBitrate: Int?) -> Unit, onDismiss: () -> Unit) {
     val lazyListState = rememberLazyListState()
+    val requestNotificationPermission = LocalNotificationPermissionRequest.current
 
     BaseDialog(title = stringResource(CoreR.string.download_quality), onDismiss = onDismiss) {
         if (lazyListState.canScrollBackward) {
@@ -46,7 +52,10 @@ fun DownloadQualityDialog(onSelect: (maxBitrate: Int?) -> Unit, onDismiss: () ->
                             ?: stringResource(CoreR.string.download_quality_original),
                     modifier =
                         Modifier.fillMaxWidth()
-                            .clickable { onSelect(bitrate.takeIf { it > 0 }) }
+                            .clickable {
+                                onSelect(bitrate.takeIf { it > 0 })
+                                requestNotificationPermission()
+                            }
                             .padding(
                                 horizontal = MaterialTheme.spacings.default,
                                 vertical = MaterialTheme.spacings.medium,

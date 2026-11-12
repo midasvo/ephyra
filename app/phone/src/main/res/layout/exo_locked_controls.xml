@@ -14,6 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:background="@drawable/rounded_corner"
+        android:foreground="@drawable/ephyra_player_focus_ring"
         android:contentDescription="@string/select_playback_speed"
         android:padding="16dp"
         android:layout_margin="8dp"

@@ -178,4 +178,20 @@
     <string name="ce_pref_detail_collections_summary">Các bộ sưu tập mà phim thuộc về</string>
     <string name="ce_pref_detail_similar">Nội dung tương tự</string>
     <string name="ce_pref_detail_similar_summary">Các tựa tương tự trong thư viện của bạn</string>
+    <string name="ce_pref_detail_credits">Đạo diễn và biên kịch</string>
+    <string name="ce_pref_detail_credits_summary">Bên dưới phần giới thiệu trên trang phim và chương trình</string>
+    <string name="ce_media_segments_auto_skip_pip">Chỉ khi ở chế độ hình trong hình</string>
+    <string name="ce_media_segments_auto_skip_always">Luôn luôn</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="other">%d tập</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="other">%d ngày</item>
+    </plurals>
+    <string name="ce_number_no_limit">Không giới hạn</string>
+    <string name="ce_number_off">Tắt</string>
+    <string name="ce_pref_player_keep_landscape">Giữ trình phát ở chế độ ngang</string>
+    <string name="ce_pref_player_keep_landscape_summary">Phát video ở chế độ ngang, kể cả khi bạn xoay máy tính bảng theo chiều dọc</string>
+    <string name="ce_pref_home_episode_images">Dùng hình ảnh của tập</string>
+    <string name="ce_pref_home_episode_images_summary">Hiển thị hình ảnh của tập thay cho hình ảnh của phim bộ trong Tiếp tục xem và Tiếp theo</string>
 </resources>

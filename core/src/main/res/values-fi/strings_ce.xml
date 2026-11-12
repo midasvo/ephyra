@@ -97,4 +97,20 @@
     <string name="item_included_in">Sisältyy kokoelmaan</string>
     <string name="item_more_like_this">Samankaltaisia</string>
     <string name="ce_session_revoked">%1$s kirjasi sinut ulos. Jatka kirjautumalla uudelleen sisään.</string>
+    <string name="ce_download_error_server">Palvelin hylkäsi latauksen (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Palvelin vastasi virheellä (HTTP %1$d). Yritä myöhemmin uudelleen.</string>
+    <string name="ce_media_info">Mediatiedot</string>
+    <string name="ce_home_profile">Profiili</string>
+    <string name="ce_watched">Katsottu</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d katsomatta</item>
+        <item quantity="other">%d katsomatta</item>
+    </plurals>
+    <string name="ce_delete_download_message">Haluatko varmasti poistaa tämän latauksen laitteeltasi?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d epäonnistui</item>
+        <item quantity="other">%d epäonnistui</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Mitään ei ole vielä ladattu</string>
+    <string name="ce_home_offline_empty_body">Olet offline-tilassa. Lataamasi elokuvat ja jaksot näkyvät täällä ja Latauksissa.</string>
 </resources>

@@ -50,4 +50,12 @@
     <string name="ce_profile_pattern_saved">圖案已設定</string>
     <string name="ce_profile_pattern_removed">圖案已移除</string>
     <string name="ce_profile_pattern_grid">解鎖圖案，3 × 3 點的格線</string>
+    <string name="ce_server_address_in_use">此位址正在使用中，無法移除</string>
+    <string name="ce_server_address_already_added">此位址已新增</string>
+    <string name="ce_local_network_denied">區域網路存取權已關閉。沒有這項權限，就無法找到或連線到您網路上的伺服器。</string>
+    <string name="ce_local_network_denied_where">在系統設定中，它位於「權限」&gt;「%1$s」。</string>
+    <string name="ce_local_network_allow">允許存取</string>
+    <string name="ce_local_network_off">區域網路存取權已關閉</string>
+    <string name="ce_add_server_error_local_network">找不到伺服器。區域網路存取權已關閉，因此您網路上的位址遭到封鎖。</string>
+    <string name="ce_permission_permanently_denied">%1$s已遭拒絕。如要使用，請在系統設定的「權限」中允許「%2$s」。</string>
 </resources>

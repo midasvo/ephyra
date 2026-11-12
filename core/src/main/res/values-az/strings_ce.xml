@@ -94,4 +94,18 @@
     <string name="item_included_in">Daxil olduğu</string>
     <string name="item_more_like_this">Buna bənzər</string>
     <string name="ce_session_revoked">%1$s sizi hesabdan çıxardı. Davam etmək üçün yenidən daxil olun.</string>
+    <string name="ce_download_error_server">Server endirməni rədd etdi (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Server xəta ilə cavab verdi (HTTP %1$d). Sonra yenidən cəhd edin.</string>
+    <string name="ce_media_info">Media məlumatı</string>
+    <string name="ce_home_profile">Profil</string>
+    <string name="ce_watched">Baxılıb</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="other">%d baxılmayıb</item>
+    </plurals>
+    <string name="ce_delete_download_message">Bu endirməni cihazınızdan silmək istədiyinizə əminsiniz?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="other">%d uğursuz</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Hələ heç nə endirilməyib</string>
+    <string name="ce_home_offline_empty_body">Oflaynsınız. Endirdiyiniz filmlər və epizodlar burada və Endirmələrdə görünür.</string>
 </resources>

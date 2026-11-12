@@ -97,4 +97,20 @@
     <string name="item_included_in">Onderdeel van</string>
     <string name="item_more_like_this">Meer zoals dit</string>
     <string name="ce_session_revoked">%1$s heeft je afgemeld. Meld je opnieuw aan om verder te gaan.</string>
+    <string name="ce_download_error_server">De server heeft de download geweigerd (HTTP %1$d)</string>
+    <string name="ce_error_server_status">De server gaf een fout terug (HTTP %1$d). Probeer het later opnieuw.</string>
+    <string name="ce_media_info">Media-info</string>
+    <string name="ce_home_profile">Profiel</string>
+    <string name="ce_watched">Bekeken</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d niet bekeken</item>
+        <item quantity="other">%d niet bekeken</item>
+    </plurals>
+    <string name="ce_delete_download_message">Weet je zeker dat je deze download van je apparaat wilt verwijderen?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d mislukt</item>
+        <item quantity="other">%d mislukt</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Nog niets gedownload</string>
+    <string name="ce_home_offline_empty_body">Je bent offline. Films en afleveringen die je downloadt, verschijnen hier en bij Downloads.</string>
 </resources>

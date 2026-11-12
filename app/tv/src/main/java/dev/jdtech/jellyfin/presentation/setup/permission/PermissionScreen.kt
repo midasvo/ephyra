@@ -100,6 +100,7 @@ fun PermissionScreen(
         rationale = request.permission.rationaleStringRes,
         icon = request.permission.iconDrawableId,
         permanentlyDenied = state.permanentlyDenied,
+        systemSettingName = state.systemSettingName, // CE (#376)
         onGrantClick = { launcher.launch(request.permission.id) },
         onOpenSettingsClick = { openAppSettings(context) },
         onSkipClick = { viewModel.onAction(PermissionAction.OnSkipClick) },
@@ -112,6 +113,7 @@ private fun PermissionScreenLayout(
     @StringRes rationale: Int,
     @DrawableRes icon: Int,
     permanentlyDenied: Boolean,
+    systemSettingName: String? = null,
     onGrantClick: () -> Unit,
     onOpenSettingsClick: () -> Unit,
     onSkipClick: () -> Unit,
@@ -143,10 +145,19 @@ private fun PermissionScreenLayout(
                 Spacer(modifier = Modifier.height(MaterialTheme.spacings.default))
                 Text(
                     text =
-                        stringResource(
-                            SetupR.string.permission_permanently_denied,
-                            stringResource(title),
-                        ),
+                        // CE (#376): with the system's name for the setting, when it is known.
+                        if (systemSettingName != null) {
+                            stringResource(
+                                SetupR.string.ce_permission_permanently_denied,
+                                stringResource(title),
+                                systemSettingName,
+                            )
+                        } else {
+                            stringResource(
+                                SetupR.string.permission_permanently_denied,
+                                stringResource(title),
+                            )
+                        },
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                 )

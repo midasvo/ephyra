@@ -97,4 +97,20 @@
     <string name="item_included_in">Indgår i</string>
     <string name="item_more_like_this">Mere som dette</string>
     <string name="ce_session_revoked">%1$s har logget dig ud. Log ind igen for at fortsætte.</string>
+    <string name="ce_download_error_server">Serveren afviste downloadet (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Serveren svarede med en fejl (HTTP %1$d). Prøv igen senere.</string>
+    <string name="ce_media_info">Medieoplysninger</string>
+    <string name="ce_home_profile">Profil</string>
+    <string name="ce_watched">Set</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d ikke set</item>
+        <item quantity="other">%d ikke set</item>
+    </plurals>
+    <string name="ce_delete_download_message">Er du sikker på, at du vil slette denne download fra din enhed?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d mislykkedes</item>
+        <item quantity="other">%d mislykkedes</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Intet downloadet endnu</string>
+    <string name="ce_home_offline_empty_body">Du er offline. Film og afsnit, du downloader, vises her og under Downloads.</string>
 </resources>

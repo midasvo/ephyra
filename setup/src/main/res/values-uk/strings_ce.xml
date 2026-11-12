@@ -50,4 +50,12 @@
     <string name="ce_profile_pattern_saved">Графічний ключ встановлено</string>
     <string name="ce_profile_pattern_removed">Графічний ключ видалено</string>
     <string name="ce_profile_pattern_grid">Графічний ключ, сітка з 3 × 3 точок</string>
+    <string name="ce_server_address_in_use">Ця адреса використовується, її не можна вилучити</string>
+    <string name="ce_server_address_already_added">Цю адресу вже додано</string>
+    <string name="ce_local_network_denied">Доступ до локальної мережі вимкнено. Без нього сервери у вашій мережі неможливо знайти, і до них неможливо підключитися.</string>
+    <string name="ce_local_network_denied_where">У налаштуваннях системи він розташований у розділі Дозволи &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Дозволити доступ</string>
+    <string name="ce_local_network_off">Доступ до локальної мережі вимкнено</string>
+    <string name="ce_add_server_error_local_network">Сервер не знайдено. Доступ до локальної мережі вимкнено, тому адреси у вашій мережі заблоковано.</string>
+    <string name="ce_permission_permanently_denied">Дозвіл «%1$s» відхилено. Щоб користуватися ним, дозвольте «%2$s» у розділі «Дозволи» в налаштуваннях системи.</string>
 </resources>

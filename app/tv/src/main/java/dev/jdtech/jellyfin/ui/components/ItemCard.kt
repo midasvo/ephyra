@@ -42,6 +42,11 @@ fun ItemCard(
     modifier: Modifier = Modifier,
     showSeriesName: Boolean = false,
     showYear: Boolean = false,
+    // CE (#423): lines of the title on a vertical card. Home uses 1, so its rows fit above the
+    // bottom safe area; the hero shows the focused card's full title.
+    titleMaxLines: Int = 2,
+    // CE (#608): see posterSources.
+    preferThumb: Boolean = false,
 ) {
     val width =
         when (direction) {
@@ -57,7 +62,7 @@ fun ItemCard(
             scale = ClickableSurfaceDefaults.scale(focusedScale = EphyraFocusScale),
         ) {
             Box {
-                ItemPoster(item = item, direction = direction)
+                ItemPoster(item = item, direction = direction, preferThumb = preferThumb)
                 ProgressBadge(
                     item = item,
                     modifier =
@@ -111,7 +116,7 @@ fun ItemCard(
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
-            maxLines = if (direction == Direction.HORIZONTAL) 1 else 2,
+            maxLines = if (direction == Direction.HORIZONTAL) 1 else titleMaxLines,
             overflow = TextOverflow.Ellipsis,
         )
         if (subtitle != null) {

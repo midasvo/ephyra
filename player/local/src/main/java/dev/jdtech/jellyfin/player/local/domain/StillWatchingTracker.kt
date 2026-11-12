@@ -70,5 +70,14 @@ class StillWatchingTracker(
 
         /** Sentinel value for "off" on the inactivity axis. */
         const val OFF_MS: Long = 0L
+
+        /**
+         * CE (#367): the whole seconds the prompt has left before [endsAtMs], rounded up, never
+         * below 0. Both times on the same clock.
+         */
+        fun secondsLeft(endsAtMs: Long, nowMs: Long): Int {
+            val leftMs = endsAtMs - nowMs
+            return if (leftMs <= 0L) 0 else ((leftMs + 999L) / 1000L).toInt()
+        }
     }
 }

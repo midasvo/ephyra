@@ -1,8 +1,11 @@
 package dev.jdtech.jellyfin.ce.presentation.film
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +23,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +46,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
@@ -56,6 +59,9 @@ import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.ce.thememusic.rememberThemeMusic
 import dev.jdtech.jellyfin.ce.ui.PersonCard
+import dev.jdtech.jellyfin.ce.ui.components.TvLoadError
+import dev.jdtech.jellyfin.ce.ui.components.TvOverviewText
+import dev.jdtech.jellyfin.ce.ui.focus.NoBringIntoView
 import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
@@ -137,8 +143,24 @@ fun ShowScreen(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
+internal fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
+    // CE (#514): the page scrolls itself when a row gets focus, so moving along the buttons leaves
+    // the title on screen. The rows keep the default.
+    val rowSpec = LocalBringIntoViewSpec.current
+    CompositionLocalProvider(LocalBringIntoViewSpec provides NoBringIntoView) {
+        ShowScreenContent(state = state, onAction = onAction, rowSpec = rowSpec)
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ShowScreenContent(
+    state: ShowState,
+    onAction: (ShowAction) -> Unit,
+    rowSpec: BringIntoViewSpec,
+) {
     val configuration = LocalConfiguration.current
     val locale = configuration.locales.get(0)
 
@@ -146,9 +168,8 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
     val focusPosition = rememberFocusPosition(row = ROW_BUTTONS, column = 0)
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    // The list can't be scrolled by hand (userScrollEnabled = false): it follows the focused row.
-    // Wait a frame first, so this scroll takes over from the bring-into-view scroll that the focus
-    // change starts, instead of that one cancelling this one halfway.
+    // The list follows the focused row (it has no bring-into-view of its own, #514). Wait a frame
+    // first, so the row's focus change has settled before the list scrolls.
     val scrollToRow: (Int) -> Unit = { row ->
         scope.launch {
             withFrameNanos {}
@@ -210,7 +231,8 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                     contentPadding =
                         PaddingValues(top = 112.dp, bottom = MaterialTheme.spacings.large),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
-                    userScrollEnabled = false,
+                    // CE (#514): no userScrollEnabled = false. Without user scrolling, Down from
+                    // the buttons can't reach the seasons row while that row is below the screen.
                 ) {
                     item {
                         Column(
@@ -280,11 +302,11 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                             }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
                             TvTagline(show.tagline)
-                            Text(
+                            // CE (#545): a cut overview takes focus and opens in full on OK.
+                            TvOverviewText(
+                                title = show.name,
                                 text = show.overview,
-                                style = MaterialTheme.typography.bodyMedium,
                                 maxLines = 4,
-                                overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.width(640.dp),
                             )
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.default))
@@ -400,54 +422,18 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                                 }
                             }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.default))
-                            Row(
-                                horizontalArrangement =
-                                    Arrangement.spacedBy(MaterialTheme.spacings.large)
-                            ) {
-                                Column {
-                                    Text(
-                                        text = stringResource(id = CoreR.string.genres),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White.copy(alpha = .5f),
-                                    )
-                                    Text(
-                                        text = show.genres.joinToString(),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                }
-                                state.director?.let { director ->
-                                    Column {
-                                        Text(
-                                            text = stringResource(id = CoreR.string.director),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.White.copy(alpha = .5f),
-                                        )
-                                        Text(
-                                            text = director.name,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                        )
-                                    }
-                                }
-                                if (state.writers.isNotEmpty()) {
-                                    Column {
-                                        Text(
-                                            text = stringResource(id = CoreR.string.writers),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.White.copy(alpha = .5f),
-                                        )
-                                        Text(
-                                            text = state.writers.joinToString { it.name },
-                                            style = MaterialTheme.typography.bodyMedium,
-                                        )
-                                    }
-                                }
-                                if (show.studios.isNotEmpty()) {
-                                    TvLabeledValue(
-                                        label = stringResource(CoreR.string.item_networks),
-                                        value = show.studios.joinToString(),
-                                    )
-                                }
-                            }
+                            TvCredits(
+                                listOf(
+                                    stringResource(CoreR.string.genres) to
+                                        show.genres.joinToString(),
+                                    stringResource(CoreR.string.director) to
+                                        state.director?.name.orEmpty(),
+                                    stringResource(CoreR.string.writers) to
+                                        state.writers.joinToString { it.name },
+                                    stringResource(CoreR.string.item_networks) to
+                                        show.studios.joinToString(),
+                                )
+                            )
                             if (state.seasons.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(MaterialTheme.spacings.large))
                                 Text(
@@ -459,31 +445,37 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                     }
                     if (state.seasons.isNotEmpty()) {
                         item {
-                            LazyRow(
-                                horizontalArrangement =
-                                    Arrangement.spacedBy(MaterialTheme.spacings.default),
-                                contentPadding =
-                                    PaddingValues(horizontal = MaterialTheme.spacings.default * 2),
-                                modifier =
-                                    Modifier.focusRestorer().onFocusChanged {
-                                        if (it.hasFocus) scrollToRow(ROW_SEASONS)
-                                    },
-                            ) {
-                                itemsIndexed(state.seasons, key = { _, season -> season.id }) {
-                                    index,
-                                    season ->
-                                    ItemCard(
-                                        item = season,
-                                        direction = Direction.VERTICAL,
-                                        onClick = { onAction(ShowAction.NavigateToItem(season)) },
-                                        modifier =
-                                            Modifier.focusPosition(
-                                                focusPosition,
-                                                ROW_SEASONS,
-                                                index,
-                                                season.id.toString(),
-                                            ),
-                                    )
+                            CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
+                                LazyRow(
+                                    horizontalArrangement =
+                                        Arrangement.spacedBy(MaterialTheme.spacings.default),
+                                    contentPadding =
+                                        PaddingValues(
+                                            horizontal = MaterialTheme.spacings.default * 2
+                                        ),
+                                    modifier =
+                                        Modifier.focusRestorer().onFocusChanged {
+                                            if (it.hasFocus) scrollToRow(ROW_SEASONS)
+                                        },
+                                ) {
+                                    itemsIndexed(state.seasons, key = { _, season -> season.id }) {
+                                        index,
+                                        season ->
+                                        ItemCard(
+                                            item = season,
+                                            direction = Direction.VERTICAL,
+                                            onClick = {
+                                                onAction(ShowAction.NavigateToItem(season))
+                                            },
+                                            modifier =
+                                                Modifier.focusPosition(
+                                                    focusPosition,
+                                                    ROW_SEASONS,
+                                                    index,
+                                                    season.id.toString(),
+                                                ),
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -501,36 +493,40 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                                         ),
                                 )
                                 Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
-                                LazyRow(
-                                    horizontalArrangement =
-                                        Arrangement.spacedBy(MaterialTheme.spacings.default),
-                                    contentPadding =
-                                        PaddingValues(
-                                            horizontal = MaterialTheme.spacings.default * 2
-                                        ),
-                                    modifier =
-                                        Modifier.focusRestorer().onFocusChanged {
-                                            if (it.hasFocus) {
-                                                scrollToRow(if (state.seasons.isNotEmpty()) 2 else 1)
-                                            }
-                                        },
-                                ) {
-                                    itemsIndexed(state.actors, key = { _, actor -> actor.id }) {
-                                        index,
-                                        actor ->
-                                        PersonCard(
-                                            person = actor,
-                                            onClick = {
-                                                onAction(ShowAction.NavigateToPerson(actor.id))
+                                CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
+                                    LazyRow(
+                                        horizontalArrangement =
+                                            Arrangement.spacedBy(MaterialTheme.spacings.default),
+                                        contentPadding =
+                                            PaddingValues(
+                                                horizontal = MaterialTheme.spacings.default * 2
+                                            ),
+                                        modifier =
+                                            Modifier.focusRestorer().onFocusChanged {
+                                                if (it.hasFocus) {
+                                                    scrollToRow(
+                                                        if (state.seasons.isNotEmpty()) 2 else 1
+                                                    )
+                                                }
                                             },
-                                            modifier =
-                                                Modifier.focusPosition(
-                                                    focusPosition,
-                                                    ROW_CAST,
-                                                    index,
-                                                    actor.id.toString(),
-                                                ),
-                                        )
+                                    ) {
+                                        itemsIndexed(state.actors, key = { _, actor -> actor.id }) {
+                                            index,
+                                            actor ->
+                                            PersonCard(
+                                                person = actor,
+                                                onClick = {
+                                                    onAction(ShowAction.NavigateToPerson(actor.id))
+                                                },
+                                                modifier =
+                                                    Modifier.focusPosition(
+                                                        focusPosition,
+                                                        ROW_CAST,
+                                                        index,
+                                                        actor.id.toString(),
+                                                    ),
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -546,6 +542,7 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                                 direction = related.direction,
                                 focusPosition = focusPosition,
                                 row = related.row,
+                                rowSpec = rowSpec,
                                 onFocused = {
                                     relatedRows.relatedLazyIndex(related.row, firstRelatedIndex)?.let {
                                         scrollToRow(it)
@@ -595,7 +592,19 @@ private fun ShowScreenLayout(state: ShowState, onAction: (ShowAction) -> Unit) {
                     listState.scrollToItem(if (state.seasons.isNotEmpty()) 2 else 1)
                 }
             }
-        } ?: run { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) }
+        }
+            ?: run {
+                val error = state.error
+                if (error != null) {
+                    TvLoadError(
+                        error = error,
+                        onRetry = { onAction(ShowAction.OnRetryClick) },
+                        modifier = Modifier.align(Alignment.Center),
+                    )
+                } else {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+            }
     }
 }
 

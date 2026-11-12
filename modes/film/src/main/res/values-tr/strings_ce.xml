@@ -3,4 +3,5 @@
     <string name="home_suggestions_title">Öneriler</string>
     <string name="home_rows_move_up">Yukarı taşı</string>
     <string name="home_rows_move_down">Aşağı taşı</string>
+    <string name="ce_continue_watching">İzlemeye Devam Et</string>
 </resources>

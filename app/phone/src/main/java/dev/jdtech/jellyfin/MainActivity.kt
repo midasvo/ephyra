@@ -15,11 +15,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import dev.jdtech.jellyfin.core.presentation.downloader.DownloadPumpService
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.utils.KeyboardShortcuts
+import dev.jdtech.jellyfin.presentation.utils.LocalNotificationPermissionRequest
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
 import dev.jdtech.jellyfin.presentation.utils.LocalPlaybackStopped
+import dev.jdtech.jellyfin.presentation.utils.ProvideLocalNetworkBlock
 import dev.jdtech.jellyfin.repository.PlaybackEvents
+import dev.jdtech.jellyfin.utils.shouldRequestNotificationPermission
 import dev.jdtech.jellyfin.viewmodels.MainViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.map
@@ -30,17 +34,16 @@ class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var playbackEvents: PlaybackEvents
 
+    // CE (#372): registered here rather than in the download quality dialog, which closes on the
+    // tap that asks. The download has already started; once allowed, its notification is posted
+    // again, because the one posted before the answer was dropped.
     private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op either way */ }
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) DownloadPumpService.refreshNotification(this)
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
 
         enableEdgeToEdge()
 
@@ -53,18 +56,32 @@ class MainActivity : AppCompatActivity() {
                     CompositionLocalProvider(
                         LocalOfflineMode provides state.isOfflineMode,
                         LocalPlaybackStopped provides stopped,
+                        LocalNotificationPermissionRequest provides ::requestNotificationPermission,
                     ) {
-                        NavigationRoot(
-                            hasServers = state.hasServers,
-                            hasCurrentServer = state.hasCurrentServer,
-                            hasCurrentUser = state.hasCurrentUser,
-                            showFavoritesTab = state.showFavoritesTab,
-                            askUserOnStart = state.askUserOnStart,
-                            profileLocked = state.profileLocked,
-                        )
+                        // CE (#571): the error screens know when local network access is what
+                        // keeps the server out of reach, and can ask for it.
+                        ProvideLocalNetworkBlock {
+                            NavigationRoot(
+                                hasServers = state.hasServers,
+                                hasCurrentServer = state.hasCurrentServer,
+                                hasCurrentUser = state.hasCurrentUser,
+                                showFavoritesTab = state.showFavoritesTab,
+                                askUserOnStart = state.askUserOnStart,
+                                profileLocked = state.profileLocked,
+                            )
+                        }
                     }
                 }
             }
+        }
+    }
+
+    /** CE (#372): asked when the user starts a download, never on start or recreation. */
+    private fun requestNotificationPermission() {
+        val permission = Manifest.permission.POST_NOTIFICATIONS
+        val granted = checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+        if (shouldRequestNotificationPermission(Build.VERSION.SDK_INT, granted)) {
+            notificationPermissionLauncher.launch(permission)
         }
     }
 

@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">Kokoelmat, joihin elokuva kuuluu</string>
     <string name="ce_pref_detail_similar">Samankaltaisia</string>
     <string name="ce_pref_detail_similar_summary">Samankaltaisia nimikkeitä kirjastostasi</string>
+    <string name="ce_pref_detail_credits">Ohjaaja ja käsikirjoittajat</string>
+    <string name="ce_pref_detail_credits_summary">Kuvauksen alla elokuvien ja sarjojen sivuilla</string>
+    <string name="ce_media_segments_auto_skip_pip">Vain kuva kuvassa -tilassa</string>
+    <string name="ce_media_segments_auto_skip_always">Aina</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d jakso</item>
+        <item quantity="other">%d jaksoa</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d päivä</item>
+        <item quantity="other">%d päivää</item>
+    </plurals>
+    <string name="ce_number_no_limit">Ei rajaa</string>
+    <string name="ce_number_off">Pois</string>
+    <string name="ce_pref_player_keep_landscape">Pidä soitin vaakasuunnassa</string>
+    <string name="ce_pref_player_keep_landscape_summary">Toista videot vaakasuunnassa, vaikka käännät tabletin pystyyn</string>
+    <string name="ce_pref_home_episode_images">Käytä jaksojen kuvia</string>
+    <string name="ce_pref_home_episode_images_summary">Näytä jakson kuva sarjan kuvan sijaan riveillä Jatka katsomista ja Seuraavaksi</string>
 </resources>

@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">Les col·leccions de les quals forma part una pel·lícula</string>
     <string name="ce_pref_detail_similar">Més com aquest</string>
     <string name="ce_pref_detail_similar_summary">Títols similars de la teva biblioteca</string>
+    <string name="ce_pref_detail_credits">Director i guionistes</string>
+    <string name="ce_pref_detail_credits_summary">Sota la sinopsi a les pàgines de pel·lícules i sèries</string>
+    <string name="ce_media_segments_auto_skip_pip">Només en imatge sobre imatge</string>
+    <string name="ce_media_segments_auto_skip_always">Sempre</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d episodi</item>
+        <item quantity="other">%d episodis</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d dia</item>
+        <item quantity="other">%d dies</item>
+    </plurals>
+    <string name="ce_number_no_limit">Sense límit</string>
+    <string name="ce_number_off">Desactivat</string>
+    <string name="ce_pref_player_keep_landscape">Mantén el reproductor en horitzontal</string>
+    <string name="ce_pref_player_keep_landscape_summary">Reprodueix els vídeos en horitzontal, encara que posis la tauleta en vertical</string>
+    <string name="ce_pref_home_episode_images">Utilitza imatges dels episodis</string>
+    <string name="ce_pref_home_episode_images_summary">Mostra la imatge de l\'episodi en lloc de la imatge de la sèrie a Continua mirant i Següent</string>
 </resources>

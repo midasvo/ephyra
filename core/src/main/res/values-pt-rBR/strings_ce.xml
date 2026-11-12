@@ -97,4 +97,20 @@
     <string name="item_included_in">Incluído em</string>
     <string name="item_more_like_this">Mais como este</string>
     <string name="ce_session_revoked">%1$s desconectou você. Entre novamente para continuar.</string>
+    <string name="ce_download_error_server">O servidor recusou o download (HTTP %1$d)</string>
+    <string name="ce_error_server_status">O servidor respondeu com um erro (HTTP %1$d). Tente novamente mais tarde.</string>
+    <string name="ce_media_info">Informações da mídia</string>
+    <string name="ce_home_profile">Perfil</string>
+    <string name="ce_watched">Assistido</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d não assistido</item>
+        <item quantity="other">%d não assistidos</item>
+    </plurals>
+    <string name="ce_delete_download_message">Você tem certeza de que deseja excluir este download do seu dispositivo?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d com falha</item>
+        <item quantity="other">%d com falha</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Nada baixado ainda</string>
+    <string name="ce_home_offline_empty_body">Você está offline. Os filmes e episódios que você baixar aparecem aqui e em Downloads.</string>
 </resources>

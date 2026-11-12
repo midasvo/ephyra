@@ -1,6 +1,8 @@
 package dev.jdtech.jellyfin.ce.presentation.settings
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,12 +26,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -53,6 +59,7 @@ import dev.jdtech.jellyfin.presentation.settings.components.SettingsMultiSelectD
 import dev.jdtech.jellyfin.presentation.settings.components.SettingsPermissionCard
 import dev.jdtech.jellyfin.presentation.settings.components.SettingsSelectDetailsCard
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.settings.R as SettingsR
 import dev.jdtech.jellyfin.settings.presentation.models.Preference
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceAction
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceCategory
@@ -63,7 +70,9 @@ import dev.jdtech.jellyfin.settings.presentation.models.PreferenceMultiSelect
 import dev.jdtech.jellyfin.settings.presentation.models.PreferencePermission
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceSelect
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceSwitch
+import dev.jdtech.jellyfin.settings.presentation.models.numberInputText
 import dev.jdtech.jellyfin.settings.presentation.settings.SettingsAction
+import kotlin.math.abs
 
 /**
  * The one layout of every TV settings page, the first as much as a category's: a list of the
@@ -76,6 +85,7 @@ import dev.jdtech.jellyfin.settings.presentation.settings.SettingsAction
  *
  * Focus comes back to the row it left from, after a visit to a category or to another screen.
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TvSettingsLayout(
     title: String,
@@ -85,6 +95,7 @@ fun TvSettingsLayout(
 ) {
     val focusPosition = rememberFocusPosition()
     var focused by remember { mutableStateOf<Preference?>(null) }
+    var paneFocused by remember { mutableStateOf(false) }
     // A reload hands out new copies of the preferences: show the current one, by name.
     val shown =
         focused?.let { old ->
@@ -117,7 +128,14 @@ fun TvSettingsLayout(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
                 contentPadding = PaddingValues(bottom = TvSafeArea.vertical),
-                modifier = Modifier.weight(LIST_WEIGHT),
+                // Left from the details pane goes back to the row it belongs to, not to the row
+                // that happens to be level with the focused option (#419).
+                modifier =
+                    Modifier.weight(LIST_WEIGHT)
+                        .focusProperties {
+                            enter = { focusPosition.currentRequester() ?: FocusRequester.Default }
+                        }
+                        .focusGroup(),
             ) {
                 itemsIndexed(groups) { index, group ->
                     TvSettingsGroup(
@@ -134,12 +152,20 @@ fun TvSettingsLayout(
                     )
                 }
             }
-            Box(modifier = Modifier.weight(1f - LIST_WEIGHT)) {
+            Box(
+                modifier =
+                    Modifier.weight(1f - LIST_WEIGHT).onFocusChanged {
+                        paneFocused = it.hasFocus
+                    }
+            ) {
                 TvSettingsDetails(preference = shown, onAction = onAction)
             }
         }
     }
     RestoreFocus(position = focusPosition, ready = groups.isNotEmpty())
+    // Back in the details pane returns to the row that opened it, like a dialog (ADR 0003). From a
+    // row, Back leaves the page.
+    BackHandler(enabled = paneFocused) { focusPosition.requestFocus() }
 }
 
 /** A group: its name, then its rows on one panel, so it reads as one thing. */
@@ -227,8 +253,7 @@ private fun TvSettingsPreference(
         is PreferenceIntInput ->
             TvSettingsRow(
                 preference = preference,
-                summary =
-                    inputValue(preference.value.toLong(), preference.prefixRes, preference.suffixRes),
+                summary = inputValue(preference),
                 iconSlot = iconSlot,
                 modifier = modifier,
             ) {
@@ -339,7 +364,8 @@ private fun TvSettingsDetails(preference: Preference?, onAction: (SettingsAction
             TvSettingsNumber(
                 preference = preference,
                 value = preference.value.toLong(),
-                text = inputValue(preference.value.toLong(), preference.prefixRes, preference.suffixRes),
+                text = inputValue(preference),
+                inMilliseconds = preference.suffixRes == SettingsR.string.ms,
                 onChange = {
                     onAction(SettingsAction.OnUpdate(preference.copy(value = it.toInt())))
                 },
@@ -349,6 +375,7 @@ private fun TvSettingsDetails(preference: Preference?, onAction: (SettingsAction
                 preference = preference,
                 value = preference.value,
                 text = inputValue(preference.value, preference.prefixRes, preference.suffixRes),
+                inMilliseconds = preference.suffixRes == SettingsR.string.ms,
                 onChange = { onAction(SettingsAction.OnUpdate(preference.copy(value = it))) },
             )
         else -> {
@@ -371,17 +398,20 @@ private fun TvSettingsDetails(preference: Preference?, onAction: (SettingsAction
 
 /**
  * A number setting in the details pane: its value between steps down and up. There is no keyboard
- * on a remote worth typing a number with, and these settings are small counts of episodes, minutes
- * or seconds.
+ * on a remote worth typing a number with. Most of these settings are small counts of episodes,
+ * minutes or seconds; a value [inMilliseconds] (the timeouts, the next episode threshold) steps by
+ * whole seconds instead (#420), and is still shown in milliseconds.
  */
 @Composable
 private fun TvSettingsNumber(
     preference: Preference,
     value: Long,
     text: String,
+    inMilliseconds: Boolean,
     onChange: (Long) -> Unit,
 ) {
     val current = value.coerceAtLeast(0)
+    val seconds = stringResource(SettingsR.string.seconds)
     Column(modifier = Modifier.padding(top = ROW_PADDING_VERTICAL)) {
         Text(
             text = stringResource(preference.nameStringResource),
@@ -399,12 +429,16 @@ private fun TvSettingsNumber(
         Text(text = text, style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
         Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small)) {
-            NUMBER_STEPS.forEach { step ->
+            numberSteps(inMilliseconds).forEach { step ->
+                val next = stepValue(current, step)
                 Button(
-                    onClick = { onChange((current + step).coerceAtLeast(0)) },
-                    enabled = preference.enabled && current + step >= 0,
+                    onClick = { next?.let(onChange) },
+                    enabled = preference.enabled && next != null,
                 ) {
-                    Text(text = if (step > 0) "+$step" else "−${-step}")
+                    val size =
+                        if (inMilliseconds) "${abs(step) / MS_PER_SECOND} $seconds"
+                        else "${abs(step)}"
+                    Text(text = if (step > 0) "+$size" else "−$size")
                 }
             }
         }
@@ -433,18 +467,52 @@ private fun selectedOptions(preference: PreferenceMultiSelect): String {
 }
 
 @Composable
-private fun inputValue(value: Long, prefixRes: Int?, suffixRes: Int?): String =
-    listOfNotNull(
-            prefixRes?.let { stringResource(it) },
-            value.takeIf { it >= 0 }?.toString(),
-            suffixRes?.let { stringResource(it) },
+private fun inputValue(preference: PreferenceIntInput): String =
+    inputValue(
+        value = preference.value.toLong(),
+        prefixRes = preference.prefixRes,
+        suffixRes = preference.suffixRes,
+        suffixPluralsRes = preference.suffixPluralsRes,
+        zeroLabelRes = preference.zeroLabelRes,
+    )
+
+@Composable
+private fun inputValue(
+    value: Long,
+    prefixRes: Int?,
+    suffixRes: Int?,
+    suffixPluralsRes: Int? = null,
+    zeroLabelRes: Int? = null,
+): String {
+    val resources = LocalResources.current
+    return numberInputText(
+            value = value,
+            prefixRes = prefixRes,
+            suffixRes = suffixRes,
+            string = resources::getString,
+            quantityString = { id, quantity ->
+                resources.getQuantityString(id, quantity, quantity)
+            },
+            suffixPluralsRes = suffixPluralsRes,
+            zeroLabelRes = zeroLabelRes,
         )
-        .joinToString(" ")
         .ifEmpty { stringResource(CoreR.string.not_set) }
+}
+
+/** The steps of a number setting: 1 and 10, or 1 and 10 seconds for a value in milliseconds. */
+internal fun numberSteps(inMilliseconds: Boolean): List<Long> =
+    if (inMilliseconds) NUMBER_STEPS.map { it * MS_PER_SECOND } else NUMBER_STEPS
+
+/**
+ * The value after [step], or null when the step would take it below zero, the lowest value the
+ * phone's number dialog accepts too.
+ */
+internal fun stepValue(current: Long, step: Long): Long? = (current + step).takeIf { it >= 0 }
 
 private const val LIST_WEIGHT = .5f
 // +1 first: OK on the row lands there, and it is never disabled.
 private val NUMBER_STEPS = listOf(1L, -1L, 10L, -10L)
+private const val MS_PER_SECOND = 1000L
 private val GroupShape = RoundedCornerShape(12.dp)
 private val ROW_MIN_HEIGHT = 56.dp
 private val ROW_PADDING_HORIZONTAL = 16.dp

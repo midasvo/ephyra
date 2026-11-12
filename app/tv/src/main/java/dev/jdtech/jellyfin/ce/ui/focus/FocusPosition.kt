@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -133,8 +134,15 @@ fun Modifier.focusPosition(
 }
 
 /**
+ * True while something around the screen holds focus that the screen must not take, such as the TV
+ * drawer after Back from Settings (#533). [RestoreFocus] then leaves focus where it is.
+ */
+val LocalRestoreFocusSuppressed = staticCompositionLocalOf<() -> Boolean> { { false } }
+
+/**
  * Puts focus on the saved position once each time the screen enters composition: the default
- * element on the first visit, the last focused one after Back.
+ * element on the first visit, the last focused one after Back. While [LocalRestoreFocusSuppressed]
+ * says so, it skips that once and leaves focus alone.
  *
  * @param ready true once the content is there (for example the first page of a list).
  * @param prepare runs right before focusing: resolve keys and scroll the saved item into view, so
@@ -148,12 +156,18 @@ fun RestoreFocus(
 ) {
     // Not saveable on purpose: it has to run again after the screen comes back.
     var restored by remember { mutableStateOf(false) }
+    val suppressed = LocalRestoreFocusSuppressed.current
     LaunchedEffect(ready) {
         if (!ready || restored) return@LaunchedEffect
         prepare(position)
         // A scroll in prepare only composes the item on the next frame.
         repeat(RESTORE_ATTEMPTS) { attempt ->
             withFrameNanos {}
+            // Read right before the request: the drawer may have taken focus meanwhile (#533).
+            if (suppressed()) {
+                restored = true
+                return@LaunchedEffect
+            }
             if (position.requestFocus()) {
                 restored = true
                 return@LaunchedEffect

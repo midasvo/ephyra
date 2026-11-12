@@ -26,4 +26,7 @@
         <item quantity="one">Börjar om %d sekund</item>
         <item quantity="other">Börjar om %d sekunder</item>
     </plurals>
+    <string name="ce_track_forced">Tvingade</string>
+    <string name="ce_player_connection_lost">Anslutningen bröts. Uppspelningen fortsätter när nätverket är tillbaka.</string>
+    <string name="ce_player_try_again">Försök igen</string>
 </resources>

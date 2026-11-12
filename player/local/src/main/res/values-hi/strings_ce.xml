@@ -26,4 +26,7 @@
         <item quantity="one">%d सेकंड में शुरू होगा</item>
         <item quantity="other">%d सेकंड में शुरू होगा</item>
     </plurals>
+    <string name="ce_track_forced">अनिवार्य</string>
+    <string name="ce_player_connection_lost">कनेक्शन टूट गया। नेटवर्क वापस आने पर प्लेबैक जारी रहेगा।</string>
+    <string name="ce_player_try_again">फिर से कोशिश करें</string>
 </resources>

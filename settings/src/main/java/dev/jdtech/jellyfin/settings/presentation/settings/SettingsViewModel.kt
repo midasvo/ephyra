@@ -11,7 +11,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jdtech.jellyfin.settings.R
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
-import dev.jdtech.jellyfin.settings.domain.Constants
+import dev.jdtech.jellyfin.settings.domain.KeepPlayerLandscape
+import dev.jdtech.jellyfin.settings.domain.bounded
 import dev.jdtech.jellyfin.settings.domain.models.PermissionDefinitions
 import dev.jdtech.jellyfin.settings.domain.models.Preference as PreferenceBackend
 import dev.jdtech.jellyfin.settings.presentation.enums.AppVariant
@@ -75,6 +76,17 @@ class SettingsViewModel @Inject constructor(
                     )
                 )
         )
+
+    /**
+     * CE (#363): only where the player can get a wide window. Worked out once: a foldable shows
+     * it folded or not (its hinge sensor), so folding does not change the answer.
+     */
+    private val keepLandscapeDeviceTypes =
+        if (appVariant == AppVariant.PHONE && KeepPlayerLandscape.isShown(context)) {
+            listOf(DeviceType.PHONE)
+        } else {
+            emptyList()
+        }
 
     private val topLevelPreferences =
         listOf(
@@ -236,6 +248,17 @@ class SettingsViewModel @Inject constructor(
                                                     backendPreference =
                                                         appPreferences.homeNextUpMaxDays,
                                                     suffixRes = R.string.home_next_up_max_days_suffix,
+                                                    suffixPluralsRes = R.plurals.ce_days_count,
+                                                    zeroLabelRes = R.string.ce_number_no_limit,
+                                                ),
+                                                // CE (#608)
+                                                PreferenceSwitch(
+                                                    nameStringResource =
+                                                        R.string.ce_pref_home_episode_images,
+                                                    descriptionStringRes =
+                                                        R.string.ce_pref_home_episode_images_summary,
+                                                    backendPreference =
+                                                        appPreferences.homeEpisodeImages,
                                                 ),
                                                 PreferenceSwitch(
                                                     nameStringResource = R.string.pref_tv_watch_next,
@@ -313,10 +336,12 @@ class SettingsViewModel @Inject constructor(
                                                                             descriptionStringRes = R.string.cast_and_crew_summary,
                                                                             backendPreference = appPreferences.displayCastAndCrew,
                                                                         ),
+                                                                        // CE (#510): off by default, and part of the cast and crew.
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.extra_info,
-                                                                            descriptionStringRes = R.string.extra_info_summary,
-                                                                            backendPreference = appPreferences.displayExtraInfo,
+                                                                            nameStringResource = R.string.ce_pref_detail_credits,
+                                                                            descriptionStringRes = R.string.ce_pref_detail_credits_summary,
+                                                                            dependencies = listOf(appPreferences.displayCastAndCrew),
+                                                                            backendPreference = appPreferences.detailCredits,
                                                                         ),
                                                                     )
                                                             ),
@@ -498,7 +523,7 @@ class SettingsViewModel @Inject constructor(
                                                 PreferenceSelect(
                                                     nameStringResource = R.string.pref_player_backend,
                                                     backendPreference = appPreferences.playerBackend,
-                                                    options = R.array.player_backends,
+                                                    options = R.array.player_backend_names,
                                                     optionValues = R.array.player_backends
                                                 ),
                                                 PreferenceSwitch(
@@ -517,6 +542,15 @@ class SettingsViewModel @Inject constructor(
                                                     supportedDeviceTypes = listOf(DeviceType.TV),
                                                     backendPreference =
                                                         appPreferences.playerTvMatchRefreshRate,
+                                                ),
+                                                PreferenceSwitch(
+                                                    nameStringResource =
+                                                        R.string.ce_pref_player_keep_landscape,
+                                                    descriptionStringRes =
+                                                        R.string.ce_pref_player_keep_landscape_summary,
+                                                    supportedDeviceTypes = keepLandscapeDeviceTypes,
+                                                    backendPreference =
+                                                        appPreferences.playerKeepLandscape,
                                                 ),
                                                 PreferenceCategory(
                                                     nameStringResource = R.string.mpv_options,
@@ -564,6 +598,8 @@ class SettingsViewModel @Inject constructor(
                                                                     listOf(
                                                                         PreferenceFileEdit(
                                                                             nameStringResource = R.string.edit_file_title,
+                                                                            // CE (#421): the TV has no file editor.
+                                                                            supportedDeviceTypes = listOf(DeviceType.PHONE),
                                                                             filePath = "mpv/mpv.conf",
                                                                             onClick = {
                                                                                 viewModelScope.launch {
@@ -575,6 +611,8 @@ class SettingsViewModel @Inject constructor(
                                                                         ),
                                                                         PreferenceFileEdit(
                                                                             nameStringResource = R.string.edit_file_title,
+                                                                            // CE (#421): the TV has no file editor.
+                                                                            supportedDeviceTypes = listOf(DeviceType.PHONE),
                                                                             filePath = "mpv/input.conf",
                                                                             onClick = {
                                                                                 viewModelScope.launch {
@@ -869,6 +907,8 @@ class SettingsViewModel @Inject constructor(
                                                     backendPreference =
                                                         appPreferences.stillWatchingAfterEpisodes,
                                                     suffixRes = R.string.episodes,
+                                                    suffixPluralsRes = R.plurals.ce_episodes_count,
+                                                    zeroLabelRes = R.string.ce_number_off,
                                                 ),
                                                 PreferenceIntInput(
                                                     nameStringResource =
@@ -882,6 +922,7 @@ class SettingsViewModel @Inject constructor(
                                                     backendPreference =
                                                         appPreferences.stillWatchingAfterMinutes,
                                                     suffixRes = R.string.minutes,
+                                                    zeroLabelRes = R.string.ce_number_off,
                                                 ),
                                                 PreferenceIntInput(
                                                     nameStringResource =
@@ -1050,6 +1091,7 @@ class SettingsViewModel @Inject constructor(
                                                     backendPreference =
                                                         appPreferences.smartDownloadsKeepReady,
                                                     suffixRes = R.string.episodes,
+                                                    suffixPluralsRes = R.plurals.ce_episodes_count,
                                                 ),
                                                 PreferenceSwitch(
                                                     nameStringResource =
@@ -1322,9 +1364,13 @@ class SettingsViewModel @Inject constructor(
                                                             preference.dependencies.all {
                                                                 appPreferences.getValue(it)
                                                             },
+                                                    // CE (#559): shown as the app uses it.
                                                     value =
-                                                        appPreferences.getValue(
-                                                            preference.backendPreference
+                                                        appPreferences.bounded(
+                                                            preference.backendPreference,
+                                                            appPreferences.getValue(
+                                                                preference.backendPreference
+                                                            ),
                                                         ),
                                                 )
                                             }
@@ -1393,19 +1439,10 @@ class SettingsViewModel @Inject constructor(
                     is PreferenceIntInput ->
                         appPreferences.setValue(
                             action.preference.backendPreference,
-                            if (action.preference.backendPreference == appPreferences.subtitleFontScale) {
-                                action.preference.value.coerceIn(
-                                    Constants.SubtitleStyle.FONT_SCALE_MIN,
-                                    Constants.SubtitleStyle.FONT_SCALE_MAX,
-                                )
-                            } else if (
-                                action.preference.backendPreference ==
-                                    appPreferences.smartDownloadsKeepReady
-                            ) {
-                                action.preference.value.coerceAtLeast(1)
-                            } else {
-                                action.preference.value
-                            },
+                            appPreferences.bounded(
+                                action.preference.backendPreference,
+                                action.preference.value,
+                            ),
                         )
                     is PreferenceLongInput ->
                         appPreferences.setValue(

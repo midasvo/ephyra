@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.recalculateWindowInsets
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +40,7 @@ import dev.jdtech.jellyfin.film.presentation.homerows.HomeRowsViewModel
 import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.presentation.film.components.ErrorState
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.utils.Layout
 import dev.jdtech.jellyfin.settings.R as SettingsR
 
 /** CE (#142): Settings → Interface → Home rows. A switch per row, and buttons to move it. */
@@ -98,6 +100,8 @@ private fun HomeRowsScreenLayout(state: HomeRowsState, onAction: (HomeRowsAction
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth().testTag("ce_home_rows_settings"),
                         contentPadding = innerPadding,
+                        // The settings cap (4-design.md §12), centred as on the Settings screen.
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         items(state.rows, key = { it.key }) { entry ->
                             HomeRowItem(
@@ -105,7 +109,8 @@ private fun HomeRowsScreenLayout(state: HomeRowsState, onAction: (HomeRowsAction
                                 isFirst = entry == state.rows.first(),
                                 isLast = entry == state.rows.last(),
                                 onAction = onAction,
-                                modifier = Modifier.animateItem(),
+                                modifier =
+                                    Modifier.widthIn(max = Layout.settingsMaxWidth).animateItem(),
                             )
                         }
                     }
@@ -165,7 +170,7 @@ private fun HomeRowsScreenLayoutPreview() {
                         listOf(
                             HomeRowEntry(
                                 HomeRowConfig(HomeRowType.CONTINUE_WATCHING),
-                                UiText.StringResource(FilmR.string.continue_watching),
+                                UiText.StringResource(FilmR.string.ce_continue_watching),
                             ),
                             HomeRowEntry(
                                 HomeRowConfig(HomeRowType.NEXT_UP, visible = false),

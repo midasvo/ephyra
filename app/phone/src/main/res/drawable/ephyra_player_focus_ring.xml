@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CE (#449): keyboard focus on a round player control (docs/identity/VISION.md): a 2 dp ring in
+     the dark scheme's primary, which the identity uses for focus; the player overlay is always dark.
+     No fill and no glow (glow is for the TV focus ring only). Set as the button's foreground, so the
+     ripple background stays; a touch never focuses these buttons, so it shows for keys only. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="oval">
+            <stroke
+                android:width="2dp"
+                android:color="@color/primary_dark" />
+        </shape>
+    </item>
+</selector>

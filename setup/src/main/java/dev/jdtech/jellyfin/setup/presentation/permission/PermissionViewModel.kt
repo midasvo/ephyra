@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
+import dev.jdtech.jellyfin.setup.domain.systemPermissionGroupLabel
 import dev.jdtech.jellyfin.utils.isPermissionGranted
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class PermissionViewModel
@@ -44,7 +46,15 @@ constructor(
             is PermissionAction.OnSkipClick -> decideCurrent()
             is PermissionAction.OnPermissionResult -> onPermissionResult(action.granted)
             is PermissionAction.OnPermanentlyDenied ->
-                _state.update { it.copy(permanentlyDenied = true) }
+                // CE (#376): the text names the setting the way the system does, so the name is
+                // read before the text shows.
+                viewModelScope.launch {
+                    val name =
+                        _state.value.currentRequest?.let {
+                            systemPermissionGroupLabel(context, it.permission.id)
+                        }
+                    _state.update { it.copy(permanentlyDenied = true, systemSettingName = name) }
+                }
             is PermissionAction.OnDismiss -> _state.update { it.copy(dismissedThisSession = true) }
         }
     }

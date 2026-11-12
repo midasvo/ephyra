@@ -205,7 +205,7 @@ class HomeRowsTest {
 }
 
 /** Just enough SharedPreferences for AppPreferences. */
-private class MemorySharedPreferences : SharedPreferences {
+internal class MemorySharedPreferences : SharedPreferences {
     private val values = mutableMapOf<String, Any?>()
 
     override fun getAll(): Map<String, *> = values

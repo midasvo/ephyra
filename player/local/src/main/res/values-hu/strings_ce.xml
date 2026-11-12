@@ -26,4 +26,7 @@
         <item quantity="one">%d másodperc múlva indul</item>
         <item quantity="other">%d másodperc múlva indul</item>
     </plurals>
+    <string name="ce_track_forced">Kényszerített</string>
+    <string name="ce_player_connection_lost">Megszakadt a kapcsolat. A lejátszás folytatódik, amint visszatér a hálózat.</string>
+    <string name="ce_player_try_again">Próbáld újra</string>
 </resources>

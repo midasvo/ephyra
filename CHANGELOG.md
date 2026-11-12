@@ -13,6 +13,196 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v2.4.4] — 2026-11-12
+
+Playback with ExoPlayer starts faster for files with Dolby Digital Plus audio in an mp4: they
+now play directly instead of going through the server, which on a TV box could take ten seconds
+or more before a picture. The rest are small fixes to the phone player, offline Home and the
+item pages.
+
+### Fixed
+- Player (ExoPlayer): an mp4 with Dolby Digital Plus (E-AC-3) audio plays directly. When a file
+  does go through the server, HEVC video is passed on as it is where the device can decode it,
+  instead of being re-encoded, and leaving the player ends the server's conversion at once
+  instead of a minute later (#589).
+- Player: the first key after a tap on the player works. Space pauses and an arrow seeks,
+  where that first key used to do nothing (#448).
+- Player: in a window too narrow for all the buttons in the top row, the row starts at its end,
+  so audio, subtitles and episodes are in view, and a fading edge shows there is more (#456).
+- Player: at a large font size the title no longer leaves the window at the top (#585).
+- Home: offline with nothing downloaded, Home says so and points to Downloads (#585).
+- Item pages: the back and home buttons are readable on a page without artwork, also in the
+  light theme (#585).
+
+## [v2.4.3] — 2026-11-12
+
+A quick follow-up to v2.4.2. Progress watched from a download after the network dropped in the
+middle of playback was sent to the server and then overwritten by the server a few minutes
+later; that is fixed. Downloads finish and tidy up more reliably, the players recover better
+after a lost connection, and tablets get a switch to keep the player in landscape.
+
+### Added
+- Player: "Keep the player in landscape" in the player settings, off by default, for tablets and
+  unfolded foldables. Where the display does not allow it, the player follows the device (#363).
+
+### Fixed
+- Downloads: progress synced after the network was lost during playback is no longer replaced
+  by an older position a few minutes later. The app now ends the playback session the server
+  still had open before it sends the progress (#584).
+- Downloads: the download service runs until the queue is done and leaves no notification
+  behind, and it waits for the queue to restore when the system restarts it (#560).
+- Downloads: finished files and artwork that the database lost track of are cleaned up (#379).
+- Offline: Home no longer shows the remembered online rows, which could not be opened (#428).
+- Player: on mpv, Play and the wait for the network load the item again after a lost connection
+  (#474).
+- Player: the media notification no longer crashes a player in the background (#568).
+- Player: a pause made in the background stays after the return, a repeated end-of-item report
+  no longer prompts again, and auto-enter picture-in-picture follows a gesture setting changed
+  while the player is open (#477, #480).
+- Player: the seek bar no longer shows through the episode sheet (#523).
+- Setup: Add server says that local network access is off when that is what blocks it (#376).
+- TV: the player shows a buffering indicator, and pause works while it buffers (#486).
+- TV: the still-watching prompt counts down to the player's own deadline (#477).
+- TV: the drawer's icons and labels keep inside the safe area, Right from the expanded drawer
+  reaches a poster beside it, and its profile item shows the server name under the user (#539,
+  #567).
+- TV: the login and add-server fields open the keyboard on OK instead of on focus, Left during
+  a cold start opens the drawer on Home, and the overview has no focus ring while its full text
+  is open (#583).
+
+## [v2.4.2] — 2026-11-11
+
+A second release of fixes from the run-through of the app on phone, tablet and TV. What you
+watch from a download while the server cannot be reached is now sent to the server as soon as it
+is back, without restarting the app, and it is no longer lost when you delete the download first.
+The player picks up by itself when the network returns. And many smaller things on the TV, the
+tablet layouts, Home, the setup screens and the settings read and behave as they should.
+
+### Fixed
+- Downloads: progress, watched state and favourites changed while the server could not be reached
+  are sent when it is reachable again, not at the next app start. The app notices on its next
+  request to the server, when it comes to the foreground and when the network changes (#552).
+- Downloads: deleting a download before its progress was sent no longer loses that progress
+  (#552).
+- Downloads: a download queued without a network waits for it, the item page says "Waiting for
+  network" like the Downloads row, and the Downloads header counts failed downloads apart (#530,
+  #558, #546).
+- Player: playback loads again by itself when the network comes back, and the connection-lost
+  line covers no control (#450).
+- Player: track names are readable and the same on both backends, and the phone player's title
+  names the series (#451, #452).
+- Player: the controls stay clear of the system bars in split-screen, and the buttons under the
+  episode sheet are hidden while it is open (#455, #456).
+- Home: a server renamed on the server is renamed in the app, the server name keeps its room
+  when a refresh fails, and a pull to refresh shows one loading indicator (#543, #392, #391).
+- Home: a new first item in a row shows at the start, Back from a search opened on Home returns
+  to Home, and the carousel counts its pages by the window's width (#393, #394, #438).
+- Detail pages: the episode page links to its show, the watched button fills when watched, cast
+  without a photo shows a person icon, and premiere dates keep the four-digit year (#395, #397,
+  #396, #414).
+- Detail pages: items without artwork get no empty scrim or backdrop, on the page and on
+  Suggestions cards (#433, #437).
+- Accessibility: the Home buttons and the badges on cards have labels, keyboard focus is visible
+  on the carousel and the cards, and Tab skips plain text on item pages and the hidden bottom
+  bar (#441, #398, #442).
+- Right-to-left languages: arrows are mirrored and server text keeps its own direction (#401).
+- Setup: the username is trimmed before logging in, "Server not found" clears when the address
+  is changed, the Addresses screen says why a removal or an addition did nothing, and the
+  server's login disclaimer is shown as text instead of HTML (#516, #443, #390, #375).
+- Settings: the player backends have names, number settings say "1 episode" and "No limit", and
+  the still-watching timeout is at least 5 seconds (#399, #400, #559).
+- Wording: the delete download dialog says "from your device", and Latin American Spanish reads
+  "Continuar viendo" (#402, #403).
+- Profiles: the profile sheet opens fully in landscape (#440).
+- Tablet: the open search docks beside the rail on wide windows, the Season list keeps its
+  position over a rotation, the person page starts below its back and home buttons, and the rows
+  of seven screens keep to their designed widths (#439, #435, #436, #434).
+- TV: a long overview or biography opens in full, and the person page's first row fits (#545,
+  #508).
+- TV: the movie page shows Resume, Restart and the time left, and drops its spinner once the
+  movie has loaded; a season without episodes says so instead of spinning forever (#412, #544,
+  #505).
+- TV: focus is visible and goes where you expect: on Retry, the licence text, the About, login
+  and sort dialog buttons, back from Settings, a licence and the Users screen, down to a cast or
+  seasons row below the screen, and off the login screen's server button (#540, #418, #533, #424,
+  #541, #514, #557).
+- TV: Home, the library counter and the login screen keep out of the overscan margin, the Home
+  hero shows the overview for every row, and Back on Home opens the drawer on Home (#423, #410,
+  #411).
+- TV: Retry on Home also loads the drawer's libraries, and a failed search says why and offers
+  Retry (#513, #417).
+- TV: a season card without its own poster shows the show's, an undetermined language is left
+  out of the audio chip, and the credits under the buttons wrap (#416, #415, #413).
+- TV: OK after the remote's number keys submits the PIN, and the drawer's lock badge follows the
+  PIN at once (#409, #408).
+- TV settings: Left and Back from a details pane return to its row, millisecond settings step by
+  whole seconds, the screensaver settings keep label and value apart, and the mpv options page
+  has no empty "Advanced" heading (#419, #420, #422, #421).
+
+## [v2.4.1] — 2026-11-11
+
+A release of fixes, from a full run-through of the app on phone, tablet and TV. Playback copes
+better with a lost or stalled connection, above all on mpv. Downloads are only offered where the
+server allows them and say why one was refused. Artwork you have already seen is shown from the
+cache instead of being checked with the server again. And the detail pages are tidier: the file
+details moved behind an info chip, and the credits are off until you ask for them.
+
+### Changed
+- Movie and episode pages: an info chip at the end of the badge row opens a Media info sheet
+  with the file, its video, audio and subtitle tracks, and each version when there are several.
+  It replaces the "Display Extra Info" setting and the lines of text it put on the page (#510).
+- Movie and show pages: genres are one line under the overview, and the director, writers and
+  studios a small table. That table is now off by default: turn on "Director and writers" and
+  "Studios and networks" in Settings → Interface → Detail pages to see it, on TV too (#510).
+
+### Fixed
+- Artwork: posters older than a year were checked with the server every time they were shown,
+  and stayed grey when the server could not be reached. They now come from the cache (#370).
+- Player: a lost connection on mpv is reported as an error, instead of closing the player,
+  marking the item watched or starting the next episode (#445).
+- Player: a stalled stream on mpv recovers or reports an error after 30 seconds, instead of
+  freezing for good (#460).
+- Player: a stream that fails to open on mpv is reported, and picking another episode in the
+  player works again (#446, #453).
+- Player: the phone player closes when nothing could be loaded, instead of staying black (#374).
+- Player: an episode whose download has not finished is streamed instead of failing (#454).
+- Player: the stop is reported to the server for an item you leave while it is still loading
+  (#461).
+- Player: the "still watching?" countdown shows the time really left (#367).
+- Player: keyboard focus is visible on the controls, and Space no longer presses a control the
+  keyboard did not choose (#448, #449).
+- Player: auto-enter picture-in-picture stays off when the PiP home gesture is off (#447).
+- Playback through a server on a sub-path: the address and the transcode path are joined with
+  one slash (#444).
+- Downloads: Download is only offered where the server allows it, and a refused download says
+  why (#373, #383).
+- Downloads: the notification permission is asked for when a download starts (#372).
+- Downloads: a cancelled download that was not running is removed (#426).
+- Home: a failed load is explained in plain words instead of a stack trace, and a change to the
+  Home rows shows without a pull to refresh (#377, #431).
+- My media: an error with Retry when the network drops, loading again when it returns; the
+  search stays open after a rotation or theme switch; Tab skips the closed search bar (#427,
+  #387, #430).
+- Library: it loads again after the app was killed in the background (#371).
+- Detail pages: a cast card's name and role open the person, as its picture does (#389).
+- Tablet: an episode's still is stacked above its text in a narrow pane, and the buttons wrap
+  (#429).
+- Setup: the server address is trimmed before connecting, adding a saved server again keeps its
+  user signed in, Login opens empty after a sign-out, and a cancelled Quick Connect code is
+  cleared (#404, #425, #388, #382).
+- Profiles: removing the current user in Settings no longer crashes the app (#381).
+- Settings: the licence text opens on the phone, and the device profile can be exported on
+  Android 11 and later (#384, #385).
+- The app tells the server its real version (#386).
+- TV: an error with Retry when Home or an item page fails to load, instead of a blank page or an
+  endless spinner (#405).
+- TV: the person page opens at the top, with the name and the whole biography (#407).
+- TV: playback progress is reported from the TV player, and the OK press that shows the player
+  controls no longer also acts on them (#458, #459).
+
+### Maintenance
+- Migration tests for every released database schema (#380).
+
 ## [v2.4.0] — 2026-11-10
 
 A fix for Android 10 and 11 first: the player crashed there as soon as you pressed a volume key
@@ -731,6 +921,10 @@ Initial CE fork off findroid `1.0.2`. These rapid early iterations established t
 `nl.midasvo.findroid.ce` application ID, downloads and SD-card storage improvements, and ongoing
 tracking of upstream. See the git history between the corresponding tags for commit-level detail.
 
+[v2.4.4]: https://github.com/midasvo/ephyra/releases/tag/v2.4.4
+[v2.4.3]: https://github.com/midasvo/ephyra/releases/tag/v2.4.3
+[v2.4.2]: https://github.com/midasvo/ephyra/releases/tag/v2.4.2
+[v2.4.1]: https://github.com/midasvo/ephyra/releases/tag/v2.4.1
 [v2.4.0]: https://github.com/midasvo/ephyra/releases/tag/v2.4.0
 [v2.3.0]: https://github.com/midasvo/ephyra/releases/tag/v2.3.0
 [v2.2.0]: https://github.com/midasvo/ephyra/releases/tag/v2.2.0

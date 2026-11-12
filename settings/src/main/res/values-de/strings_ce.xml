@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">Die Sammlungen, zu denen ein Film gehört</string>
     <string name="ce_pref_detail_similar">Mehr wie dieses</string>
     <string name="ce_pref_detail_similar_summary">Ähnliche Titel aus deiner Mediathek</string>
+    <string name="ce_pref_detail_credits">Regie und Drehbuch</string>
+    <string name="ce_pref_detail_credits_summary">Unter der Beschreibung auf Film- und Serienseiten</string>
+    <string name="ce_media_segments_auto_skip_pip">Nur im Bild-in-Bild-Modus</string>
+    <string name="ce_media_segments_auto_skip_always">Immer</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d Folge</item>
+        <item quantity="other">%d Folgen</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d Tag</item>
+        <item quantity="other">%d Tage</item>
+    </plurals>
+    <string name="ce_number_no_limit">Unbegrenzt</string>
+    <string name="ce_number_off">Aus</string>
+    <string name="ce_pref_player_keep_landscape">Player im Querformat halten</string>
+    <string name="ce_pref_player_keep_landscape_summary">Videos im Querformat abspielen, auch wenn du das Tablet hochkant drehst</string>
+    <string name="ce_pref_home_episode_images">Episodenbilder verwenden</string>
+    <string name="ce_pref_home_episode_images_summary">In „Weiterschauen“ und „Als Nächstes“ das Bild der Episode statt des Serienbilds anzeigen</string>
 </resources>

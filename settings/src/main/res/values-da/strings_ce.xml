@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">De samlinger, en film er en del af</string>
     <string name="ce_pref_detail_similar">Mere som dette</string>
     <string name="ce_pref_detail_similar_summary">Lignende titler fra dit bibliotek</string>
+    <string name="ce_pref_detail_credits">Instruktør og forfattere</string>
+    <string name="ce_pref_detail_credits_summary">Under beskrivelsen på film- og seriesider</string>
+    <string name="ce_media_segments_auto_skip_pip">Kun i billede-i-billede</string>
+    <string name="ce_media_segments_auto_skip_always">Altid</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d afsnit</item>
+        <item quantity="other">%d afsnit</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d dag</item>
+        <item quantity="other">%d dage</item>
+    </plurals>
+    <string name="ce_number_no_limit">Ingen grænse</string>
+    <string name="ce_number_off">Fra</string>
+    <string name="ce_pref_player_keep_landscape">Hold afspilleren i liggende format</string>
+    <string name="ce_pref_player_keep_landscape_summary">Afspil videoer i liggende format, også når du vender tabletten på højkant</string>
+    <string name="ce_pref_home_episode_images">Brug episodebilleder</string>
+    <string name="ce_pref_home_episode_images_summary">Vis episodens billede i stedet for seriens billede i Fortsæt med at se og Næste</string>
 </resources>

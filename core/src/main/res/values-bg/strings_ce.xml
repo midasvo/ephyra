@@ -97,4 +97,20 @@
     <string name="item_included_in">Включено в</string>
     <string name="item_more_like_this">Още подобни</string>
     <string name="ce_session_revoked">%1$s ви отписа. Влезте отново, за да продължите.</string>
+    <string name="ce_download_error_server">Сървърът отказа изтеглянето (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Сървърът отговори с грешка (HTTP %1$d). Опитайте отново по-късно.</string>
+    <string name="ce_media_info">Информация за медията</string>
+    <string name="ce_home_profile">Профил</string>
+    <string name="ce_watched">Гледано</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d негледан</item>
+        <item quantity="other">%d негледани</item>
+    </plurals>
+    <string name="ce_delete_download_message">Сигурни ли сте, че искате да изтриете това изтегляне от устройството си?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d неуспешно</item>
+        <item quantity="other">%d неуспешни</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Още няма изтеглени</string>
+    <string name="ce_home_offline_empty_body">Нямате връзка. Филмите и епизодите, които изтеглите, се показват тук и в Изтегляния.</string>
 </resources>

@@ -94,4 +94,18 @@
     <string name="item_included_in">收录于</string>
     <string name="item_more_like_this">更多类似内容</string>
     <string name="ce_session_revoked">%1$s 已将你退出登录。请重新登录以继续。</string>
+    <string name="ce_download_error_server">服务器拒绝了下载 (HTTP %1$d)</string>
+    <string name="ce_error_server_status">服务器返回了错误 (HTTP %1$d)。请稍后再试。</string>
+    <string name="ce_media_info">媒体信息</string>
+    <string name="ce_home_profile">个人资料</string>
+    <string name="ce_watched">已观看</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="other">%d 个未观看</item>
+    </plurals>
+    <string name="ce_delete_download_message">您确定要从设备中删除此下载内容吗？</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="other">%d 个失败</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">尚未下载任何内容</string>
+    <string name="ce_home_offline_empty_body">你处于离线状态。你下载的电影和剧集会显示在这里和“下载”中。</string>
 </resources>

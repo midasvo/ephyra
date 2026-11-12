@@ -18,7 +18,8 @@ fun PlayedBadge(modifier: Modifier = Modifier) {
     BaseBadge(modifier = modifier, color = MaterialTheme.colorScheme.tertiary) {
         Icon(
             painter = painterResource(CoreR.drawable.ic_check),
-            contentDescription = stringResource(CoreR.string.episode_watched_indicator),
+            // #441: not "Episode watched indicator", which a movie or a show card said too.
+            contentDescription = stringResource(CoreR.string.ce_watched),
             tint = MaterialTheme.colorScheme.onTertiary,
             modifier = Modifier.size(16.dp).align(Alignment.Center),
         )

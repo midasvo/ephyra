@@ -204,6 +204,40 @@ class MainScreenTest {
         assertTrue(finishing)
     }
 
+    // #411: Back from a library goes Home without passing the drawer. Entering the drawer then
+    // still lands on Home, not on the library that was opened from it.
+    @Test
+    fun backOnHomeAfterALibraryOpensTheDrawerOnHome() {
+        setUpMainScreen()
+        rule.waitForIdle()
+        val library = dummyCollections.first()
+        selectDrawerItem("drawer_item_library_${library.id}")
+        rule.onNodeWithTag("library_screen_content_${library.id}").assertIsFocused()
+
+        pressBack()
+        rule.onNodeWithTag("home_screen_content").assertIsFocused()
+
+        pressBack()
+        rule.onNodeWithTag("drawer_item_home").assertIsFocused()
+    }
+
+    @Test
+    fun leftFromHomeAfterALibraryFocusesHomeInTheDrawer() {
+        setUpMainScreen()
+        rule.waitForIdle()
+        val library = dummyCollections.first()
+        selectDrawerItem("drawer_item_library_${library.id}")
+
+        pressBack()
+        rule.onNodeWithTag("home_screen_content").assertIsFocused()
+
+        rule.onNodeWithTag("home_screen_content").performKeyInput {
+            pressKey(Key.DirectionLeft)
+        }
+        rule.waitForIdle()
+        rule.onNodeWithTag("drawer_item_home").assertIsFocused()
+    }
+
     @Test
     fun drawerFavoritesHiddenWhenDisabled() {
         setUpMainScreen(showFavorites = false)

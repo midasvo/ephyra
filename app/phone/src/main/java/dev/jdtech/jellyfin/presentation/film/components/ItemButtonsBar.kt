@@ -5,14 +5,16 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalIconToggleButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -133,7 +135,11 @@ fun ItemButtonsBar(
                     }
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small)) {
+            // Wraps instead of clipping when the buttons don't fit beside each other (#429).
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
+            ) {
                 if (
                     windowSizeClass.isWidthAtLeastBreakpoint(
                         WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND
@@ -191,11 +197,20 @@ fun ItemButtonsBar(
                         }
                     }
                 }
-                FilledTonalIconButton(onClick = onMarkAsPlayedClick) {
+                // CE (#397): watched fills the button, so the state reads without telling two
+                // tints apart; TalkBack hears it as checked or not.
+                FilledTonalIconToggleButton(
+                    checked = item.played,
+                    onCheckedChange = { onMarkAsPlayedClick() },
+                    colors =
+                        IconButtonDefaults.filledTonalIconToggleButtonColors(
+                            checkedContainerColor = MaterialTheme.colorScheme.tertiary,
+                            checkedContentColor = MaterialTheme.colorScheme.onTertiary,
+                        ),
+                ) {
                     Icon(
                         painter = painterResource(CoreR.drawable.ic_check),
                         contentDescription = stringResource(CoreR.string.check_button_description),
-                        tint = if (item.played) MaterialTheme.colorScheme.tertiary else LocalContentColor.current,
                     )
                 }
                 FilledTonalIconButton(onClick = onMarkAsFavoriteClick) {

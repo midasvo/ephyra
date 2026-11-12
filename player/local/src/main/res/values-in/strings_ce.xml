@@ -24,4 +24,7 @@
     <plurals name="player_up_next_starts_in">
         <item quantity="other">Dimulai dalam %d detik</item>
     </plurals>
+    <string name="ce_track_forced">Paksa</string>
+    <string name="ce_player_connection_lost">Koneksi terputus. Pemutaran berlanjut saat jaringan kembali.</string>
+    <string name="ce_player_try_again">Coba lagi</string>
 </resources>

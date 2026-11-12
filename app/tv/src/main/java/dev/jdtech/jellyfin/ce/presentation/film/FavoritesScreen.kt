@@ -42,6 +42,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
+import dev.jdtech.jellyfin.ce.ui.components.TvLoadError
 import dev.jdtech.jellyfin.ce.ui.focus.FocusPosition
 import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
@@ -132,26 +133,12 @@ internal fun FavoritesScreenLayout(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
             state.error != null && state.sections.isEmpty() -> {
-                Column(
-                    modifier = Modifier.align(Alignment.Center).padding(TvSafeArea.horizontal),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
-                ) {
-                    Text(
-                        text =
-                            state.error?.localizedMessage.orEmpty().ifBlank {
-                                stringResource(CoreR.string.error_loading_data_body)
-                            },
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
+                state.error?.let { error ->
+                    TvLoadError(
+                        error = error,
+                        onRetry = onRetry,
+                        modifier = Modifier.align(Alignment.Center),
                     )
-                    Button(
-                        onClick = onRetry,
-                        modifier = Modifier.focusPosition(focusPosition, 0, 0),
-                    ) {
-                        Text(text = stringResource(CoreR.string.retry))
-                    }
                 }
             }
             state.sections.isEmpty() -> {
@@ -221,7 +208,11 @@ internal fun FavoritesScreenLayout(
     val left = remember { Triple(focusPosition.row, focusPosition.column, focusPosition.key) }
     RestoreFocus(
         position = focusPosition,
-        ready = loaded && (!state.isLoading || state.sections.isNotEmpty()),
+        // Not while the error shows: TvLoadError focuses Retry, and the cards after a Retry.
+        ready =
+            loaded &&
+                (!state.isLoading || state.sections.isNotEmpty()) &&
+                (state.error == null || state.sections.isNotEmpty()),
     ) { position ->
         if (state.sections.isEmpty()) return@RestoreFocus
 

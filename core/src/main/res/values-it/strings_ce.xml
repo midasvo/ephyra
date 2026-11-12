@@ -97,4 +97,20 @@
     <string name="item_included_in">Incluso in</string>
     <string name="item_more_like_this">Altri simili</string>
     <string name="ce_session_revoked">%1$s ti ha disconnesso. Accedi di nuovo per continuare.</string>
+    <string name="ce_download_error_server">Il server ha rifiutato il download (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Il server ha risposto con un errore (HTTP %1$d). Riprova più tardi.</string>
+    <string name="ce_media_info">Informazioni multimediali</string>
+    <string name="ce_home_profile">Profilo</string>
+    <string name="ce_watched">Visto</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d da vedere</item>
+        <item quantity="other">%d da vedere</item>
+    </plurals>
+    <string name="ce_delete_download_message">Sei sicuro di voler cancellare questo download dal tuo dispositivo?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d non riuscito</item>
+        <item quantity="other">%d non riusciti</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Ancora nessun download</string>
+    <string name="ce_home_offline_empty_body">Sei offline. I film e gli episodi che scarichi compaiono qui e in Download.</string>
 </resources>

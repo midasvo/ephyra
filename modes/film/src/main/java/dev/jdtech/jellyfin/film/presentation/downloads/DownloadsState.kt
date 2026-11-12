@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.film.presentation.downloads
 
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadProgress
+import dev.jdtech.jellyfin.core.presentation.downloader.DownloadStatus
 import java.util.UUID
 import dev.jdtech.jellyfin.models.CollectionSection
 import dev.jdtech.jellyfin.models.FindroidItem
@@ -23,6 +24,18 @@ data class ActiveDownload(
     /** User-facing failure reason, only set when progress.status == FAILED. */
     val errorText: UiText? = null,
 )
+
+/**
+ * CE (#546): what the Downloads header counts. [active] is everything still on its way (queued,
+ * downloading, waiting for the network, or just finished), [failed] the downloads that wait for
+ * Retry.
+ */
+data class QueueCounts(val active: Int, val failed: Int)
+
+fun List<ActiveDownload>.queueCounts(): QueueCounts {
+    val failed = count { it.progress.status == DownloadStatus.FAILED }
+    return QueueCounts(active = size - failed, failed = failed)
+}
 
 enum class DownloadSortOrder { NAME, DATE, SIZE }
 

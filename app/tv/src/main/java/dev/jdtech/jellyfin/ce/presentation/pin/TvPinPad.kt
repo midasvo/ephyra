@@ -75,7 +75,8 @@ private val KeySize = 64.dp
 /**
  * CE (#299): the PIN on TV. Dots for the typed digits, the reason for the last rejection, and a
  * keypad for the D-pad: 1 to 9, then delete, 0 and OK. The remote's digit keys and its delete key
- * type straight away, wherever focus is on the pad. OK with fewer than four digits does nothing.
+ * type straight away, wherever focus is on the pad, and a digit key moves focus to OK. OK with
+ * fewer than four digits does nothing.
  */
 @Composable
 fun TvPinPad(
@@ -85,6 +86,7 @@ fun TvPinPad(
     modifier: Modifier = Modifier,
 ) {
     val firstKey = remember { FocusRequester() }
+    val okKey = remember { FocusRequester() }
     // tv-material's buttons keep the click handler of their first composition for the D-pad's OK,
     // and a new step hands in a new [pin] state. Read both through these, never from the closure.
     val currentPin by rememberUpdatedState(pin)
@@ -114,6 +116,9 @@ fun TvPinPad(
                 when {
                     digit != null -> {
                         type(digit)
+                        // OK on the remote comes next: it must press the check key, not the
+                        // key focus rested on, which would add a digit (#409).
+                        runCatching { okKey.requestFocus() }
                         true
                     }
                     event.key == Key.Backspace || event.key == Key.Delete -> {
@@ -172,7 +177,10 @@ fun TvPinPad(
                 }
                 // Dimmed, not disabled, until the PIN is long enough: focus can still rest on it. The
                 // icon is dimmed rather than the key, so the focus ring outside it is not cut off.
-                PadKey(onClick = ::submit, modifier = Modifier.testTag("ce_pin_ok")) {
+                PadKey(
+                    onClick = ::submit,
+                    modifier = Modifier.focusRequester(okKey).testTag("ce_pin_ok"),
+                ) {
                     Icon(
                         painter = painterResource(CoreR.drawable.ic_check),
                         contentDescription = null,

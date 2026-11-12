@@ -8,6 +8,9 @@ import android.view.KeyEvent.KEYCODE_DPAD_CENTER
 import android.view.KeyEvent.KEYCODE_DPAD_DOWN
 import android.view.KeyEvent.KEYCODE_DPAD_LEFT
 import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+import android.view.KeyEvent.KEYCODE_DPAD_UP
+import android.view.KeyEvent.KEYCODE_ENTER
+import android.view.KeyEvent.KEYCODE_NUMPAD_ENTER
 import android.view.KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK
 import android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD
 import android.view.KeyEvent.KEYCODE_MEDIA_NEXT
@@ -244,5 +247,89 @@ class TvPlayerKeyHandlerTest {
         handler.onKeyEvent(KEYCODE_MEDIA_PLAY_PAUSE, ACTION_DOWN, 1)
         handler.onKeyEvent(KEYCODE_MEDIA_PLAY_PAUSE, ACTION_UP, 0)
         assertEquals(listOf("toggle"), controls.calls)
+    }
+
+    // #459: the OK-up after an OK-down that showed the controls reached Play/Pause, which by then
+    // had focus: OK paused with "OK pauses" off, and paused-then-played with it on.
+
+    private fun up(keyCode: Int) = handler.onKeyEvent(keyCode, ACTION_UP, 0)
+
+    @Test
+    fun okThatShowsTheControlsAlsoTakesItsKeyUp() {
+        for (ok in listOf(KEYCODE_DPAD_CENTER, KEYCODE_ENTER, KEYCODE_NUMPAD_ENTER)) {
+            controls.controlsVisible = false
+            controls.calls.clear()
+
+            assertTrue(handler.onKeyEvent(ok, ACTION_DOWN, 0))
+            assertTrue("the up of $ok must not reach Play/Pause", up(ok))
+            assertEquals(listOf("show"), controls.calls)
+        }
+    }
+
+    @Test
+    fun okPausesOnceWhenSetAndNothingTogglesOnRelease() {
+        settings = settings.copy(okPauses = true)
+
+        assertTrue(handler.onKeyEvent(KEYCODE_DPAD_CENTER, ACTION_DOWN, 0))
+        assertTrue(up(KEYCODE_DPAD_CENTER))
+
+        assertEquals(listOf("pause", "show"), controls.calls)
+    }
+
+    @Test
+    fun aLongOkPressShowsTheControlsOnceAndTakesTheRelease() {
+        handler.onKeyEvent(KEYCODE_DPAD_CENTER, ACTION_DOWN, 0)
+        for (repeat in 1..20) handler.onKeyEvent(KEYCODE_DPAD_CENTER, ACTION_DOWN, repeat)
+
+        assertTrue(up(KEYCODE_DPAD_CENTER))
+        assertEquals(listOf("show"), controls.calls.filter { it == "show" || it == "toggle" })
+    }
+
+    @Test
+    fun anOkUpWithoutItsDownIsNotTaken() {
+        // The down went elsewhere (a dialog, the skip button): the up is not the handler's.
+        assertFalse(up(KEYCODE_DPAD_CENTER))
+    }
+
+    @Test
+    fun anotherKeyDownForgetsTheOkPress() {
+        handler.onKeyEvent(KEYCODE_DPAD_CENTER, ACTION_DOWN, 0)
+        // The up was lost; the next key goes to the shown controls.
+        handler.onKeyEvent(KEYCODE_DPAD_UP, ACTION_DOWN, 0)
+
+        assertFalse("a later OK-up must not be swallowed", up(KEYCODE_DPAD_CENTER))
+    }
+
+    @Test
+    fun theControlsHiddenByOtherMeansLetTheOkUpThrough() {
+        handler.onKeyEvent(KEYCODE_DPAD_CENTER, ACTION_DOWN, 0)
+        controls.controlsVisible = false
+
+        assertFalse(up(KEYCODE_DPAD_CENTER))
+    }
+
+    @Test
+    fun aDialogOrTheQueueForgetsTheOkPress() {
+        handler.onKeyEvent(KEYCODE_DPAD_CENTER, ACTION_DOWN, 0)
+        handler.forgetOkPress()
+
+        assertFalse(up(KEYCODE_DPAD_CENTER))
+    }
+
+    @Test
+    fun theSkipButtonStillTakesOkDownAndUp() {
+        controls.skipButtonShown = true
+
+        assertFalse(handler.onKeyEvent(KEYCODE_DPAD_CENTER, ACTION_DOWN, 0))
+        assertFalse(up(KEYCODE_DPAD_CENTER))
+        assertTrue(controls.calls.isEmpty())
+    }
+
+    @Test
+    fun okOnTheShownControlsGoesToTheFocusedButton() {
+        controls.controlsVisible = true
+
+        assertFalse(handler.onKeyEvent(KEYCODE_DPAD_CENTER, ACTION_DOWN, 0))
+        assertFalse(up(KEYCODE_DPAD_CENTER))
     }
 }

@@ -13,7 +13,7 @@ import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 fun DeleteDownloadDialog(onDelete: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         title = { Text(text = stringResource(CoreR.string.delete_download)) },
-        text = { Text(text = stringResource(CoreR.string.delete_download_message)) },
+        text = { Text(text = stringResource(CoreR.string.ce_delete_download_message)) },
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = onDelete) {

@@ -2,6 +2,7 @@ package dev.jdtech.jellyfin.player.local.presentation
 
 import android.app.Application
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -9,6 +10,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.SystemClock
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.net.Uri
 import android.view.Window
 import dev.jdtech.jellyfin.player.local.domain.DisplayRefreshRateManager
@@ -40,12 +45,14 @@ import dev.jdtech.jellyfin.models.MediaSegmentAction
 import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerItem
+import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
 import dev.jdtech.jellyfin.player.core.domain.models.Trickplay
 import dev.jdtech.jellyfin.player.local.PlaybackService
 import dev.jdtech.jellyfin.player.local.PlaybackSessionStore
 import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.domain.AudioDecoderFallback
 import dev.jdtech.jellyfin.player.local.domain.DebugSegments
+import dev.jdtech.jellyfin.player.local.domain.NetworkRecovery
 import dev.jdtech.jellyfin.player.local.domain.PlaylistManager
 import dev.jdtech.jellyfin.player.local.domain.SegmentDecision
 import dev.jdtech.jellyfin.player.local.domain.SegmentTracker
@@ -54,7 +61,10 @@ import dev.jdtech.jellyfin.player.local.domain.SleepTimer
 import dev.jdtech.jellyfin.player.local.domain.SleepTimerOption
 import dev.jdtech.jellyfin.player.local.domain.StoredChoice
 import dev.jdtech.jellyfin.player.local.domain.StillWatchingTracker
+import dev.jdtech.jellyfin.player.local.domain.SessionTrackPicks
 import dev.jdtech.jellyfin.player.local.domain.TrackCandidate
+import dev.jdtech.jellyfin.player.local.domain.TrackChoices
+import dev.jdtech.jellyfin.player.local.domain.TrackPick
 import dev.jdtech.jellyfin.player.local.domain.TrickplayLoader
 import dev.jdtech.jellyfin.player.local.domain.TrickplayRegionLoader
 import dev.jdtech.jellyfin.player.local.domain.TrickplayTiles
@@ -63,10 +73,15 @@ import dev.jdtech.jellyfin.player.local.domain.UpNextCountdown
 import dev.jdtech.jellyfin.player.local.domain.UpNextDecision
 import dev.jdtech.jellyfin.player.local.domain.autoPlayNextFollowsServer
 import dev.jdtech.jellyfin.player.local.domain.buildMediaSourceFactory
+import dev.jdtech.jellyfin.player.local.domain.getTrackNames
+import dev.jdtech.jellyfin.player.local.domain.isNewEndOfItem
 import dev.jdtech.jellyfin.player.local.domain.matchSeriesTrack
 import dev.jdtech.jellyfin.player.local.domain.playbackStopReport
+import dev.jdtech.jellyfin.player.local.domain.playerTitle
 import dev.jdtech.jellyfin.player.local.domain.resolveAutoPlayNext
 import dev.jdtech.jellyfin.player.local.domain.seriesTrackChoice
+import dev.jdtech.jellyfin.player.local.domain.toTrackPick
+import dev.jdtech.jellyfin.player.local.domain.trackPreferenceKey
 import dev.jdtech.jellyfin.player.local.mpv.MPVPlayer
 import dev.jdtech.jellyfin.player.local.mpv.mpvSubtitleOptionChanges
 import dev.jdtech.jellyfin.player.local.mpv.mpvSubtitleOptions
@@ -197,8 +212,21 @@ constructor(
         val fileLoaded: Boolean,
         val showStillWatching: Boolean,
         val stillWatchingTimeoutSeconds: Int,
+        /**
+         * CE (#367): when the still-watching prompt times out, in [SystemClock.elapsedRealtime]
+         * time. The dialog counts down to it, so it shows the time really left after the app was
+         * in the background.
+         */
+        val stillWatchingEndsAtMs: Long = 0L,
         /** CE (#131): the item in the player, for the TV overlay (series name, episode line). */
         val currentItem: PlayerItem? = null,
+        /** CE (#452): the series of the item, the phone player's line above [currentItemTitle]. */
+        val currentItemSeriesName: String? = null,
+        /**
+         * CE (#450): the connection was lost; the player loads again by itself when the network is
+         * back. The phone player shows a spinner and a line saying so.
+         */
+        val waitingForNetwork: Boolean = false,
     )
 
     private val _queue = MutableStateFlow<List<FindroidItem>>(emptyList())
@@ -215,6 +243,12 @@ constructor(
      */
     private val sleepTimer = SleepTimer()
     private var sleepTimerJob: Job? = null
+
+    /** CE (#450): waiting for the network after the connection was lost. */
+    private val networkRecovery = NetworkRecovery { SystemClock.elapsedRealtime() }
+    private var lastNetworkError: PlaybackException? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var networkRetryJob: Job? = null
 
     /** The item the sleep timer stopped at the end of, until playback resumes. */
     private var sleepTimerEndedItemId: String? = null
@@ -258,7 +292,12 @@ constructor(
 
     private var items: MutableList<PlayerItem> = mutableListOf()
 
-    /** The item whose series audio and subtitle choice was last applied, so it happens once. */
+    /**
+     * The item whose audio and subtitle choice was last applied, and how many audio and subtitle
+     * tracks it had then ([trackPreferenceKey]), so it happens once per set of tracks. CE (#596):
+     * mpv lists the subtitle files of an item after the tracks of the stream, and a choice for
+     * one of those found nothing to select when it was applied to the first list only.
+     */
     private var appliedTrackPreferenceItemId: String? = null
 
     /**
@@ -266,6 +305,9 @@ constructor(
      * first item buffers. See [seriesTrackPreferences].
      */
     private var trackPreferences: Pair<UUID, Deferred<List<SeriesTrackPreferenceDto>>>? = null
+
+    /** CE (#596): the tracks picked by hand in an item without a series, such as a movie. */
+    private val sessionTrackPicks = SessionTrackPicks()
 
     private val displayRefreshRateManager = DisplayRefreshRateManager(appPreferences)
     private var loggedDisplayFrameRate: Float? = null
@@ -621,10 +663,26 @@ constructor(
             externalSubtitles.map { externalSubtitle ->
                 MediaItem.SubtitleConfiguration.Builder(externalSubtitle.uri)
                     .setLabel(
-                        externalSubtitle.title.ifBlank { application.getString(R.string.external) }
+                        // CE (#597): a track of the file itself that the server delivers apart
+                        // (during a transcode) is named as it is when the stream carries it.
+                        if (externalSubtitle.embedded) {
+                            externalSubtitle.title.ifBlank { null }
+                        } else {
+                            externalSubtitle.title.ifBlank {
+                                application.getString(R.string.external)
+                            }
+                        }
                     )
                     .setMimeType(externalSubtitle.mimeType)
                     .setLanguage(externalSubtitle.language)
+                    .setSelectionFlags(
+                        if (externalSubtitle.embedded) {
+                            (if (externalSubtitle.default) C.SELECTION_FLAG_DEFAULT else 0) or
+                                (if (externalSubtitle.forced) C.SELECTION_FLAG_FORCED else 0)
+                        } else {
+                            0
+                        }
+                    )
                     .build()
             }
 
@@ -723,6 +781,8 @@ constructor(
     }
 
     private fun releasePlayer() {
+        // CE (#450): nothing loads again once the player is closing.
+        endNetworkWait()
         displayRefreshRateManager.reset()
         // Take the exact position, then clear the snapshot so a transition fired while releasing
         // cannot report the same item a second time.
@@ -827,11 +887,14 @@ constructor(
             val mediaItem = player.currentMediaItem ?: return@launch
             if (mediaItem.mediaId.isNotEmpty()) {
                 val itemId = UUID.fromString(mediaItem.mediaId)
+                // CE (#599): the item as it plays now; a quality switch replaces it in items.
+                val transcoded = items.firstOrNull { it.itemId == itemId }?.isTranscoded == true
                 try {
                     repository.postPlaybackProgress(
                         itemId,
                         player.currentPosition.times(10000),
                         !player.isPlaying,
+                        transcoded,
                     )
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -914,6 +977,8 @@ constructor(
         Timber.d("Playing MediaItem: ${mediaItem?.mediaId}")
         displayRefreshRateManager.onMediaItemTransition()
         loggedDisplayFrameRate = null
+        // CE (#450): another item: no reload of the one that lost its connection.
+        if (networkRecovery.isWaiting) endNetworkWait()
         savedStateHandle["mediaItemIndex"] = player.currentMediaItemIndex
 
         // Every item change goes through here, whatever caused it, so this is where the item being
@@ -940,20 +1005,13 @@ constructor(
                 items
                     .first { it.itemId.toString() == player.currentMediaItem?.mediaId }
                     .let { item ->
-                        val itemTitle =
-                            if (item.parentIndexNumber != null && item.indexNumber != null) {
-                                if (item.indexNumberEnd == null) {
-                                    "S${item.parentIndexNumber}:E${item.indexNumber} - ${item.name}"
-                                } else {
-                                    "S${item.parentIndexNumber}:E${item.indexNumber}-${item.indexNumberEnd} - ${item.name}"
-                                }
-                            } else {
-                                item.name
-                            }
+                        // CE (#452): the series name is a line of its own above this.
+                        val itemTitle = playerTitle(item)
                         _uiState.update {
                             it.copy(
                                 currentItemId = item.itemId,
-                                currentItemTitle = itemTitle,
+                                currentItemTitle = itemTitle.title,
+                                currentItemSeriesName = itemTitle.seriesName,
                                 currentItem = item,
                                 currentSegment = null,
                                 currentChapters = item.chapters,
@@ -1009,7 +1067,7 @@ constructor(
         val start =
             GlobalScope.launch(Dispatchers.IO) {
                 try {
-                    repository.postPlaybackStart(item.itemId)
+                    repository.postPlaybackStart(item.itemId, item.isTranscoded)
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
@@ -1065,14 +1123,19 @@ constructor(
         }
     }
 
+    /**
+     * CE (#477): the playWhenReady of the last [onPlayWhenReadyChanged], so a repeated end of item
+     * report while already paused at the end is not taken as a new end. Starts as playing, so the
+     * first end of a session always counts.
+     */
+    private var lastPlayWhenReady = true
+
     override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+        val wasPlayWhenReady = lastPlayWhenReady
+        lastPlayWhenReady = playWhenReady
         // End of the current item: transition to the next one, or close the player if autoplay is
         // off. On an advance, the stop for the finished item is reported by onMediaItemTransition.
-        if (
-            !playWhenReady &&
-                reason == Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM &&
-                player.playbackState == ExoPlayer.STATE_READY
-        ) {
+        if (isNewEndOfItem(wasPlayWhenReady, playWhenReady, reason, player.playbackState)) {
             // Dispatched (not immediate) so the advance runs after this listener callback returns,
             // as it did when a network call came first.
             viewModelScope.launch(Dispatchers.Main) {
@@ -1258,11 +1321,12 @@ constructor(
 
     private fun showStillWatchingPrompt() {
         Timber.d("Still-watching threshold tripped — prompting user")
-        _uiState.update { it.copy(showStillWatching = true) }
+        val endsAtMs = SystemClock.elapsedRealtime() + stillWatchingPromptTimeoutSeconds * 1000L
+        _uiState.update { it.copy(showStillWatching = true, stillWatchingEndsAtMs = endsAtMs) }
         stillWatchingTimeoutJob?.cancel()
         stillWatchingTimeoutJob =
             viewModelScope.launch {
-                delay(stillWatchingPromptTimeoutSeconds * 1000L)
+                delay(endsAtMs - SystemClock.elapsedRealtime())
                 // Timeout: user is gone. Hide the dialog and leave the player paused. The current
                 // item's stop was already reported in onPlayWhenReadyChanged (with the actual
                 // position), so the season won't be marked watched.
@@ -1378,7 +1442,124 @@ constructor(
             player.prepare()
             return
         }
+        // CE (#450): a lost connection waits for the network and loads again by itself.
+        val mediaId = player.currentMediaItem?.mediaId
+        val canPrepare = player.isCommandAvailable(Player.COMMAND_PREPARE)
+        when (networkRecovery.onError(error.errorCode, mediaId, canPrepare)) {
+            NetworkRecovery.OnError.WAIT -> {
+                Timber.w("Connection lost, waiting for the network")
+                lastNetworkError = error
+                waitForNetwork()
+                eventsChannel.trySend(
+                    PlayerEvents.PlayerError(error, nothingLoaded = false, waitingForNetwork = true)
+                )
+                return
+            }
+            NetworkRecovery.OnError.KEEP_WAITING -> {
+                lastNetworkError = error
+                return
+            }
+            NetworkRecovery.OnError.GIVE_UP -> {
+                Timber.w("The network did not come back in time, giving up")
+                endNetworkWait()
+            }
+            NetworkRecovery.OnError.SHOW_ERROR -> endNetworkWait()
+        }
         eventsChannel.trySend(PlayerEvents.PlayerError.fromPlayer(error, player.currentMediaItem))
+    }
+
+    /**
+     * CE (#450): show the waiting state and load again when a network with internet access comes
+     * back ([ConnectivityManager.NetworkCallback]) and every [NetworkRecovery.RETRY_INTERVAL_MS]
+     * while one is up. The callback is registered only while waiting.
+     */
+    private fun waitForNetwork() {
+        _uiState.update { it.copy(waitingForNetwork = true) }
+        val connectivityManager = application.getSystemService(ConnectivityManager::class.java)
+        if (networkCallback == null && connectivityManager != null) {
+            val callback =
+                object : ConnectivityManager.NetworkCallback() {
+                    override fun onAvailable(network: Network) {
+                        viewModelScope.launch(Dispatchers.Main) {
+                            retryAfterNetworkLoss(onlyWhenOnline = false)
+                        }
+                    }
+                }
+            try {
+                connectivityManager.registerNetworkCallback(
+                    NetworkRequest.Builder()
+                        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                        .build(),
+                    callback,
+                )
+                networkCallback = callback
+                Timber.d("Watching the network")
+            } catch (e: RuntimeException) {
+                // Too many callbacks or no permission: the timer below still retries.
+                Timber.w(e, "Could not watch the network")
+            }
+        }
+        if (networkRetryJob == null) {
+            networkRetryJob =
+                viewModelScope.launch {
+                    while (true) {
+                        delay(NetworkRecovery.RETRY_INTERVAL_MS)
+                        retryAfterNetworkLoss(onlyWhenOnline = true)
+                    }
+                }
+        }
+    }
+
+    private fun retryAfterNetworkLoss(onlyWhenOnline: Boolean) {
+        when (networkRecovery.check(player.currentMediaItem?.mediaId)) {
+            NetworkRecovery.Check.RETRY -> {
+                if (onlyWhenOnline && !isOnline()) return
+                if (player.playbackState != Player.STATE_IDLE) return
+                // Keeps the position, and playWhenReady: paused while waiting stays paused.
+                Timber.d("Loading again after the connection was lost")
+                player.prepare()
+            }
+            NetworkRecovery.Check.GIVE_UP -> {
+                Timber.w("The network did not come back in time, giving up")
+                val error = lastNetworkError
+                endNetworkWait()
+                error?.let {
+                    eventsChannel.trySend(PlayerEvents.PlayerError.fromPlayer(it, player.currentMediaItem))
+                }
+            }
+            NetworkRecovery.Check.STOPPED -> endNetworkWait()
+        }
+    }
+
+    private fun isOnline(): Boolean {
+        val connectivityManager =
+            application.getSystemService(ConnectivityManager::class.java) ?: return false
+        val network = connectivityManager.activeNetwork ?: return false
+        return connectivityManager
+            .getNetworkCapabilities(network)
+            ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    }
+
+    /** CE (#450): stop waiting for the network: unregister, stop the timer, hide the state. */
+    private fun endNetworkWait() {
+        networkRecovery.stop()
+        lastNetworkError = null
+        networkRetryJob?.cancel()
+        networkRetryJob = null
+        networkCallback?.let { callback ->
+            try {
+                application
+                    .getSystemService(ConnectivityManager::class.java)
+                    ?.unregisterNetworkCallback(callback)
+                Timber.d("Stopped watching the network")
+            } catch (e: IllegalArgumentException) {
+                Timber.w(e, "Network callback was not registered")
+            }
+        }
+        networkCallback = null
+        if (_uiState.value.waitingForNetwork) {
+            _uiState.update { it.copy(waitingForNetwork = false) }
+        }
     }
 
     override fun onPlaybackStateChanged(state: Int) {
@@ -1392,6 +1573,8 @@ constructor(
             }
             ExoPlayer.STATE_READY -> {
                 stateString = "ExoPlayer.STATE_READY     -"
+                // CE (#450): loaded again after the connection was lost.
+                if (networkRecovery.isWaiting) endNetworkWait()
                 _uiState.update { it.copy(fileLoaded = true) }
                 runDeferredWork()
             }
@@ -1472,22 +1655,52 @@ constructor(
     private fun supportedGroups(trackType: @C.TrackType Int) =
         player.currentTracks.groups.filter { it.type == trackType && it.isSupported }
 
-    /** Remembers a track the user picked by hand for the rest of the series. */
-    private fun saveSeriesTrackPreference(trackType: @C.TrackType Int, index: Int) {
-        val seriesId = currentPlayerItem()?.seriesId ?: return
-        val userId = jellyfinApi.userId ?: return
+    /** The audio track playing now, as the matcher describes it, or null when it has no name. */
+    private fun selectedAudioChoice(): StoredChoice? {
+        val groups = supportedGroups(C.TRACK_TYPE_AUDIO)
+        return seriesTrackChoice(
+            playerCandidates(C.TRACK_TYPE_AUDIO),
+            groups.indexOfFirst { it.isSelected },
+        )
+    }
+
+    private fun playerCandidates(trackType: @C.TrackType Int): List<TrackCandidate> =
+        supportedGroups(trackType).map {
+            val format = it.mediaTrackGroup.getFormat(0)
+            TrackCandidate(format.language, format.label)
+        }
+
+    /**
+     * Remembers the track at [index] of [candidates], picked by hand: for the rest of the series,
+     * or, in an item without a series (CE, #596), for as long as the player is open. Without that
+     * a movie fell back to its default tracks on every reload of the stream: a quality switch, or
+     * an audio switch while the server transcodes.
+     */
+    private fun rememberTrackChoice(
+        trackType: @C.TrackType Int,
+        index: Int,
+        candidates: List<TrackCandidate> = playerCandidates(trackType),
+    ) {
+        val item = currentPlayerItem() ?: return
         // Only subtitles can be remembered as off. Silent audio for a whole series is never wanted.
         if (index == -1 && trackType != C.TRACK_TYPE_TEXT) return
+        val choice = if (index == -1) null else seriesTrackChoice(candidates, index)
+        val seriesId = item.seriesId
+        if (seriesId == null) {
+            // A track with neither a language nor a title cannot be found again after a reload.
+            if (index != -1 && choice == null) {
+                sessionTrackPicks.forget(item.itemId, trackType)
+            } else {
+                sessionTrackPicks.remember(item.itemId, TrackPick(trackType, choice))
+            }
+            return
+        }
+        val userId = jellyfinApi.userId ?: return
         val preference =
             if (index == -1) {
                 SeriesTrackPreferenceDto(userId, seriesId, trackType, disabled = true)
             } else {
-                val candidates =
-                    supportedGroups(trackType).map {
-                        val format = it.mediaTrackGroup.getFormat(0)
-                        TrackCandidate(format.language, format.label)
-                    }
-                val choice = seriesTrackChoice(candidates, index) ?: return
+                if (choice == null) return
                 SeriesTrackPreferenceDto(
                     userId,
                     seriesId,
@@ -1513,11 +1726,13 @@ constructor(
 
     override fun onTracksChanged(tracks: Tracks) {
         handleDisplayRefreshRate(tracks)
-        val hasSelectableTracks =
-            tracks.groups.any { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }
+        val selectableTracks =
+            tracks.groups.count { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }
         val itemId = player.currentMediaItem?.mediaId
-        if (!hasSelectableTracks || itemId == null || itemId == appliedTrackPreferenceItemId) return
-        appliedTrackPreferenceItemId = itemId
+        if (selectableTracks == 0 || itemId == null) return
+        val key = trackPreferenceKey(itemId, selectableTracks)
+        if (key == appliedTrackPreferenceItemId) return
+        appliedTrackPreferenceItemId = key
 
         // Back to the global behaviour first, so a choice made in an earlier episode or series does
         // not carry over.
@@ -1527,42 +1742,39 @@ constructor(
         }
         val reset = parameters.build()
 
-        val preferences = currentPlayerItem()?.seriesId?.let { seriesTrackPreferences(it) }
-        if (preferences == null) {
+        val item = currentPlayerItem()
+        val preferences = item?.seriesId?.let { seriesTrackPreferences(it) }
+        // CE (#596): an item without a series has the picks of this session instead.
+        val sessionPicks =
+            if (item != null && item.seriesId == null) sessionTrackPicks.of(item.itemId)
+            else emptyList()
+        if (preferences == null && sessionPicks.isEmpty()) {
             player.trackSelectionParameters = reset
             return
         }
         // Normally read while the item buffered (#296): then the choice goes in with the reset, as
         // one track selection before the first frame, and nothing switches or rebuffers after it.
         // Otherwise reset now and apply the choice once it is read.
-        val ready = preferences.isCompleted
+        val ready = preferences?.isCompleted ?: true
         if (!ready) player.trackSelectionParameters = reset
         viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            val stored = preferences.await()
+            val stored = preferences?.await()?.map { it.toTrackPick() } ?: sessionPicks
             if (player.currentMediaItem?.mediaId != itemId) return@launch
 
             var applied = (if (ready) reset else player.trackSelectionParameters).buildUpon()
-            for (preference in stored) {
-                val trackType = preference.trackType
-                if (preference.disabled) {
+            for (pick in stored) {
+                val trackType = pick.trackType
+                val choice = pick.choice
+                if (choice == null) {
                     if (trackType == C.TRACK_TYPE_TEXT) {
                         applied = applied.setTrackTypeDisabled(trackType, true)
                     }
                     continue
                 }
                 val groups = supportedGroups(trackType)
-                val candidates =
-                    groups.map {
-                        val format = it.mediaTrackGroup.getFormat(0)
-                        TrackCandidate(format.language, format.label)
-                    }
-                val stored =
-                    StoredChoice(
-                        preference.language,
-                        preference.title,
-                        preference.positionInLanguage,
-                    )
-                val group = matchSeriesTrack(stored, candidates)?.let { groups[it] } ?: continue
+                val group =
+                    matchSeriesTrack(choice, playerCandidates(trackType))?.let { groups[it] }
+                        ?: continue
                 applied =
                     applied
                         .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, 0))
@@ -1598,8 +1810,46 @@ constructor(
             emptyList()
         }
 
+    /**
+     * CE (#596): the file's audio streams when [trackType] is audio and the server transcodes
+     * the playing item, or null: then the player's own tracks are the ones to list and select.
+     */
+    private fun transcodeAudioTracks(trackType: @C.TrackType Int): List<ServerAudioTrack>? =
+        currentPlayerItem()
+            ?.takeIf { trackType == C.TRACK_TYPE_AUDIO && it.isTranscoded }
+            ?.audioTracks
+            ?.takeIf { it.isNotEmpty() }
+
+    /**
+     * CE (#596): what the track dialog of [trackType] lists, for [switchToTrack] to pick from by
+     * position. The player's tracks, except for audio while the server transcodes: that stream
+     * carries one track, so the file's audio streams are listed instead.
+     */
+    fun trackChoices(trackType: @C.TrackType Int, context: Context): TrackChoices {
+        val audioTracks = transcodeAudioTracks(trackType)
+        if (audioTracks != null) {
+            val off = C.TRACK_TYPE_AUDIO in player.trackSelectionParameters.disabledTrackTypes
+            val playing = currentPlayerItem()?.audioStreamIndex
+            return TrackChoices(
+                names = audioTracks.getTrackNames(context),
+                selected = if (off) -1 else audioTracks.indexOfFirst { it.index == playing },
+            )
+        }
+        val groups = supportedGroups(trackType)
+        return TrackChoices(
+            names = groups.getTrackNames(context).toList(),
+            selected = groups.indexOfFirst { it.isSelected },
+        )
+    }
+
+    /** Selects the track at [index] of [trackChoices]; -1 turns the track type off. */
     fun switchToTrack(trackType: @C.TrackType Int, index: Int) {
         markUserInteraction()
+        val audioTracks = transcodeAudioTracks(trackType)
+        if (index != -1 && audioTracks != null) {
+            switchTranscodeAudio(audioTracks, index)
+            return
+        }
         // Index -1 equals disable track
         if (index == -1) {
             player.trackSelectionParameters =
@@ -1624,7 +1874,72 @@ constructor(
                     .setTrackTypeDisabled(trackType, false)
                     .build()
         }
-        saveSeriesTrackPreference(trackType, index)
+        rememberTrackChoice(trackType, index)
+    }
+
+    /**
+     * CE (#596): plays the audio stream at [index] of [audioTracks] while the server transcodes.
+     * The transcode carries one track, so the server is asked for a new stream with the picked
+     * one, and the queue is reloaded at the same position, as on a quality switch.
+     */
+    private fun switchTranscodeAudio(audioTracks: List<ServerAudioTrack>, index: Int) {
+        val item = currentPlayerItem() ?: return
+        val track = audioTracks.getOrNull(index) ?: return
+        // "None" turns the stream's one track off in the player: any pick turns it on again.
+        player.trackSelectionParameters =
+            player.trackSelectionParameters
+                .buildUpon()
+                .clearOverridesOfType(C.TRACK_TYPE_AUDIO)
+                .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
+                .build()
+        rememberTrackChoice(
+            C.TRACK_TYPE_AUDIO,
+            index,
+            audioTracks.map { TrackCandidate(it.language, it.title) },
+        )
+        if (track.index == item.audioStreamIndex) return
+
+        viewModelScope.launch {
+            val rebuilt =
+                try {
+                    // An episode's pick is saved for its series: once it is written, the other
+                    // queued episodes are requested with it as well.
+                    if (item.seriesId != null) trackPreferences?.second?.await()
+                    items.toList().map {
+                        playlistManager.recreatePlayerItem(
+                            it,
+                            audioStreamIndex = track.index.takeIf { _ -> it.itemId == item.itemId },
+                        )
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    // The stream that plays keeps playing, with the track it has.
+                    e.localizedMessage?.let {
+                        Toast.makeText(application, it, Toast.LENGTH_LONG).show()
+                    }
+                    return@launch
+                }
+            reloadQueue(rebuilt)
+        }
+    }
+
+    /**
+     * Swaps the whole queue for [rebuilt], the same items with new streams, keeping the item, the
+     * position and the pause state.
+     */
+    private fun reloadQueue(rebuilt: List<PlayerItem>) {
+        val currentIndex = player.currentMediaItemIndex
+        val position = player.currentPosition
+        val playWhenReady = player.playWhenReady
+        items = rebuilt.toMutableList()
+        appliedTrackPreferenceItemId = null
+        player.setMediaItems(rebuilt.map { it.toMediaItem() }, currentIndex, position)
+        player.prepare()
+        // Keep playing (or paused) as before, whatever the player does with the flag on a new
+        // playlist: mpv used to clear it, so the button showed Play while it played (#305).
+        player.playWhenReady = playWhenReady
     }
 
     fun selectSpeed(speed: Float) {
@@ -1656,9 +1971,18 @@ constructor(
         appPreferences.setValue(appPreferences.playerMaxBitrate, bitrate)
 
         viewModelScope.launch {
+            // CE (#580): the playing item keeps its audio track when the switch leads to a
+            // transcode, which carries one track.
+            val playingId = player.currentMediaItem?.mediaId
+            val playingAudio = selectedAudioChoice()
             val rebuilt =
                 try {
-                    items.map { playlistManager.recreatePlayerItem(it) }
+                    items.map {
+                        playlistManager.recreatePlayerItem(
+                            it,
+                            playingAudio.takeIf { _ -> it.itemId.toString() == playingId },
+                        )
+                    }
                 } catch (e: Exception) {
                     Timber.e(e)
                     // Keep playing the current stream and roll the setting back so
@@ -1679,16 +2003,7 @@ constructor(
                 return@launch
             }
 
-            val currentIndex = player.currentMediaItemIndex
-            val position = player.currentPosition
-            val playWhenReady = player.playWhenReady
-            items = rebuilt.toMutableList()
-            appliedTrackPreferenceItemId = null
-            player.setMediaItems(rebuilt.map { it.toMediaItem() }, currentIndex, position)
-            player.prepare()
-            // Keep playing (or paused) as before, whatever the player does with the flag on a new
-            // playlist: mpv used to clear it, so the button showed Play while it played (#305).
-            player.playWhenReady = playWhenReady
+            reloadQueue(rebuilt)
         }
     }
 
@@ -1709,12 +2024,18 @@ constructor(
             getTvTrickplay(item)
             return
         }
-        val trickplayInfo = item.trickplayInfo ?: return
+        _uiState.value.currentTrickplay?.loader?.release()
+        // CE (#594): an item without trickplay clears the previous item's, which would otherwise
+        // show its thumbnails on this item's seek bar.
+        val trickplayInfo = item.trickplayInfo
+        if (trickplayInfo == null) {
+            _uiState.update { it.copy(currentTrickplay = null) }
+            return
+        }
         Timber.d("Trickplay Resolution: ${trickplayInfo.width}")
 
         // Hand the consumer a loader instead of decoding the whole strip: a long film is
         // hundreds of bitmaps, which is a lot of memory and network while the player is starting.
-        _uiState.value.currentTrickplay?.loader?.release()
         val loader =
             TrickplayLoader(
                 repository = repository,
@@ -1974,9 +2295,15 @@ sealed interface PlayerEvents {
     /**
      * Playback failed. [nothingLoaded] is true when the player has no item at all, so nothing will
      * ever play: the phone player closes then (#374). With an item loaded, Play retries.
+     * [waitingForNetwork]: the connection was lost and the player loads again by itself when it is
+     * back (#450); the phone player shows that from [PlayerViewModel.UiState.waitingForNetwork]
+     * instead of an error.
      */
-    data class PlayerError(val error: PlaybackException, val nothingLoaded: Boolean) :
-        PlayerEvents {
+    data class PlayerError(
+        val error: PlaybackException,
+        val nothingLoaded: Boolean,
+        val waitingForNetwork: Boolean = false,
+    ) : PlayerEvents {
         companion object {
             /** The item to start with could not be loaded ([failure] is null without an item). */
             fun startFailed(failure: Exception?) =

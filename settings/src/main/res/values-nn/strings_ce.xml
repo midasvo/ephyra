@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">Samlingane ein film er ein del av</string>
     <string name="ce_pref_detail_similar">Meir som dette</string>
     <string name="ce_pref_detail_similar_summary">Liknande titlar frå biblioteket ditt</string>
+    <string name="ce_pref_detail_credits">Regissør og forfattarar</string>
+    <string name="ce_pref_detail_credits_summary">Under skildringa på film- og seriesider</string>
+    <string name="ce_media_segments_auto_skip_pip">Berre i bilete-i-bilete</string>
+    <string name="ce_media_segments_auto_skip_always">Alltid</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d episode</item>
+        <item quantity="other">%d episodar</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d dag</item>
+        <item quantity="other">%d dagar</item>
+    </plurals>
+    <string name="ce_number_no_limit">Inga grense</string>
+    <string name="ce_number_off">Av</string>
+    <string name="ce_pref_player_keep_landscape">Hald avspelaren liggjande</string>
+    <string name="ce_pref_player_keep_landscape_summary">Spel av videoar liggjande, òg når du snur nettbrettet på høgkant</string>
+    <string name="ce_pref_home_episode_images">Bruk episodebilete</string>
+    <string name="ce_pref_home_episode_images_summary">Vis biletet til episoden i staden for biletet til serien i Hald fram å sjå og Neste</string>
 </resources>

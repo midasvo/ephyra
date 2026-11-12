@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">De samlingar som en film ingår i</string>
     <string name="ce_pref_detail_similar">Mer som detta</string>
     <string name="ce_pref_detail_similar_summary">Liknande titlar från ditt bibliotek</string>
+    <string name="ce_pref_detail_credits">Regissör och manusförfattare</string>
+    <string name="ce_pref_detail_credits_summary">Under beskrivningen på film- och seriesidor</string>
+    <string name="ce_media_segments_auto_skip_pip">Bara i bild-i-bild</string>
+    <string name="ce_media_segments_auto_skip_always">Alltid</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d avsnitt</item>
+        <item quantity="other">%d avsnitt</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d dag</item>
+        <item quantity="other">%d dagar</item>
+    </plurals>
+    <string name="ce_number_no_limit">Ingen gräns</string>
+    <string name="ce_number_off">Av</string>
+    <string name="ce_pref_player_keep_landscape">Håll spelaren i liggande läge</string>
+    <string name="ce_pref_player_keep_landscape_summary">Spela upp videor i liggande läge, även när du vänder surfplattan stående</string>
+    <string name="ce_pref_home_episode_images">Använd avsnittsbilder</string>
+    <string name="ce_pref_home_episode_images_summary">Visa avsnittets bild i stället för seriens bild i Fortsätt titta och Nästa</string>
 </resources>

@@ -11,6 +11,7 @@ import dev.jdtech.jellyfin.film.domain.homerows.HomeRowsProfile
 import dev.jdtech.jellyfin.film.domain.homerows.HomeRowsStore
 import dev.jdtech.jellyfin.film.domain.homerows.homeLibraries
 import dev.jdtech.jellyfin.models.UiText
+import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.util.UUID
 import javax.inject.Inject
@@ -23,7 +24,8 @@ import timber.log.Timber
 
 /**
  * CE (#142): Settings → Interface → Home rows, for phone and TV. Every change is stored straight
- * away for the current user on the current server.
+ * away for the current user on the current server, and signalled as a change, so Home loads the new
+ * layout when it comes back into view (#431).
  */
 @HiltViewModel
 class HomeRowsViewModel
@@ -31,6 +33,7 @@ class HomeRowsViewModel
 constructor(
     private val repository: JellyfinRepository,
     private val store: HomeRowsStore,
+    private val dataChanges: DataChangeEvents = DataChangeEvents(),
 ) : ViewModel() {
     private val _state = MutableStateFlow(HomeRowsState())
     val state = _state.asStateFlow()
@@ -65,7 +68,7 @@ constructor(
         val title =
             when (row.type) {
                 HomeRowType.SUGGESTIONS -> UiText.StringResource(FilmR.string.home_suggestions_title)
-                HomeRowType.CONTINUE_WATCHING -> UiText.StringResource(FilmR.string.continue_watching)
+                HomeRowType.CONTINUE_WATCHING -> UiText.StringResource(FilmR.string.ce_continue_watching)
                 HomeRowType.NEXT_UP -> UiText.StringResource(FilmR.string.next_up)
                 HomeRowType.LATEST ->
                     UiText.StringResource(
@@ -79,7 +82,10 @@ constructor(
     private fun change(transform: (List<HomeRowConfig>) -> List<HomeRowConfig>) {
         val rows = transform(_state.value.rows.map { it.row })
         _state.update { it.copy(rows = rows.map(::entry)) }
-        profile?.let { store.write(it, rows) }
+        profile?.let {
+            store.write(it, rows)
+            dataChanges.onChanged()
+        }
     }
 
     fun onAction(action: HomeRowsAction) {

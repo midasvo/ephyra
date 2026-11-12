@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,12 +44,14 @@ import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderViewModel
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyVideoMetadata
+import dev.jdtech.jellyfin.film.domain.withMediaInfo
 import dev.jdtech.jellyfin.film.presentation.movie.MovieAction
 import dev.jdtech.jellyfin.film.presentation.movie.MovieState
 import dev.jdtech.jellyfin.film.presentation.movie.MovieViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
+import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.CriticRating
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
@@ -56,7 +59,7 @@ import dev.jdtech.jellyfin.presentation.film.components.ItemsRow
 import dev.jdtech.jellyfin.presentation.film.components.TaglineText
 import dev.jdtech.jellyfin.presentation.film.components.WatchHistoryText
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
-import dev.jdtech.jellyfin.presentation.film.components.ExtraInfoText
+import dev.jdtech.jellyfin.presentation.film.components.MediaInfoSheet
 import dev.jdtech.jellyfin.presentation.film.components.InfoText
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemHeader
@@ -64,6 +67,7 @@ import dev.jdtech.jellyfin.presentation.film.components.ItemTopBar
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
 import dev.jdtech.jellyfin.presentation.film.components.OverviewText
 import dev.jdtech.jellyfin.presentation.film.components.VideoMetadataBar
+import dev.jdtech.jellyfin.presentation.film.components.rememberArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.rememberTopBarBackgroundAlpha
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -166,9 +170,30 @@ private fun MovieScreenLayout(
     onAction: (MovieAction) -> Unit,
     onDownloaderAction: (DownloaderAction) -> Unit,
 ) {
+    // CE (#510): above the narrow/wide branch, so the sheet stays open, on the version picked,
+    // when a rotation, a fold or a resized window changes the layout. Shown once there is
+    // something to show: after process death the flag is back before the movie is.
+    var mediaInfoOpen by rememberSaveable { mutableStateOf(false) }
+    val movieSources = state.movie?.sources
+    val mediaInfoSources = remember(movieSources) { movieSources.orEmpty().withMediaInfo() }
+    // No chip when there is nothing to describe: offline, a download has no track data.
+    val onMediaInfoClick = { mediaInfoOpen = true }.takeIf { mediaInfoSources.isNotEmpty() }
+    if (mediaInfoOpen && mediaInfoSources.isNotEmpty()) {
+        MediaInfoSheet(
+            sources = mediaInfoSources,
+            onDismissRequest = { mediaInfoOpen = false },
+        )
+    }
+
     // CE: medium and expanded windows get the hero layout (docs/tablet/4-design.md §6).
     if (useWideItemLayout()) {
-        MovieWideLayout(state, downloaderState, onAction, onDownloaderAction)
+        MovieWideLayout(
+            state,
+            downloaderState,
+            onAction,
+            onDownloaderAction,
+            onMediaInfoClick = onMediaInfoClick,
+        )
         return
     }
 
@@ -179,6 +204,8 @@ private fun MovieScreenLayout(
     val paddingBottom = safePadding.bottom + MaterialTheme.spacings.default
 
     val scrollState = rememberScrollState()
+    // CE (#437): the artwork under the top bar, if any; shared by the header and the bar.
+    val artwork = rememberArtworkState(state.movie, ArtworkPlacement.Header)
 
     var downloadQualityDialogOpen by remember { mutableStateOf(false) }
 
@@ -188,6 +215,7 @@ private fun MovieScreenLayout(
                 ItemHeader(
                     item = movie,
                     scrollState = scrollState,
+                    artwork = artwork,
                     content = {
                         Column(
                             modifier =
@@ -268,7 +296,11 @@ private fun MovieScreenLayout(
                     }
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
                     state.videoMetadata?.let { videoMetadata ->
-                        VideoMetadataBar(videoMetadata, is3D = movie.is3D)
+                        VideoMetadataBar(
+                            videoMetadata,
+                            is3D = movie.is3D,
+                            onInfoClick = onMediaInfoClick,
+                        )
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
                     }
                     ItemButtonsBar(
@@ -308,10 +340,6 @@ private fun MovieScreenLayout(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
-                    if (state.displayExtraInfo && state.videoMetadata != null) {
-                        ExtraInfoText(videoMetadata = state.videoMetadata!!)
-                        Spacer(Modifier.height(MaterialTheme.spacings.medium))
-                    }
                     movie.tagline?.let { tagline ->
                         TaglineText(tagline)
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
@@ -351,14 +379,16 @@ private fun MovieScreenLayout(
             )
         }
 
-        LightStatusBarOverArtwork(state.movie != null, rememberTopBarBackgroundAlpha(scrollState))
+        LightStatusBarOverArtwork(artwork.hasArtwork, rememberTopBarBackgroundAlpha(scrollState))
         ItemTopBar(
             hasBackButton = true,
             hasHomeButton = true,
             backgroundAlpha = rememberTopBarBackgroundAlpha(scrollState),
+            overArtwork = artwork.hasArtwork,
             onBackClick = { onAction(MovieAction.OnBackClick) },
             onHomeClick = { onAction(MovieAction.OnHomeClick) },
         )
+
 
         if (downloadQualityDialogOpen) {
             DownloadQualityDialog(

@@ -57,7 +57,7 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
                         json.optJSONObject("suggestions")?.let { obj ->
                             HomeItem.Suggestions(UUID.fromString(obj.getString("id")), items(obj))
                         },
-                    resume = json.optJSONObject("resume")?.let { section(it, FilmR.string.continue_watching) },
+                    resume = json.optJSONObject("resume")?.let { section(it, FilmR.string.ce_continue_watching) },
                     nextUp = json.optJSONObject("nextUp")?.let { section(it, FilmR.string.next_up) },
                     views =
                         json.getJSONArray("views").objects().map { obj ->
@@ -274,6 +274,8 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
             .put("showPrimary", images.showPrimary?.toString() ?: JSONObject.NULL)
             .put("showBackdrop", images.showBackdrop?.toString() ?: JSONObject.NULL)
             .put("showLogo", images.showLogo?.toString() ?: JSONObject.NULL)
+            .put("thumb", images.thumb?.toString() ?: JSONObject.NULL)
+            .put("showThumb", images.showThumb?.toString() ?: JSONObject.NULL)
 
     private fun images(obj: JSONObject): FindroidImages {
         fun uri(key: String) = if (obj.isNull(key)) null else Uri.parse(obj.getString(key))
@@ -284,6 +286,9 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
             showPrimary = uri("showPrimary"),
             showBackdrop = uri("showBackdrop"),
             showLogo = uri("showLogo"),
+            // Absent in a cache written before #608: isNull is true for a missing key.
+            thumb = uri("thumb"),
+            showThumb = uri("showThumb"),
         )
     }
 

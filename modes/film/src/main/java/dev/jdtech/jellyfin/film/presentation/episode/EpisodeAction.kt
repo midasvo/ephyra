@@ -26,6 +26,9 @@ sealed interface EpisodeAction {
 
     data class NavigateToSeason(val seasonId: UUID, val seriesId: UUID) : EpisodeAction
 
+    /** CE (#395): the show's page, from the show button in the episode page's top bar. */
+    data class NavigateToSeries(val seriesId: UUID) : EpisodeAction
+
     /** CE (#332): opens the episode on IMDb and the like. */
     data class OpenExternalLink(val url: String) : EpisodeAction
 }

@@ -131,6 +131,31 @@ class StillWatchingTrackerTest {
         assertTrue(tracker.wouldPromptOnAutoAdvance(nowMs = 60_000L))
     }
 
+    // #367: the dialog counts down to the ViewModel's deadline, not from the full timeout.
+
+    @Test
+    fun `secondsLeft is the full timeout when the prompt appears`() {
+        assertEquals(30, StillWatchingTracker.secondsLeft(endsAtMs = 130_000L, nowMs = 100_000L))
+    }
+
+    @Test
+    fun `secondsLeft counts the time spent away from the app`() {
+        // 20 s after a 30 s prompt appeared, for example after Home and back.
+        assertEquals(10, StillWatchingTracker.secondsLeft(endsAtMs = 130_000L, nowMs = 120_000L))
+    }
+
+    @Test
+    fun `secondsLeft rounds a part of a second up`() {
+        assertEquals(10, StillWatchingTracker.secondsLeft(endsAtMs = 130_000L, nowMs = 120_001L))
+        assertEquals(1, StillWatchingTracker.secondsLeft(endsAtMs = 130_000L, nowMs = 129_999L))
+    }
+
+    @Test
+    fun `secondsLeft is 0 at and after the deadline`() {
+        assertEquals(0, StillWatchingTracker.secondsLeft(endsAtMs = 130_000L, nowMs = 130_000L))
+        assertEquals(0, StillWatchingTracker.secondsLeft(endsAtMs = 130_000L, nowMs = 200_000L))
+    }
+
     private companion object {
         private const val OFF: Long = StillWatchingTracker.OFF_MS
     }

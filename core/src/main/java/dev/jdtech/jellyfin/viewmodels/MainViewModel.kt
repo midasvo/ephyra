@@ -9,6 +9,7 @@ import dev.jdtech.jellyfin.models.User
 import dev.jdtech.jellyfin.profilelock.ProfileLock
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.utils.NetworkConnectivity
+import dev.jdtech.jellyfin.utils.UiOfflineDecision
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +27,7 @@ constructor(
     private val database: ServerDatabaseDao,
     private val networkConnectivity: NetworkConnectivity,
     private val profileLock: ProfileLock,
+    private val uiOfflineDecision: UiOfflineDecision,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MainState())
     val state = _state.asStateFlow()
@@ -41,6 +43,10 @@ constructor(
 
     init {
         check()
+    }
+
+    override fun onCleared() {
+        uiOfflineDecision.clear(this)
     }
 
     fun loadServerAndUser() {
@@ -141,7 +147,11 @@ constructor(
                         profileLocked = profileLocked,
                     )
                 }
-                .collect { mainState -> _state.emit(mainState) }
+                .collect { mainState ->
+                    // CE (#427): screens created from now on get the repository this UI shows.
+                    uiOfflineDecision.set(this@MainViewModel, mainState.isOfflineMode)
+                    _state.emit(mainState)
+                }
         }
     }
 

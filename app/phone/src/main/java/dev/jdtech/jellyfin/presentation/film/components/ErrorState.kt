@@ -17,32 +17,58 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.localnetwork.localNetworkBlockFor
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.utils.localNetworkDeniedText
+import dev.jdtech.jellyfin.setup.R as SetupR
 
 /** Stands in for a screen's content when it failed to load. */
 @Composable
 fun ErrorState(error: Exception, onRetryClick: () -> Unit, modifier: Modifier = Modifier) {
     var showErrorDialog by rememberSaveable { mutableStateOf(false) }
+    // CE (#571): a server out of reach because local network access is denied says so, offers to
+    // allow it, and loads again by itself once access is back.
+    val block = localNetworkBlockFor(error = error, onUnblocked = onRetryClick)
 
     EmptyState(
         icon = CoreR.drawable.ic_alert_circle,
         title = stringResource(CoreR.string.error_loading_data),
         modifier = modifier,
-        body = stringResource(CoreR.string.error_loading_data_body),
+        body =
+            if (block != null) {
+                localNetworkDeniedText(block)
+            } else {
+                stringResource(CoreR.string.error_loading_data_body)
+            },
         iconContainerColor = MaterialTheme.colorScheme.errorContainer,
         iconColor = MaterialTheme.colorScheme.onErrorContainer,
         specks = false,
         actions = {
-            FilledTonalButton(onClick = onRetryClick) { Text(stringResource(CoreR.string.retry)) }
-            TextButton(onClick = { showErrorDialog = true }) {
-                Text(stringResource(CoreR.string.show_stacktrace))
+            if (block != null) {
+                block.request?.let { request ->
+                    FilledTonalButton(onClick = request) {
+                        Text(stringResource(SetupR.string.ce_local_network_allow))
+                    }
+                }
+                TextButton(onClick = onRetryClick) { Text(stringResource(CoreR.string.retry)) }
+            } else {
+                FilledTonalButton(onClick = onRetryClick) {
+                    Text(stringResource(CoreR.string.retry))
+                }
+                TextButton(onClick = { showErrorDialog = true }) {
+                    Text(stringResource(CoreR.string.show_stacktrace))
+                }
             }
         },
     )
 
-    if (showErrorDialog) {
-        ErrorDialog(exception = error, onDismissRequest = { showErrorDialog = false })
+    if (showErrorDialog && block == null) {
+        ErrorDialog(
+            exception = error,
+            onDismissRequest = { showErrorDialog = false },
+            onRetry = onRetryClick,
+        )
     }
 }
 

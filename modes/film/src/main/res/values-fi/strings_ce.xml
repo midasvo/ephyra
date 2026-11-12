@@ -3,4 +3,5 @@
     <string name="home_suggestions_title">Ehdotukset</string>
     <string name="home_rows_move_up">Siirrä ylös</string>
     <string name="home_rows_move_down">Siirrä alas</string>
+    <string name="ce_continue_watching">Jatka katselua</string>
 </resources>

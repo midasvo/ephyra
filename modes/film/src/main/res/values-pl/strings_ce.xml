@@ -3,4 +3,5 @@
     <string name="home_suggestions_title">Propozycje</string>
     <string name="home_rows_move_up">Przenieś w górę</string>
     <string name="home_rows_move_down">Przenieś w dół</string>
+    <string name="ce_continue_watching">Kontynuuj odtwarzanie</string>
 </resources>

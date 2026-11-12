@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.ce.presentation.main
 
 import android.app.Activity
+import android.os.SystemClock
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,12 +43,19 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.DrawerValue
@@ -65,6 +74,8 @@ import dev.jdtech.jellyfin.ce.presentation.film.SearchScreen
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
 import dev.jdtech.jellyfin.ce.ui.components.UserAvatar
+import dev.jdtech.jellyfin.ce.ui.focus.DirectionKeyClock
+import dev.jdtech.jellyfin.ce.ui.focus.LocalRestoreFocusSuppressed
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraFocusedBorder
 import dev.jdtech.jellyfin.ce.ui.tvSafeAreaPadding
 import dev.jdtech.jellyfin.core.R as CoreR
@@ -109,23 +120,23 @@ fun MainScreen(
     val mainState by mainViewModel.state.collectAsState()
     val mediaState by mediaViewModel.state.collectAsState()
 
-    // Runs on every return to this screen (#257). A user or server switch comes back here with
-    // the same ViewModels, so the server and user load again only when the loaded user isn't the
-    // one signed in now. The libraries load as before the first time; after that they refresh in
-    // the background, keeping the list on screen, when the user changed or the last load is older
-    // than LIBRARIES_REFRESH_NANOS, so a library added on the server still shows up.
+    // Runs on every return to this screen (#257); see [loadsOnReturn] for what loads.
     val context = LocalContext.current
     LaunchedEffect(true) {
         val loadedUser = (mainViewModel.uiState.value as? MainViewModel.UiState.Normal)?.user?.id
-        val sameUser =
-            loadedUser != null && loadedUser == JellyfinApi.getInstance(context).userId
-        if (!sameUser) mainViewModel.loadServerAndUser()
-        val loadedAt = mediaViewModel.librariesLoadedAtNanos
-        when {
-            loadedAt == null || mediaViewModel.state.value.libraries.isEmpty() ->
-                mediaViewModel.loadData()
-            !sameUser || System.nanoTime() - loadedAt > LIBRARIES_REFRESH_NANOS ->
-                mediaViewModel.loadData(silent = true)
+        val loads =
+            loadsOnReturn(
+                sameUser =
+                    loadedUser != null && loadedUser == JellyfinApi.getInstance(context).userId,
+                librariesLoadedAtNanos = mediaViewModel.librariesLoadedAtNanos,
+                hasLibraries = mediaViewModel.state.value.libraries.isNotEmpty(),
+                nowNanos = System.nanoTime(),
+            )
+        if (loads.user) mainViewModel.loadServerAndUser()
+        when (loads.libraries) {
+            LibrariesLoad.FULL -> mediaViewModel.loadData()
+            LibrariesLoad.SILENT -> mediaViewModel.loadData(silent = true)
+            LibrariesLoad.NONE -> Unit
         }
     }
 
@@ -150,6 +161,13 @@ fun MainScreen(
                 navigateToMovie = navigateToMovie,
                 navigateToShow = navigateToShow,
                 navigateToEpisode = navigateToEpisode,
+                // #513: after a failed start the drawer has no libraries; Retry loads them too.
+                onRetry = {
+                    val media = mediaViewModel.state.value
+                    if (reloadsLibrariesOnRetry(media.libraries.isNotEmpty(), media.isLoading)) {
+                        mediaViewModel.loadData()
+                    }
+                },
             )
         },
         searchContent = {
@@ -187,12 +205,77 @@ const val DESTINATION_FAVORITES = "favorites"
 fun libraryDestinationKey(libraryId: UUID): String = "library:$libraryId"
 
 /** How old the drawer's libraries may get before a return to Main refreshes them (#257). */
-private const val LIBRARIES_REFRESH_NANOS = 5 * 60 * 1_000_000_000L
+internal const val LIBRARIES_REFRESH_NANOS = 5 * 60 * 1_000_000_000L
+
+internal enum class LibrariesLoad {
+    NONE,
+    FULL,
+    SILENT,
+}
+
+internal data class ReturnLoads(val user: Boolean, val libraries: LibrariesLoad)
+
+/**
+ * What Main loads when it is shown again (#257). A user or server switch comes back here with the
+ * same ViewModels.
+ * - The server and user load every time: a cheap database read, and the user's row can change on
+ *   the screens Main opens, such as a PIN set or removed in Settings, which the drawer's face shows
+ *   with its lock badge (#408). An unchanged user does not recompose anything.
+ * - The libraries load in full the first time. After that they refresh in the background, keeping
+ *   the list on screen, when the user changed or the last load is older than
+ *   [LIBRARIES_REFRESH_NANOS], so a library added on the server still shows up.
+ */
+internal fun loadsOnReturn(
+    sameUser: Boolean,
+    librariesLoadedAtNanos: Long?,
+    hasLibraries: Boolean,
+    nowNanos: Long,
+): ReturnLoads =
+    ReturnLoads(
+        user = true,
+        libraries =
+            when {
+                librariesLoadedAtNanos == null || !hasLibraries -> LibrariesLoad.FULL
+                !sameUser || nowNanos - librariesLoadedAtNanos > LIBRARIES_REFRESH_NANOS ->
+                    LibrariesLoad.SILENT
+                else -> LibrariesLoad.NONE
+            },
+    )
+
+/**
+ * Whether Retry on Home also loads the drawer's libraries (#513): only when there are none, as
+ * after a start without the server, and no load is running.
+ */
+internal fun reloadsLibrariesOnRetry(hasLibraries: Boolean, librariesLoading: Boolean): Boolean =
+    !hasLibraries && !librariesLoading
 
 private const val ITEM_PROFILE = "profile"
 private const val ITEM_SETTINGS = "settings"
 
+/**
+ * Where the pages beside the drawer start. Each page pads its own content by
+ * [TvSafeArea.horizontal], so its content starts at 128 dp. The collapsed rail is wider
+ * ([DrawerStartPadding] + the 56 dp item = 92 dp) and covers the first 12 dp of that padding,
+ * which holds no content: the pages stay where they were before #539.
+ */
 val ClosedDrawerWidth = 80.dp
+
+/**
+ * #539 (ADR 0002, safe area): the drawer's icons, avatar and labels sit inside the TV safe area,
+ * its background and focus pill may reach into the margin. tv-material puts the collapsed item's
+ * 24 dp icon 16 dp in from the item's edge (20 dp when expanded) and the profile's 32 dp avatar
+ * overflows that box by 4 dp on each side, so the avatar starts 12 dp in: at
+ * [TvSafeArea.horizontal].
+ */
+internal val DrawerStartPadding = TvSafeArea.horizontal - 12.dp
+
+/**
+ * The expanded drawer keeps 12 dp of surface after the pill. The collapsed rail ends at the pill:
+ * its opaque surface covers the pages' padding, and 12 dp more cut the glow of a focused first
+ * card off with a visible edge (#539).
+ */
+internal fun drawerEndPadding(drawerValue: DrawerValue): Dp =
+    if (drawerValue == DrawerValue.Open) 12.dp else 0.dp
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Suppress("DEPRECATION")
@@ -211,6 +294,7 @@ fun MainScreenLayout(
     libraryContent: @Composable (library: FindroidCollection) -> Unit,
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val baseUrl =
         remember(context) { runCatching { JellyfinApi.getInstance(context).api.baseUrl }.getOrNull() }
     val coroutineScope = rememberCoroutineScope()
@@ -229,11 +313,16 @@ fun MainScreenLayout(
     // The drawer item that opened another route (profile or settings). This screen leaves the
     // composition while that route is shown, so the effect below runs again on the way back.
     var returnFocusTo by rememberSaveable { mutableStateOf<String?>(null) }
+    // #533: while the drawer holds focus, the content's focus restore leaves it there. Otherwise
+    // Home, done refreshing after Back from Settings, took focus from the Settings item.
+    val drawerFocus = remember { DrawerFocus() }
+    val restoreSuppressed: () -> Boolean = remember(drawerFocus) { { drawerFocus.holds } }
 
     LaunchedEffect(Unit) {
         val item = returnFocusTo ?: return@LaunchedEffect
         returnFocusTo = null
         val requester = if (item == ITEM_PROFILE) profileFocusRequester else settingsFocusRequester
+        drawerFocus.hold()
         requestFocusWhenReady(requester)
     }
 
@@ -247,6 +336,8 @@ fun MainScreenLayout(
         coroutineScope.launch {
             withFrameNanos {}
             if (!contentFocusRequester.tryRequestFocus()) {
+                // The destination takes focus from the drawer once it has loaded (#533).
+                drawerFocus.release()
                 fallback?.tryRequestFocus()
             }
         }
@@ -266,12 +357,14 @@ fun MainScreenLayout(
         when {
             !isHome && isDrawerOpen -> {
                 activeDestinationKey = DESTINATION_HOME
+                drawerFocus.hold()
                 homeFocusRequester.tryRequestFocus()
             }
             !isHome -> showDestination(DESTINATION_HOME, fallback = homeFocusRequester)
             !isDrawerOpen -> {
                 coroutineScope.launch {
                     drawerState.setValue(DrawerValue.Open)
+                    drawerFocus.hold()
                     homeFocusRequester.tryRequestFocus()
                 }
             }
@@ -289,27 +382,65 @@ fun MainScreenLayout(
                     Modifier.fillMaxHeight()
                         .focusProperties {
                             right = contentFocusRequester
+                            // A D-pad key while nothing had focus lands on the shown destination,
+                            // as a move from the content does, not on the first item (profile).
+                            onEnter = {
+                                if (
+                                    requestedFocusDirection != FocusDirection.Enter &&
+                                        !drawerFocus.contentHasFocus &&
+                                        drawerFocus.keyJustPressed()
+                                ) {
+                                    drawerRequester(activeDestinationKey).tryRequestFocus()
+                                }
+                            }
                             exit = { direction ->
                                 if (direction == FocusDirection.Right) contentFocusRequester
                                 else FocusRequester.Default
                             }
                         }
                         .focusGroup()
+                        .onFocusChanged {
+                            drawerFocus.onFocusChanged(it.hasFocus)
+                            // A key at the very start of the app can put focus here before the
+                            // drawer follows it: it stayed collapsed, holding focus.
+                            if (it.hasFocus && drawerState.currentValue == DrawerValue.Closed) {
+                                coroutineScope.launch { drawerState.setValue(DrawerValue.Open) }
+                            }
+                        }
+                        // #539: the expanded items end at 292 dp, right of a 150 dp poster at the
+                        // page's 128 dp (Favorites), so a plain Right can find nothing right of the
+                        // item and leave focus in the drawer. Then the content is entered instead.
+                        .onPreviewKeyEvent {
+                            if (it.type != KeyEventType.KeyDown || it.key != Key.DirectionRight) {
+                                return@onPreviewKeyEvent false
+                            }
+                            if (!focusManager.moveFocus(FocusDirection.Right)) {
+                                contentFocusRequester.tryRequestFocus()
+                            }
+                            true
+                        }
                         .background(MaterialTheme.colorScheme.surface)
-                        .padding(vertical = TvSafeArea.vertical, horizontal = 12.dp)
+                        .padding(
+                            start = DrawerStartPadding,
+                            top = TvSafeArea.vertical,
+                            end = drawerEndPadding(drawerValue),
+                            bottom = TvSafeArea.vertical,
+                        )
                         .testTag("main_drawer_content"),
                 horizontalAlignment = Alignment.Start,
             ) {
-                // Profile header: user + server, OK opens user switch
-                NavigationDrawerItem(
-                    selected = false,
+                // Profile header: user + server, OK opens user switch. Two lines, so its own item
+                // (#567).
+                DrawerProfileItem(
+                    userName = user?.name.orEmpty(),
+                    serverName = server?.name,
                     onClick = {
                         returnFocusTo = ITEM_PROFILE
                         navigateToUsers()
                     },
                     leadingContent = {
-                        // The drawer gives leading content a 24 dp box; the 32 dp face overflows it
-                        // evenly (requiredSize centres), so the rail and the item height stay put.
+                        // The 32 dp face overflows the 24 dp box evenly (requiredSize centres), so
+                        // the rail stays put.
                         Crossfade(
                             targetState = user,
                             animationSpec =
@@ -322,48 +453,42 @@ fun MainScreenLayout(
                                     user = shown,
                                     baseUrl = baseUrl,
                                     size = 32.dp,
-                                    modifier = Modifier.requiredSize(32.dp),
+                                    modifier =
+                                        Modifier.requiredSize(32.dp)
+                                            .testTag("drawer_icon_profile"),
                                 )
                             } else {
                                 Icon(
                                     painter = painterResource(id = CoreR.drawable.ic_user),
                                     contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(24.dp).testTag("drawer_icon_profile"),
                                 )
                             }
                         }
                     },
-                    border = ephyraDrawerItemBorder(),
                     modifier =
                         Modifier.focusRequester(profileFocusRequester)
                             .testTag("drawer_item_profile"),
-                ) {
-                    Column(modifier = Modifier.padding(start = 8.dp)) {
-                        Text(
-                            text = user?.name.orEmpty(),
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        server?.name?.let { serverName ->
-                            Text(
-                                text = serverName,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Scrollable navigation list: Search, Home, Favorites, and each Library
+                // Scrollable navigation list: Search, Home, Favorites, and each Library. Moving
+                // into it lands on the shown destination (ADR 0002), not on the item that had focus
+                // last: Back from a library goes Home without passing the drawer, and a restorer
+                // then sent Back and Left on Home to that library (#411). A request for one item
+                // (Enter) gets that item.
                 LazyColumn(
                     modifier =
                         Modifier.weight(1f)
-                            .focusRestorer()
+                            .focusProperties {
+                                onEnter = {
+                                    if (requestedFocusDirection != FocusDirection.Enter) {
+                                        drawerRequester(activeDestinationKey).tryRequestFocus()
+                                    }
+                                }
+                            }
+                            .focusGroup()
                             .focusProperties { down = settingsFocusRequester },
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
@@ -380,7 +505,7 @@ fun MainScreenLayout(
                                 Icon(
                                     painter = painterResource(id = CoreR.drawable.ic_search),
                                     contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(24.dp).testTag("drawer_icon_search"),
                                 )
                             },
                             border = ephyraDrawerItemBorder(),
@@ -404,7 +529,7 @@ fun MainScreenLayout(
                                 Icon(
                                     painter = painterResource(id = CoreR.drawable.ic_home),
                                     contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(24.dp).testTag("drawer_icon_home"),
                                 )
                             },
                             border = ephyraDrawerItemBorder(),
@@ -434,7 +559,8 @@ fun MainScreenLayout(
                                     Icon(
                                         painter = painterResource(id = CoreR.drawable.ic_heart),
                                         contentDescription = null,
-                                        modifier = Modifier.size(24.dp),
+                                        modifier =
+                                            Modifier.size(24.dp).testTag("drawer_icon_favorites"),
                                     )
                                 },
                                 border = ephyraDrawerItemBorder(),
@@ -462,7 +588,9 @@ fun MainScreenLayout(
                                 Icon(
                                     painter = painterResource(id = library.type.drawerIconRes()),
                                     contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
+                                    modifier =
+                                        Modifier.size(24.dp)
+                                            .testTag("drawer_icon_library_${library.id}"),
                                 )
                             },
                             border = ephyraDrawerItemBorder(),
@@ -494,7 +622,7 @@ fun MainScreenLayout(
                         Icon(
                             painter = painterResource(id = CoreR.drawable.ic_settings),
                             contentDescription = null,
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(24.dp).testTag("drawer_icon_settings"),
                         )
                     },
                     border = ephyraDrawerItemBorder(),
@@ -510,13 +638,21 @@ fun MainScreenLayout(
                 }
             }
         },
-        modifier = modifier.fillMaxSize(),
+        // #533: a D-pad move is the user's; see [DrawerFocus].
+        modifier =
+            modifier.fillMaxSize().onPreviewKeyEvent {
+                if (it.type == KeyEventType.KeyDown && it.key in DirectionKeys) {
+                    drawerFocus.onDirectionKey()
+                }
+                false
+            },
     ) {
         Box(
             modifier =
                 Modifier.fillMaxSize()
                     .padding(start = ClosedDrawerWidth)
                     .focusRequester(contentFocusRequester)
+                    .onFocusChanged { drawerFocus.contentHasFocus = it.hasFocus }
                     .focusProperties {
                         left = activeDrawerRequester
                         exit = { direction ->
@@ -527,22 +663,24 @@ fun MainScreenLayout(
                     .focusGroup()
         ) {
             saveableStateHolder.SaveableStateProvider(activeDestinationKey) {
-                when {
-                    activeDestinationKey == DESTINATION_HOME -> {
-                        homeContent()
-                    }
-                    activeDestinationKey == DESTINATION_SEARCH -> {
-                        searchContent()
-                    }
-                    activeDestinationKey == DESTINATION_FAVORITES -> {
-                        favoritesContent()
-                    }
-                    activeDestinationKey.startsWith("library:") -> {
-                        val libraryIdString = activeDestinationKey.removePrefix("library:")
-                        val library =
-                            libraries.firstOrNull { it.id.toString() == libraryIdString }
-                        if (library != null) {
-                            libraryContent(library)
+                CompositionLocalProvider(LocalRestoreFocusSuppressed provides restoreSuppressed) {
+                    when {
+                        activeDestinationKey == DESTINATION_HOME -> {
+                            homeContent()
+                        }
+                        activeDestinationKey == DESTINATION_SEARCH -> {
+                            searchContent()
+                        }
+                        activeDestinationKey == DESTINATION_FAVORITES -> {
+                            favoritesContent()
+                        }
+                        activeDestinationKey.startsWith("library:") -> {
+                            val libraryIdString = activeDestinationKey.removePrefix("library:")
+                            val library =
+                                libraries.firstOrNull { it.id.toString() == libraryIdString }
+                            if (library != null) {
+                                libraryContent(library)
+                            }
                         }
                     }
                 }
@@ -566,6 +704,68 @@ private fun ephyraDrawerItemBorder(): NavigationDrawerItemBorder {
         pressedSelectedBorder = ring,
     )
 }
+
+private val DirectionKeys =
+    setOf(Key.DirectionLeft, Key.DirectionRight, Key.DirectionUp, Key.DirectionDown)
+
+/**
+ * #533: whether the drawer holds focus, so the content must not take it. It holds focus that Main
+ * put there (Back from Settings or the profile, Back on Home) or that the user moved there with the
+ * D-pad. It does not hold focus that only landed there because the focused element of the content
+ * went away, such as Retry while a page reloads: the page takes it back once it is there. Plain
+ * fields, so a focus change recomposes nothing.
+ */
+private class DrawerFocus {
+    private var requested = false
+
+    var holds = false
+        private set
+
+    private var hasFocus = false
+    private var directionKeyAt: Long? = null
+
+    /** Whether the page beside the drawer has focus. */
+    var contentHasFocus = false
+
+    /** Main is about to put focus on a drawer item, or moves it inside the drawer. */
+    fun hold() {
+        if (hasFocus) holds = true else requested = true
+    }
+
+    fun onDirectionKey() {
+        directionKeyAt = SystemClock.uptimeMillis()
+        // Moving inside the drawer: the user is there.
+        if (hasFocus) holds = true
+    }
+
+    /**
+     * A D-pad key came just now, so focus that moves now is the user's. The activity also sees the
+     * keys that reach no key modifier here, while nothing has focus.
+     */
+    fun keyJustPressed(): Boolean {
+        val keyAt = directionKeyAt
+        return (keyAt != null && SystemClock.uptimeMillis() - keyAt < DIRECTION_KEY_MS) ||
+            DirectionKeyClock.pressedWithin(DIRECTION_KEY_MS)
+    }
+
+    fun onFocusChanged(focused: Boolean) {
+        if (focused && !hasFocus) {
+            holds = requested || keyJustPressed()
+            requested = false
+        }
+        if (!focused) holds = false
+        hasFocus = focused
+    }
+
+    /** Focus waits in the drawer for a destination that is still loading. */
+    fun release() {
+        holds = false
+        requested = false
+    }
+}
+
+/** How long after a D-pad key a focus change still counts as its result. */
+private const val DIRECTION_KEY_MS = 500L
 
 /** Requests focus, or returns false when [this] is not attached or nothing can take focus. */
 private fun FocusRequester.tryRequestFocus(): Boolean =

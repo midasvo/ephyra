@@ -30,6 +30,9 @@ android {
 
     // CE-owned: the image mapper tests need android.net.Uri, which Robolectric provides on the JVM.
     testOptions { unitTests { isIncludeAndroidResources = true } }
+
+    // CE (#380): MigrationTestHelper reads the exported schemas from the test assets.
+    sourceSets { named("test") { assets.directories.add("$projectDir/schemas") } }
 }
 
 room3 { schemaDirectory("$projectDir/schemas") }
@@ -44,6 +47,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
     implementation(libs.timber)
+    testImplementation(libs.androidx.room3.testing)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }

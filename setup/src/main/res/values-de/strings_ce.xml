@@ -50,4 +50,12 @@
     <string name="ce_profile_pattern_saved">Muster festgelegt</string>
     <string name="ce_profile_pattern_removed">Muster entfernt</string>
     <string name="ce_profile_pattern_grid">Entsperrmuster, ein Raster aus 3 × 3 Punkten</string>
+    <string name="ce_server_address_in_use">Diese Adresse wird verwendet und kann nicht entfernt werden</string>
+    <string name="ce_server_address_already_added">Diese Adresse wurde bereits hinzugefügt</string>
+    <string name="ce_local_network_denied">Der Zugriff auf das lokale Netzwerk ist deaktiviert. Ohne ihn können Server in Ihrem Netzwerk weder gefunden noch erreicht werden.</string>
+    <string name="ce_local_network_denied_where">In den Systemeinstellungen steht er unter Berechtigungen &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Zugriff erlauben</string>
+    <string name="ce_local_network_off">Der Zugriff auf das lokale Netzwerk ist deaktiviert</string>
+    <string name="ce_add_server_error_local_network">Server nicht gefunden. Der Zugriff auf das lokale Netzwerk ist deaktiviert, wodurch Adressen in Ihrem Netzwerk blockiert werden.</string>
+    <string name="ce_permission_permanently_denied">%1$s wurde abgelehnt. Um die Funktion zu nutzen, erlauben Sie „%2$s“ unter Berechtigungen in den Systemeinstellungen.</string>
 </resources>

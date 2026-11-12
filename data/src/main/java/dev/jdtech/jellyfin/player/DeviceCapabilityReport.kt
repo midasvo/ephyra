@@ -19,9 +19,9 @@
 package dev.jdtech.jellyfin.player
 
 import android.content.Context
+import android.hardware.display.DisplayManager
 import android.os.Build
 import android.view.Display
-import android.view.WindowManager
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -191,16 +191,10 @@ object DeviceCapabilityReportBuilder {
     }
 
     private fun currentDisplay(context: Context): DisplayInfo {
-        // Context.display was added in API 30; on older devices fall back to the
-        // deprecated WindowManager.defaultDisplay. Either is fine for an
-        // informational diagnostic — we just want any sane display.
-        val display: Display? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            @Suppress("UnsafeOptInUsageError")
-            context.display
-        } else {
-            @Suppress("DEPRECATION")
-            (context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager)?.defaultDisplay
-        }
+        // The default display through DisplayManager, which works from the application
+        // context. Context.display throws for a context without a display (#385).
+        val display: Display? =
+            context.getSystemService(DisplayManager::class.java)?.getDisplay(Display.DEFAULT_DISPLAY)
         if (display == null) {
             return DisplayInfo(
                 widthPx = 0,

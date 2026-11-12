@@ -26,4 +26,7 @@
         <item quantity="one">Empieza en %d segundo</item>
         <item quantity="other">Empieza en %d segundos</item>
     </plurals>
+    <string name="ce_track_forced">Forzados</string>
+    <string name="ce_player_connection_lost">Se ha perdido la conexión. La reproducción continuará cuando vuelva la red.</string>
+    <string name="ce_player_try_again">Reintentar</string>
 </resources>

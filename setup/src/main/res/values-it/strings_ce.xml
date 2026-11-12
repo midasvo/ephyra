@@ -50,4 +50,12 @@
     <string name="ce_profile_pattern_saved">Sequenza impostata</string>
     <string name="ce_profile_pattern_removed">Sequenza rimossa</string>
     <string name="ce_profile_pattern_grid">Sequenza di sblocco, una griglia di 3 per 3 punti</string>
+    <string name="ce_server_address_in_use">Questo indirizzo è in uso e non può essere rimosso</string>
+    <string name="ce_server_address_already_added">Questo indirizzo è già stato aggiunto</string>
+    <string name="ce_local_network_denied">L\'accesso alla rete locale è disattivato. Senza, i server sulla tua rete non possono essere trovati né raggiunti.</string>
+    <string name="ce_local_network_denied_where">Nelle impostazioni di sistema si trova in Autorizzazioni &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Consenti l\'accesso</string>
+    <string name="ce_local_network_off">L\'accesso alla rete locale è disattivato</string>
+    <string name="ce_add_server_error_local_network">Server non trovato. L\'accesso alla rete locale è disattivato e questo blocca gli indirizzi sulla tua rete.</string>
+    <string name="ce_permission_permanently_denied">%1$s è stato negato. Per usarlo, consenti \"%2$s\" in Autorizzazioni nelle impostazioni di sistema.</string>
 </resources>

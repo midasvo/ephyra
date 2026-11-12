@@ -178,4 +178,24 @@
     <string name="ce_pref_detail_collections_summary">Colecțiile din care face parte un film</string>
     <string name="ce_pref_detail_similar">Mai multe asemănătoare</string>
     <string name="ce_pref_detail_similar_summary">Titluri similare din biblioteca ta</string>
+    <string name="ce_pref_detail_credits">Regizor și scenariști</string>
+    <string name="ce_pref_detail_credits_summary">Sub descriere, pe paginile filmelor și serialelor</string>
+    <string name="ce_media_segments_auto_skip_pip">Doar în modul picture-in-picture</string>
+    <string name="ce_media_segments_auto_skip_always">Întotdeauna</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d episod</item>
+        <item quantity="few">%d episoade</item>
+        <item quantity="other">%d de episoade</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d zi</item>
+        <item quantity="few">%d zile</item>
+        <item quantity="other">%d de zile</item>
+    </plurals>
+    <string name="ce_number_no_limit">Fără limită</string>
+    <string name="ce_number_off">Dezactivat</string>
+    <string name="ce_pref_player_keep_landscape">Păstrează playerul în modul peisaj</string>
+    <string name="ce_pref_player_keep_landscape_summary">Redă videoclipurile în modul peisaj, chiar și când rotești tableta pe verticală</string>
+    <string name="ce_pref_home_episode_images">Folosește imaginile episoadelor</string>
+    <string name="ce_pref_home_episode_images_summary">Afișează imaginea episodului în locul imaginii serialului în Continuă vizionarea și Urmează</string>
 </resources>

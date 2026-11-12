@@ -58,7 +58,7 @@ a failure comes from the emulator and not the app, the cell says so.
 | 2 | Add server by address, log in (SUP-06) | unpolished: disclaimer shows `<br/>` (F9) | unpolished: `<br/>` (F9) | unpolished: `<br/>` (F9) | unpolished: `<br/>` (F9) | unpolished: `<br/>` (F9) | unpolished: focus starts on Add user (F21), `<br/>` (F9); the D-pad finding F6 is withdrawn |
 | – | Quick Connect (SUP-08) | not tested: not in the brief | not tested: not in the brief | not tested: not in the brief | not tested: not in the brief | not tested: not in the brief | not tested: not in the brief |
 | 3 | Notification permission (LIF-12) | n/a (below API 33) | n/a (below API 33) | unpolished: asked before Welcome, again after recreation (F2) | broken: asked again on rotation after a deny (F2) | unpolished: asked before Welcome, again on each cold start (F2) | n/a (below API 33) |
-| 4 | Local network permission (LIF-13) | n/a | n/a | n/a | n/a: no rationale screen, correctly | unpolished: rationale and settings card work; after a deny, discovery and LAN addresses fail without a reason (F8) | n/a |
+| 4 | Local network permission (LIF-13) | n/a | n/a | n/a | n/a: no rationale screen, correctly | works: rationale and settings card work; F8 fixed (#376): after a deny, Add server says that local network access is off and a LAN address that fails names the permission | n/a |
 | 5 | Home: rows, artwork, scroll (HOM-06) | works | works | works | works | works | works |
 | 6 | Library, sort, filter, movie, show, season, episode (BRW-07) | works | works | works; empty hero on one movie (F22) | works | works | works; show, season and episode pages not visited |
 | 7 | Search | works | works | works | works | works | not tested: not in the TV steps |

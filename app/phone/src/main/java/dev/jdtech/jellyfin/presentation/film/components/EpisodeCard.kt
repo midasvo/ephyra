@@ -77,6 +77,17 @@ fun EpisodeCard(
     )
 }
 
+/**
+ * The Download action of an episode row, or null for no Download button: when the server does not
+ * allow the episode to be downloaded (#373), or while a removal of it waits on its Undo snackbar (a
+ * download started then would be stopped by it). Cancel, Retry and Remove don't depend on it.
+ */
+fun episodeRowDownloadClick(
+    episode: FindroidEpisode,
+    removalPending: Boolean,
+    onDownloadClick: () -> Unit,
+): (() -> Unit)? = if (!episode.canDownload || removalPending) null else onDownloadClick
+
 /** The download control at the end of an episode row, also used by the Season list-detail. */
 @Composable
 fun EpisodeDownloadControl(

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.film.presentation.home.HomeAction
 import dev.jdtech.jellyfin.models.HomeSection
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.rememberLazyListStateAtStart
 
 @Composable
 fun HomeSection(
@@ -26,6 +27,8 @@ fun HomeSection(
     itemsPadding: PaddingValues,
     onAction: (HomeAction) -> Unit,
     modifier: Modifier = Modifier,
+    // CE (#608): the cards show the series' or movie's thumb instead of the episode's image.
+    preferThumb: Boolean = false,
 ) {
     Column(modifier = modifier) {
         Box(modifier = Modifier.fillMaxWidth().height(42.dp).padding(itemsPadding)) {
@@ -37,6 +40,7 @@ fun HomeSection(
         }
         Spacer(modifier = Modifier.height(MaterialTheme.spacings.extraSmall))
         LazyRow(
+            state = rememberLazyListStateAtStart(firstKey = section.items.firstOrNull()?.id),
             contentPadding = itemsPadding,
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
         ) {
@@ -44,6 +48,7 @@ fun HomeSection(
                 ItemCard(
                     item = item,
                     direction = Direction.HORIZONTAL,
+                    preferThumb = preferThumb,
                     onClick = { onAction(HomeAction.OnItemClick(item)) },
                 )
             }

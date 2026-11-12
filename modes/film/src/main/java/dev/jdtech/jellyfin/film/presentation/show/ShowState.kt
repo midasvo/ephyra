@@ -10,6 +10,8 @@ import java.util.UUID
 data class SeasonDownloadInfo(
     val downloadedCount: Int = 0,
     val totalCount: Int = 0,
+    /** Whether the server allows at least one of the season's episodes to be downloaded (#373). */
+    val canDownload: Boolean = false,
 )
 
 data class ShowState(
@@ -26,4 +28,15 @@ data class ShowState(
     // CE (#332): loaded after the page is shown, see ShowViewModel.loadRelated.
     val related: RelatedItems = RelatedItems(),
     val error: Exception? = null,
-)
+) {
+    /**
+     * Whether the page offers Download (#373): known once the series' episodes are in, so a page
+     * without them (the request failed, or offline) offers none.
+     */
+    val canDownload: Boolean
+        get() = seasonDownloadInfo.values.any { it.canDownload }
+
+    /** The seasons the season picker of a show download lists. */
+    val downloadableSeasons: List<FindroidSeason>
+        get() = seasons.filter { seasonDownloadInfo[it.id]?.canDownload == true }
+}

@@ -28,4 +28,7 @@
         <item quantity="many">Commence dans %d secondes</item>
         <item quantity="other">Commence dans %d secondes</item>
     </plurals>
+    <string name="ce_track_forced">Forcés</string>
+    <string name="ce_player_connection_lost">Connexion perdue. La lecture reprendra au retour du réseau.</string>
+    <string name="ce_player_try_again">Réessayer</string>
 </resources>

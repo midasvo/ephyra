@@ -214,7 +214,7 @@ private fun HomeRowsScreenLayoutPreview() {
                         listOf(
                             HomeRowEntry(
                                 HomeRowConfig(HomeRowType.CONTINUE_WATCHING),
-                                UiText.StringResource(FilmR.string.continue_watching),
+                                UiText.StringResource(FilmR.string.ce_continue_watching),
                             ),
                             HomeRowEntry(
                                 HomeRowConfig(HomeRowType.NEXT_UP, visible = false),

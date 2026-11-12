@@ -103,4 +103,24 @@
     <string name="item_included_in">Vključeno v</string>
     <string name="item_more_like_this">Več podobnih</string>
     <string name="ce_session_revoked">%1$s vas je odjavil. Za nadaljevanje se znova prijavite.</string>
+    <string name="ce_download_error_server">Strežnik je zavrnil prenos (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Strežnik je odgovoril z napako (HTTP %1$d). Poskusite znova pozneje.</string>
+    <string name="ce_media_info">Podatki o predstavnosti</string>
+    <string name="ce_home_profile">Profil</string>
+    <string name="ce_watched">Ogledano</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d neogledan</item>
+        <item quantity="two">%d neogledana</item>
+        <item quantity="few">%d neogledani</item>
+        <item quantity="other">%d neogledanih</item>
+    </plurals>
+    <string name="ce_delete_download_message">Ali res želite izbrisati ta prenos iz naprave?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">Neuspešno: %d</item>
+        <item quantity="two">Neuspešno: %d</item>
+        <item quantity="few">Neuspešno: %d</item>
+        <item quantity="other">Neuspešno: %d</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Prenesenega še ni nič</string>
+    <string name="ce_home_offline_empty_body">Brez povezave ste. Filmi in epizode, ki jih prenesete, so prikazani tukaj in v Prenosih.</string>
 </resources>

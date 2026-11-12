@@ -24,4 +24,7 @@
     <plurals name="player_up_next_starts_in">
         <item quantity="other">%d saniyəyə başlayır</item>
     </plurals>
+    <string name="ce_track_forced">Məcburi</string>
+    <string name="ce_player_connection_lost">Bağlantı kəsildi. Şəbəkə qayıdanda oxutma davam edəcək.</string>
+    <string name="ce_player_try_again">Yenidən cəhd et</string>
 </resources>

@@ -17,8 +17,10 @@ import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.utils.Downloader
+import dev.jdtech.jellyfin.utils.NetworkConnectivity
 import dev.jdtech.jellyfin.utils.download.DownloadStatus
 import dev.jdtech.jellyfin.utils.download.estimateCappedDownloadSize
+import dev.jdtech.jellyfin.utils.download.isPermanentHttpFailure
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -38,6 +40,19 @@ import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /**
+ * CE (#560): whether [entries] hold anything the queue still has to do: a download that is running
+ * or paused, or one that waits for a free slot, its retry or the network. The pump runs for as long
+ * as this holds, and the download service runs for as long as the pump does.
+ */
+internal fun hasDownloadWork(entries: List<DownloadQueue.Entry>): Boolean =
+    entries.any { it.isDownloadWork() }
+
+internal fun DownloadQueue.Entry.isDownloadWork(): Boolean =
+    state is DownloadQueue.EntryState.Downloading ||
+        state is DownloadQueue.EntryState.Pending ||
+        state is DownloadQueue.EntryState.Paused
+
+/**
  * Central download scheduler. Holds a list of queued/active downloads, respects the
  * user's max-concurrent-downloads setting, and drives Downloader.downloadItem() as
  * slots open up. Single source of truth for download state across the app.
@@ -52,6 +67,7 @@ constructor(
     private val database: ServerDatabaseDao,
     @ApplicationContext private val context: Context,
     private val dataChanges: DataChangeEvents = DataChangeEvents(),
+    private val connectivity: NetworkConnectivity = AlwaysOnline,
 ) {
     // Resolved per use, never captured: the active repository can change at runtime without
     // this @Singleton being recreated (offline <-> online switch).
@@ -107,10 +123,23 @@ constructor(
         val retryCount: Int = 0,
         /** Epoch ms at which an auto-retry should fire, or null. */
         val retryAt: Long? = null,
+        /**
+         * CE (#530): a Pending entry held back because the device has no network. It starts by
+         * itself once the network returns; the UI shows it as waiting for the network.
+         */
+        val waitingForNetwork: Boolean = false,
     )
 
     private val _entries = MutableStateFlow<List<Entry>>(emptyList())
     val entries: StateFlow<List<Entry>> = _entries.asStateFlow()
+
+    /**
+     * CE (#560): true from the moment the pump is started until it finds no work left. Both ends
+     * are decided under the mutex, so this is the one place that says whether the download service
+     * is needed; the service follows it instead of counting entries by itself.
+     */
+    private val _pumpActive = MutableStateFlow(false)
+    val pumpActive: StateFlow<Boolean> = _pumpActive.asStateFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
@@ -227,6 +256,12 @@ constructor(
      * pendings via their addedAt timestamp.
      */
     suspend fun restoreAll() {
+        // CE (#573): subtitles of finished downloads that older builds left as `.download`.
+        try {
+            downloader.finalizeFinishedMediaStreams()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to finalize the subtitles of finished downloads")
+        }
         val active =
             try {
                 downloader.getActiveDownloads()
@@ -456,7 +491,8 @@ constructor(
         mutex.withLock {
             if (pumpJob?.isActive == true) return
             // Keep the app process alive while we have work to pump. The service
-            // stops itself when the queue drains.
+            // stops itself once the pump is no longer active.
+            _pumpActive.value = true
             DownloadPumpService.start(context)
             pumpJob =
                 scope.launch {
@@ -464,6 +500,9 @@ constructor(
                         pump()
                     } catch (e: Exception) {
                         Timber.e(e, "DownloadQueue pump crashed")
+                        // Nothing pumps any more: let the service go. The next ensurePump()
+                        // starts both again.
+                        _pumpActive.value = false
                     }
                 }
         }
@@ -487,6 +526,8 @@ constructor(
             }
             if (active.isNotEmpty()) {
                 val updates = mutableMapOf<UUID, Entry>()
+                // Refused by the server in a way asking again won't change (#383).
+                val permanentFailures = mutableSetOf<UUID>()
                 val now = System.currentTimeMillis()
                 val dlIds = active.mapNotNull { it.downloadId }
                 val snapshots = downloader.getProgress(dlIds)
@@ -512,7 +553,13 @@ constructor(
                                 if (entry.state is EntryState.Paused) null
                                 else EntryState.Paused
                             DownloadStatus.SUCCESSFUL -> EntryState.Completed
-                            DownloadStatus.FAILED -> EntryState.Failed(null)
+                            DownloadStatus.FAILED -> {
+                                val httpStatus = snapshot.httpStatus
+                                if (httpStatus != null && isPermanentHttpFailure(httpStatus)) {
+                                    permanentFailures.add(entry.id)
+                                }
+                                EntryState.Failed(httpStatus?.let(::serverRefused))
+                            }
                             // Unknown/unhandled status (e.g. engine entry disappeared).
                             // Treat as failed rather than silently claiming success.
                             else -> EntryState.Failed(null)
@@ -624,12 +671,6 @@ constructor(
                             )
                         }
                     }
-                    mutex.withLock {
-                        _entries.value =
-                            sort(_entries.value.map { updates[it.id] ?: it })
-                    }
-                    // A finished download changes what the screens show (#251).
-                    if (completedNow.isNotEmpty()) dataChanges.onChanged()
                     // A failed entry keeps its partial .download file and source row so
                     // the next attempt (auto-retry or manual retry) can resume from where
                     // it left off via Range. We only clear the speed sample — no file/row cleanup.
@@ -639,20 +680,20 @@ constructor(
                         val dlId = failed.downloadId ?: continue
                         lastSamples.remove(dlId)
                     }
-                    // Schedule auto-retry for eligible entries; notify for permanent failures.
-                    val retryUpdates = mutableMapOf<UUID, Entry>()
+                    // Schedule auto-retry for eligible entries. CE (#560): they go straight to
+                    // waiting for the retry, in the same update as everything else. Published as
+                    // Failed first, a queue with nothing else in flight looked finished in between.
+                    val exhausted = mutableListOf<Entry>()
                     for (failed in failedEntries) {
-                        if (failed.retryCount < MAX_AUTO_RETRIES) {
-                            val backoffMs = RETRY_BACKOFF_MS[failed.retryCount.coerceAtMost(RETRY_BACKOFF_MS.lastIndex)]
-                            retryUpdates[failed.id] = failed.copy(
-                                state = EntryState.Pending,
-                                downloadId = null,
-                                startedAt = null,
-                                progress = 0,
-                                retryCount = failed.retryCount + 1,
-                                retryAt = System.currentTimeMillis() + backoffMs,
+                        val next =
+                            afterFailure(
+                                failed = failed,
+                                permanent = failed.id in permanentFailures,
+                                now = System.currentTimeMillis(),
                             )
-                            Timber.i("Auto-retry #${failed.retryCount + 1} for ${failed.item.name} in ${backoffMs / 1000}s")
+                        if (next.state is EntryState.Pending) {
+                            updates[failed.id] = next
+                            Timber.i("Auto-retry #${next.retryCount} for ${failed.item.name} in ${retryBackoffMs(failed.retryCount) / 1000}s")
                             try {
                                 downloader.savePendingDownload(
                                     failed.item,
@@ -663,16 +704,17 @@ constructor(
                                 Timber.e(e, "Failed to re-persist auto-retried download ${failed.item.name}")
                             }
                         } else {
-                            notifyFailure(failed.item)
+                            exhausted.add(failed)
                         }
                     }
-                    if (retryUpdates.isNotEmpty()) {
-                        mutex.withLock {
-                            _entries.value = sort(
-                                _entries.value.map { retryUpdates[it.id] ?: it }
-                            )
-                        }
+                    mutex.withLock {
+                        _entries.value =
+                            sort(_entries.value.map { updates[it.id] ?: it })
                     }
+                    // A finished download changes what the screens show (#251).
+                    if (completedNow.isNotEmpty()) dataChanges.onChanged()
+                    // Notify for the failures that stay failed.
+                    exhausted.forEach { notifyFailure(it.item) }
                     val completedEntries =
                         updates.values.filter { it.state is EntryState.Completed }
                     for (entry in completedEntries) {
@@ -681,14 +723,17 @@ constructor(
                 }
             }
 
-            // 2. Fill free slots from Pending queue
+            // 2. Fill free slots from Pending queue. Without a network nothing can start: the
+            //    pending entries wait for it instead of failing (#530).
+            val online = connectivity.isOnline()
+            markWaitingForNetwork(waiting = !online)
             val maxConcurrent = appPreferences.getValue(appPreferences.maxConcurrentDownloads)
             val currentlyActive =
                 _entries.value.count {
                     it.state is EntryState.Downloading || it.state is EntryState.Paused
                 }
             val freeSlots = (maxConcurrent - currentlyActive).coerceAtLeast(0)
-            if (freeSlots > 0) {
+            if (online && freeSlots > 0) {
                 val now = System.currentTimeMillis()
                 val pending = _entries.value.filter {
                     it.state is EntryState.Pending && (it.retryAt == null || it.retryAt <= now)
@@ -703,15 +748,9 @@ constructor(
             //    pumpJob).
             val shouldExit =
                 mutex.withLock {
-                    val snap = _entries.value
-                    val hasWork =
-                        snap.any {
-                            it.state is EntryState.Downloading ||
-                                it.state is EntryState.Pending ||
-                                it.state is EntryState.Paused
-                        }
-                    if (!hasWork) {
+                    if (!hasDownloadWork(_entries.value)) {
                         pumpJob = null
+                        _pumpActive.value = false
                         true
                     } else {
                         false
@@ -757,6 +796,18 @@ constructor(
                 Pair(-1L, UiText.StringResource(CoreR.string.downloading_error))
             }
 
+        // A start that failed because the network went away is not a failure of the download: it
+        // waits for the network as the queue does and is not counted as a retry (#530). A failure
+        // while online stays Failed, with Retry.
+        val waitForNetwork = downloadId == -1L && !connectivity.isOnline()
+        if (waitForNetwork) {
+            try {
+                downloader.savePendingDownload(entry.item, entry.maxBitrate, entry.smartQueued)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to persist download ${entry.item.name} waiting for network")
+            }
+        }
+
         var orphaned = false
         mutex.withLock {
             val stillPresent = _entries.value.any { it.id == entry.id }
@@ -778,7 +829,10 @@ constructor(
                                 downloadId = downloadId,
                                 startedAt = System.currentTimeMillis(),
                                 isTranscode = isTranscode,
+                                waitingForNetwork = false,
                             )
+                        } else if (waitForNetwork) {
+                            e.copy(state = EntryState.Pending, waitingForNetwork = true)
                         } else {
                             e.copy(state = EntryState.Failed(errorText))
                         }
@@ -793,6 +847,21 @@ constructor(
             }
         }
     }
+
+    /** Marks the Pending entries as waiting for the network, or clears the mark (#530). */
+    private suspend fun markWaitingForNetwork(waiting: Boolean) {
+        fun stale(entry: Entry) =
+            entry.state is EntryState.Pending && entry.waitingForNetwork != waiting
+        if (_entries.value.none(::stale)) return
+        mutex.withLock {
+            _entries.value =
+                _entries.value.map { if (stale(it)) it.copy(waitingForNetwork = waiting) else it }
+        }
+    }
+
+    /** The reason a download the server answered with an HTTP error shows (#383). */
+    private fun serverRefused(httpStatus: Int): UiText =
+        UiText.StringResource(CoreR.string.ce_download_error_server, httpStatus)
 
     private fun notifyFailure(item: FindroidItem) {
         val nm = context.getSystemService<NotificationManager>() ?: return
@@ -821,6 +890,15 @@ constructor(
         nm.notify(item.id.hashCode(), notification)
     }
 
+    /** For a queue built by hand, as the tests do: connectivity is not part of what they test. */
+    private object AlwaysOnline : NetworkConnectivity {
+        override fun isOnline() = true
+
+        override fun isMetered() = false
+
+        override fun isRoaming() = false
+    }
+
     companion object {
         private const val FAILURE_CHANNEL_ID = "download_failures"
         private const val MAX_AUTO_RETRIES = 3
@@ -829,5 +907,27 @@ constructor(
 
         /** Minimum gap between checks for failed external subtitle/media-stream downloads. */
         private const val MEDIA_STREAM_RETRY_INTERVAL_MS = 30_000L
+
+        private fun retryBackoffMs(retryCount: Int): Long =
+            RETRY_BACKOFF_MS[retryCount.coerceIn(0, RETRY_BACKOFF_MS.lastIndex)]
+
+        /**
+         * CE (#560): what a download the engine [failed] becomes. With auto-retries left it waits
+         * for the next one; with none left, or refused by the server for good ([permanent], #383),
+         * it stays failed.
+         */
+        internal fun afterFailure(failed: Entry, permanent: Boolean, now: Long): Entry =
+            if (permanent || failed.retryCount >= MAX_AUTO_RETRIES) {
+                failed
+            } else {
+                failed.copy(
+                    state = EntryState.Pending,
+                    downloadId = null,
+                    startedAt = null,
+                    progress = 0,
+                    retryCount = failed.retryCount + 1,
+                    retryAt = now + retryBackoffMs(failed.retryCount),
+                )
+            }
     }
 }

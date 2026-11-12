@@ -12,4 +12,6 @@ data class SeasonState(
     val seriesSeasons: List<FindroidSeason> = emptyList(),
     val episodeDownloadProgress: Map<UUID, DownloadProgress> = emptyMap(),
     val error: Exception? = null,
+    /** CE (#505): a load is running, so empty [episodes] may still be coming. */
+    val isLoading: Boolean = false,
 )

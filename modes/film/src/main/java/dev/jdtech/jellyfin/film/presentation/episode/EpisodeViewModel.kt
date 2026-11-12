@@ -57,12 +57,11 @@ constructor(
             val token = reloadPolicy.begin()
             _state.emit(_state.value.copy(error = null))
             try {
-                // The preferences don't depend on the episode, so they are read while it loads.
-                val (episode, displayCastAndCrew, displayExtraInfo) = coroutineScope {
+                // The preference doesn't depend on the episode, so it is read while it loads.
+                val (episode, displayCastAndCrew) = coroutineScope {
                     val episodeAsync = async { repository.getEpisode(episodeId) }
                     val castAsync = async { appPreferences.getValue(appPreferences.displayCastAndCrew) }
-                    val extraAsync = async { appPreferences.getValue(appPreferences.displayExtraInfo) }
-                    Triple(episodeAsync.await(), castAsync.await(), extraAsync.await())
+                    episodeAsync.await() to castAsync.await()
                 }
                 val videoMetadata = episode.sources.firstOrNull()?.let { videoMetadataParser.parse(it) }
                 val actors = if (displayCastAndCrew) getActors(episode) else emptyList()
@@ -71,7 +70,6 @@ constructor(
                         episode = episode.shownIn(appPreferences.detailSections()),
                         videoMetadata = videoMetadata,
                         actors = actors,
-                        displayExtraInfo = displayExtraInfo,
                     )
                 )
                 reloadPolicy.complete(token)

@@ -120,6 +120,7 @@ Read the one that fits the change before starting:
 | Screenshots for the README, the site or the Play listing | `docs/screenshots.md` |
 | Track selection or subtitle styling | `docs/track-test-series.md` |
 | Google Play | `docs/play-store.md` |
+| A server or an emulator to test on | `docs/dev-environment.md`, through the `test-server` and `test-devices` skills |
 
 The numbered files in `docs/mpv-research/`, `docs/tablet/` and `docs/tv-research/` are research from before the work was done. Where they differ from the code, the code is right.
 

@@ -15,8 +15,10 @@ import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import java.lang.reflect.Proxy
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -28,6 +30,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.jellyfin.sdk.model.api.ItemFields
 
 /**
  * CE (#252): the show page asks for the series' episodes once, not once per season, and takes the
@@ -40,6 +43,12 @@ class ShowLoadingTest {
     private val season2 = UUID.fromString("22222222-2222-2222-2222-222222222222")
     private val calls = mutableListOf<String>()
     private val episodeSeasonIds = mutableListOf<UUID?>()
+    private val episodeFields = mutableListOf<List<ItemFields>?>()
+
+    /** What the server allows per season (#373). */
+    private var season1CanDownload = true
+    private var season2CanDownload = true
+    private var episodesFail = false
 
     @Before
     fun setUp() {
@@ -58,8 +67,8 @@ class ShowLoadingTest {
         val state = withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
 
         assertEquals(listOf<UUID?>(null), episodeSeasonIds)
-        assertEquals(SeasonDownloadInfo(downloadedCount = 1, totalCount = 3), state.seasonDownloadInfo[season1])
-        assertEquals(SeasonDownloadInfo(downloadedCount = 0, totalCount = 2), state.seasonDownloadInfo[season2])
+        assertEquals(SeasonDownloadInfo(downloadedCount = 1, totalCount = 3, canDownload = true), state.seasonDownloadInfo[season1])
+        assertEquals(SeasonDownloadInfo(downloadedCount = 0, totalCount = 2, canDownload = true), state.seasonDownloadInfo[season2])
         assertTrue(state.hasDownloads)
         assertNull(state.error)
     }
@@ -86,6 +95,89 @@ class ShowLoadingTest {
 
         assertEquals(listOf("markAsFavorite"), calls)
         assertEquals(2, state.seasons.size)
+    }
+
+    @Test
+    fun `the series request asks for CanDownload`() = runBlocking {
+        val viewModel = viewModel()
+        viewModel.loadShow(showId)
+        withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
+
+        assertEquals(1, episodeFields.size)
+        assertTrue(episodeFields.single().orEmpty().contains(ItemFields.CAN_DOWNLOAD))
+    }
+
+    @Test
+    fun `all allowed offers Download for every season`() = runBlocking {
+        val viewModel = viewModel()
+        viewModel.loadShow(showId)
+        val state = withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
+
+        assertTrue(state.canDownload)
+        assertEquals(listOf(season1, season2), state.downloadableSeasons.map { it.id })
+    }
+
+    @Test
+    fun `none allowed offers no Download, and Delete still shows what is downloaded`() =
+        runBlocking {
+            season1CanDownload = false
+            season2CanDownload = false
+            val viewModel = viewModel(SeasonEpisodeCounts(season1, total = 1, downloaded = 1))
+            viewModel.loadShow(showId)
+            val state =
+                withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
+
+            assertEquals(false, state.canDownload)
+            assertEquals(emptyList<UUID>(), state.downloadableSeasons.map { it.id })
+            assertTrue(state.hasDownloads)
+            assertEquals(1, state.seasonDownloadInfo[season1]?.downloadedCount)
+        }
+
+    @Test
+    fun `mixed offers only the allowed seasons`() = runBlocking {
+        season1CanDownload = false
+        val viewModel = viewModel()
+        viewModel.loadShow(showId)
+        val state = withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
+
+        assertTrue(state.canDownload)
+        assertEquals(listOf(season2), state.downloadableSeasons.map { it.id })
+    }
+
+    @Test
+    fun `a failed series request offers no Download and shows the page`() = runBlocking {
+        episodesFail = true
+        val viewModel = viewModel(SeasonEpisodeCounts(season1, total = 1, downloaded = 1))
+        viewModel.loadShow(showId)
+        val state = withTimeout(5_000) { viewModel.state.first { it.show != null } }
+        // The counts request runs alongside; give it the time to fail.
+        Thread.sleep(200)
+
+        assertEquals(false, viewModel.state.value.canDownload)
+        assertTrue(viewModel.state.value.hasDownloads)
+        assertNull(viewModel.state.value.error)
+        assertEquals(2, state.seasons.size)
+    }
+
+    @Test
+    fun `a reload keeps Download on screen`() = runBlocking {
+        val viewModel = viewModel()
+        viewModel.loadShow(showId)
+        withTimeout(5_000) { viewModel.state.first { it.canDownload } }
+        val seen = mutableListOf<Boolean>()
+        val collector =
+            launch(Dispatchers.Unconfined) { viewModel.state.collect { seen.add(it.canDownload) } }
+        calls.clear()
+
+        viewModel.loadShow(showId)
+        withTimeout(5_000) {
+            while (synchronized(calls) { "getEpisodes" !in calls }) delay(10)
+        }
+        delay(100)
+        collector.cancel()
+
+        assertTrue(seen.isNotEmpty())
+        assertTrue("Download vanished during a reload: $seen", seen.all { it })
     }
 
     private fun viewModel(vararg counts: SeasonEpisodeCounts): ShowViewModel {
@@ -118,8 +210,14 @@ class ShowLoadingTest {
                 "getNextUp" -> emptyList<Any>()
                 "getSeasons" -> listOf(season(season1, 1), season(season2, 2))
                 "getEpisodes" -> {
-                    synchronized(calls) { episodeSeasonIds.add(args!![1] as UUID?) }
-                    List(3) { episode(season1) } + List(2) { episode(season2) }
+                    @Suppress("UNCHECKED_CAST")
+                    synchronized(calls) {
+                        episodeSeasonIds.add(args!![1] as UUID?)
+                        episodeFields.add(args[2] as List<ItemFields>?)
+                    }
+                    if (episodesFail) throw IllegalStateException("No connection")
+                    List(3) { episode(season1, season1CanDownload) } +
+                        List(2) { episode(season2, season2CanDownload) }
                 }
                 "markAsFavorite" -> Unit
                 else -> throw NotImplementedError("JellyfinRepository.${method.name}")
@@ -181,7 +279,7 @@ class ShowLoadingTest {
             images = FindroidImages(),
         )
 
-    private fun episode(seasonId: UUID) =
+    private fun episode(seasonId: UUID, canDownload: Boolean = true) =
         FindroidEpisode(
             id = UUID.randomUUID(),
             name = "Episode",
@@ -194,7 +292,7 @@ class ShowLoadingTest {
             played = false,
             favorite = false,
             canPlay = true,
-            canDownload = true,
+            canDownload = canDownload,
             runtimeTicks = 0L,
             playbackPositionTicks = 0L,
             premiereDate = null,

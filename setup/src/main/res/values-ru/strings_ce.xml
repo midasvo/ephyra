@@ -50,4 +50,12 @@
     <string name="ce_profile_pattern_saved">Графический ключ задан</string>
     <string name="ce_profile_pattern_removed">Графический ключ удалён</string>
     <string name="ce_profile_pattern_grid">Графический ключ, сетка из 3 × 3 точек</string>
+    <string name="ce_server_address_in_use">Этот адрес используется, его нельзя удалить</string>
+    <string name="ce_server_address_already_added">Этот адрес уже добавлен</string>
+    <string name="ce_local_network_denied">Доступ к локальной сети отключён. Без него серверы в вашей сети нельзя найти, и к ним нельзя подключиться.</string>
+    <string name="ce_local_network_denied_where">В настройках системы он находится в разделе Разрешения &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Разрешить доступ</string>
+    <string name="ce_local_network_off">Доступ к локальной сети отключён</string>
+    <string name="ce_add_server_error_local_network">Сервер не найден. Доступ к локальной сети отключён, поэтому адреса в вашей сети заблокированы.</string>
+    <string name="ce_permission_permanently_denied">Разрешение «%1$s» отклонено. Чтобы пользоваться им, разрешите «%2$s» в разделе «Разрешения» в настройках системы.</string>
 </resources>

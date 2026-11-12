@@ -97,4 +97,20 @@
     <string name="item_included_in">Inclòs a</string>
     <string name="item_more_like_this">Més com aquest</string>
     <string name="ce_session_revoked">%1$s ha tancat la teva sessió. Torna a iniciar la sessió per continuar.</string>
+    <string name="ce_download_error_server">El servidor ha rebutjat la baixada (HTTP %1$d)</string>
+    <string name="ce_error_server_status">El servidor ha respost amb un error (HTTP %1$d). Torna-ho a provar més tard.</string>
+    <string name="ce_media_info">Informació multimèdia</string>
+    <string name="ce_home_profile">Perfil</string>
+    <string name="ce_watched">Vist</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d sense veure</item>
+        <item quantity="other">%d sense veure</item>
+    </plurals>
+    <string name="ce_delete_download_message">Segur que vols suprimir aquesta baixada del dispositiu?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d fallida</item>
+        <item quantity="other">%d fallides</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Encara no hi ha res baixat</string>
+    <string name="ce_home_offline_empty_body">No tens connexió. Les pel·lícules i els episodis que baixis apareixen aquí i a Baixades.</string>
 </resources>

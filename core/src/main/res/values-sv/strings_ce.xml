@@ -97,4 +97,20 @@
     <string name="item_included_in">Ingår i</string>
     <string name="item_more_like_this">Mer som detta</string>
     <string name="ce_session_revoked">%1$s loggade ut dig. Logga in igen för att fortsätta.</string>
+    <string name="ce_download_error_server">Servern nekade nedladdningen (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Servern svarade med ett fel (HTTP %1$d). Försök igen senare.</string>
+    <string name="ce_media_info">Medieinformation</string>
+    <string name="ce_home_profile">Profil</string>
+    <string name="ce_watched">Sedd</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d osedd</item>
+        <item quantity="other">%d osedda</item>
+    </plurals>
+    <string name="ce_delete_download_message">Är du säker på att du vill ta bort denna nedladdning från din enhet?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d misslyckades</item>
+        <item quantity="other">%d misslyckades</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Inget nedladdat än</string>
+    <string name="ce_home_offline_empty_body">Du är offline. Filmer och avsnitt som du laddar ned visas här och under Nedladdningar.</string>
 </resources>

@@ -34,7 +34,9 @@ private val BackgroundFadeEnd = 180.dp
 
 /**
  * [backgroundAlpha] fades in a solid background behind the buttons, so scrolled content doesn't
- * run through them. See [rememberTopBarBackgroundAlpha].
+ * run through them. See [rememberTopBarBackgroundAlpha]. [overArtwork] is false when there is no
+ * artwork under the bar (a page without one, loading, an error): then the bar has no dark scrim
+ * (#437).
  */
 @Composable
 fun ItemTopBar(
@@ -43,22 +45,39 @@ fun ItemTopBar(
     onBackClick: () -> Unit = {},
     onHomeClick: () -> Unit = {},
     backgroundAlpha: () -> Float = { 0f },
+    overArtwork: Boolean = true,
     content: @Composable (RowScope.() -> Unit) = {},
 ) {
     val safePadding = rememberSafePadding()
     val backgroundColor = MaterialTheme.colorScheme.background
+    // CE: the dark circle is made for sitting on artwork (VISION §5); on the page's own
+    // background the buttons take the surface roles, so they read in the light theme too.
+    val buttonColors =
+        if (overArtwork) {
+            IconButtonDefaults.iconButtonColors(
+                containerColor = Color.Black.copy(alpha = 0.5f),
+                contentColor = Color.White,
+            )
+        } else {
+            IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            )
+        }
 
     Box(modifier = Modifier.fillMaxWidth()) {
         // Keeps the status bar readable on top of artwork.
-        Box(
-            modifier =
-                Modifier.matchParentSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color.Black.copy(alpha = 0.45f), Color.Transparent)
+        if (overArtwork) {
+            Box(
+                modifier =
+                    Modifier.matchParentSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Black.copy(alpha = 0.45f), Color.Transparent)
+                            )
                         )
-                    )
-        )
+            )
+        }
         Box(
             modifier =
                 Modifier.matchParentSize()
@@ -81,14 +100,7 @@ fun ItemTopBar(
                     )
         ) {
             if (hasBackButton) {
-                IconButton(
-                    onClick = onBackClick,
-                    colors =
-                        IconButtonDefaults.iconButtonColors(
-                            containerColor = Color.Black.copy(alpha = 0.5f),
-                            contentColor = Color.White,
-                        ),
-                ) {
+                IconButton(onClick = onBackClick, colors = buttonColors) {
                     Icon(
                         painter = painterResource(CoreR.drawable.ic_arrow_left),
                         contentDescription = stringResource(CoreR.string.navigate_back),
@@ -96,14 +108,7 @@ fun ItemTopBar(
                 }
             }
             if (hasHomeButton) {
-                IconButton(
-                    onClick = onHomeClick,
-                    colors =
-                        IconButtonDefaults.iconButtonColors(
-                            containerColor = Color.Black.copy(alpha = 0.5f),
-                            contentColor = Color.White,
-                        ),
-                ) {
+                IconButton(onClick = onHomeClick, colors = buttonColors) {
                     Icon(
                         painter = painterResource(CoreR.drawable.ic_home),
                         contentDescription = stringResource(CoreR.string.title_home),

@@ -1,5 +1,7 @@
 package dev.jdtech.jellyfin.ce.presentation.player
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
@@ -109,9 +112,43 @@ fun TrickplayThumbnail(frame: ImageBitmap, timeText: String?, modifier: Modifier
 fun Modifier.aboveAt(fraction: Float, gap: Dp): Modifier = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
     val width = constraints.maxWidth
-    val x =
-        (width * fraction.coerceIn(0f, 1f) - placeable.width / 2f)
-            .roundToInt()
-            .coerceIn(0, (width - placeable.width).coerceAtLeast(0))
+    val x = aboveAtX(width, placeable.width, fraction)
     layout(width, 0) { placeable.place(x, -placeable.height - gap.roundToPx()) }
 }
+
+/** Where [Modifier.aboveAt] puts the left edge of an element [elementWidth] wide in [width]. */
+internal fun aboveAtX(width: Int, elementWidth: Int, fraction: Float): Int =
+    (width * fraction.coerceIn(0f, 1f) - elementWidth / 2f)
+        .roundToInt()
+        .coerceIn(0, (width - elementWidth).coerceAtLeast(0))
+
+/**
+ * CE (#464): whether the seek bar's thumbnail is on screen: a position is being picked and there is
+ * a thumbnail for it. An item without trickplay never shows one, so nothing gives way for it.
+ */
+internal fun seekPreviewShown(pendingSeek: Boolean, hasFrame: Boolean): Boolean =
+    pendingSeek && hasFrame
+
+/**
+ * CE (#464): the alpha of what the seek bar's thumbnail can cover (the title lines, the skip button
+ * and the "Up next" card). The thumbnail is drawn above the time row without taking room, so they
+ * fade out while it shows and come back when the seek is confirmed or dropped. Alpha only: nothing
+ * moves and focus order stays as it is.
+ */
+@Composable
+internal fun rememberGiveWayAlpha(previewShown: Boolean): () -> Float {
+    val alpha =
+        animateFloatAsState(
+            targetValue = if (previewShown) 0f else 1f,
+            animationSpec = tween(GIVE_WAY_MS),
+            label = "seekPreviewGiveWay",
+        )
+    return remember(alpha) { { alpha.value } }
+}
+
+/** Fades with [rememberGiveWayAlpha]; read while drawing, so a fade does not recompose. */
+internal fun Modifier.givesWayToSeekPreview(alpha: () -> Float): Modifier = graphicsLayer {
+    this.alpha = alpha()
+}
+
+internal const val GIVE_WAY_MS = 150

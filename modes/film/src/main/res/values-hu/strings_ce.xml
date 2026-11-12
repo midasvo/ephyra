@@ -3,4 +3,5 @@
     <string name="home_suggestions_title">Javaslatok</string>
     <string name="home_rows_move_up">Feljebb</string>
     <string name="home_rows_move_down">Lejjebb</string>
+    <string name="ce_continue_watching">Megtekintés Folytatása</string>
 </resources>

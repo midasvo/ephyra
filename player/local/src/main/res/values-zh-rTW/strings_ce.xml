@@ -24,4 +24,7 @@
     <plurals name="player_up_next_starts_in">
         <item quantity="other">%d 秒後開始</item>
     </plurals>
+    <string name="ce_track_forced">強制</string>
+    <string name="ce_player_connection_lost">連線已中斷。網路恢復後將繼續播放。</string>
+    <string name="ce_player_try_again">重試</string>
 </resources>

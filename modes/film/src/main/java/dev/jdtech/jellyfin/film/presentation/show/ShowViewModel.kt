@@ -10,13 +10,13 @@ import dev.jdtech.jellyfin.film.presentation.RelatedItemsRequest
 import dev.jdtech.jellyfin.film.presentation.detailSections
 import dev.jdtech.jellyfin.film.presentation.keeping
 import dev.jdtech.jellyfin.film.presentation.launchRelatedItems
+import dev.jdtech.jellyfin.film.presentation.selectEpisodesToDownload
 import dev.jdtech.jellyfin.film.presentation.shownIn
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItemPerson
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.models.FindroidSourceType
 import dev.jdtech.jellyfin.models.SeasonEpisodeCounts
-import dev.jdtech.jellyfin.models.isDownloaded
 import dev.jdtech.jellyfin.models.mergeDuplicateRoles
 import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.JellyfinRepository
@@ -39,8 +39,15 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.PersonKind
 import timber.log.Timber
+
+/**
+ * The fields the show page asks for with the series' episodes: the server only fills in
+ * `CanDownload` when asked (see `SeasonEpisodeFieldsTest`), and without it nothing would download.
+ */
+internal val showEpisodeFields = listOf(ItemFields.CAN_DOWNLOAD)
 
 @HiltViewModel
 class ShowViewModel
@@ -133,6 +140,9 @@ constructor(
                     val show = showAsync.await()
                     val displayCastAndCrew =
                         appPreferences.getValue(appPreferences.displayCastAndCrew)
+                    // CE (#510): the director and the writers have a switch of their own.
+                    val displayCredits =
+                        displayCastAndCrew && appPreferences.getValue(appPreferences.detailCredits)
                     val castAndCrewAsync =
                         async(Dispatchers.Default) {
                             if (displayCastAndCrew) castAndCrew(show) else CastAndCrew()
@@ -149,8 +159,8 @@ constructor(
                             nextUp = nextUp,
                             seasons = seasons,
                             actors = castAndCrew.actors,
-                            director = castAndCrew.director,
-                            writers = castAndCrew.writers,
+                            director = castAndCrew.director.takeIf { displayCredits },
+                            writers = castAndCrew.writers.takeIf { displayCredits }.orEmpty(),
                             hasDownloads =
                                 localCounts?.let { counts ->
                                     seasons.any { (counts[it.id]?.downloaded ?: 0) > 0 }
@@ -161,20 +171,24 @@ constructor(
                     if (relatedFor == showId) loadRelated(showId)
 
                     if (localCounts == null) return@coroutineScope
-                    // Offline, the stored episodes are all there is.
+                    // Offline, the stored episodes are all there is, and they say nothing about
+                    // what the server allows to download.
                     val totals =
-                        if (downloadsOnly) localCounts.mapValues { it.value.total }
+                        if (downloadsOnly)
+                            localCounts.mapValues { SeasonEpisodeTotals(total = it.value.total) }
                         else serverTotalsAsync.await() ?: return@coroutineScope
                     _state.emit(
                         _state.value.copy(
                             seasonDownloadInfo =
                                 seasons.associate { season ->
-                                    val total = totals[season.id] ?: 0
+                                    val seasonTotals = totals[season.id] ?: SeasonEpisodeTotals()
+                                    val total = seasonTotals.total
                                     val downloaded = localCounts[season.id]?.downloaded ?: 0
                                     season.id to
                                         SeasonDownloadInfo(
                                             downloadedCount = downloaded.coerceAtMost(total),
                                             totalCount = total,
+                                            canDownload = seasonTotals.canDownload,
                                         )
                                 }
                         )
@@ -195,12 +209,22 @@ constructor(
             database.getSeasonEpisodeCounts(showId).associateBy { it.seasonId }
         }
 
-    /** Episodes per season on the server, from one request for the whole series. */
-    private suspend fun getServerEpisodeTotals(showId: UUID): Map<UUID, Int> =
+    private data class SeasonEpisodeTotals(val total: Int = 0, val canDownload: Boolean = false)
+
+    /**
+     * Episodes per season on the server, and whether any of them may be downloaded, from one
+     * request for the whole series.
+     */
+    private suspend fun getServerEpisodeTotals(showId: UUID): Map<UUID, SeasonEpisodeTotals> =
         repository
-            .getEpisodes(seriesId = showId, seasonId = null)
-            .groupingBy { it.seasonId }
-            .eachCount()
+            .getEpisodes(seriesId = showId, seasonId = null, fields = showEpisodeFields)
+            .groupBy { it.seasonId }
+            .mapValues { (_, episodes) ->
+                SeasonEpisodeTotals(
+                    total = episodes.size,
+                    canDownload = episodes.any { it.canDownload },
+                )
+            }
 
     private suspend fun <T> optional(block: suspend () -> T): T? =
         try {
@@ -268,15 +292,15 @@ constructor(
                     }
                     .map { it.id }
                     .toSet()
-            val toQueue = mutableListOf<FindroidEpisode>()
-            var skipped = 0
-            for (seasonId in seasonIds) {
-                val episodes = repository.getEpisodes(seriesId = showId, seasonId = seasonId)
-                for (episode in episodes) {
-                    if (episode.isDownloaded() || episode.id in liveQueuedIds) skipped++
-                    else toQueue.add(episode)
+            val episodes =
+                seasonIds.flatMap { seasonId ->
+                    repository.getEpisodes(
+                        seriesId = showId,
+                        seasonId = seasonId,
+                        fields = showEpisodeFields,
+                    )
                 }
-            }
+            val (toQueue, skipped) = selectEpisodesToDownload(episodes, liveQueuedIds)
             downloadQueue.enqueueAll(toQueue, maxBitrate)
             eventsChannel.send(ShowEvent.DownloadResult(toQueue.size, skipped, 0))
             loadShow(showId)

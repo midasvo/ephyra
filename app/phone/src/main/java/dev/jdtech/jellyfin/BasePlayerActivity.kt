@@ -55,10 +55,22 @@ abstract class BasePlayerActivity : AppCompatActivity() {
         if (wasPip) {
             wasPip = false
         } else {
-            viewModel.player.playWhenReady = viewModel.playWhenReady
+            // CE (#477): only undo the pause onPause made; a player that played on in the
+            // background may have been paused since (still-watching prompt, sleep timer).
+            playWhenReadyToRestore(pausesOnLeave, viewModel.playWhenReady)?.let {
+                viewModel.player.playWhenReady = it
+            }
         }
         hideSystemUI()
     }
+
+    /**
+     * Leaving the player screen pauses the player, unless it plays on in the background. Fixed for
+     * the session ([PlayerViewModel.isBackgroundAudioEnabled] is read once), so onPause and
+     * onResume always agree, also across a recreated activity.
+     */
+    private val pausesOnLeave: Boolean
+        get() = !viewModel.isBackgroundAudioEnabled
 
     override fun onPause() {
         super.onPause()
@@ -67,7 +79,7 @@ abstract class BasePlayerActivity : AppCompatActivity() {
             wasPip = true
         } else {
             viewModel.playWhenReady = viewModel.player.playWhenReady
-            if (!viewModel.isBackgroundAudioEnabled) {
+            if (pausesOnLeave) {
                 viewModel.player.playWhenReady = false
             }
             viewModel.updatePlaybackProgress()
@@ -100,12 +112,16 @@ abstract class BasePlayerActivity : AppCompatActivity() {
 
     protected fun configureInsets(playerControls: View) {
         playerControls.setOnApplyWindowInsetsListener { _, windowInsets ->
-            val cutout = windowInsets.displayCutout
+            // CE (#455): the visible system bars too, not only the cutout.
+            val insets =
+                playerControlsInsets(
+                    WindowInsetsCompat.toWindowInsetsCompat(windowInsets, playerControls)
+                )
             playerControls.updatePadding(
-                left = cutout?.safeInsetLeft ?: 0,
-                top = cutout?.safeInsetTop ?: 0,
-                right = cutout?.safeInsetRight ?: 0,
-                bottom = cutout?.safeInsetBottom ?: 0,
+                left = insets.left,
+                top = insets.top,
+                right = insets.right,
+                bottom = insets.bottom,
             )
             return@setOnApplyWindowInsetsListener windowInsets
         }

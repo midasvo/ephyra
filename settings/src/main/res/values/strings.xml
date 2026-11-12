@@ -296,4 +296,24 @@
     <string name="ce_pref_detail_collections_summary">The collections a movie is part of</string>
     <string name="ce_pref_detail_similar">More like this</string>
     <string name="ce_pref_detail_similar_summary">Similar titles from your library</string>
+    <string name="ce_pref_detail_credits">Director and writers</string>
+    <string name="ce_pref_detail_credits_summary">Under the overview on movie and show pages</string>
+    <string name="ce_media_segments_auto_skip_pip">Only in picture-in-picture</string>
+    <string name="ce_media_segments_auto_skip_always">Always</string>
+    <string name="ce_player_backend_exoplayer" translatable="false">ExoPlayer</string>
+    <string name="ce_player_backend_mpv" translatable="false">mpv</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d episode</item>
+        <item quantity="other">%d episodes</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <string name="ce_number_no_limit">No limit</string>
+    <string name="ce_number_off">Off</string>
+    <string name="ce_pref_player_keep_landscape">Keep the player in landscape</string>
+    <string name="ce_pref_player_keep_landscape_summary">Play videos in landscape, even when you turn the tablet upright</string>
+    <string name="ce_pref_home_episode_images">Use episode images</string>
+    <string name="ce_pref_home_episode_images_summary">Show the episode\'s image instead of the show\'s artwork in Continue Watching and Next Up</string>
 </resources>

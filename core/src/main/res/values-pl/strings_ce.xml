@@ -103,4 +103,24 @@
     <string name="item_included_in">Należy do</string>
     <string name="item_more_like_this">Więcej podobnych</string>
     <string name="ce_session_revoked">%1$s wylogował cię. Zaloguj się ponownie, aby kontynuować.</string>
+    <string name="ce_download_error_server">Serwer odrzucił pobieranie (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Serwer odpowiedział błędem (HTTP %1$d). Spróbuj ponownie później.</string>
+    <string name="ce_media_info">Informacje o multimediach</string>
+    <string name="ce_home_profile">Profil</string>
+    <string name="ce_watched">Obejrzane</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d nieobejrzany</item>
+        <item quantity="few">%d nieobejrzane</item>
+        <item quantity="many">%d nieobejrzanych</item>
+        <item quantity="other">%d nieobejrzanych</item>
+    </plurals>
+    <string name="ce_delete_download_message">Czy na pewno chcesz usunąć ten plik z urządzenia?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d nieudane</item>
+        <item quantity="few">%d nieudane</item>
+        <item quantity="many">%d nieudanych</item>
+        <item quantity="other">%d nieudanych</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Nic jeszcze nie pobrano</string>
+    <string name="ce_home_offline_empty_body">Jesteś offline. Pobrane filmy i odcinki pojawią się tutaj i w sekcji Pobrane.</string>
 </resources>

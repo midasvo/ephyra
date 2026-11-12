@@ -50,4 +50,12 @@
     <string name="ce_profile_pattern_saved">Padrão definido</string>
     <string name="ce_profile_pattern_removed">Padrão removido</string>
     <string name="ce_profile_pattern_grid">Padrão de desbloqueio, uma grade de 3 por 3 pontos</string>
+    <string name="ce_server_address_in_use">Este endereço está em uso e não pode ser removido</string>
+    <string name="ce_server_address_already_added">Este endereço já foi adicionado</string>
+    <string name="ce_local_network_denied">O acesso à rede local está desativado. Sem ele, não é possível encontrar nem acessar os servidores da sua rede.</string>
+    <string name="ce_local_network_denied_where">Nas configurações do sistema, fica em Permissões &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Permitir acesso</string>
+    <string name="ce_local_network_off">O acesso à rede local está desativado</string>
+    <string name="ce_add_server_error_local_network">Servidor não encontrado. O acesso à rede local está desativado, o que bloqueia os endereços da sua rede.</string>
+    <string name="ce_permission_permanently_denied">%1$s foi negado. Para usar, permita \"%2$s\" em Permissões nas configurações do sistema.</string>
 </resources>

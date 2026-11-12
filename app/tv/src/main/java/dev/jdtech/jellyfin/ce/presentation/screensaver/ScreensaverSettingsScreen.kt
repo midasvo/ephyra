@@ -210,8 +210,9 @@ private fun ScreensaverActionCard(
         scale = ClickableSurfaceScale.None,
         modifier = modifier.fillMaxWidth(),
     ) {
+        // Full width, or SpaceBetween has no room and the value runs into the title (#422).
         Row(
-            modifier = Modifier.padding(MaterialTheme.spacings.default),
+            modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacings.default),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {

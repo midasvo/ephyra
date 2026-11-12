@@ -1,10 +1,11 @@
 package dev.jdtech.jellyfin
 
+import android.animation.TimeInterpolator
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.AppOpsManager
 import android.app.PictureInPictureParams
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
@@ -26,6 +27,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Space
@@ -37,6 +39,7 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModelProvider
+import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -53,6 +56,7 @@ import androidx.window.layout.WindowMetricsCalculator
 import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.ephyra.EphyraMotion
 import dev.jdtech.jellyfin.databinding.ActivityPlayerBinding
 import dev.jdtech.jellyfin.film.presentation.season.SeasonState
 import dev.jdtech.jellyfin.film.presentation.season.SeasonViewModel
@@ -82,9 +86,6 @@ import timber.log.Timber
 
 var isControlsLocked: Boolean = false
 
-/** Below this many dp a window is compact width (Material window size classes). */
-private const val COMPACT_WIDTH_DP = 600
-
 @AndroidEntryPoint
 class PlayerActivity : BasePlayerActivity() {
 
@@ -110,6 +111,12 @@ class PlayerActivity : BasePlayerActivity() {
     /** CE (R8): locks or unlocks the controls as their buttons do. Set in [onCreate]. */
     private var toggleLock: () -> Unit = {}
 
+    /**
+     * CE (#448): the focused control is one the user moved to with Tab or the arrows, not one
+     * Android focused by itself. Only then do Space and the arrows go to it.
+     */
+    private var keyboardFocusChosen = false
+
     /** CE (R8): wheel movement not yet turned into a seek; touchpads scroll in fractions. */
     private var pendingScroll = 0f
 
@@ -128,16 +135,22 @@ class PlayerActivity : BasePlayerActivity() {
     }
 
     /**
-     * CE (R6, T7): the orientation the player asks for while the controls are not locked. Phones
-     * keep the forced landscape; tablets and unfolded foldables play in whatever orientation they
-     * are held. Set by [updatePlayerOrientation].
+     * CE (#363): a fold is half-opened (tabletop or book posture), in either orientation. Set from
+     * [WindowInfoTracker]; [playerOrientation] then leaves the window free to turn.
      */
-    private var playerOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+    private var foldHalfOpened = false
 
     /**
-     * Picks [playerOrientation] from the window the player gets when it fills the screen: forced
-     * landscape when that window is compact width (< 600 dp) held in portrait, i.e. its shorter
-     * side is under 600 dp; otherwise unspecified.
+     * CE (#363): the display answered "Keep the player in landscape" with a letterboxed box
+     * ([refusesLandscape]). Latched for the life of this player, so it follows the device from
+     * then on instead of flipping between the box and full screen.
+     */
+    private var landscapeRefused = false
+
+    /**
+     * CE (R6, T7, #363): asks for the orientation [playerOrientation] picks, from the window the
+     * player gets when it fills the screen, the "Keep the player in landscape" setting, the window
+     * mode, the fold and the lock.
      *
      * The shorter side and not the current width, because a phone held in landscape is wider than
      * 600 dp and must still lock. The maximum window and not the current one, because a requested
@@ -146,13 +159,39 @@ class PlayerActivity : BasePlayerActivity() {
      * or unfolding changes the maximum window, hence the call from [onConfigurationChanged].
      */
     private fun updatePlayerOrientation() {
-        val bounds = WindowMetricsCalculator.getOrCreate().computeMaximumWindowMetrics(this).bounds
+        val calculator = WindowMetricsCalculator.getOrCreate()
+        val bounds = calculator.computeMaximumWindowMetrics(this).bounds
         val shorterSideDp = minOf(bounds.width(), bounds.height()) / resources.displayMetrics.density
-        playerOrientation =
-            if (shorterSideDp < COMPACT_WIDTH_DP) ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        if (!isControlsLocked && requestedOrientation != playerOrientation) {
-            requestedOrientation = playerOrientation
+        val keepLandscape = appPreferences.getValue(appPreferences.playerKeepLandscape)
+        if (keepLandscape && !landscapeRefused) {
+            val window = calculator.computeCurrentWindowMetrics(this).bounds
+            val letterboxed =
+                isLetterboxed(
+                    windowWidth = window.width(),
+                    windowHeight = window.height(),
+                    maxWidth = bounds.width(),
+                    maxHeight = bounds.height(),
+                    multiWindow = isInMultiWindowMode,
+                    pictureInPicture = isInPictureInPictureMode,
+                )
+            if (refusesLandscape(requestedOrientation, keepLandscape, shorterSideDp, letterboxed)) {
+                Timber.d("Keep landscape: letterboxed in $window of $bounds, following the device")
+                landscapeRefused = true
+            }
+        }
+        val orientation =
+            playerOrientation(
+                shorterSideDp = shorterSideDp,
+                keepLandscape = keepLandscape,
+                locked = isControlsLocked,
+                multiWindow = isInMultiWindowMode,
+                pictureInPicture = isInPictureInPictureMode,
+                foldHalfOpened = foldHalfOpened,
+                sdkInt = Build.VERSION.SDK_INT,
+                landscapeRefused = landscapeRefused,
+            )
+        if (requestedOrientation != orientation) {
+            requestedOrientation = orientation
         }
     }
 
@@ -275,6 +314,18 @@ class PlayerActivity : BasePlayerActivity() {
             applyPlayerDimens()
             updateEpisodesButton()
         }
+        // CE (#455): a fold, an unfold or a resize can bring the system bars back; until now they
+        // were hidden again only on resume and when the controls hide.
+        if (!isInPictureInPictureMode) hideSystemUI()
+    }
+
+    override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
+        super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
+        // CE (#455): as in onConfigurationChanged. In split-screen some bars stay up anyway, and
+        // configureInsets keeps the controls clear of them.
+        if (!isInPictureInPictureMode) hideSystemUI()
+        // CE (#363): split-screen and freeform windows are left free to turn.
+        updatePlayerOrientation()
     }
 
     /**
@@ -353,6 +404,26 @@ class PlayerActivity : BasePlayerActivity() {
                         },
                         onDismiss = { closeEpisodeSheet() },
                         onClosed = { binding.episodeSheet.isVisible = false },
+                        onBoundsChanged = { bounds ->
+                            if (bounds != episodeSheetBounds) {
+                                episodeSheetBounds = bounds
+                                updateControlsUnderEpisodeSheet()
+                            }
+                        },
+                        wantsFocus = episodeSheetWantsFocus.value,
+                        mayTakeFocus = {
+                            episodeSheetTakesFocus(
+                                requested = episodeSheetWantsFocus.value,
+                                sheetOpen = episodeSheetBackCallback.isEnabled,
+                                focusParked = currentFocus.let { it == null || it === binding.playerView },
+                            )
+                        },
+                        onFocusSettled = { focused ->
+                            episodeSheetWantsFocus.value = false
+                            // The user opened the sheet from the keyboard, so the row is a
+                            // control they chose: the arrows and Space go to it (#448).
+                            if (focused) keyboardFocusChosen = true
+                        },
                     )
                 }
             }
@@ -363,16 +434,174 @@ class PlayerActivity : BasePlayerActivity() {
         // The controls stay up while the sheet is open.
         binding.playerView.controllerShowTimeoutMs = 0
         binding.playerView.showController()
+        updateControlsUnderEpisodeSheet()
     }
 
     /** Closes the sheet with its fade, or at once when [animate] is false. */
     private fun closeEpisodeSheet(animate: Boolean = true) {
         if (!episodeSheetBackCallback.isEnabled) return
         episodeSheetBackCallback.isEnabled = false
+        episodeSheetWantsFocus.value = false
+        val hadFocus = binding.episodeSheet.hasFocus()
         episodeSheetVisible.targetState = false
         if (!animate) binding.episodeSheet.isVisible = false
         // Restarts the hide timer when the controls are showing.
         binding.playerView.controllerShowTimeoutMs = controlsHideTimeoutMs
+        updateControlsUnderEpisodeSheet(animate)
+        // CE (#588): focus goes back where it came from, not to whatever Android finds first.
+        if (hadFocus && !episodesButton.requestFocus()) parkFocusOnPlayerView(force = true)
+    }
+
+    /**
+     * CE (#588): the sheet was opened from the keyboard and has yet to focus the playing episode's
+     * row. A Compose state: the sheet acts on it when its rows are there.
+     */
+    private val episodeSheetWantsFocus = mutableStateOf(false)
+
+    /** CE (#456): the sheet's bounds in the window, from the sheet; null until it is laid out. */
+    private var episodeSheetBounds: Rect? = null
+
+    /**
+     * CE (#456, #523): the sheet is 92 % opaque (design §9), so the controls under it showed
+     * through. While it is open, the top-row and transport buttons it covers or cuts, the skip
+     * button and the whole seek row (the time labels and the seek bar, so the bar is never half
+     * visible) fade out with the sheet's motion and leave the focus order; closing brings them
+     * back, at once when [animate] is false.
+     */
+    private fun updateControlsUnderEpisodeSheet(animate: Boolean = true) {
+        // The sheet also counts for what lies past the window's edge on its side: top-row buttons
+        // scrolled out of a narrow window there would come under the sheet with the focus.
+        val sheet =
+            episodeSheetBounds
+                ?.takeIf { episodeSheetBackCallback.isEnabled }
+                ?.let { Rect(it) }
+                ?.apply {
+                    if (right >= binding.root.width) right = Int.MAX_VALUE
+                    else if (left <= 0) left = Int.MIN_VALUE
+                }
+        val playerView = binding.playerView
+        val topRow =
+            playerView.findViewById<ViewGroup>(R.id.extra_buttons).getChildAt(0) as ViewGroup
+        val transport = playerView.findViewById<ViewGroup>(R.id.transport_controls)
+        val seekRow = playerView.findViewById<View>(R.id.seek_row)
+        val controls =
+            (topRow.children + transport.children).filter { it !is Space } +
+                seekRow +
+                skipSegmentButton
+        val bounds = controls.associateWith { it.boundsInWindow() }
+        val covered = controlsUnderEpisodeSheet(bounds, sheet)
+        for (view in bounds.keys) setUnderEpisodeSheet(view, view in covered, animate)
+    }
+
+    /**
+     * CE: a top row too narrow for every button starts scrolled to its end, and stays there through
+     * a resize or rotation until the user scrolls it (by touch, or by moving focus to a button out
+     * of view, which the scroll view brings in). Scrolling also moves buttons under or out from
+     * under the open episode sheet (#456).
+     */
+    private fun configureTopRowScroll() {
+        val topRow = binding.playerView.findViewById<HorizontalScrollView>(R.id.extra_buttons)
+        val buttons = topRow.getChildAt(0)
+        fun maxScroll() =
+            topRowMaxScroll(
+                contentWidth = buttons.width,
+                viewportWidth = topRow.width - topRow.paddingLeft - topRow.paddingRight,
+            )
+        var followsEnd = true
+        topRow.setOnScrollChangeListener { _, scrollX, _, _, _ ->
+            followsEnd = topRowFollowsEnd(scrollX, maxScroll())
+            if (episodeSheetBackCallback.isEnabled) updateControlsUnderEpisodeSheet()
+        }
+        val keepAtEnd =
+            View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+                if (followsEnd) topRow.scrollTo(maxScroll(), 0)
+            }
+        topRow.addOnLayoutChangeListener(keepAtEnd)
+        buttons.addOnLayoutChangeListener(keepAtEnd)
+    }
+
+    private fun View.boundsInWindow(): Rect {
+        val location = IntArray(2)
+        getLocationInWindow(location)
+        return Rect(location[0], location[1], location[0] + width, location[1] + height)
+    }
+
+    /** The running fade of each control the episode sheet hides or brings back. */
+    private val episodeSheetFades = HashMap<View, ValueAnimator>()
+
+    /** The controls the episode sheet hides now, faded out or on their way. */
+    private val hiddenUnderEpisodeSheet = HashSet<View>()
+
+    /**
+     * Hides [view] under the open episode sheet, or brings it back. The fade is the view's
+     * transition alpha, which multiplies its alpha: media3 sets the alpha of the transport
+     * buttons itself (a disabled Next is dimmed), and the visibility other code sets is not
+     * touched either. A hidden control takes no focus and is not in the accessibility tree.
+     * Nothing happens to a control that is already where it should be, so a fade goes on.
+     */
+    private fun setUnderEpisodeSheet(view: View, covered: Boolean, animate: Boolean) {
+        val changed =
+            if (covered) hiddenUnderEpisodeSheet.add(view) else hiddenUnderEpisodeSheet.remove(view)
+        if (!changed && animate) return
+        val hadFocus = view.hasFocus()
+        if (covered && view is ViewGroup) {
+            // CE (#523): a drag on the seek bar that is still going on ends without a seek;
+            // disabling the bar is media3's way to cancel one.
+            val timeBar = view.findViewById<DefaultTimeBar>(R.id.exo_progress)
+            if (timeBar.isEnabled) {
+                timeBar.isEnabled = false
+                timeBar.isEnabled = true
+            }
+        }
+        if (covered && hadFocus) {
+            // Opened from the keyboard: the Episodes button has focus. It moves to the player
+            // view, rather than to the first control.
+            // CE (#588): the sheet takes it from there, for the playing episode's row, once the
+            // rows are there. Asking the sheet's view for focus instead found nothing to focus
+            // on the first open, and the first row on a later one.
+            binding.episodeSheet.post {
+                parkFocusOnPlayerView()
+                if (episodeSheetBackCallback.isEnabled) {
+                    view.setFocusBlocked(true)
+                    episodeSheetWantsFocus.value = true
+                }
+            }
+        } else {
+            view.setFocusBlocked(covered)
+        }
+        view.importantForAccessibility =
+            when {
+                !covered -> View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                view is ViewGroup -> View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+                else -> View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }
+
+        val alpha = if (covered) 0f else 1f
+        episodeSheetFades.remove(view)?.cancel()
+        if (!animate || view.transitionAlpha == alpha) {
+            view.transitionAlpha = alpha
+            return
+        }
+        val easing = if (covered) EphyraMotion.EasingEnter else EphyraMotion.EasingExit
+        val fade = ValueAnimator.ofFloat(view.transitionAlpha, alpha)
+        fade.duration =
+            (if (covered) EphyraMotion.DURATION_MEDIUM else EphyraMotion.DURATION_SHORT).toLong()
+        fade.interpolator = TimeInterpolator { easing.transform(it) }
+        fade.addUpdateListener { view.transitionAlpha = it.animatedValue as Float }
+        episodeSheetFades[view] = fade
+        fade.start()
+    }
+
+    /** Keeps focus off a control, or off everything in a group, or lets it back. */
+    private fun View.setFocusBlocked(blocked: Boolean) {
+        when (this) {
+            is ViewGroup ->
+                descendantFocusability =
+                    if (blocked) ViewGroup.FOCUS_BLOCK_DESCENDANTS
+                    else ViewGroup.FOCUS_BEFORE_DESCENDANTS
+            is ImageButton,
+            is Button -> isFocusable = !blocked
+        }
     }
 
     private val isPipSupported by lazy {
@@ -434,6 +663,8 @@ class PlayerActivity : BasePlayerActivity() {
             PlayerView.ControllerVisibilityListener { visibility ->
                 if (visibility == View.GONE) {
                     hideSystemUI()
+                    // CE (#448): focus left in the hidden controls is no longer the user's.
+                    parkFocusOnPlayerView()
                 }
                 // CE (R8): a mouse pointer hides with the controls and comes back with them.
                 binding.playerView.pointerIcon =
@@ -445,6 +676,22 @@ class PlayerActivity : BasePlayerActivity() {
                 updateSkipSegmentButton(viewModel.uiState.value)
             }
         )
+
+        // CE (#448): Android also focuses a control by itself: the first control when a key ends
+        // touch mode (the back button, with the controls up), play/pause when the controls show,
+        // the next control when the focused one hides. Move focus back to the player view, so only
+        // a control the user moved to with Tab or the arrows has focus.
+        binding.playerView.isFocusableInTouchMode = true
+        binding.playerView.viewTreeObserver.addOnTouchModeChangeListener { inTouchMode ->
+            keyboardFocusChosen = false
+            keepFocusThroughTouchMode(inTouchMode)
+        }
+        binding.playerView.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+            val playerView = binding.playerView
+            if (!keyboardFocusChosen && newFocus?.isInside(playerView) == true) {
+                playerView.post { if (!keyboardFocusChosen) parkFocusOnPlayerView() }
+            }
+        }
 
         val playerControls = binding.playerView.findViewById<View>(R.id.player_controls)
         val lockedControls = binding.playerView.findViewById<View>(R.id.locked_player_view)
@@ -477,6 +724,7 @@ class PlayerActivity : BasePlayerActivity() {
         binding.playerView.subtitleView?.applySubtitleStyle(appPreferences)
 
         val videoNameTextView = binding.playerView.findViewById<TextView>(R.id.video_name)
+        val seriesNameTextView = binding.playerView.findViewById<TextView>(R.id.video_series_name)
 
         val audioButton = binding.playerView.findViewById<ImageButton>(R.id.btn_audio_track)
         val subtitleButton = binding.playerView.findViewById<ImageButton>(R.id.btn_subtitle)
@@ -486,6 +734,17 @@ class PlayerActivity : BasePlayerActivity() {
         val qualityButton = binding.playerView.findViewById<ImageButton>(R.id.btn_quality)
         val qualitySpace = binding.playerView.findViewById<Space>(R.id.space_quality)
         skipSegmentButton = binding.playerView.findViewById(R.id.btn_skip_segment)
+        // CE (#523): the skip button can appear while the episode sheet is open, and never shows
+        // under it; the other controls can move under it or away, when the window is resized.
+        skipSegmentButton.addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ ->
+            val sheet = episodeSheetBounds?.takeIf { episodeSheetBackCallback.isEnabled }
+            val covered = sheet != null && isUnderEpisodeSheet(view.boundsInWindow(), sheet)
+            setUnderEpisodeSheet(view, covered, animate = false)
+        }
+        binding.playerView.viewTreeObserver.addOnGlobalLayoutListener {
+            if (episodeSheetBackCallback.isEnabled) updateControlsUnderEpisodeSheet()
+        }
+        configureTopRowScroll()
         val pipButton = binding.playerView.findViewById<ImageButton>(R.id.btn_pip)
         val lockButton = binding.playerView.findViewById<ImageButton>(R.id.btn_lockview)
         val unlockButton = binding.playerView.findViewById<ImageButton>(R.id.btn_unlock)
@@ -517,16 +776,30 @@ class PlayerActivity : BasePlayerActivity() {
                     WindowInfoTracker.getOrCreate(this@PlayerActivity)
                         .windowLayoutInfo(this@PlayerActivity)
                         .collect { layoutInfo ->
+                            val folds =
+                                layoutInfo.displayFeatures.filterIsInstance<FoldingFeature>()
                             tabletopFold =
-                                layoutInfo.displayFeatures
-                                    .filterIsInstance<FoldingFeature>()
+                                folds
                                     .firstOrNull {
                                         it.state == FoldingFeature.State.HALF_OPENED &&
                                             it.orientation == FoldingFeature.Orientation.HORIZONTAL
                                     }
                                     ?.bounds
                             applyTabletopLayout()
+                            // CE (#363): any orientation, see playerOrientation.
+                            foldHalfOpened =
+                                folds.any { it.state == FoldingFeature.State.HALF_OPENED }
+                            updatePlayerOrientation()
                         }
+                }
+
+                // CE (#363): the setting can change while the player is open in the background or
+                // in picture-in-picture. observe() sends the current value first, so coming back
+                // to the player applies a change made meanwhile.
+                launch {
+                    appPreferences.observe(appPreferences.playerKeepLandscape).collect {
+                        updatePlayerOrientation()
+                    }
                 }
 
                 launch {
@@ -535,6 +808,16 @@ class PlayerActivity : BasePlayerActivity() {
                         uiState.apply {
                             // Title
                             videoNameTextView.text = currentItemTitle
+                            // CE (#452): the series name on its own line above.
+                            seriesNameTextView.text = currentItemSeriesName
+                            seriesNameTextView.isVisible = currentItemSeriesName != null
+
+                            // CE (#450): waiting for the network, with the controls up so Play
+                            // (retry now) is at hand.
+                            if (waitingForNetwork && !binding.connectionLost.isVisible) {
+                                binding.playerView.showController()
+                            }
+                            binding.connectionLost.isVisible = waitingForNetwork
 
                             // Media segment (#271)
                             currentSegment?.let { segment ->
@@ -622,13 +905,13 @@ class PlayerActivity : BasePlayerActivity() {
                                     )
                                 }
 
-                                if (appPreferences.getValue(appPreferences.playerPipGesture)) {
-                                    try {
-                                        setPictureInPictureParams(pipParams(event.isPlaying))
-                                    } catch (_: IllegalArgumentException) {}
-                                }
+                                // CE (#480): also with the gesture off, so auto-enter follows a
+                                // setting changed while the player was open.
+                                updatePipParams(event.isPlaying, playStateChanged = true)
                             }
                             is PlayerEvents.PlayerError -> {
+                                // CE (#450): shown as the waiting state, not as an error.
+                                if (event.waitingForNetwork) return@collect
                                 // Logged in PlayerViewModel. Without this the player sat there
                                 // without a word after a stream failed to open (#306).
                                 Toast.makeText(
@@ -748,17 +1031,20 @@ class PlayerActivity : BasePlayerActivity() {
             closeEpisodeSheet(animate = false)
             exoPlayerControlView.visibility = View.GONE
             lockedLayout.visibility = View.VISIBLE
-            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
             isControlsLocked = true
+            // SCREEN_ORIENTATION_LOCKED: the current orientation, whatever it is.
+            updatePlayerOrientation()
             updateUpNextCardAllowed()
+            parkFocusOnPlayerView()
         }
 
         unlockButton.setOnClickListener {
             exoPlayerControlView.visibility = View.VISIBLE
             lockedLayout.visibility = View.GONE
-            requestedOrientation = playerOrientation
             isControlsLocked = false
+            updatePlayerOrientation()
             updateUpNextCardAllowed()
+            parkFocusOnPlayerView()
         }
 
         // CE (R8): the L key presses whichever of the two is showing.
@@ -837,8 +1123,11 @@ class PlayerActivity : BasePlayerActivity() {
      * | Media next / previous | next / previous item in the queue |
      *
      * Any key but the media keys and Escape also shows the controls, or keeps them up. While the
-     * controls are showing and one of them has focus (after Tab), the arrows and Space go to that
-     * control. With the controls locked only L, Escape and the media keys do anything.
+     * controls are showing and the user moved focus to one of them (with Tab), the arrows and Space
+     * go to that control; focus Android gave a control by itself does not count (#448). A row of
+     * the open episode sheet is such a control too (#588). With the
+     * controls locked only L, Escape and the media keys do anything, and Space presses Unlock or a
+     * skip button only when the user moved to it.
      */
     private fun onPlayerKey(event: KeyEvent): Boolean {
         // A picture-in-picture window takes no keys; leave everything to the system.
@@ -865,24 +1154,58 @@ class PlayerActivity : BasePlayerActivity() {
         val playerView = binding.playerView
         // Judged before the controls are shown: showing them may move focus into them.
         val controlFocused =
-            playerView.isControllerFullyVisible &&
-                currentFocus.let { it != null && it !== playerView && it.isInside(playerView) }
+            keyGoesToFocusedControl(
+                focusChosenByKeyboard = keyboardFocusChosen,
+                focusOnControl =
+                    focusIsOnControl(
+                        insideControls =
+                            currentFocus.let {
+                                it != null && it !== playerView && it.isInside(playerView)
+                            },
+                        insideEpisodeSheet = currentFocus?.isInside(binding.episodeSheet) == true,
+                        episodeSheetOpen = episodeSheetBackCallback.isEnabled,
+                    ),
+                controlsShowing = playerView.isControllerFullyVisible,
+            )
         viewModel.markUserInteraction()
         // Shows the controls, or restarts their hide timer when they are up.
         if (playerView.useController) playerView.showController()
+
+        // CE (#448): Tab, and the arrows this passes on, move focus: the user chose that control.
+        // Any other key keeps focus off the controls unless the user chose one. Showing the
+        // controls puts focus on play/pause, which would turn the next arrow into focus navigation
+        // and let Space or Enter press a control the user never moved to.
+        val arrowPassedOn = !event.hasNoModifiers() || isControlsLocked || controlFocused
+        if (keyCode == KeyEvent.KEYCODE_TAB || (isArrowKey(keyCode) && arrowPassedOn)) {
+            keyboardFocusChosen = true
+        } else if (!controlFocused) {
+            parkFocusOnPlayerView()
+        }
 
         if (!event.hasNoModifiers()) return false
         if (keyCode == KeyEvent.KEYCODE_L) {
             if (event.repeatCount == 0) toggleLock()
             return true
         }
-        if (isControlsLocked) return false
+        if (isControlsLocked) {
+            // With Unlock the only control, Android's Tab search finds nothing from the player
+            // view itself (it needs two focusables), so Tab moves to Unlock here.
+            if (keyCode == KeyEvent.KEYCODE_TAB && !controlFocused) {
+                if (playerView.findViewById<View>(R.id.btn_unlock).requestFocus()) return true
+            }
+            // Space presses only an Unlock or skip the user moved to; other keys go on as before.
+            return keyCode == KeyEvent.KEYCODE_SPACE &&
+                spaceKeyAction(locked = true, controlFocused) == SpaceKeyAction.NOTHING
+        }
 
         val handled =
             when (keyCode) {
                 KeyEvent.KEYCODE_SPACE -> {
-                    if (!controlFocused && event.repeatCount == 0) togglePlayPause()
-                    !controlFocused
+                    val action = spaceKeyAction(locked = false, controlFocused)
+                    if (action == SpaceKeyAction.PLAY_PAUSE && event.repeatCount == 0) {
+                        togglePlayPause()
+                    }
+                    action != SpaceKeyAction.FOCUSED_CONTROL
                 }
                 KeyEvent.KEYCODE_DPAD_LEFT,
                 KeyEvent.KEYCODE_DPAD_RIGHT -> {
@@ -907,17 +1230,50 @@ class PlayerActivity : BasePlayerActivity() {
                 }
                 else -> false
             }
-        // Showing the controls puts focus on play/pause, which would turn the next arrow into
-        // focus navigation. A shortcut keeps focus where it was; Tab still moves into the controls.
-        if (handled && !controlFocused && currentFocus?.isInside(playerView) == true) {
-            // The player view itself, not its first focusable child.
-            val focusability = playerView.descendantFocusability
-            playerView.descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
-            playerView.requestFocus()
-            playerView.descendantFocusability = focusability
-        }
         return handled
     }
+
+    /**
+     * Moves focus from a control to the player view itself, not its first focusable child, so no
+     * control has focus until the user moves to one (#448). Focus outside the player stays put.
+     */
+    private fun parkFocusOnPlayerView(force: Boolean = false) {
+        keyboardFocusChosen = false
+        val playerView = binding.playerView
+        if (!force && currentFocus?.isInside(playerView) != true) return
+        val focusability = playerView.descendantFocusability
+        playerView.descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
+        playerView.requestFocus()
+        playerView.descendantFocusability = focusability
+    }
+
+    /**
+     * CE: the first Space (or arrow, Tab, Enter) after a touch did nothing. That key ends touch
+     * mode, and when nothing has focus, or a group that hands focus on to its children, Android
+     * gives a control focus and drops the key before [onPlayerKey] sees it. So the player view
+     * keeps focus in touch mode (Android moves a control's focus to it, as it is focusable in touch
+     * mode), and for the key that ends touch mode it keeps focus itself, so the key goes on.
+     */
+    private fun keepFocusThroughTouchMode(inTouchMode: Boolean) {
+        val playerView = binding.playerView
+        if (inTouchMode) {
+            if (currentFocus == null) playerView.requestFocus()
+            return
+        }
+        if (currentFocus !== playerView) return
+        val focusability = playerView.descendantFocusability
+        playerView.descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
+        playerView.post { playerView.descendantFocusability = focusability }
+    }
+
+    private fun isArrowKey(keyCode: Int): Boolean =
+        when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_LEFT,
+            KeyEvent.KEYCODE_DPAD_RIGHT,
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_DPAD_DOWN -> true
+            else -> false
+        }
 
     /** The media keys, which act without showing the controls. */
     private fun mediaKeyAction(keyCode: Int): (() -> Unit)? {
@@ -1054,9 +1410,12 @@ class PlayerActivity : BasePlayerActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // CE (#568): the media notification's intent carries no item. It only brings the player
+        // back, which goes on with what it plays, as onCreate does for it.
+        val itemIdExtra = intent.extras?.getString("itemId") ?: return
         setIntent(intent)
 
-        val itemId = UUID.fromString(intent.extras!!.getString("itemId"))
+        val itemId = UUID.fromString(itemIdExtra)
         val itemKind = intent.extras!!.getString("itemKind")
         val startFromBeginning = intent.extras!!.getBoolean("startFromBeginning")
         val mediaSourceId = intent.extras!!.getString("mediaSourceId")
@@ -1092,9 +1451,7 @@ class PlayerActivity : BasePlayerActivity() {
         finish()
     }
 
-    private fun pipParams(
-        enableAutoEnter: Boolean = viewModel.player.isPlaying
-    ): PictureInPictureParams {
+    private fun pipParams(enableAutoEnter: Boolean): PictureInPictureParams {
         val displayAspectRatio = Rational(binding.playerView.width, binding.playerView.height)
 
         // videoSize is VideoSize.UNKNOWN (0x0) until the file is loaded, which would yield a NaN
@@ -1148,19 +1505,61 @@ class PlayerActivity : BasePlayerActivity() {
         return builder.build()
     }
 
+    /** CE (#480): auto-enter in the PiP params last given to the system; none given means off. */
+    private var pipAutoEnterSet = false
+
+    /**
+     * CE (#480): give the system the PiP params for the current setting and play state. It keeps
+     * the last params set (also the PiP button's), so this runs on every play/pause change and
+     * whenever the player returns, from PiP or from Settings, whatever the gesture setting.
+     *
+     * Building the params reads the video size, which on mpv waits for its core and can hold up
+     * the main thread while mpv sets up its output again (an ANR on a return). So they are only
+     * built again when auto-enter changes, or on a play/pause change with the gesture on, as
+     * before.
+     */
+    private fun updatePipParams(
+        isPlaying: Boolean = viewModel.player.isPlaying,
+        playStateChanged: Boolean = false,
+    ) {
+        if (!isPipSupported) return
+        val gestureEnabled = appPreferences.getValue(appPreferences.playerPipGesture)
+        val autoEnter = pipAutoEnterEnabled(gestureEnabled, isPlaying)
+        if (!pipParamsNeedUpdate(pipAutoEnterSet, autoEnter, playStateChanged && gestureEnabled)) {
+            return
+        }
+        try {
+            setPictureInPictureParams(pipParams(autoEnter))
+            pipAutoEnterSet = autoEnter
+        } catch (_: IllegalArgumentException) {}
+    }
+
     private fun pictureInPicture() {
         if (!isPipSupported) {
             return
         }
 
         try {
-            enterPictureInPictureMode(pipParams())
+            val autoEnter =
+                pipAutoEnterEnabled(
+                    gestureEnabled = appPreferences.getValue(appPreferences.playerPipGesture),
+                    isPlaying = viewModel.player.isPlaying,
+                )
+            enterPictureInPictureMode(pipParams(autoEnter))
+            pipAutoEnterSet = autoEnter
         } catch (_: IllegalArgumentException) {}
     }
 
     override fun onStart() {
         super.onStart()
         viewModel.setVideoEnabled(true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // CE (#480): the PiP home gesture may have changed in Settings while the player was in PiP
+        // or in the background. After super, which may have given back playWhenReady.
+        updatePipParams()
     }
 
     override fun onStop() {
@@ -1191,6 +1590,8 @@ class PlayerActivity : BasePlayerActivity() {
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         viewModel.isInPictureInPictureMode = isInPictureInPictureMode
+        // CE (#363): free in picture-in-picture; the setting applies again on the way back.
+        updatePlayerOrientation()
         updateUpNextCardAllowed()
         applyTabletopLayout()
         updateEpisodesButton()

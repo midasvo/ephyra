@@ -7,6 +7,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
@@ -25,7 +26,10 @@ fun Modifier.copyOnLongClick(
     val scope = rememberCoroutineScope()
     val clipLabel = stringResource(CoreR.string.copied_text_label)
 
-    return this.combinedClickable(
+    // #442: a text that only copies is not a control, so Tab skips it. Keyboard focus only: a
+    // screen reader still reaches the text, with its copy action.
+    val focus = if (onClick == null) Modifier.focusProperties { canFocus = false } else Modifier
+    return this.then(focus).combinedClickable(
         enabled = enabled,
         onClick = onClick ?: {},
         onLongClickLabel = stringResource(CoreR.string.copy_text_action),

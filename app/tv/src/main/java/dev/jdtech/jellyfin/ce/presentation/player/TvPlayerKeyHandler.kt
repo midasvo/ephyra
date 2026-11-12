@@ -17,6 +17,10 @@ import android.view.KeyEvent
  *
  * A hold is applied as one seek when the key is released; the indicator shows the target while the
  * key is held, so the player isn't asked to seek twenty times a second.
+ *
+ * CE (#459): an OK that showed the controls also takes its key-up. Showing the controls moves focus
+ * to Play/Pause, and an OK-up let through there pressed it: OK paused with "OK pauses" off and
+ * paused-then-played with it on.
  */
 class TvPlayerKeyHandler(
     private val controls: TvPlayerControls,
@@ -25,10 +29,23 @@ class TvPlayerKeyHandler(
 ) {
     private var hold: Hold? = null
 
+    /**
+     * The OK key whose down showed the controls, until its up. Cleared by any other key-down, by
+     * [forgetOkPress], and ignored once the controls are hidden again, so an OK-up whose down
+     * went elsewhere is never swallowed.
+     */
+    private var okDown: Int? = null
+
+    /** The screen opened or closed a dialog or the queue: an OK-up from now on is not ours. */
+    fun forgetOkPress() {
+        okDown = null
+    }
+
     /** Returns true when the key was handled and must not reach the focused element. */
     fun onKeyEvent(keyCode: Int, action: Int, repeatCount: Int): Boolean {
         if (action == KeyEvent.ACTION_UP) return onKeyUp(keyCode)
         if (action != KeyEvent.ACTION_DOWN) return false
+        if (okDown != null && !(keyCode == okDown && repeatCount > 0)) okDown = null
 
         mediaKeyAction(keyCode)?.let {
             it(repeatCount)
@@ -72,6 +89,7 @@ class TvPlayerKeyHandler(
                 if (repeatCount == 0) {
                     if (settings().okPauses) controls.pause()
                     controls.showControls()
+                    okDown = keyCode
                 }
                 true
             }
@@ -85,6 +103,11 @@ class TvPlayerKeyHandler(
     }
 
     private fun onKeyUp(keyCode: Int): Boolean {
+        if (okDown != null && okDown == keyCode) {
+            okDown = null
+            // Only while the controls this OK showed are still up; otherwise the up is not ours.
+            if (controls.controlsVisible) return true
+        }
         val held = hold
         if (held != null && held.keyCode == keyCode) {
             hold = null

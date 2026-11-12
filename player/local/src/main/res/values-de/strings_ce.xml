@@ -26,4 +26,7 @@
         <item quantity="one">Startet in %d Sekunde</item>
         <item quantity="other">Startet in %d Sekunden</item>
     </plurals>
+    <string name="ce_track_forced">Erzwungen</string>
+    <string name="ce_player_connection_lost">Verbindung verloren. Die Wiedergabe geht weiter, sobald das Netzwerk wieder da ist.</string>
+    <string name="ce_player_try_again">Erneut versuchen</string>
 </resources>

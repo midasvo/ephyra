@@ -22,6 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,12 +42,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.presentation.setup.components.DiscoveredServerItem
 import dev.jdtech.jellyfin.presentation.setup.components.LoadingButton
 import dev.jdtech.jellyfin.presentation.setup.components.RootLayout
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.utils.rememberLocalNetworkRequest
 import dev.jdtech.jellyfin.setup.R as SetupR
 import dev.jdtech.jellyfin.setup.presentation.addserver.AddServerAction
 import dev.jdtech.jellyfin.setup.presentation.addserver.AddServerEvent
@@ -64,6 +67,16 @@ fun AddServerScreen(
 
     LaunchedEffect(true) { viewModel.discoverServers() }
 
+    // CE (#376): local network access may have changed in the dialog or the system settings.
+    LifecycleResumeEffect(Unit) {
+        viewModel.onAction(AddServerAction.OnResume)
+        onPauseOrDispose {}
+    }
+
+    // CE (#376): the request behind the notice's button, shared with the error screens (#571).
+    val requestLocalNetwork =
+        rememberLocalNetworkRequest(onGranted = { viewModel.onAction(AddServerAction.OnResume) })
+
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
             is AddServerEvent.Success -> onSuccess()
@@ -79,11 +92,16 @@ fun AddServerScreen(
             }
             viewModel.onAction(action)
         },
+        onAllowLocalNetworkClick = requestLocalNetwork,
     )
 }
 
 @Composable
-private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAction) -> Unit) {
+private fun AddServerScreenLayout(
+    state: AddServerState,
+    onAction: (AddServerAction) -> Unit,
+    onAllowLocalNetworkClick: () -> Unit = {},
+) {
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
     val scrollState = rememberScrollState()
@@ -129,6 +147,25 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
                     }
                 }
             }
+            // CE (#376): where the discovered servers would be, say why there are none.
+            if (state.localNetworkDenied) {
+                Text(
+                    text =
+                        stringResource(SetupR.string.ce_local_network_denied) +
+                            (state.localNetworkSettingName?.let {
+                                " " +
+                                    stringResource(SetupR.string.ce_local_network_denied_where, it)
+                            } ?: ""),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                TextButton(
+                    onClick = onAllowLocalNetworkClick,
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text(text = stringResource(SetupR.string.ce_local_network_allow))
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = serverAddress,
@@ -138,7 +175,11 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
                         contentDescription = null,
                     )
                 },
-                onValueChange = { serverAddress = it },
+                onValueChange = {
+                    serverAddress = it
+                    // CE (#443): the error belongs to the address that was tried.
+                    onAction(AddServerAction.OnAddressChange)
+                },
                 label = {
                     Text(text = stringResource(SetupR.string.edit_text_server_address_hint))
                 },
@@ -182,4 +223,19 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
 @Composable
 private fun AddServerScreenLayoutPreview() {
     FindroidTheme { AddServerScreenLayout(state = AddServerState(), onAction = {}) }
+}
+
+@PreviewScreenSizes
+@Composable
+private fun AddServerScreenLayoutLocalNetworkDeniedPreview() {
+    FindroidTheme {
+        AddServerScreenLayout(
+            state =
+                AddServerState(
+                    localNetworkDenied = true,
+                    localNetworkSettingName = "Nearby devices",
+                ),
+            onAction = {},
+        )
+    }
 }

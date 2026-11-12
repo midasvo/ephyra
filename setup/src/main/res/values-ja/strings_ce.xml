@@ -50,4 +50,12 @@
     <string name="ce_profile_pattern_saved">パターンを設定しました</string>
     <string name="ce_profile_pattern_removed">パターンを削除しました</string>
     <string name="ce_profile_pattern_grid">ロック解除パターン、3×3の点のグリッド</string>
+    <string name="ce_server_address_in_use">このアドレスは使用中のため削除できません</string>
+    <string name="ce_server_address_already_added">このアドレスは既に追加されています</string>
+    <string name="ce_local_network_denied">ローカルネットワークへのアクセスがオフになっています。オフのままでは、ネットワーク上のサーバーを検出することも接続することもできません。</string>
+    <string name="ce_local_network_denied_where">システム設定では「権限」&gt;「%1$s」にあります。</string>
+    <string name="ce_local_network_allow">アクセスを許可</string>
+    <string name="ce_local_network_off">ローカルネットワークへのアクセスがオフになっています</string>
+    <string name="ce_add_server_error_local_network">サーバーが見つかりません。ローカルネットワークへのアクセスがオフのため、ネットワーク上のアドレスがブロックされています。</string>
+    <string name="ce_permission_permanently_denied">%1$sは拒否されました。使用するには、システム設定の「権限」で「%2$s」を許可してください。</string>
 </resources>

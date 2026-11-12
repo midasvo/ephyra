@@ -131,13 +131,10 @@ fun downloadTitles(item: FindroidItem): Pair<String, String?> {
 private fun statusLine(download: ActiveDownload): String {
     val context = LocalContext.current
     fun size(bytes: Long) = Formatter.formatShortFileSize(context, bytes)
-    return when (download.progress.status) {
-        DownloadStatus.QUEUED -> stringResource(CoreR.string.download_queued)
-        DownloadStatus.PENDING -> stringResource(CoreR.string.download_pending)
-        DownloadStatus.PAUSED -> stringResource(CoreR.string.download_waiting_for_network)
+    val status = download.progress.status
+    return when (status) {
         DownloadStatus.FAILED ->
             download.errorText?.asString() ?: stringResource(CoreR.string.download_failed)
-        DownloadStatus.COMPLETED -> stringResource(CoreR.string.download_completed)
         DownloadStatus.DOWNLOADING -> {
             val total = download.totalBytes
             val done = download.bytesDownloaded.coerceAtLeast(0L)
@@ -155,7 +152,8 @@ private fun statusLine(download: ActiveDownload): String {
                 } else bytes
             }
         }
-        else -> ""
+        // CE (#558): the item page's card says the same.
+        else -> downloadStatusTextRes(status)?.let { stringResource(it) }.orEmpty()
     }
 }
 

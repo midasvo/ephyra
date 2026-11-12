@@ -50,4 +50,12 @@
     <string name="ce_profile_pattern_saved">Schéma défini</string>
     <string name="ce_profile_pattern_removed">Schéma supprimé</string>
     <string name="ce_profile_pattern_grid">Schéma de déverrouillage, une grille de 3 points sur 3</string>
+    <string name="ce_server_address_in_use">Cette adresse est utilisée et ne peut pas être supprimée</string>
+    <string name="ce_server_address_already_added">Cette adresse a déjà été ajoutée</string>
+    <string name="ce_local_network_denied">L\'accès au réseau local est désactivé. Sans lui, les serveurs de votre réseau ne peuvent être ni trouvés ni joints.</string>
+    <string name="ce_local_network_denied_where">Dans les paramètres système, il se trouve sous Autorisations &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Autoriser l\'accès</string>
+    <string name="ce_local_network_off">L\'accès au réseau local est désactivé</string>
+    <string name="ce_add_server_error_local_network">Serveur introuvable. L\'accès au réseau local est désactivé, ce qui bloque les adresses de votre réseau.</string>
+    <string name="ce_permission_permanently_denied">%1$s a été refusé. Pour l\'utiliser, autorisez « %2$s » sous Autorisations dans les paramètres système.</string>
 </resources>

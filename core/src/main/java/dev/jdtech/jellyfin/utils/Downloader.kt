@@ -56,6 +56,8 @@ interface Downloader {
         val bytesDownloaded: Long,
         /** Total bytes for the download, or -1 if unknown. */
         val totalBytes: Long,
+        /** The HTTP status the server failed the download with, or null (#383). */
+        val httpStatus: Int? = null,
     )
 
     suspend fun getProgress(downloadId: Long?): Progress
@@ -117,8 +119,10 @@ interface Downloader {
      *   - completed sources whose file has been deleted externally
      *   - active .download sources whose engine task is gone and file is missing
      *   - orphan .download files not referenced by any DB source row
+     *   - finished files, image and trickplay folders no row refers to, once they are a day
+     *     old (a database reset, #379), and empty download folders
      *
-     * Run on app startup before restoring active downloads.
+     * Runs once a day (OrphanSweepWorker).
      */
     suspend fun sweepOrphans()
 
@@ -130,4 +134,12 @@ interface Downloader {
      * just finalized successfully).
      */
     suspend fun finalizeDownload(downloadId: Long): Boolean
+
+    /**
+     * CE (#573): renames the external subtitles of finished downloads that still have their
+     * `.download` name, and updates their rows. Builds before #573 never finalized them. A
+     * subtitle whose transfer the engine still runs, or reports failed, is left alone. Runs at
+     * every start (DownloadQueue.restoreAll) and before the orphan sweep.
+     */
+    suspend fun finalizeFinishedMediaStreams()
 }

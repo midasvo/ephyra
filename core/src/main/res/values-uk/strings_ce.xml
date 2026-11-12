@@ -103,4 +103,24 @@
     <string name="item_included_in">Входить до</string>
     <string name="item_more_like_this">Схоже</string>
     <string name="ce_session_revoked">%1$s завершив ваш сеанс. Увійдіть знову, щоб продовжити.</string>
+    <string name="ce_download_error_server">Сервер відхилив завантаження (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Сервер відповів помилкою (HTTP %1$d). Спробуйте пізніше.</string>
+    <string name="ce_media_info">Відомості про медіа</string>
+    <string name="ce_home_profile">Профіль</string>
+    <string name="ce_watched">Переглянуто</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d непереглянутий</item>
+        <item quantity="few">%d непереглянуті</item>
+        <item quantity="many">%d непереглянутих</item>
+        <item quantity="other">%d непереглянутих</item>
+    </plurals>
+    <string name="ce_delete_download_message">Ви впевнені, що хочете видалити це завантаження зі свого пристрою?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">Помилка: %d</item>
+        <item quantity="few">Помилка: %d</item>
+        <item quantity="many">Помилка: %d</item>
+        <item quantity="other">Помилка: %d</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Ще нічого не завантажено</string>
+    <string name="ce_home_offline_empty_body">Немає з\'єднання. Завантажені фільми й епізоди з\'являться тут і в розділі «Завантаження».</string>
 </resources>

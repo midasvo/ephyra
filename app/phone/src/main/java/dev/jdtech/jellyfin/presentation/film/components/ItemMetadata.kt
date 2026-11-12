@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextDirection
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.models.FindroidExternalLink
 import dev.jdtech.jellyfin.models.FindroidItem
@@ -78,7 +79,8 @@ fun TaglineText(tagline: String?, modifier: Modifier = Modifier) {
     Text(
         text = text,
         modifier = modifier.copyOnLongClick(text),
-        style = MaterialTheme.typography.titleSmall,
+        // CE (#401): server text sets its own direction, as in OverviewText.
+        style = MaterialTheme.typography.titleSmall.copy(textDirection = TextDirection.Content),
         fontStyle = FontStyle.Italic,
     )
 }

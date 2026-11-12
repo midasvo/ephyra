@@ -359,12 +359,14 @@ private fun EntryProviderScope<NavKey>.tvEntries(
         MovieScreen(
             movieId = UUID.fromString(key.itemId),
             navigateToPlayer =
-                resumedAction { itemId, mediaSourceId ->
+                resumedAction { itemId, mediaSourceId, startFromBeginning ->
                     navigate(
                         PlayerRoute(
                             itemId = itemId.toString(),
                             itemKind = BaseItemKind.MOVIE.serialName,
                             mediaSourceId = mediaSourceId,
+                            // CE (#412): Restart on the movie page.
+                            startFromBeginning = startFromBeginning,
                         )
                     )
                 },

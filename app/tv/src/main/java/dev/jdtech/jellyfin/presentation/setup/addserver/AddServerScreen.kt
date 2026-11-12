@@ -34,14 +34,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.tv.material3.Button
 import androidx.tv.material3.Icon
 import androidx.tv.material3.LocalContentColor
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import dev.jdtech.jellyfin.ce.ui.rememberTvTextFieldEditing
+import dev.jdtech.jellyfin.ce.ui.tvTextFieldEditing
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyDiscoveredServer
 import dev.jdtech.jellyfin.presentation.setup.components.DiscoveredServerItem
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
@@ -58,6 +62,12 @@ fun AddServerScreen(onSuccess: () -> Unit, viewModel: AddServerViewModel = hiltV
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(true) { viewModel.discoverServers() }
+
+    // CE (#376): local network access may have been allowed in the system settings meanwhile.
+    LifecycleResumeEffect(Unit) {
+        viewModel.onAction(AddServerAction.OnResume)
+        onPauseOrDispose {}
+    }
 
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
@@ -76,6 +86,8 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
     var serverAddress by rememberSaveable { mutableStateOf("") }
 
     val doConnect = { onAction(AddServerAction.OnConnectClick(serverAddress)) }
+    // CE: the keyboard opens on OK, not when focus moves onto the field.
+    val addressEditing = rememberTvTextFieldEditing()
 
     LaunchedEffect(true) { focusRequester.requestFocus() }
 
@@ -106,6 +118,19 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
                     }
                 }
             }
+            // CE (#376): say why nothing is found. Text only, so focus stays as it was.
+            if (state.localNetworkDenied) {
+                Text(
+                    text =
+                        stringResource(R.string.ce_local_network_denied) +
+                            (state.localNetworkSettingName?.let {
+                                " " + stringResource(R.string.ce_local_network_denied_where, it)
+                            } ?: ""),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.width(480.dp),
+                )
+            }
             Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
             OutlinedTextField(
                 value = serverAddress,
@@ -116,7 +141,10 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
                         contentDescription = null,
                     )
                 },
-                onValueChange = { serverAddress = it },
+                onValueChange = {
+                    serverAddress = it
+                    onAction(AddServerAction.OnAddressChange)
+                },
                 label = {
                     Text(text = stringResource(id = R.string.edit_text_server_address_hint))
                 },
@@ -128,6 +156,7 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
                         imeAction = ImeAction.Go,
                     ),
                 keyboardActions = KeyboardActions(onGo = { doConnect() }),
+                readOnly = !addressEditing.editing, // CE
                 isError = state.error != null,
                 enabled = !state.isLoading,
                 supportingText = {
@@ -138,7 +167,10 @@ private fun AddServerScreenLayout(state: AddServerState, onAction: (AddServerAct
                         )
                     }
                 },
-                modifier = Modifier.width(360.dp).focusRequester(focusRequester),
+                modifier =
+                    Modifier.width(360.dp)
+                        .focusRequester(focusRequester)
+                        .tvTextFieldEditing(addressEditing), // CE
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
             Box {

@@ -11,7 +11,7 @@ import coil3.SingletonImageLoader
 import coil3.annotation.ExperimentalCoilApi
 import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
-import coil3.network.cachecontrol.CacheControlCacheStrategy
+import dev.jdtech.jellyfin.utils.JellyfinImageCacheStrategy
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.CachePolicy
 import coil3.request.crossfade
@@ -68,7 +68,7 @@ class BaseApplication : Application(), Configuration.Provider, SingletonImageLoa
                         appPreferences.getValue(appPreferences.imageDisplaySize)
                     }
                 )
-                add(OkHttpNetworkFetcherFactory(cacheStrategy = { CacheControlCacheStrategy() }))
+                add(OkHttpNetworkFetcherFactory(cacheStrategy = { JellyfinImageCacheStrategy() }))
                 add(SvgDecoder.Factory())
             }
             .memoryCache {

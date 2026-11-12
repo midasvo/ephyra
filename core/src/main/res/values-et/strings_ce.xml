@@ -97,4 +97,20 @@
     <string name="item_included_in">Kuulub kogusse</string>
     <string name="item_more_like_this">Sarnased</string>
     <string name="ce_session_revoked">%1$s logis sind välja. Jätkamiseks logi uuesti sisse.</string>
+    <string name="ce_download_error_server">Server keeldus allalaadimisest (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Server vastas veaga (HTTP %1$d). Proovi hiljem uuesti.</string>
+    <string name="ce_media_info">Meediainfo</string>
+    <string name="ce_home_profile">Profiil</string>
+    <string name="ce_watched">Vaadatud</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d vaatamata</item>
+        <item quantity="other">%d vaatamata</item>
+    </plurals>
+    <string name="ce_delete_download_message">Kas oled kindel, et soovid selle allalaaditud faili oma seadmest kustutada?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d ebaõnnestus</item>
+        <item quantity="other">%d ebaõnnestus</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Midagi pole veel alla laaditud</string>
+    <string name="ce_home_offline_empty_body">Oled võrguühenduseta. Allalaaditud filmid ja osad kuvatakse siin ja jaotises Allalaadimised.</string>
 </resources>

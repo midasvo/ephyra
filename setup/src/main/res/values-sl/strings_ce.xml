@@ -50,4 +50,12 @@
     <string name="ce_profile_pattern_saved">Vzorec nastavljen</string>
     <string name="ce_profile_pattern_removed">Vzorec odstranjen</string>
     <string name="ce_profile_pattern_grid">Vzorec za odklepanje, mreža 3 × 3 pik</string>
+    <string name="ce_server_address_in_use">Ta naslov je v uporabi in ga ni mogoče odstraniti</string>
+    <string name="ce_server_address_already_added">Ta naslov je že dodan</string>
+    <string name="ce_local_network_denied">Dostop do lokalnega omrežja je izklopljen. Brez njega strežnikov v vašem omrežju ni mogoče najti ali doseči.</string>
+    <string name="ce_local_network_denied_where">V sistemskih nastavitvah je pod Dovoljenja &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Dovoli dostop</string>
+    <string name="ce_local_network_off">Dostop do lokalnega omrežja je izklopljen</string>
+    <string name="ce_add_server_error_local_network">Strežnika ni bilo mogoče najti. Dostop do lokalnega omrežja je izklopljen, kar blokira naslove v vašem omrežju.</string>
+    <string name="ce_permission_permanently_denied">Dovoljenje %1$s je bilo zavrnjeno. Če ga želite uporabljati, dovolite »%2$s« pod Dovoljenja v sistemskih nastavitvah.</string>
 </resources>
