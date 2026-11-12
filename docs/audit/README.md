@@ -150,7 +150,7 @@ Test level B.
 
 Test level D. #432 was a design decision: the hero height formula in `docs/tablet/4-design.md` §6
 cannot meet a 2.2:1 limit in landscape, so acceptance criterion 1 now holds for portrait and the
-height cap decides in landscape (#622 for a 16:9 backdrop).
+hero height decides in landscape (#622 for a 16:9 backdrop).
 
 | Issue | What |
 |---|---|
