@@ -238,4 +238,31 @@ class PlayerInvariantsTest {
             screen.contains("TvResumeOnReturn.Action.PLAY -> player.play()"),
         )
     }
+
+    @Test
+    fun `mpv loads external subtitles off the main thread`() {
+        // #617: sub-add blocks while downloading an external subtitle. MPVPlayer must run them
+        // off the main thread, keep the list so a reload after an error still adds them, and not
+        // undo the track selection when a subtitle arrives late.
+        val mpvPlayer = source("mpv/MPVPlayer.kt")
+        val startFile =
+            Regex("""MpvEvent\.MPV_EVENT_START_FILE -> \{[\s\S]*?\n {16}\}""").find(mpvPlayer)
+        assertTrue("MPVPlayer's START_FILE branch not found", startFile != null)
+        assertTrue(
+            "START_FILE must execute subtitle loading on subtitleExecutor (#617)",
+            startFile!!.value.contains("subtitleExecutor.execute"),
+        )
+        assertFalse(
+            "START_FILE must not run sub-add directly on the main thread (#617)",
+            startFile.value.contains("mpvLib.command("),
+        )
+        assertFalse(
+            "START_FILE must not clear initialCommands, or a reload after an error loses subtitles (#617)",
+            startFile.value.contains("initialCommands.clear()"),
+        )
+        assertTrue(
+            "MPVPlayer must preserve the subtitle track selection across sub-add (#617)",
+            mpvPlayer.contains("targetSubtitleTrack("),
+        )
+    }
 }

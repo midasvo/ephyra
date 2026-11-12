@@ -46,6 +46,7 @@ import dev.jdtech.mpv.MPVLib.MpvFormat
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.Executors
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -55,6 +56,7 @@ class MPVPlayer(
     context: Context,
     private val audioAttributes: AudioAttributes = AudioAttributes.DEFAULT,
     private val handleAudioFocus: Boolean = true,
+    @Volatile
     private var trackSelectionParameters: TrackSelectionParameters =
         TrackSelectionParameters.DEFAULT,
     private val seekBackIncrement: Long = C.DEFAULT_SEEK_BACK_INCREMENT_MS,
@@ -82,6 +84,7 @@ class MPVPlayer(
      * Set by [release]. After it every [MPVLib] call throws, and the activity's window, and with it
      * the SurfaceView, is torn down after the view model has released the player (#318).
      */
+    @Volatile
     private var released = false
 
     // Headphones were unplugged: pause rather than carry on over the speaker.
@@ -414,6 +417,19 @@ class MPVPlayer(
      * cannot pass that mark on, so the track list gets it back from here.
      */
     private val forcedSubtitleFiles = HashSet<String>()
+
+    /**
+     * CE (#617): runs `sub-add` commands off the main thread so slow subtitle downloads do not
+     * block the UI. A single-thread executor preserves the queue order (#597).
+     */
+    private val subtitleExecutor =
+        Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "mpv-subtitles").apply { isDaemon = true }
+        }
+    private val mpvLock = Any()
+    @Volatile
+    private var loadGeneration: Long = 0L
+    private var subtitlesLoadedGeneration: Long = -1L
     private var initialIndex: Int = 0
     private var initialSeekTo: Long = 0L
 
@@ -621,9 +637,12 @@ class MPVPlayer(
                     reloadingAfterError = false
                     loadState.startFile()
                     streamBreak.reset()
-                    if (!isPlayerReady) {
-                        for (command in initialCommands) {
-                            mpvLib.command(command)
+                    if (!isPlayerReady && initialCommands.isNotEmpty() && subtitlesLoadedGeneration != loadGeneration) {
+                        subtitlesLoadedGeneration = loadGeneration
+                        val commands = initialCommands.toList()
+                        val currentGen = loadGeneration
+                        subtitleExecutor.execute {
+                            loadSubtitles(commands, currentGen)
                         }
                     }
                 }
@@ -828,6 +847,34 @@ class MPVPlayer(
      */
     private fun selectTrack(trackType: MPVTrackType, id: String) {
         mpvLib.setPropertyString(trackType.type, id)
+    }
+
+    /**
+     * CE (#617): loads external subtitles off the main thread.
+     *
+     * `sub-add` with `auto` causes mpv to re-evaluate auto track selection, which would switch away
+     * from an already selected track or undo a track choice (e.g. forced subtitles of #597, or
+     * subtitles disabled by the user). We preserve the active or configured selection across each
+     * `sub-add`.
+     */
+    private fun loadSubtitles(commands: List<Array<String>>, generation: Long) {
+        for (command in commands) {
+            synchronized(mpvLock) {
+                if (released || loadGeneration != generation) return
+                val targetSid =
+                    targetSubtitleTrack(
+                        trackSelectionParameters,
+                        mpvLib.getPropertyString("sid"),
+                    )
+
+                mpvLib.command(command)
+
+                if (released || loadGeneration != generation) return
+                if (targetSid != null && mpvLib.getPropertyString("sid") != targetSid) {
+                    selectTrack(MPVTrackType.SUBTITLE, targetSid)
+                }
+            }
+        }
     }
 
     // Timeline wrapper
@@ -1223,6 +1270,8 @@ class MPVPlayer(
         playbackParameters = PlaybackParameters.DEFAULT
         initialCommands.clear()
         forcedSubtitleFiles.clear()
+        loadGeneration++
+        subtitlesLoadedGeneration = -1L
     }
 
     /** Prepares the player. */
@@ -1662,7 +1711,10 @@ class MPVPlayer(
         handler.removeCallbacksAndMessages(null)
         listeners.release()
         released = true
-        mpvLib.destroy()
+        subtitleExecutor.shutdownNow()
+        synchronized(mpvLock) {
+            mpvLib.destroy()
+        }
     }
 
     private fun detachVideoSurface() {
