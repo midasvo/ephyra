@@ -31,4 +31,11 @@
     <string name="ce_track_forced">Forzati</string>
     <string name="ce_player_connection_lost">Connessione persa. La riproduzione riprenderà quando la rete tornerà disponibile.</string>
     <string name="ce_player_try_again">Riprova</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Ritardo sottotitoli</string>
+    <string name="subtitle_sync">Sincronizzazione sottotitoli</string>
+    <string name="capture_spoken_line">Cattura battuta pronunciata</string>
+    <string name="capture_line_hint">Tocca quando una battuta viene pronunciata per sincronizzarla con i sottotitoli</string>
+    <string name="no_cues_found">Nessuna riga di sottotitoli trovata vicino a questa posizione</string>
+    <string name="reset">Ripristina</string>
 </resources>

@@ -29,4 +29,11 @@
     <string name="ce_track_forced">Tvingade</string>
     <string name="ce_player_connection_lost">Anslutningen bröts. Uppspelningen fortsätter när nätverket är tillbaka.</string>
     <string name="ce_player_try_again">Försök igen</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Undertextfördröjning</string>
+    <string name="subtitle_sync">Undertextsynkronisering</string>
+    <string name="capture_spoken_line">Fånga talad rad</string>
+    <string name="capture_line_hint">Tryck när en rad sägs för att matcha med undertextdialogen</string>
+    <string name="no_cues_found">Inga undertextrader hittades nära den här positionen</string>
+    <string name="reset">Återställ</string>
 </resources>

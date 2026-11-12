@@ -27,4 +27,11 @@
     <string name="ce_track_forced">Paksa</string>
     <string name="ce_player_connection_lost">Koneksi terputus. Pemutaran berlanjut saat jaringan kembali.</string>
     <string name="ce_player_try_again">Coba lagi</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Penundaan subtitle</string>
+    <string name="subtitle_sync">Sinkronisasi subtitle</string>
+    <string name="capture_spoken_line">Rekam kalimat terucap</string>
+    <string name="capture_line_hint">Ketuk saat kalimat diucapkan untuk mencocokkan dengan dialog subtitle</string>
+    <string name="no_cues_found">Tidak ada baris subtitle yang ditemukan di dekat posisi ini</string>
+    <string name="reset">Atur ulang</string>
 </resources>

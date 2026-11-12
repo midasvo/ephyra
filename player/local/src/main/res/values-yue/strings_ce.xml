@@ -27,4 +27,11 @@
     <string name="ce_track_forced">強制</string>
     <string name="ce_player_connection_lost">連線中斷咗。網絡返嚟之後會繼續播放。</string>
     <string name="ce_player_try_again">再試一次</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">字幕延遲</string>
+    <string name="subtitle_sync">字幕同步</string>
+    <string name="capture_spoken_line">擷取講出嘅說話</string>
+    <string name="capture_line_hint">喺講出某句說話嗰陣撳一下嚟同字幕對齊</string>
+    <string name="no_cues_found">喺呢個位置附近搵唔到字幕</string>
+    <string name="reset">重設</string>
 </resources>

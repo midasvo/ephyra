@@ -27,4 +27,11 @@
     <string name="ce_track_forced">Bắt buộc</string>
     <string name="ce_player_connection_lost">Mất kết nối. Phát lại sẽ tiếp tục khi mạng trở lại.</string>
     <string name="ce_player_try_again">Thử lại</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Độ trễ phụ đề</string>
+    <string name="subtitle_sync">Đồng bộ phụ đề</string>
+    <string name="capture_spoken_line">Bắt câu thoại</string>
+    <string name="capture_line_hint">Nhấn khi nghe câu thoại để khớp với phụ đề</string>
+    <string name="no_cues_found">Không tìm thấy dòng phụ đề nào gần vị trí này</string>
+    <string name="reset">Đặt lại</string>
 </resources>

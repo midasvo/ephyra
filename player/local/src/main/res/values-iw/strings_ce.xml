@@ -31,4 +31,11 @@
     <string name="ce_track_forced">מאולצות</string>
     <string name="ce_player_connection_lost">החיבור אבד. ההפעלה תימשך כשהרשת תחזור.</string>
     <string name="ce_player_try_again">נסה שוב</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">השהיית כתוביות</string>
+    <string name="subtitle_sync">סנכרון כתוביות</string>
+    <string name="capture_spoken_line">לכידת שורה מדוברת</string>
+    <string name="capture_line_hint">הקש כאשר נאמרת שורה כדי להתאים אותה לכתוביות</string>
+    <string name="no_cues_found">לא נמצאו שורות כתוביות ליד מיקום זה</string>
+    <string name="reset">איפוס</string>
 </resources>

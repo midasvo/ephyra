@@ -27,4 +27,11 @@
     <string name="ce_track_forced">強制</string>
     <string name="ce_player_connection_lost">接続が切れました。ネットワークが戻ると再生を続けます。</string>
     <string name="ce_player_try_again">再試行</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">字幕の遅延</string>
+    <string name="subtitle_sync">字幕の同期</string>
+    <string name="capture_spoken_line">発話されたセリフを記録</string>
+    <string name="capture_line_hint">セリフが話されたときにタップして字幕の会話と一致させます</string>
+    <string name="no_cues_found">この位置の近くに字幕が見つかりません</string>
+    <string name="reset">リセット</string>
 </resources>

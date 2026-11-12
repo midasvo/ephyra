@@ -29,4 +29,11 @@
     <string name="ce_track_forced">Kényszerített</string>
     <string name="ce_player_connection_lost">Megszakadt a kapcsolat. A lejátszás folytatódik, amint visszatér a hálózat.</string>
     <string name="ce_player_try_again">Próbáld újra</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Felirat késleltetése</string>
+    <string name="subtitle_sync">Felirat szinkronizálása</string>
+    <string name="capture_spoken_line">Kimondott sor rögzítése</string>
+    <string name="capture_line_hint">Koppintson, amikor elhangzik egy mondat, hogy szinkronizálja a felirattal</string>
+    <string name="no_cues_found">Nem találhatók feliratsorok ezen pozíció közelében</string>
+    <string name="reset">Visszaállítás</string>
 </resources>

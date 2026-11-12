@@ -31,4 +31,11 @@
     <string name="ce_track_forced">Forçadas</string>
     <string name="ce_player_connection_lost">Ligação perdida. A reprodução continua quando a rede voltar.</string>
     <string name="ce_player_try_again">Tentar novamente</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Atraso das legendas</string>
+    <string name="subtitle_sync">Sincronização de legendas</string>
+    <string name="capture_spoken_line">Capturar linha falada</string>
+    <string name="capture_line_hint">Toque quando uma linha for dita para corresponder ao diálogo das legendas</string>
+    <string name="no_cues_found">Nenhuma linha de legendas encontrada perto desta posição</string>
+    <string name="reset">Repor</string>
 </resources>

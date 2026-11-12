@@ -37,4 +37,11 @@
     <string name="ce_track_forced">إجباري</string>
     <string name="ce_player_connection_lost">انقطع الاتصال. سيستمر التشغيل عند عودة الشبكة.</string>
     <string name="ce_player_try_again">حاول مجددًا</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">تأخير الترجمة</string>
+    <string name="subtitle_sync">مزامنة الترجمة</string>
+    <string name="capture_spoken_line">التقاط السطر المنطوق</string>
+    <string name="capture_line_hint">اضغط عند نطق السطر لمطابقته مع نص الترجمة</string>
+    <string name="no_cues_found">لم يتم العثور على أسطر ترجمة بالقرب من هذا الموضع</string>
+    <string name="reset">إعادة تعيين</string>
 </resources>

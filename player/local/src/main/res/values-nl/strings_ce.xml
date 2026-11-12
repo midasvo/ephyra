@@ -29,4 +29,11 @@
     <string name="ce_track_forced">Geforceerd</string>
     <string name="ce_player_connection_lost">Verbinding verbroken. Het afspelen gaat verder zodra het netwerk terug is.</string>
     <string name="ce_player_try_again">Opnieuw proberen</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Ondertitelvertraging</string>
+    <string name="subtitle_sync">Ondertitelsynchronisatie</string>
+    <string name="capture_spoken_line">Gesproken zin vastleggen</string>
+    <string name="capture_line_hint">Tik wanneer een zin wordt uitgesproken om te koppelen aan de ondertiteling</string>
+    <string name="no_cues_found">Geen ondertitelregels gevonden bij deze positie</string>
+    <string name="reset">Resetten</string>
 </resources>

@@ -29,4 +29,11 @@
     <string name="ce_track_forced">Принудителни</string>
     <string name="ce_player_connection_lost">Връзката е прекъсната. Възпроизвеждането ще продължи, когато мрежата се върне.</string>
     <string name="ce_player_try_again">Опитай отново</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Забавяне на субтитрите</string>
+    <string name="subtitle_sync">Синхронизиране на субтитрите</string>
+    <string name="capture_spoken_line">Заснемане на изречена реплика</string>
+    <string name="capture_line_hint">Докоснете при изричане на реплика, за да я напаснете със субтитрите</string>
+    <string name="no_cues_found">Не са намерени субтитри близо до тази позиция</string>
+    <string name="reset">Нулиране</string>
 </resources>

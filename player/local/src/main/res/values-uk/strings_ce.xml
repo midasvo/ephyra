@@ -33,4 +33,11 @@
     <string name="ce_track_forced">Примусові</string>
     <string name="ce_player_connection_lost">З’єднання втрачено. Відтворення продовжиться, коли мережа повернеться.</string>
     <string name="ce_player_try_again">Спробувати ще раз</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Затримка субтитрів</string>
+    <string name="subtitle_sync">Синхронізація субтитрів</string>
+    <string name="capture_spoken_line">Захопити сказану фразу</string>
+    <string name="capture_line_hint">Торкніться при виголошенні фрази для зіставлення із субтитрами</string>
+    <string name="no_cues_found">Поруч із цією позицією не знайдено рядків субтитрів</string>
+    <string name="reset">Скинути</string>
 </resources>

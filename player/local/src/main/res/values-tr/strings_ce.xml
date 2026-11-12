@@ -29,4 +29,11 @@
     <string name="ce_track_forced">Zorunlu</string>
     <string name="ce_player_connection_lost">Bağlantı kesildi. Ağ geri geldiğinde oynatma devam edecek.</string>
     <string name="ce_player_try_again">Tekrar dene</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Altyazı gecikmesi</string>
+    <string name="subtitle_sync">Altyazı senkronizasyonu</string>
+    <string name="capture_spoken_line">Konuşulan satırı yakala</string>
+    <string name="capture_line_hint">Altyazı diyaloğuyla eşleştirmek için bir satır konuşulduğunda dokunun</string>
+    <string name="no_cues_found">Bu konumun yakınında altyazı satırı bulunamadı</string>
+    <string name="reset">Sıfırla</string>
 </resources>

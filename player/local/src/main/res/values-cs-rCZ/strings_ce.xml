@@ -33,4 +33,11 @@
     <string name="ce_track_forced">Vynucené</string>
     <string name="ce_player_connection_lost">Připojení bylo ztraceno. Přehrávání bude pokračovat, až bude síť opět dostupná.</string>
     <string name="ce_player_try_again">Zkusit znovu</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="subtitle_delay">Zpoždění titulků</string>
+    <string name="subtitle_sync">Synchronizace titulků</string>
+    <string name="capture_spoken_line">Zachytit mluvený řádek</string>
+    <string name="capture_line_hint">Klepněte při vyslovení řádku pro spárování s dialogem titulků</string>
+    <string name="no_cues_found">Poblíž této pozice nebyly nalezeny žádné řádky titulků</string>
+    <string name="reset">Obnovit</string>
 </resources>
