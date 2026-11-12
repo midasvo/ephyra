@@ -173,7 +173,7 @@ constructor(
                 currentItemArtwork = item.artworkUri,
                 isMovie = isMovie,
                 defaultAspectRatio = defaultRatio,
-                currentChapters = item.chapters,
+                currentChapters = item.chapters.withImages(item.itemId),
                 fileLoaded = true,
             )
         }
@@ -199,6 +199,16 @@ constructor(
                 currentMediaItemSegments = segments
                 _uiState.update { it.copy(segments = segments) }
             }
+    }
+
+    /** The chapters with the URL of their thumbnail, where the server made one. */
+    private fun List<PlayerChapter>.withImages(itemId: UUID): List<PlayerChapter> {
+        val base = repository.getBaseUrl().trimEnd('/')
+        if (base.isEmpty()) return this
+        return mapIndexed { index, chapter ->
+            val tag = chapter.imageTag ?: return@mapIndexed chapter
+            chapter.copy(imageUri = "$base/Items/$itemId/Images/Chapter/$index?tag=$tag")
+        }
     }
 
     private fun onMediaItemCleared() {
