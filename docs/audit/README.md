@@ -148,8 +148,9 @@ Test level B.
 
 ### 5. Tablet layout and keyboard
 
-Test level D. #432 needs a design decision first: the hero height formula in
-`docs/tablet/4-design.md` §6 cannot meet the 2.2:1 limit of acceptance criterion 1.
+Test level D. #432 was a design decision: the hero height formula in `docs/tablet/4-design.md` §6
+cannot meet a 2.2:1 limit in landscape, so acceptance criterion 1 now holds for portrait and the
+height cap decides in landscape (#622 for a 16:9 backdrop).
 
 | Issue | What |
 |---|---|
@@ -157,7 +158,7 @@ Test level D. #432 needs a design decision first: the hero height formula in
 | #430 | Tab on My media opens the search and never reaches the library cards |
 | #455 | The taskbar covers the seek bar after split-screen or an unfold |
 | #456 | The player's buttons show through the top of the episode sheet |
-| #432 | Landscape backdrop cropped to a thin band (design decision) |
+| #432 | Landscape backdrop cropped to a thin band (decided: accepted, see #622) |
 | #434, #435, #436, #438, #439 | Width caps, Season rotation scroll, person page, carousel pages, wide search |
 
 ### 6. Unpolished
