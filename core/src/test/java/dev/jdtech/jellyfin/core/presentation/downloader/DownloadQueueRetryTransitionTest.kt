@@ -355,6 +355,8 @@ class DownloadQueueRetryTransitionTest {
 
         override suspend fun sweepOrphans() = Unit
 
+        override suspend fun finalizeFinishedMediaStreams() = Unit
+
         override suspend fun finalizeDownload(downloadId: Long) = true
     }
 
