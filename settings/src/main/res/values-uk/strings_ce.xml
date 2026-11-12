@@ -198,4 +198,6 @@
     <string name="ce_number_off">Вимк.</string>
     <string name="ce_pref_player_keep_landscape">Тримати плеєр в альбомній орієнтації</string>
     <string name="ce_pref_player_keep_landscape_summary">Відтворювати відео в альбомній орієнтації, навіть якщо повернути планшет вертикально</string>
+    <string name="ce_pref_home_episode_images">Використовувати зображення серій</string>
+    <string name="ce_pref_home_episode_images_summary">Показувати зображення серії замість зображення серіалу в «Продовжити перегляд» і «Далі»</string>
 </resources>

@@ -194,4 +194,6 @@
     <string name="ce_number_off">Desactivado</string>
     <string name="ce_pref_player_keep_landscape">Mantener el reproductor en horizontal</string>
     <string name="ce_pref_player_keep_landscape_summary">Reproducir los vídeos en horizontal, aunque gires la tableta en vertical</string>
+    <string name="ce_pref_home_episode_images">Usar imágenes de episodios</string>
+    <string name="ce_pref_home_episode_images_summary">Mostrar la imagen del episodio en lugar de la imagen de la serie en Seguir viendo y A continuación</string>
 </resources>

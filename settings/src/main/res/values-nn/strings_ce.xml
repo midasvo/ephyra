@@ -194,4 +194,6 @@
     <string name="ce_number_off">Av</string>
     <string name="ce_pref_player_keep_landscape">Hald avspelaren liggjande</string>
     <string name="ce_pref_player_keep_landscape_summary">Spel av videoar liggjande, òg når du snur nettbrettet på høgkant</string>
+    <string name="ce_pref_home_episode_images">Bruk episodebilete</string>
+    <string name="ce_pref_home_episode_images_summary">Vis biletet til episoden i staden for biletet til serien i Hald fram å sjå og Neste</string>
 </resources>

@@ -194,4 +194,6 @@
     <string name="ce_number_off">Desactivat</string>
     <string name="ce_pref_player_keep_landscape">Mantén el reproductor en horitzontal</string>
     <string name="ce_pref_player_keep_landscape_summary">Reprodueix els vídeos en horitzontal, encara que posis la tauleta en vertical</string>
+    <string name="ce_pref_home_episode_images">Utilitza imatges dels episodis</string>
+    <string name="ce_pref_home_episode_images_summary">Mostra la imatge de l\'episodi en lloc de la imatge de la sèrie a Continua mirant i Següent</string>
 </resources>

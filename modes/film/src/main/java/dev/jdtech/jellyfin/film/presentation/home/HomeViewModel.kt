@@ -74,6 +74,19 @@ constructor(
     /** The repository is chosen when this view model is made, so this holds for its whole life. */
     private val offline = repository is JellyfinRepositoryOfflineImpl
 
+    init {
+        syncPreferences()
+    }
+
+    /**
+     * CE (#608): settings Home draws from without loading anything. Read when Home comes back into
+     * view, so a change in Settings shows without a reload.
+     */
+    private fun syncPreferences() {
+        val useEpisodeImages = appPreferences.getValue(appPreferences.homeEpisodeImages)
+        _state.update { it.copy(useEpisodeImages = useEpisodeImages) }
+    }
+
     /**
      * With [silent] the refresh indicator stays hidden, for reloads the user didn't ask for. The
      * returned job ends once every row has loaded, for screens that wait for that (TV Home puts focus
@@ -89,8 +102,10 @@ constructor(
     }
 
     /** Whether coming back to Home needs a load (#251), see [ReloadPolicy]. */
-    fun shouldReload(stopEventFollows: Boolean = false): Boolean =
-        reloadPolicy.shouldReload(stopEventFollows)
+    fun shouldReload(stopEventFollows: Boolean = false): Boolean {
+        syncPreferences()
+        return reloadPolicy.shouldReload(stopEventFollows)
+    }
 
     /** [loadData] when [shouldReload] says so, else a job that is already done. */
     fun loadDataIfNeeded(silent: Boolean = false): Job =

@@ -194,4 +194,6 @@
     <string name="ce_number_off">Aus</string>
     <string name="ce_pref_player_keep_landscape">Player im Querformat halten</string>
     <string name="ce_pref_player_keep_landscape_summary">Videos im Querformat abspielen, auch wenn du das Tablet hochkant drehst</string>
+    <string name="ce_pref_home_episode_images">Episodenbilder verwenden</string>
+    <string name="ce_pref_home_episode_images_summary">In „Weiterschauen“ und „Als Nächstes“ das Bild der Episode statt des Serienbilds anzeigen</string>
 </resources>

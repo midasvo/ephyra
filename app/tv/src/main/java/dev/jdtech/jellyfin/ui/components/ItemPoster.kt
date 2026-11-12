@@ -42,8 +42,17 @@ enum class Direction {
 }
 
 @Composable
-fun ItemPoster(item: FindroidItem, direction: Direction, modifier: Modifier = Modifier) {
-    val sources = remember(item.images, direction) { posterSources(item, direction) }
+fun ItemPoster(
+    item: FindroidItem,
+    direction: Direction,
+    modifier: Modifier = Modifier,
+    // CE (#608): see posterSources.
+    preferThumb: Boolean = false,
+) {
+    val sources =
+        remember(item.images, direction, preferThumb) {
+            posterSources(item, direction, preferThumb)
+        }
 
     // CE (#135): without artwork, or when none of it loads, the card shows the title and an icon
     // instead of an empty rectangle. A failed load moves on to the next source (#416).
@@ -60,9 +69,11 @@ fun ItemPoster(item: FindroidItem, direction: Direction, modifier: Modifier = Mo
         if (imageUri == null) {
             PosterPlaceholder(
                 item = item,
-                // A vertical episode poster is the show's, a horizontal one the episode's own.
+                // A vertical episode poster is the show's, a horizontal one the episode's own,
+                // unless the card prefers the show's thumb.
                 title =
-                    if (item is FindroidEpisode && direction == Direction.VERTICAL) item.seriesName
+                    if (item is FindroidEpisode && (direction == Direction.VERTICAL || preferThumb))
+                        item.seriesName
                     else item.name,
                 modifier = Modifier.fillMaxSize(),
             )
@@ -82,12 +93,32 @@ fun ItemPoster(item: FindroidItem, direction: Direction, modifier: Modifier = Mo
  * The artwork a card tries, in order: a horizontal movie its backdrop, a vertical episode its
  * show's poster, a vertical season its own poster and then its show's (#416), anything else its
  * own poster.
+ *
+ * With [preferThumb] (#608) a horizontal card starts with the thumb, the wide art with the title on
+ * it, of the movie or of the episode's series, then the backdrop. An episode's own image, a frame
+ * from the episode, comes last. The Continue Watching and Next Up rows ask for it.
  */
-internal fun posterSources(item: FindroidItem, direction: Direction): List<Uri> =
+internal fun posterSources(
+    item: FindroidItem,
+    direction: Direction,
+    preferThumb: Boolean = false,
+): List<Uri> =
     when (direction) {
         Direction.HORIZONTAL ->
             when (item) {
-                is FindroidMovie -> listOf(item.images.backdrop)
+                is FindroidMovie ->
+                    if (preferThumb) listOf(item.images.thumb, item.images.backdrop)
+                    else listOf(item.images.backdrop)
+                is FindroidEpisode ->
+                    if (preferThumb) {
+                        listOf(
+                            item.images.showThumb,
+                            item.images.showBackdrop,
+                            item.images.primary,
+                        )
+                    } else {
+                        listOf(item.images.primary)
+                    }
                 else -> listOf(item.images.primary)
             }
         Direction.VERTICAL ->

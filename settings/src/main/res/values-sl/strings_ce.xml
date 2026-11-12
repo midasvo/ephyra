@@ -198,4 +198,6 @@
     <string name="ce_number_off">Izklopljeno</string>
     <string name="ce_pref_player_keep_landscape">Ohrani predvajalnik v ležeči postavitvi</string>
     <string name="ce_pref_player_keep_landscape_summary">Predvajaj videoposnetke v ležeči postavitvi, tudi ko tablico obrnete pokonci</string>
+    <string name="ce_pref_home_episode_images">Uporabi slike epizod</string>
+    <string name="ce_pref_home_episode_images_summary">Prikaži sliko epizode namesto slike serije v vrsticah Nadaljuj z ogledom in Naslednje</string>
 </resources>

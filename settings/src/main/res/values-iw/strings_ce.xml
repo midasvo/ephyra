@@ -196,4 +196,6 @@
     <string name="ce_number_off">כבוי</string>
     <string name="ce_pref_player_keep_landscape">להשאיר את הנגן לרוחב</string>
     <string name="ce_pref_player_keep_landscape_summary">להפעיל סרטונים לרוחב, גם כשמסובבים את הטאבלט לאורך</string>
+    <string name="ce_pref_home_episode_images">שימוש בתמונות של פרקים</string>
+    <string name="ce_pref_home_episode_images_summary">הצגת תמונת הפרק במקום תמונת הסדרה ב\"המשך צפייה\" וב\"הבא בתור\"</string>
 </resources>

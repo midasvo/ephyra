@@ -401,7 +401,7 @@ class JellyfinRepositoryImpl(
                     // Up unless asked (#410).
                     fields = listOf(ItemFields.OVERVIEW),
                     imageTypeLimit = 1,
-                    enableImageTypes = ROW_IMAGE_TYPES,
+                    enableImageTypes = WIDE_ROW_IMAGE_TYPES,
                     enableTotalRecordCount = false,
                 )
                 .content
@@ -446,7 +446,7 @@ class JellyfinRepositoryImpl(
                     seriesId = seriesId,
                     fields = listOf(ItemFields.OVERVIEW),
                     imageTypeLimit = 1,
-                    enableImageTypes = ROW_IMAGE_TYPES,
+                    enableImageTypes = WIDE_ROW_IMAGE_TYPES,
                     nextUpDateCutoff =
                         nextUpDateCutoff(
                             seriesId = seriesId,
@@ -963,6 +963,9 @@ class JellyfinRepositoryImpl(
          * for) every backdrop, logo, thumb and banner of each item.
          */
         val ROW_IMAGE_TYPES = listOf(ImageType.PRIMARY, ImageType.BACKDROP)
+
+        /** CE (#608): Continue Watching and Next Up also show the thumb, the art with the title. */
+        val WIDE_ROW_IMAGE_TYPES = ROW_IMAGE_TYPES + ImageType.THUMB
 
         /** Library grid page; a fling on a 2-4 column grid outruns anything smaller. */
         private const val LIBRARY_PAGE_SIZE = 40

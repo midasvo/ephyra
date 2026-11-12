@@ -192,4 +192,6 @@
     <string name="ce_number_off">关闭</string>
     <string name="ce_pref_player_keep_landscape">播放器保持横屏</string>
     <string name="ce_pref_player_keep_landscape_summary">即使将平板电脑竖过来，视频也以横屏播放</string>
+    <string name="ce_pref_home_episode_images">使用剧集图片</string>
+    <string name="ce_pref_home_episode_images_summary">在“继续观看”和“接下来播放”中显示单集的图片，而不是剧集的图片</string>
 </resources>
