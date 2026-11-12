@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">De collecties waar een film deel van uitmaakt</string>
     <string name="ce_pref_detail_similar">Meer zoals dit</string>
     <string name="ce_pref_detail_similar_summary">Vergelijkbare titels uit je bibliotheek</string>
+    <string name="ce_pref_detail_credits">Regisseur en schrijvers</string>
+    <string name="ce_pref_detail_credits_summary">Onder de beschrijving op film- en seriepagina\'s</string>
+    <string name="ce_media_segments_auto_skip_pip">Alleen in scherm-in-scherm</string>
+    <string name="ce_media_segments_auto_skip_always">Altijd</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d aflevering</item>
+        <item quantity="other">%d afleveringen</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d dag</item>
+        <item quantity="other">%d dagen</item>
+    </plurals>
+    <string name="ce_number_no_limit">Geen limiet</string>
+    <string name="ce_number_off">Uit</string>
+    <string name="ce_pref_player_keep_landscape">Speler liggend houden</string>
+    <string name="ce_pref_player_keep_landscape_summary">Video\'s liggend afspelen, ook als je de tablet rechtop draait</string>
+    <string name="ce_pref_home_episode_images">Afleveringsafbeeldingen gebruiken</string>
+    <string name="ce_pref_home_episode_images_summary">Toon in Verder kijken en Volgende de afbeelding van de aflevering in plaats van die van de serie</string>
 </resources>

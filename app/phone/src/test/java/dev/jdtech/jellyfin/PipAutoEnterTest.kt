@@ -21,4 +21,18 @@ class PipAutoEnterTest {
         assertTrue(pipAutoEnterEnabled(gestureEnabled = true, isPlaying = true))
         assertFalse(pipAutoEnterEnabled(gestureEnabled = true, isPlaying = false))
     }
+
+    // #480: the params kept auto-enter on after the gesture was turned off with the player open.
+    @Test
+    fun `params follow a changed auto-enter`() {
+        assertTrue(pipParamsNeedUpdate(autoEnterSet = true, autoEnter = false, false))
+        assertTrue(pipParamsNeedUpdate(autoEnterSet = false, autoEnter = true, false))
+    }
+
+    @Test
+    fun `unchanged params are not built again unless asked`() {
+        assertFalse(pipParamsNeedUpdate(autoEnterSet = false, autoEnter = false, false))
+        assertFalse(pipParamsNeedUpdate(autoEnterSet = true, autoEnter = true, false))
+        assertTrue(pipParamsNeedUpdate(autoEnterSet = true, autoEnter = true, refreshAnyway = true))
+    }
 }

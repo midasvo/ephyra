@@ -3,4 +3,5 @@
     <string name="home_suggestions_title">Suggestions</string>
     <string name="home_rows_move_up">Monter</string>
     <string name="home_rows_move_down">Descendre</string>
+    <string name="ce_continue_watching">Reprendre la lecture</string>
 </resources>

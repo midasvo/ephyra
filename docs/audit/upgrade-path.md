@@ -174,7 +174,7 @@ Proposed text for the release notes:
 
 | Finding | Issue |
 |---|---|
-| Downloaded files stay on disk after the database is reset (downgrade or a failed migration); they are never listed again or removed | #379 |
+| Downloaded files stay on disk after the database is reset (downgrade or a failed migration); they are never listed again or removed | #379, fixed: the daily orphan sweep removes files and artwork no row refers to once they are a day old |
 | No Room migration tests for the released schemas (14, 16, 18) while the fallback is destructive | #380 |
 | The release notes do not say that the Favorites Home row moved to the Favorites tab (2.1.0) | not filed |
 | The release notes do not warn that a downgrade below 2.3.0 signs you out and forgets downloads | not filed (the text above is the proposal) |

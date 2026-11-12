@@ -46,7 +46,7 @@ fun ByteArray.toBase64Str(): String {
 }
 
 fun DateTime.format(locale: Locale = Locale.getDefault()): String {
-    return DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)
+    return DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
         .withLocale(locale)
         .format(this.toLocalDate())
 }

@@ -62,7 +62,11 @@ constructor(
                     val newState =
                         when (val s = entry?.state) {
                             is DownloadQueue.EntryState.Pending ->
-                                DownloaderState(status = DownloadStatus.PENDING)
+                                DownloaderState(
+                                    status =
+                                        if (entry.waitingForNetwork) DownloadStatus.PAUSED
+                                        else DownloadStatus.PENDING
+                                )
                             is DownloadQueue.EntryState.Downloading ->
                                 DownloaderState(
                                     status = DownloadStatus.RUNNING,

@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">تم تعيين النمط</string>
     <string name="ce_profile_pattern_removed">تمت إزالة النمط</string>
     <string name="ce_profile_pattern_grid">نمط فتح القفل، شبكة من 3 × 3 نقاط</string>
+    <string name="ce_server_address_in_use">هذا العنوان قيد الاستخدام ولا يمكن إزالته</string>
+    <string name="ce_server_address_already_added">هذا العنوان مضاف بالفعل</string>
+    <string name="ce_local_network_denied">الوصول إلى الشبكة المحلية متوقف. بدونه لا يمكن العثور على الخوادم الموجودة على شبكتك أو الوصول إليها.</string>
+    <string name="ce_local_network_denied_where">تجده في إعدادات النظام ضمن الأذونات &gt; %1$s.</string>
+    <string name="ce_local_network_allow">السماح بالوصول</string>
+    <string name="ce_local_network_off">الوصول إلى الشبكة المحلية متوقف</string>
+    <string name="ce_add_server_error_local_network">لم يُعثر على الخادم. الوصول إلى الشبكة المحلية متوقف، وهذا يحظر العناوين الموجودة على شبكتك.</string>
+    <string name="ce_permission_permanently_denied">تم رفض %1$s. لاستخدامه، اسمح بـ «%2$s» ضمن الأذونات في إعدادات النظام.</string>
+    <string name="ce_quick_connect_error_expired">انتهت صلاحية رمز الاتصال السريع. اضغط على «إتصال سريع» للحصول على رمز جديد.</string>
+    <string name="ce_quick_connect_error_disabled">الاتصال السريع متوقف على هذا الخادم. سجّل الدخول باسم المستخدم وكلمة المرور.</string>
 </resources>

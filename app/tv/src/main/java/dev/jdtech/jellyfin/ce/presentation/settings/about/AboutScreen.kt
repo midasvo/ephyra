@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +44,7 @@ import dev.jdtech.jellyfin.about.ReleaseChannel
 import dev.jdtech.jellyfin.about.ScreenSummary
 import dev.jdtech.jellyfin.ce.ui.QrCode
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
+import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -74,8 +76,16 @@ fun AboutScreen(
     )
 }
 
+internal const val ABOUT_LICENSES_TAG = "ce_about_licenses"
+
+/**
+ * How far a focused pill button reaches past its bottom edge: tv-material's 1.1 focus scale of a
+ * 40 dp button (2 dp), and the ring 2 dp outside it, 3 dp wide, scaled too (#539).
+ */
+private val FOCUSED_BUTTON_OVERHANG = 8.dp
+
 @Composable
-private fun AboutScreenLayout(
+internal fun AboutScreenLayout(
     state: AboutState,
     onLicensesClick: () -> Unit,
     onDeviceProfileClick: () -> Unit,
@@ -140,14 +150,19 @@ private fun AboutScreenLayout(
                 }
             }
             Spacer(Modifier.weight(1f))
-            Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium)) {
+            // #539: room below for the focused button's scale and ring, inside the safe area.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
+                modifier = Modifier.padding(bottom = FOCUSED_BUTTON_OVERHANG),
+            ) {
                 Button(
                     onClick = onLicensesClick,
-                    modifier = Modifier.focusRequester(firstButton),
+                    border = ephyraButtonBorder(),
+                    modifier = Modifier.focusRequester(firstButton).testTag(ABOUT_LICENSES_TAG),
                 ) {
                     Text(stringResource(SettingsR.string.about_licenses))
                 }
-                OutlinedButton(onClick = onDeviceProfileClick) {
+                OutlinedButton(onClick = onDeviceProfileClick, border = ephyraButtonBorder()) {
                     Text(stringResource(SettingsR.string.about_device_profile))
                 }
             }

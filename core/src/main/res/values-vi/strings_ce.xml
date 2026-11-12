@@ -95,4 +95,17 @@
     <string name="item_more_like_this">Nội dung tương tự</string>
     <string name="ce_session_revoked">%1$s đã đăng xuất bạn. Hãy đăng nhập lại để tiếp tục.</string>
     <string name="ce_download_error_server">Máy chủ đã từ chối tải xuống (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Máy chủ trả về lỗi (HTTP %1$d). Hãy thử lại sau.</string>
+    <string name="ce_media_info">Thông tin phương tiện</string>
+    <string name="ce_home_profile">Hồ sơ</string>
+    <string name="ce_watched">Đã xem</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="other">%d chưa xem</item>
+    </plurals>
+    <string name="ce_delete_download_message">Bạn có chắc muốn xóa bản tải xuống này khỏi thiết bị không?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="other">%d không thành công</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Chưa tải xuống gì</string>
+    <string name="ce_home_offline_empty_body">Bạn đang ngoại tuyến. Phim và tập phim bạn tải xuống sẽ hiện ở đây và trong Tải xuống.</string>
 </resources>

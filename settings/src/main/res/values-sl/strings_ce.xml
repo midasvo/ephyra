@@ -178,4 +178,26 @@
     <string name="ce_pref_detail_collections_summary">Zbirke, katerih del je film</string>
     <string name="ce_pref_detail_similar">Več podobnih</string>
     <string name="ce_pref_detail_similar_summary">Podobni naslovi iz vaše knjižnice</string>
+    <string name="ce_pref_detail_credits">Režiser in scenaristi</string>
+    <string name="ce_pref_detail_credits_summary">Pod opisom na straneh filmov in serij</string>
+    <string name="ce_media_segments_auto_skip_pip">Samo v načinu slika v sliki</string>
+    <string name="ce_media_segments_auto_skip_always">Vedno</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d epizoda</item>
+        <item quantity="two">%d epizodi</item>
+        <item quantity="few">%d epizode</item>
+        <item quantity="other">%d epizod</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d dan</item>
+        <item quantity="two">%d dneva</item>
+        <item quantity="few">%d dni</item>
+        <item quantity="other">%d dni</item>
+    </plurals>
+    <string name="ce_number_no_limit">Brez omejitve</string>
+    <string name="ce_number_off">Izklopljeno</string>
+    <string name="ce_pref_player_keep_landscape">Ohrani predvajalnik v ležeči postavitvi</string>
+    <string name="ce_pref_player_keep_landscape_summary">Predvajaj videoposnetke v ležeči postavitvi, tudi ko tablico obrnete pokonci</string>
+    <string name="ce_pref_home_episode_images">Uporabi slike epizod</string>
+    <string name="ce_pref_home_episode_images_summary">Prikaži sliko epizode namesto slike serije v vrsticah Nadaljuj z ogledom in Naslednje</string>
 </resources>

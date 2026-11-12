@@ -1,8 +1,11 @@
 package dev.jdtech.jellyfin.ce.presentation.film
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +23,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +46,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
@@ -55,6 +58,9 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.ce.ui.PersonCard
+import dev.jdtech.jellyfin.ce.ui.components.TvLoadError
+import dev.jdtech.jellyfin.ce.ui.components.TvOverviewText
+import dev.jdtech.jellyfin.ce.ui.focus.NoBringIntoView
 import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
@@ -66,6 +72,7 @@ import dev.jdtech.jellyfin.film.presentation.movie.MovieAction
 import dev.jdtech.jellyfin.film.presentation.movie.MovieState
 import dev.jdtech.jellyfin.film.presentation.movie.MovieViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
+import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.getVersions
 import dev.jdtech.jellyfin.ui.components.Direction
 import dev.jdtech.jellyfin.utils.AfterFirstFrame
@@ -84,7 +91,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MovieScreen(
     movieId: UUID,
-    navigateToPlayer: (itemId: UUID, mediaSourceId: String?) -> Unit,
+    navigateToPlayer: (itemId: UUID, mediaSourceId: String?, startFromBeginning: Boolean) -> Unit,
     navigateToPerson: (personId: UUID) -> Unit,
     navigateToItem: (item: FindroidItem) -> Unit = {},
     viewModel: MovieViewModel = hiltViewModel(),
@@ -106,7 +113,7 @@ fun MovieScreen(
         onAction = { action ->
             when (action) {
                 is MovieAction.Play -> {
-                    navigateToPlayer(movieId, action.mediaSourceId)
+                    navigateToPlayer(movieId, action.mediaSourceId, action.startFromBeginning)
                 }
                 is MovieAction.PlayTrailer -> {
                     try {
@@ -118,7 +125,7 @@ fun MovieScreen(
                 is MovieAction.NavigateToPerson -> {
                     navigateToPerson(action.personId)
                 }
-                is MovieAction.PlayExtra -> navigateToPlayer(action.extraId, null)
+                is MovieAction.PlayExtra -> navigateToPlayer(action.extraId, null, false)
                 is MovieAction.NavigateToItem -> navigateToItem(action.item)
                 else -> Unit
             }
@@ -127,8 +134,24 @@ fun MovieScreen(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit) {
+internal fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit) {
+    // CE (#514): the page scrolls itself when a row gets focus, so moving along the buttons leaves
+    // the title on screen. The rows and the version dialog keep the default.
+    val rowSpec = LocalBringIntoViewSpec.current
+    CompositionLocalProvider(LocalBringIntoViewSpec provides NoBringIntoView) {
+        MovieScreenContent(state = state, onAction = onAction, rowSpec = rowSpec)
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MovieScreenContent(
+    state: MovieState,
+    onAction: (MovieAction) -> Unit,
+    rowSpec: BringIntoViewSpec,
+) {
     val configuration = LocalConfiguration.current
     val locale = configuration.locales.get(0)
 
@@ -142,11 +165,16 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
         }
     }
 
-    var versionDialogOpen by remember { mutableStateOf(false) }
+    // Null while closed; otherwise whether the chosen version starts from the beginning.
+    var versionDialogStartFromBeginning by remember { mutableStateOf<Boolean?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        state.movie?.let { movie ->
+        // CE (#544): an if, not movie?.let { } ?: run { }. That let ended with the version
+        // dialog's ?.let, null while the dialog is closed, so the spinner showed over the page.
+        val movie = state.movie
+        if (movie != null) {
             val versions = remember(movie.sources) { movie.getVersions() }
+            val inProgress = movie.playbackPositionTicks > 0 && !movie.played
             val relatedRows =
                 remember(state.related) {
                     listOf(
@@ -207,7 +235,8 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                     contentPadding =
                         PaddingValues(top = 112.dp, bottom = MaterialTheme.spacings.large),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
-                    userScrollEnabled = false,
+                    // CE (#514): no userScrollEnabled = false. Without user scrolling, Down from
+                    // the buttons can't reach the cast row while that row is below the screen.
                 ) {
                     item {
                         Column(
@@ -246,6 +275,17 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                                         ),
                                     style = MaterialTheme.typography.labelMedium,
                                 )
+                                // CE (#412): how much is left of a movie that is partly watched.
+                                if (inProgress) {
+                                    Text(
+                                        text =
+                                            stringResource(
+                                                CoreR.string.runtime_minutes_left,
+                                                minutesLeft(movie),
+                                            ),
+                                        style = MaterialTheme.typography.labelMedium,
+                                    )
+                                }
                                 movie.officialRating?.let {
                                     Text(text = it, style = MaterialTheme.typography.labelMedium)
                                 }
@@ -278,11 +318,11 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                             }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
                             TvTagline(movie.tagline)
-                            Text(
+                            // CE (#545): a cut overview takes focus and opens in full on OK.
+                            TvOverviewText(
+                                title = movie.name,
                                 text = movie.overview,
-                                style = MaterialTheme.typography.bodyMedium,
                                 maxLines = 4,
-                                overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.width(640.dp),
                             )
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.default))
@@ -291,20 +331,23 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                                     Arrangement.spacedBy(MaterialTheme.spacings.medium),
                                 modifier = Modifier.focusRestorer().focusGroup(),
                             ) {
-                                val hasTrailer = movie.trailer != null
-                                val trailerCol = if (hasTrailer) 1 else -1
-                                val playedCol = if (hasTrailer) 2 else 1
-                                val favoriteCol = if (hasTrailer) 3 else 2
+                                // CE (#412): fixed columns, as on the season page. A button that
+                                // is gone on return (Restart after the end) falls back to Play.
+                                val trailerCol = 2
+                                val playedCol = 3
+                                val favoriteCol = 4
+                                // A version dialog remembers whether it was opened to restart.
+                                val play = { startFromBeginning: Boolean ->
+                                    if (versions.size > 1) {
+                                        versionDialogStartFromBeginning = startFromBeginning
+                                    } else {
+                                        onAction(MovieAction.Play(startFromBeginning))
+                                    }
+                                }
 
                                 Button(
                                     border = ephyraButtonBorder(),
-                                    onClick = {
-                                        if (versions.size > 1) {
-                                            versionDialogOpen = true
-                                        } else {
-                                            onAction(MovieAction.Play(startFromBeginning = false))
-                                        }
-                                    },
+                                    onClick = { play(false) },
                                     modifier =
                                         Modifier.focusPosition(focusPosition, ROW_BUTTONS, 0),
                                 ) {
@@ -313,7 +356,30 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                                         contentDescription = null,
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text(text = stringResource(id = CoreR.string.play))
+                                    Text(
+                                        text =
+                                            stringResource(
+                                                id =
+                                                    if (inProgress) CoreR.string.resume
+                                                    else CoreR.string.play
+                                            )
+                                    )
+                                }
+                                if (inProgress) {
+                                    Button(
+                                        border = ephyraButtonBorder(),
+                                        onClick = { play(true) },
+                                        modifier =
+                                            Modifier.focusPosition(focusPosition, ROW_BUTTONS, 1),
+                                    ) {
+                                        Icon(
+                                            painter =
+                                                painterResource(id = CoreR.drawable.ic_rotate_ccw),
+                                            contentDescription = null,
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(text = stringResource(id = CoreR.string.restart))
+                                    }
                                 }
                                 movie.trailer?.let { trailerUri ->
                                     Button(
@@ -409,54 +475,18 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                                 }
                             }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.default))
-                            Row(
-                                horizontalArrangement =
-                                    Arrangement.spacedBy(MaterialTheme.spacings.large)
-                            ) {
-                                Column {
-                                    Text(
-                                        text = stringResource(id = CoreR.string.genres),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White.copy(alpha = .5f),
-                                    )
-                                    Text(
-                                        text = movie.genres.joinToString(),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                }
-                                state.director?.let { director ->
-                                    Column {
-                                        Text(
-                                            text = stringResource(id = CoreR.string.director),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.White.copy(alpha = .5f),
-                                        )
-                                        Text(
-                                            text = director.name,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                        )
-                                    }
-                                }
-                                if (state.writers.isNotEmpty()) {
-                                    Column {
-                                        Text(
-                                            text = stringResource(id = CoreR.string.writers),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.White.copy(alpha = .5f),
-                                        )
-                                        Text(
-                                            text = state.writers.joinToString { it.name },
-                                            style = MaterialTheme.typography.bodyMedium,
-                                        )
-                                    }
-                                }
-                                if (movie.studios.isNotEmpty()) {
-                                    TvLabeledValue(
-                                        label = stringResource(CoreR.string.item_studios),
-                                        value = movie.studios.joinToString(),
-                                    )
-                                }
-                            }
+                            TvCredits(
+                                listOf(
+                                    stringResource(CoreR.string.genres) to
+                                        movie.genres.joinToString(),
+                                    stringResource(CoreR.string.director) to
+                                        state.director?.name.orEmpty(),
+                                    stringResource(CoreR.string.writers) to
+                                        state.writers.joinToString { it.name },
+                                    stringResource(CoreR.string.item_studios) to
+                                        movie.studios.joinToString(),
+                                )
+                            )
                             if (state.actors.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(MaterialTheme.spacings.large))
                                 Text(
@@ -469,32 +499,36 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
 
                     if (state.actors.isNotEmpty()) {
                         item {
-                            LazyRow(
-                                horizontalArrangement =
-                                    Arrangement.spacedBy(MaterialTheme.spacings.default),
-                                contentPadding =
-                                    PaddingValues(horizontal = MaterialTheme.spacings.default * 2),
-                                modifier =
-                                    Modifier.focusRestorer().onFocusChanged {
-                                        if (it.hasFocus) scrollToRow(ROW_CAST)
-                                    },
-                            ) {
-                                itemsIndexed(state.actors, key = { _, actor -> actor.id }) {
-                                    index,
-                                    actor ->
-                                    PersonCard(
-                                        person = actor,
-                                        onClick = {
-                                            onAction(MovieAction.NavigateToPerson(actor.id))
+                            CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
+                                LazyRow(
+                                    horizontalArrangement =
+                                        Arrangement.spacedBy(MaterialTheme.spacings.default),
+                                    contentPadding =
+                                        PaddingValues(
+                                            horizontal = MaterialTheme.spacings.default * 2
+                                        ),
+                                    modifier =
+                                        Modifier.focusRestorer().onFocusChanged {
+                                            if (it.hasFocus) scrollToRow(ROW_CAST)
                                         },
-                                        modifier =
-                                            Modifier.focusPosition(
-                                                focusPosition,
-                                                ROW_CAST,
-                                                index,
-                                                actor.id.toString(),
-                                            ),
-                                    )
+                                ) {
+                                    itemsIndexed(state.actors, key = { _, actor -> actor.id }) {
+                                        index,
+                                        actor ->
+                                        PersonCard(
+                                            person = actor,
+                                            onClick = {
+                                                onAction(MovieAction.NavigateToPerson(actor.id))
+                                            },
+                                            modifier =
+                                                Modifier.focusPosition(
+                                                    focusPosition,
+                                                    ROW_CAST,
+                                                    index,
+                                                    actor.id.toString(),
+                                                ),
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -509,6 +543,7 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                                 direction = related.direction,
                                 focusPosition = focusPosition,
                                 row = related.row,
+                                rowSpec = rowSpec,
                                 onFocused = { scrollToRow(lazyIndexOf(related.row)) },
                                 onClick = { item ->
                                     onAction(
@@ -542,19 +577,43 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                 listState.scrollToItem(lazyIndexOf(position.row))
             }
 
-            if (versionDialogOpen) {
-                VersionDialog(
-                    versions = versions,
-                    onSelect = { mediaSourceId ->
-                        versionDialogOpen = false
-                        onAction(MovieAction.Play(mediaSourceId = mediaSourceId))
-                    },
-                    onDismiss = { versionDialogOpen = false },
-                )
+            versionDialogStartFromBeginning?.let { startFromBeginning ->
+                CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
+                    VersionDialog(
+                        versions = versions,
+                        onSelect = { mediaSourceId ->
+                            versionDialogStartFromBeginning = null
+                            onAction(
+                                MovieAction.Play(
+                                    startFromBeginning = startFromBeginning,
+                                    mediaSourceId = mediaSourceId,
+                                )
+                            )
+                        },
+                        onDismiss = { versionDialogStartFromBeginning = null },
+                    )
+                }
             }
-        } ?: run { CircularProgressIndicator(modifier = Modifier.align(Alignment.Center)) }
+        } else {
+            val error = state.error
+            if (error != null) {
+                TvLoadError(
+                    error = error,
+                    onRetry = { onAction(MovieAction.OnRetryClick) },
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            } else {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+        }
     }
 }
+
+/** Whole minutes left of a partly watched movie, at least 1, as the season page counts them. */
+private fun minutesLeft(movie: FindroidMovie): Long =
+    ((movie.runtimeTicks - movie.playbackPositionTicks) / TICKS_PER_MINUTE).coerceAtLeast(1)
+
+private const val TICKS_PER_MINUTE = 600_000_000L
 
 private const val ROW_BUTTONS = 0
 private const val ROW_CAST = 1

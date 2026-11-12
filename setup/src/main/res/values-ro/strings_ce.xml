@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">Model setat</string>
     <string name="ce_profile_pattern_removed">Model eliminat</string>
     <string name="ce_profile_pattern_grid">Model de deblocare, o grilă de 3 pe 3 puncte</string>
+    <string name="ce_server_address_in_use">Această adresă este în uz și nu poate fi eliminată</string>
+    <string name="ce_server_address_already_added">Această adresă este deja adăugată</string>
+    <string name="ce_local_network_denied">Accesul la rețeaua locală este dezactivat. Fără el, serverele din rețeaua ta nu pot fi găsite sau accesate.</string>
+    <string name="ce_local_network_denied_where">În setările sistemului se află la Permisiuni &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Permite accesul</string>
+    <string name="ce_local_network_off">Accesul la rețeaua locală este dezactivat</string>
+    <string name="ce_add_server_error_local_network">Serverul nu a fost găsit. Accesul la rețeaua locală este dezactivat, ceea ce blochează adresele din rețeaua ta.</string>
+    <string name="ce_permission_permanently_denied">%1$s a fost refuzat. Pentru a-l folosi, permite „%2$s” la Permisiuni, în setările sistemului.</string>
+    <string name="ce_quick_connect_error_expired">Codul pentru Conectare rapidă a expirat. Apăsați Conectare rapidă pentru un cod nou.</string>
+    <string name="ce_quick_connect_error_disabled">Conectarea rapidă este dezactivată pe acest server. Conectați-vă cu numele de utilizator și parola.</string>
 </resources>

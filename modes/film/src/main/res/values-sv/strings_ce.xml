@@ -3,4 +3,5 @@
     <string name="home_suggestions_title">Förslag</string>
     <string name="home_rows_move_up">Flytta upp</string>
     <string name="home_rows_move_down">Flytta ner</string>
+    <string name="ce_continue_watching">Fortsätt titta</string>
 </resources>

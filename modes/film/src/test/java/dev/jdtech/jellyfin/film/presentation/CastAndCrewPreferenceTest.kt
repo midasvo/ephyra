@@ -60,12 +60,28 @@ class CastAndCrewPreferenceTest {
     }
 
     @Test
-    fun `movie shows cast and crew by default`() {
-        val state = loadMovie(appPreferences(stored = null))
+    fun `movie shows the cast by default, and the director and writers once asked for`() {
+        val byDefault = loadMovie(appPreferences(stored = null))
 
-        assertEquals(listOf(actor), state.actors)
-        assertEquals(director, state.director)
-        assertEquals(listOf(writer), state.writers)
+        assertEquals(listOf(actor), byDefault.actors)
+        // #510: the credits under the overview are off until turned on.
+        assertNull(byDefault.director)
+        assertTrue(byDefault.writers.isEmpty())
+
+        val withCredits = loadMovie(appPreferences(stored = null, credits = true))
+
+        assertEquals(listOf(actor), withCredits.actors)
+        assertEquals(director, withCredits.director)
+        assertEquals(listOf(writer), withCredits.writers)
+    }
+
+    @Test
+    fun `movie credits stay hidden while cast and crew is off`() {
+        val state = loadMovie(appPreferences(stored = false, credits = true))
+
+        assertTrue(state.actors.isEmpty())
+        assertNull(state.director)
+        assertTrue(state.writers.isEmpty())
     }
 
     @Test
@@ -78,12 +94,18 @@ class CastAndCrewPreferenceTest {
     }
 
     @Test
-    fun `show shows cast and crew by default`() {
-        val state = loadShow(appPreferences(stored = null))
+    fun `show shows the cast by default, and the director and writers once asked for`() {
+        val byDefault = loadShow(appPreferences(stored = null))
 
-        assertEquals(listOf(actor), state.actors)
-        assertEquals(director, state.director)
-        assertEquals(listOf(writer), state.writers)
+        assertEquals(listOf(actor), byDefault.actors)
+        assertNull(byDefault.director)
+        assertTrue(byDefault.writers.isEmpty())
+
+        val withCredits = loadShow(appPreferences(stored = null, credits = true))
+
+        assertEquals(listOf(actor), withCredits.actors)
+        assertEquals(director, withCredits.director)
+        assertEquals(listOf(writer), withCredits.writers)
     }
 
     @Test
@@ -245,7 +267,7 @@ class CastAndCrewPreferenceTest {
         )
 
     /** Preferences where only the cast and crew switch may be stored; null means never touched. */
-    private fun appPreferences(stored: Boolean?): AppPreferences {
+    private fun appPreferences(stored: Boolean?, credits: Boolean? = null): AppPreferences {
         val preferences =
             Proxy.newProxyInstance(
                 SharedPreferences::class.java.classLoader,
@@ -253,8 +275,11 @@ class CastAndCrewPreferenceTest {
             ) { _, method, args ->
                 when (method.name) {
                     "getBoolean" ->
-                        if (args!![0] == "pref_display_cast_and_crew" && stored != null) stored
-                        else args[1]
+                        when {
+                            args!![0] == "pref_display_cast_and_crew" && stored != null -> stored
+                            args[0] == "pref_detail_credits" && credits != null -> credits
+                            else -> args[1]
+                        }
                     "getString",
                     "getInt",
                     "getLong",

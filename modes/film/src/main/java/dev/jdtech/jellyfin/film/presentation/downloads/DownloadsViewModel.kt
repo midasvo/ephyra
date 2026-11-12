@@ -284,7 +284,9 @@ constructor(
     private fun DownloadQueue.Entry.toActiveDownload(): ActiveDownload {
         val downloadStatus =
             when (state) {
-                is DownloadQueue.EntryState.Pending -> DownloadStatus.QUEUED
+                // "Waiting for network", as a download the engine paused for it (#530).
+                is DownloadQueue.EntryState.Pending ->
+                    if (waitingForNetwork) DownloadStatus.PAUSED else DownloadStatus.QUEUED
                 is DownloadQueue.EntryState.Downloading -> DownloadStatus.DOWNLOADING
                 is DownloadQueue.EntryState.Paused -> DownloadStatus.PAUSED
                 is DownloadQueue.EntryState.Completed -> DownloadStatus.COMPLETED

@@ -1,8 +1,12 @@
 package dev.jdtech.jellyfin.ce.presentation.film
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.BringIntoViewSpec
+import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRestorer
@@ -111,6 +116,24 @@ fun TvLabeledValue(label: String, value: String) {
     }
 }
 
+/**
+ * The genres, director, writers and studios under the buttons, as label/value columns (#413). A
+ * column that doesn't fit beside the others starts a new line, and one wider than the page wraps
+ * inside it, so a long list never squeezes the column after it. Empty values are left out.
+ */
+@Composable
+fun TvCredits(columns: List<Pair<String, String>>, modifier: Modifier = Modifier) {
+    val shown = columns.filter { (_, value) -> value.isNotBlank() }
+    if (shown.isEmpty()) return
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.large),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
+        modifier = modifier,
+    ) {
+        shown.forEach { (label, value) -> TvLabeledValue(label = label, value = value) }
+    }
+}
+
 /** One related row of a TV detail page: its focus row, title, card shape and items. */
 data class RelatedRow(
     val row: Int,
@@ -128,8 +151,10 @@ fun List<RelatedRow>.relatedLazyIndex(row: Int, firstIndex: Int): Int? =
 
 /**
  * A titled row of cards at the bottom of a detail page (extras, collections, "More like this"),
- * as row [row] of [focusPosition] so Back from an item lands on it again.
+ * as row [row] of [focusPosition] so Back from an item lands on it again. [rowSpec] is the
+ * bring-into-view spec of the row, for a page that turns it off for itself (#514).
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TvItemsRow(
     title: String,
@@ -137,6 +162,7 @@ fun TvItemsRow(
     direction: Direction,
     focusPosition: FocusPosition,
     row: Int,
+    rowSpec: BringIntoViewSpec,
     onFocused: () -> Unit,
     onClick: (FindroidItem) -> Unit,
 ) {
@@ -147,18 +173,22 @@ fun TvItemsRow(
             modifier = Modifier.padding(horizontal = MaterialTheme.spacings.default * 2),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
-            contentPadding = PaddingValues(horizontal = MaterialTheme.spacings.default * 2),
-            modifier = Modifier.focusRestorer().onFocusChanged { if (it.hasFocus) onFocused() },
-        ) {
-            itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
-                ItemCard(
-                    item = item,
-                    direction = direction,
-                    onClick = onClick,
-                    modifier = Modifier.focusPosition(focusPosition, row, index, item.id.toString()),
-                )
+        CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
+                contentPadding = PaddingValues(horizontal = MaterialTheme.spacings.default * 2),
+                modifier =
+                    Modifier.focusRestorer().onFocusChanged { if (it.hasFocus) onFocused() },
+            ) {
+                itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
+                    ItemCard(
+                        item = item,
+                        direction = direction,
+                        onClick = onClick,
+                        modifier =
+                            Modifier.focusPosition(focusPosition, row, index, item.id.toString()),
+                    )
+                }
             }
         }
     }

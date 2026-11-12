@@ -178,4 +178,26 @@
     <string name="ce_pref_detail_collections_summary">Kolekcie, ktorých súčasťou je film</string>
     <string name="ce_pref_detail_similar">Podobné tituly</string>
     <string name="ce_pref_detail_similar_summary">Podobné tituly z vašej knižnice</string>
+    <string name="ce_pref_detail_credits">Režisér a scenáristi</string>
+    <string name="ce_pref_detail_credits_summary">Pod popisom na stránkach filmov a seriálov</string>
+    <string name="ce_media_segments_auto_skip_pip">Iba v režime obraz v obraze</string>
+    <string name="ce_media_segments_auto_skip_always">Vždy</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d epizóda</item>
+        <item quantity="few">%d epizódy</item>
+        <item quantity="many">%d epizódy</item>
+        <item quantity="other">%d epizód</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d deň</item>
+        <item quantity="few">%d dni</item>
+        <item quantity="many">%d dňa</item>
+        <item quantity="other">%d dní</item>
+    </plurals>
+    <string name="ce_number_no_limit">Bez obmedzenia</string>
+    <string name="ce_number_off">Vypnuté</string>
+    <string name="ce_pref_player_keep_landscape">Ponechať prehrávač na šírku</string>
+    <string name="ce_pref_player_keep_landscape_summary">Prehrávať videá na šírku, aj keď tablet otočíte na výšku</string>
+    <string name="ce_pref_home_episode_images">Používať obrázky epizód</string>
+    <string name="ce_pref_home_episode_images_summary">Zobraziť obrázok epizódy namiesto obrázka seriálu v radoch Pokračovať v sledovaní a Ďalšie</string>
 </resources>

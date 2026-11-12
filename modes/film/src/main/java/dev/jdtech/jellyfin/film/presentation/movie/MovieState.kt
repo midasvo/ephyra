@@ -11,7 +11,6 @@ data class MovieState(
     val actors: List<FindroidItemPerson> = emptyList(),
     val director: FindroidItemPerson? = null,
     val writers: List<FindroidItemPerson> = emptyList(),
-    val displayExtraInfo: Boolean = false,
     // CE (#332): loaded after the page is shown, see MovieViewModel.loadRelated.
     val related: RelatedItems = RelatedItems(),
     val error: Exception? = null,

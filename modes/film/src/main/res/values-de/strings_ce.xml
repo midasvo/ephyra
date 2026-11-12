@@ -3,4 +3,5 @@
     <string name="home_suggestions_title">Vorschläge</string>
     <string name="home_rows_move_up">Nach oben</string>
     <string name="home_rows_move_down">Nach unten</string>
+    <string name="ce_continue_watching">Weiter ansehen</string>
 </resources>

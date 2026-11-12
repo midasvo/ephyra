@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">Desen ayarlandı</string>
     <string name="ce_profile_pattern_removed">Desen kaldırıldı</string>
     <string name="ce_profile_pattern_grid">Kilit açma deseni, 3 × 3 noktalık bir ızgara</string>
+    <string name="ce_server_address_in_use">Bu adres kullanımda ve kaldırılamaz</string>
+    <string name="ce_server_address_already_added">Bu adres zaten eklenmiş</string>
+    <string name="ce_local_network_denied">Yerel ağ erişimi kapalı. Bu erişim olmadan ağınızdaki sunucular bulunamaz ve onlara ulaşılamaz.</string>
+    <string name="ce_local_network_denied_where">Sistem ayarlarında İzinler &gt; %1$s altındadır.</string>
+    <string name="ce_local_network_allow">Erişime izin ver</string>
+    <string name="ce_local_network_off">Yerel ağ erişimi kapalı</string>
+    <string name="ce_add_server_error_local_network">Sunucu bulunamadı. Yerel ağ erişimi kapalı; bu, ağınızdaki adresleri engelliyor.</string>
+    <string name="ce_permission_permanently_denied">%1$s reddedildi. Kullanmak için sistem ayarlarında İzinler altında \"%2$s\" iznini verin.</string>
+    <string name="ce_quick_connect_error_expired">Quick Connect kodunun süresi doldu. Yeni bir kod için Quick Connect\'e basın.</string>
+    <string name="ce_quick_connect_error_disabled">Bu sunucuda Quick Connect kapalı. Kullanıcı adınız ve şifrenizle giriş yapın.</string>
 </resources>

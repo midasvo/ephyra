@@ -98,4 +98,19 @@
     <string name="item_more_like_this">Meir som dette</string>
     <string name="ce_session_revoked">%1$s logga deg ut. Logg inn att for å halde fram.</string>
     <string name="ce_download_error_server">Tenaren avviste nedlastinga (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Tenaren svarte med ein feil (HTTP %1$d). Prøv igjen seinare.</string>
+    <string name="ce_media_info">Medieinformasjon</string>
+    <string name="ce_home_profile">Profil</string>
+    <string name="ce_watched">Sett</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d ikkje sett</item>
+        <item quantity="other">%d ikkje sette</item>
+    </plurals>
+    <string name="ce_delete_download_message">Er du sikker på at du vil slette denne nedlastinga frå eininga di?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d mislukka</item>
+        <item quantity="other">%d mislukka</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Ingenting lasta ned enno</string>
+    <string name="ce_home_offline_empty_body">Du er fråkopla. Filmar og episodar du lastar ned, viser seg her og under Nedlastingar.</string>
 </resources>

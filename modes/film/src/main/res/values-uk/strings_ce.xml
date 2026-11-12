@@ -3,4 +3,5 @@
     <string name="home_suggestions_title">Рекомендації</string>
     <string name="home_rows_move_up">Перемістити вгору</string>
     <string name="home_rows_move_down">Перемістити вниз</string>
+    <string name="ce_continue_watching">Продовжити перегляд</string>
 </resources>

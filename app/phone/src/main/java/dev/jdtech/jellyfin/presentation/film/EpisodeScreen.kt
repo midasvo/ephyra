@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,10 +22,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -47,13 +45,15 @@ import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderViewModel
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyVideoMetadata
+import dev.jdtech.jellyfin.film.domain.withMediaInfo
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeAction
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeState
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeViewModel
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
+import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
 import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
-import dev.jdtech.jellyfin.presentation.film.components.ExtraInfoText
+import dev.jdtech.jellyfin.presentation.film.components.MediaInfoSheet
 import dev.jdtech.jellyfin.presentation.film.components.WatchHistoryText
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
@@ -62,6 +62,7 @@ import dev.jdtech.jellyfin.presentation.film.components.ItemTopBar
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
 import dev.jdtech.jellyfin.presentation.film.components.OverviewText
 import dev.jdtech.jellyfin.presentation.film.components.VideoMetadataBar
+import dev.jdtech.jellyfin.presentation.film.components.rememberArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.rememberTopBarBackgroundAlpha
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -161,6 +162,7 @@ fun EpisodeScreen(
                 is EpisodeAction.OnHomeClick -> navigateHome()
                 is EpisodeAction.NavigateToPerson -> navigateToPerson(action.personId)
                 is EpisodeAction.NavigateToSeason -> navigateToSeason(action.seasonId, action.seriesId)
+                is EpisodeAction.NavigateToSeries -> navigateToSeries(action.seriesId)
                 else -> Unit
             }
             viewModel.onAction(action)
@@ -176,9 +178,30 @@ private fun EpisodeScreenLayout(
     onAction: (EpisodeAction) -> Unit,
     onDownloaderAction: (DownloaderAction) -> Unit,
 ) {
+    // CE (#510): above the narrow/wide branch, so the sheet stays open, on the version picked,
+    // when a rotation, a fold or a resized window changes the layout. Shown once there is
+    // something to show: after process death the flag is back before the episode is.
+    var mediaInfoOpen by rememberSaveable { mutableStateOf(false) }
+    val episodeSources = state.episode?.sources
+    val mediaInfoSources = remember(episodeSources) { episodeSources.orEmpty().withMediaInfo() }
+    // No chip when there is nothing to describe: offline, a download has no track data.
+    val onMediaInfoClick = { mediaInfoOpen = true }.takeIf { mediaInfoSources.isNotEmpty() }
+    if (mediaInfoOpen && mediaInfoSources.isNotEmpty()) {
+        MediaInfoSheet(
+            sources = mediaInfoSources,
+            onDismissRequest = { mediaInfoOpen = false },
+        )
+    }
+
     // CE: medium and expanded windows get the hero layout (docs/tablet/4-design.md §6).
     if (useWideItemLayout()) {
-        EpisodeWideLayout(state, downloaderState, onAction, onDownloaderAction)
+        EpisodeWideLayout(
+            state,
+            downloaderState,
+            onAction,
+            onDownloaderAction,
+            onMediaInfoClick = onMediaInfoClick,
+        )
         return
     }
 
@@ -189,6 +212,8 @@ private fun EpisodeScreenLayout(
     val paddingBottom = safePadding.bottom + MaterialTheme.spacings.default
 
     val scrollState = rememberScrollState()
+    // CE (#437): the artwork under the top bar, if any; shared by the header and the bar.
+    val artwork = rememberArtworkState(state.episode, ArtworkPlacement.Header)
 
     var downloadQualityDialogOpen by remember { mutableStateOf(false) }
 
@@ -198,6 +223,7 @@ private fun EpisodeScreenLayout(
                 ItemHeader(
                     item = episode,
                     scrollState = scrollState,
+                    artwork = artwork,
                     content = {
                         Column(
                             modifier =
@@ -279,7 +305,7 @@ private fun EpisodeScreenLayout(
                     }
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
                     state.videoMetadata?.let { videoMetadata ->
-                        VideoMetadataBar(videoMetadata)
+                        VideoMetadataBar(videoMetadata, onInfoClick = onMediaInfoClick)
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
                     }
                     ItemButtonsBar(
@@ -319,10 +345,6 @@ private fun EpisodeScreenLayout(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
-                    if (state.displayExtraInfo && state.videoMetadata != null) {
-                        ExtraInfoText(videoMetadata = state.videoMetadata!!)
-                        Spacer(Modifier.height(MaterialTheme.spacings.medium))
-                    }
                     OverviewText(text = episode.overview)
                     EpisodeWatchAndLinks(episode, onAction)
                     Spacer(Modifier.height(MaterialTheme.spacings.medium))
@@ -345,35 +367,16 @@ private fun EpisodeScreenLayout(
             )
         }
 
-        LightStatusBarOverArtwork(state.episode != null, rememberTopBarBackgroundAlpha(scrollState))
+        LightStatusBarOverArtwork(artwork.hasArtwork, rememberTopBarBackgroundAlpha(scrollState))
         ItemTopBar(
             hasBackButton = true,
             hasHomeButton = true,
             backgroundAlpha = rememberTopBarBackgroundAlpha(scrollState),
+            overArtwork = artwork.hasArtwork,
             onBackClick = { onAction(EpisodeAction.OnBackClick) },
             onHomeClick = { onAction(EpisodeAction.OnHomeClick) },
         ) {
-            Spacer(modifier = Modifier.width(MaterialTheme.spacings.extraSmall))
-            state.episode?.let { episode ->
-                Button(
-                    onClick = { onAction(EpisodeAction.NavigateToSeason(episode.seasonId, episode.seriesId)) },
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = Color.Black.copy(alpha = 0.5f),
-                            contentColor = Color.White,
-                        ),
-                ) {
-                    episode.seasonName?.let { seasonName -> Text(seasonName) }
-                        ?: run {
-                            Text(
-                                stringResource(
-                                    CoreR.string.season_number,
-                                    episode.parentIndexNumber,
-                                )
-                            )
-                        }
-                }
-            }
+            state.episode?.let { episode -> EpisodeTopBarLinks(episode, onAction) }
         }
 
         if (downloadQualityDialogOpen) {

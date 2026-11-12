@@ -1,6 +1,5 @@
 package dev.jdtech.jellyfin.presentation.film.components
 
-import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
@@ -18,62 +17,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
-import dev.jdtech.jellyfin.core.presentation.ephyra.backdropCrossfadeMillis
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
-import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.Layout
 import dev.jdtech.jellyfin.presentation.utils.drawTopScrimOverArt
 import dev.jdtech.jellyfin.presentation.utils.parallaxLayoutModifier
+import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 
 @Composable
 fun ItemHeader(
     item: FindroidItem,
     scrollState: ScrollState,
     showLogo: Boolean = false,
+    artwork: ArtworkState = rememberArtworkState(item, ArtworkPlacement.Header),
     content: @Composable (BoxScope.() -> Unit) = {},
 ) {
-    val context = LocalContext.current
-    var backdropUri =
-        when (item) {
-            is FindroidEpisode -> item.images.primary
-            else -> item.images.backdrop
-        }
-
-    // Ugly workaround to append the files directory when loading local images
-    if (backdropUri != null && backdropUri.scheme == null) {
-        backdropUri =
-            Uri.Builder()
-                .appendEncodedPath("${context.filesDir}")
-                .appendEncodedPath(backdropUri.path)
-                .build()
-    }
-
     ItemHeaderBase(
         item = item,
+        artwork = artwork,
         showLogo = showLogo,
         backdropImage = {
-            AsyncImage(
-                model =
-                    ImageRequest.Builder(context)
-                        .data(backdropUri)
-                        .crossfade(backdropCrossfadeMillis())
-                        .build(),
-                contentDescription = null,
+            ArtworkBackdrop(
+                state = artwork,
                 modifier =
                     Modifier.fillMaxSize()
                         .parallaxLayoutModifier(scrollState = scrollState, rate = 2),
-                placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainer),
-                contentScale = ContentScale.Crop,
             )
         },
         content = content,
@@ -85,41 +59,19 @@ fun ItemHeader(
     item: FindroidItem,
     lazyListState: LazyListState,
     showLogo: Boolean = false,
+    artwork: ArtworkState = rememberArtworkState(item, ArtworkPlacement.Header),
     content: @Composable (BoxScope.() -> Unit) = {},
 ) {
-    val context = LocalContext.current
-    var backdropUri =
-        when (item) {
-            is FindroidEpisode -> item.images.primary
-            is FindroidSeason -> item.images.showBackdrop ?: item.images.backdrop
-            else -> item.images.backdrop
-        }
-
-    // Ugly workaround to append the files directory when loading local images
-    if (backdropUri != null && backdropUri.scheme == null) {
-        backdropUri =
-            Uri.Builder()
-                .appendEncodedPath("${context.filesDir}")
-                .appendEncodedPath(backdropUri.path)
-                .build()
-    }
-
     ItemHeaderBase(
         item = item,
+        artwork = artwork,
         showLogo = showLogo,
         backdropImage = {
-            AsyncImage(
-                model =
-                    ImageRequest.Builder(context)
-                        .data(backdropUri)
-                        .crossfade(backdropCrossfadeMillis())
-                        .build(),
-                contentDescription = null,
+            ArtworkBackdrop(
+                state = artwork,
                 modifier =
                     Modifier.fillMaxSize()
                         .parallaxLayoutModifier(lazyListState = lazyListState, rate = 2),
-                placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainer),
-                contentScale = ContentScale.Crop,
             )
         },
         content = content,
@@ -129,6 +81,7 @@ fun ItemHeader(
 @Composable
 private fun ItemHeaderBase(
     item: FindroidItem,
+    artwork: ArtworkState,
     showLogo: Boolean = false,
     backdropImage: @Composable (() -> Unit),
     content: @Composable (BoxScope.() -> Unit) = {},
@@ -140,6 +93,17 @@ private fun ItemHeaderBase(
             is FindroidEpisode -> item.images.showLogo
             else -> item.images.logo
         }
+
+    // CE (#433): without any artwork the header is only the room below the top bar for the title.
+    if (!artwork.hasArtwork) {
+        Box(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(top = rememberSafePadding().top + Layout.topBarHeight),
+            content = content,
+        )
+        return
+    }
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val windowHeight =

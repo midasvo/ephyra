@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">已經設定圖案</string>
     <string name="ce_profile_pattern_removed">已經移除圖案</string>
     <string name="ce_profile_pattern_grid">解鎖圖案，3 × 3 點嘅格仔</string>
+    <string name="ce_server_address_in_use">呢個地址用緊，唔可以移除</string>
+    <string name="ce_server_address_already_added">呢個地址已經加咗</string>
+    <string name="ce_local_network_denied">本地網絡存取權已關閉。冇咗佢，就搵唔到亦連唔到你網絡上面嘅伺服器。</string>
+    <string name="ce_local_network_denied_where">喺系統設定入面，佢喺「權限」&gt;「%1$s」。</string>
+    <string name="ce_local_network_allow">允許存取</string>
+    <string name="ce_local_network_off">本地網絡存取權已關閉</string>
+    <string name="ce_add_server_error_local_network">搵唔到伺服器。本地網絡存取權已關閉，所以你網絡上面嘅地址會被封鎖。</string>
+    <string name="ce_permission_permanently_denied">%1$s已被拒絕。要使用嘅話，請喺系統設定嘅「權限」入面允許「%2$s」。</string>
+    <string name="ce_quick_connect_error_expired">Quick Connect 嘅代碼已經過期。撳 Quick Connect 攞過個新代碼。</string>
+    <string name="ce_quick_connect_error_disabled">呢部伺服器已經關咗 Quick Connect。請用用戶名同密碼登入。</string>
 </resources>

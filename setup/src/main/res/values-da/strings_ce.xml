@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">Mønster angivet</string>
     <string name="ce_profile_pattern_removed">Mønster fjernet</string>
     <string name="ce_profile_pattern_grid">Oplåsningsmønster, et gitter med 3 gange 3 prikker</string>
+    <string name="ce_server_address_in_use">Denne adresse er i brug og kan ikke fjernes</string>
+    <string name="ce_server_address_already_added">Denne adresse er allerede tilføjet</string>
+    <string name="ce_local_network_denied">Adgang til det lokale netværk er slået fra. Uden den kan servere på dit netværk ikke findes eller nås.</string>
+    <string name="ce_local_network_denied_where">I systemindstillingerne står den under Tilladelser &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Tillad adgang</string>
+    <string name="ce_local_network_off">Adgang til det lokale netværk er slået fra</string>
+    <string name="ce_add_server_error_local_network">Serveren blev ikke fundet. Adgang til det lokale netværk er slået fra, hvilket blokerer adresser på dit netværk.</string>
+    <string name="ce_permission_permanently_denied">%1$s blev afvist. Hvis du vil bruge den, skal du tillade \"%2$s\" under Tilladelser i systemindstillingerne.</string>
+    <string name="ce_quick_connect_error_expired">Quick Connect-koden er udløbet. Tryk på Quick Connect for at få en ny kode.</string>
+    <string name="ce_quick_connect_error_disabled">Quick Connect er slået fra på denne server. Log ind med dit brugernavn og din adgangskode.</string>
 </resources>

@@ -104,4 +104,23 @@
     <string name="item_more_like_this">Похожее</string>
     <string name="ce_session_revoked">%1$s завершил ваш сеанс. Войдите снова, чтобы продолжить.</string>
     <string name="ce_download_error_server">Сервер отклонил загрузку (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Сервер ответил ошибкой (HTTP %1$d). Повторите попытку позже.</string>
+    <string name="ce_media_info">Сведения о медиа</string>
+    <string name="ce_home_profile">Профиль</string>
+    <string name="ce_watched">Просмотрено</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d непросмотренный</item>
+        <item quantity="few">%d непросмотренных</item>
+        <item quantity="many">%d непросмотренных</item>
+        <item quantity="other">%d непросмотренных</item>
+    </plurals>
+    <string name="ce_delete_download_message">Вы уверены, что хотите удалить эту загрузку со своего устройства?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">Ошибка: %d</item>
+        <item quantity="few">Ошибка: %d</item>
+        <item quantity="many">Ошибка: %d</item>
+        <item quantity="other">Ошибка: %d</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Пока ничего не загружено</string>
+    <string name="ce_home_offline_empty_body">Нет подключения. Загруженные фильмы и эпизоды появятся здесь и в разделе «Загрузки».</string>
 </resources>

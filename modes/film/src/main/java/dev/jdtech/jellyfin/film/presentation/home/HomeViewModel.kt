@@ -51,7 +51,7 @@ constructor(
     private val _state = MutableStateFlow(HomeState())
     val state = _state.asStateFlow()
 
-    private val uiTextContinueWatching = UiText.StringResource(FilmR.string.continue_watching)
+    private val uiTextContinueWatching = UiText.StringResource(FilmR.string.ce_continue_watching)
     private val uiTextNextUp = UiText.StringResource(FilmR.string.next_up)
 
     companion object {
@@ -71,6 +71,22 @@ constructor(
     private var cachedLibrariesKey: Pair<String?, UUID?>? = null
     private var cacheChecked = false
 
+    /** The repository is chosen when this view model is made, so this holds for its whole life. */
+    private val offline = repository is JellyfinRepositoryOfflineImpl
+
+    init {
+        syncPreferences()
+    }
+
+    /**
+     * CE (#608): settings Home draws from without loading anything. Read when Home comes back into
+     * view, so a change in Settings shows without a reload.
+     */
+    private fun syncPreferences() {
+        val useEpisodeImages = appPreferences.getValue(appPreferences.homeEpisodeImages)
+        _state.update { it.copy(useEpisodeImages = useEpisodeImages) }
+    }
+
     /**
      * With [silent] the refresh indicator stays hidden, for reloads the user didn't ask for. The
      * returned job ends once every row has loaded, for screens that wait for that (TV Home puts focus
@@ -86,8 +102,10 @@ constructor(
     }
 
     /** Whether coming back to Home needs a load (#251), see [ReloadPolicy]. */
-    fun shouldReload(stopEventFollows: Boolean = false): Boolean =
-        reloadPolicy.shouldReload(stopEventFollows)
+    fun shouldReload(stopEventFollows: Boolean = false): Boolean {
+        syncPreferences()
+        return reloadPolicy.shouldReload(stopEventFollows)
+    }
 
     /** [loadData] when [shouldReload] says so, else a job that is already done. */
     fun loadDataIfNeeded(silent: Boolean = false): Job =
@@ -107,6 +125,10 @@ constructor(
                 val user = logFailure("user") { database.getServerCurrentUser(server.id) }
                 _state.update { it.copy(user = user.getOrNull()) }
                 showCachedRows(server.id, user.getOrNull()?.id)
+                if (offline) {
+                    val none = logFailure("downloads") { nothingDownloaded(database, server.id) }
+                    _state.update { it.copy(nothingDownloaded = none.getOrDefault(false)) }
+                }
             }
             // CE (#142): the rows this user chose for this server, in their order.
             val stored = homeRowsStore.read(HomeRowsProfile.of(server))
@@ -124,6 +146,8 @@ constructor(
                 coroutineScope {
                     // The user image only feeds the avatar: it must not hold the rows back.
                     val avatar = server?.let { s -> async { refreshUserImage(s.id) } }
+                    // CE (#543): neither does the server's name.
+                    val name = server?.let { s -> async { refreshServerName(s) } }
                     val results =
                         awaitAll(
                             async {
@@ -144,6 +168,7 @@ constructor(
                             async { logFailure("views") { loadViews(stored, legacy) } },
                         )
                     avatar?.await()
+                    name?.await()
                     results
                 }
             val error = errorIfAllFailed(rows)
@@ -172,11 +197,26 @@ constructor(
     }
 
     /**
+     * CE (#543): a server renamed on the server is renamed here too, on the next load. Offline, or
+     * when the server does not answer, the stored name stays.
+     */
+    private suspend fun refreshServerName(server: Server) {
+        if (offline) return
+        logFailure("server name") {
+            val renamed = server.renamedTo(repository.getPublicSystemInfo()) ?: return@logFailure
+            database.updateServer(renamed)
+            _state.update { if (it.server?.id == renamed.id) it.copy(server = renamed) else it }
+        }
+    }
+
+    /**
      * Cold start (#251): the rows of the last full load, on screen before the network answers. Only
      * when nothing is on screen yet; the load that follows replaces them.
      */
     private suspend fun showCachedRows(serverId: String, userId: UUID?) {
         val cache = homeCache ?: return
+        // CE (#428): offline, the rows are the downloads; the remembered ones can't be opened.
+        if (offline) return
         if (userId == null || cacheChecked || !_state.value.isEmpty) return
         cacheChecked = true
         if (!appPreferences.getValue(appPreferences.homeCache)) {
@@ -205,7 +245,7 @@ constructor(
     private suspend fun saveRows(server: Server?) {
         val cache = homeCache ?: return
         val user = _state.value.user ?: return
-        if (server == null || repository is JellyfinRepositoryOfflineImpl) return
+        if (server == null || offline) return
         if (!appPreferences.getValue(appPreferences.homeCache)) return
         cache.write(server.id, user.id, _state.value)
     }
@@ -349,6 +389,12 @@ constructor(
         _state.update { it.copy(rowOrder = layout.map { row -> row.key }) }
         val shown = layout.filter { it.visible }.mapNotNullTo(mutableSetOf()) { it.libraryId }
         val views = libraries.filter { it.id in shown }
+        if (views.isEmpty()) {
+            // CE (#428): no Latest row to load, so none of the old ones may stay: offline with
+            // nothing downloaded, the rows remembered from an online start would.
+            _state.update { it.copy(views = emptyList()) }
+            return
+        }
 
         val current = _state.value.views
         val results = arrayOfNulls<Result<List<FindroidItem>>>(views.size)

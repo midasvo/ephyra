@@ -15,6 +15,12 @@ object Constants {
         const val OFF = "off"
     }
 
+    // Player - "Are you still watching?" (#559). The player never waits less than this for an
+    // answer, so the setting does not go lower either.
+    object StillWatching {
+        const val PROMPT_TIMEOUT_MIN_SECONDS = 5
+    }
+
     // Player - mpv audio output. These are mpv driver names, passed to `ao` verbatim, and
     // are also the values stored in R.array.mpv_aos.
     object MpvAudioOutput {

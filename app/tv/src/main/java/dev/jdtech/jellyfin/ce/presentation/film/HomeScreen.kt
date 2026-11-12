@@ -61,6 +61,7 @@ import coil3.compose.AsyncImage
 import coil3.memory.MemoryCache
 import coil3.request.transitionFactory
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
+import dev.jdtech.jellyfin.ce.ui.components.TvLoadError
 import dev.jdtech.jellyfin.ce.ui.focus.FocusPosition
 import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
@@ -102,12 +103,14 @@ import kotlinx.coroutines.withTimeoutOrNull
  * - The suggestions carousel is gone: the hero shows the focused card, so suggestions are a row of
  *   their own. The rows follow the order and visibility set in Settings (#142).
  * - OK on an episode opens its season (#130). Movies and shows open their page.
+ * - [onRetry] runs with Retry after a failed load, for what else the start missed (#513).
  */
 @Composable
 fun HomeScreen(
     navigateToMovie: (itemId: UUID) -> Unit,
     navigateToShow: (itemId: UUID) -> Unit,
     navigateToEpisode: (episodeId: UUID) -> Unit,
+    onRetry: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -140,6 +143,7 @@ fun HomeScreen(
                         is FindroidEpisode -> navigateToEpisode(action.item.id)
                     }
                 }
+                is HomeAction.OnRetryClick -> onRetry()
                 else -> Unit
             }
             viewModel.onAction(action)
@@ -175,6 +179,8 @@ private class HomeRow(
     val title: UiText,
     val items: List<FindroidItem>,
     val direction: Direction,
+    // #608: Continue Watching and Next Up show the thumb, unless the user chose episode images.
+    val preferThumb: Boolean = false,
 )
 
 /** The rows in the order the user chose (#142). Keyed on the row, so focus restore follows a move. */
@@ -182,7 +188,13 @@ private fun HomeState.rows(): List<HomeRow> =
     orderedRows().mapNotNull {
         when (it) {
             is HomeItem.Section ->
-                HomeRow(it.id, it.homeSection.name, it.homeSection.items, Direction.HORIZONTAL)
+                HomeRow(
+                    it.id,
+                    it.homeSection.name,
+                    it.homeSection.items,
+                    Direction.HORIZONTAL,
+                    preferThumb = !useEpisodeImages,
+                )
             is HomeItem.ViewItem ->
                 HomeRow(
                     it.id,
@@ -203,7 +215,7 @@ private fun HomeState.rows(): List<HomeRow> =
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun HomeScreenLayout(
+internal fun HomeScreenLayout(
     state: HomeState,
     refreshed: Boolean,
     onAction: (HomeAction) -> Unit,
@@ -256,8 +268,16 @@ private fun HomeScreenLayout(
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (rows.isEmpty()) {
+            val error = state.error
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else if (error != null) {
+                // #405: nothing remembered and the server failed, so say so instead of a blank page.
+                TvLoadError(
+                    error = error,
+                    onRetry = { onAction(HomeAction.OnRetryClick) },
+                    modifier = Modifier.align(Alignment.Center),
+                )
             }
             return@Box
         }
@@ -268,11 +288,15 @@ private fun HomeScreenLayout(
             Spacer(modifier = Modifier.height(HERO_HEIGHT))
             // The focused row moves up to just below the hero. The rows inside keep the default.
             CompositionLocalProvider(LocalBringIntoViewSpec provides rowAtTop) {
+                // #423: the list ends at the safe area instead of padding its content, so the row
+                // below the focused one doesn't show its title in the bottom margin.
                 LazyColumn(
                     state = listState,
-                    contentPadding = PaddingValues(bottom = TvSafeArea.vertical),
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
-                    modifier = Modifier.fillMaxSize().testTag("ce_home_rows"),
+                    modifier =
+                        Modifier.fillMaxSize()
+                            .padding(bottom = TvSafeArea.vertical)
+                            .testTag("ce_home_rows"),
                 ) {
                     rows.forEachIndexed { rowIndex, row ->
                         item(key = row.key) {
@@ -297,7 +321,12 @@ private fun HomeScreenLayout(
     // The card that had focus when Home was left, read once. While Home waits for the refresh,
     // the drawer moves focus into the rows, and that card must not overwrite it.
     val left = remember { Triple(focusPosition.row, focusPosition.column, focusPosition.key) }
-    RestoreFocus(position = focusPosition, ready = refreshed && rows.isNotEmpty()) { position ->
+    // Not while a Retry (#405) is loading: its rows come in one by one, and a row that arrives
+    // above the focused one would push the card focus went to out of view.
+    RestoreFocus(
+        position = focusPosition,
+        ready = refreshed && rows.isNotEmpty() && !state.isLoading,
+    ) { position ->
         // The saved card may have moved, even to another row (Next up to Continue watching).
         val (leftRow, leftColumn, key) = left
         val found =
@@ -354,7 +383,10 @@ private fun HomeRowContent(
                 ItemCard(
                     item = item,
                     direction = row.direction,
+                    preferThumb = row.preferThumb,
                     showSeriesName = row.direction == Direction.VERTICAL,
+                    // #423: a row of posters with two title lines runs into the bottom safe area.
+                    titleMaxLines = 1,
                     onClick = { onAction(HomeAction.OnItemClick(it)) },
                     modifier =
                         Modifier.focusPosition(focusPosition, rowIndex, column, item.id.toString())

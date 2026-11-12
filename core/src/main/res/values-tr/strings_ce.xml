@@ -95,4 +95,17 @@
     <string name="item_more_like_this">Buna benzer</string>
     <string name="ce_session_revoked">%1$s oturumunuzu kapattı. Devam etmek için yeniden oturum açın.</string>
     <string name="ce_download_error_server">Sunucu indirmeyi reddetti (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Sunucu bir hatayla yanıt verdi (HTTP %1$d). Daha sonra tekrar deneyin.</string>
+    <string name="ce_media_info">Medya bilgisi</string>
+    <string name="ce_home_profile">Profil</string>
+    <string name="ce_watched">İzlendi</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="other">%d izlenmemiş</item>
+    </plurals>
+    <string name="ce_delete_download_message">Bu indirileni cihazınızdan silmek istediğinizden emin misiniz?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="other">%d başarısız</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Henüz hiçbir şey indirilmedi</string>
+    <string name="ce_home_offline_empty_body">Çevrimdışısınız. İndirdiğiniz filmler ve bölümler burada ve İndirilenler\'de görünür.</string>
 </resources>

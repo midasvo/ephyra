@@ -30,4 +30,7 @@
         <item quantity="many">Start za %d sekund</item>
         <item quantity="other">Start za %d sekundy</item>
     </plurals>
+    <string name="ce_track_forced">Wymuszone</string>
+    <string name="ce_player_connection_lost">Utracono połączenie. Odtwarzanie będzie kontynuowane po powrocie sieci.</string>
+    <string name="ce_player_try_again">Spróbuj ponownie</string>
 </resources>

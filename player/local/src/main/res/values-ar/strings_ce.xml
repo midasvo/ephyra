@@ -34,4 +34,7 @@
         <item quantity="many">يبدأ بعد %d ثانية</item>
         <item quantity="other">يبدأ بعد %d ثانية</item>
     </plurals>
+    <string name="ce_track_forced">إجباري</string>
+    <string name="ce_player_connection_lost">انقطع الاتصال. سيستمر التشغيل عند عودة الشبكة.</string>
+    <string name="ce_player_try_again">حاول مجددًا</string>
 </resources>

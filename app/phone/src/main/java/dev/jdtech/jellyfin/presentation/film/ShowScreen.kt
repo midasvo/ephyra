@@ -54,6 +54,7 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
 import dev.jdtech.jellyfin.presentation.film.components.AirScheduleText
+import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.CriticRating
 import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
 import dev.jdtech.jellyfin.presentation.film.components.ItemsRow
@@ -69,6 +70,7 @@ import dev.jdtech.jellyfin.presentation.film.components.ItemTopBar
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
 import dev.jdtech.jellyfin.presentation.film.components.OverviewText
 import dev.jdtech.jellyfin.presentation.film.components.SeasonSelectionDialog
+import dev.jdtech.jellyfin.presentation.film.components.rememberArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.rememberTopBarBackgroundAlpha
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -188,6 +190,8 @@ private fun ShowScreenLayout(
     val paddingBottom = safePadding.bottom + MaterialTheme.spacings.default
 
     val scrollState = rememberScrollState()
+    // CE (#437): the artwork under the top bar, if any; shared by the header and the bar.
+    val artwork = rememberArtworkState(state.show, ArtworkPlacement.Header)
 
     var seasonSelectionDialogOpen by remember { mutableStateOf(false) }
     // Seasons picked in the selection dialog, awaiting a quality choice.
@@ -199,6 +203,7 @@ private fun ShowScreenLayout(
                 ItemHeader(
                     item = show,
                     scrollState = scrollState,
+                    artwork = artwork,
                     content = {
                         Column(
                             modifier =
@@ -410,11 +415,12 @@ private fun ShowScreenLayout(
             )
         }
 
-        LightStatusBarOverArtwork(state.show != null, rememberTopBarBackgroundAlpha(scrollState))
+        LightStatusBarOverArtwork(artwork.hasArtwork, rememberTopBarBackgroundAlpha(scrollState))
         ItemTopBar(
             hasBackButton = true,
             hasHomeButton = true,
             backgroundAlpha = rememberTopBarBackgroundAlpha(scrollState),
+            overArtwork = artwork.hasArtwork,
             onBackClick = { onAction(ShowAction.OnBackClick) },
             onHomeClick = { onAction(ShowAction.OnHomeClick) },
         )

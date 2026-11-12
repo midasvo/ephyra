@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">Колекциите, към които принадлежи филмът</string>
     <string name="ce_pref_detail_similar">Още подобни</string>
     <string name="ce_pref_detail_similar_summary">Подобни заглавия от вашата библиотека</string>
+    <string name="ce_pref_detail_credits">Режисьор и сценаристи</string>
+    <string name="ce_pref_detail_credits_summary">Под описанието на страниците на филми и сериали</string>
+    <string name="ce_media_segments_auto_skip_pip">Само в режим „картина в картината“</string>
+    <string name="ce_media_segments_auto_skip_always">Винаги</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d епизод</item>
+        <item quantity="other">%d епизода</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d ден</item>
+        <item quantity="other">%d дни</item>
+    </plurals>
+    <string name="ce_number_no_limit">Без ограничение</string>
+    <string name="ce_number_off">Изключено</string>
+    <string name="ce_pref_player_keep_landscape">Плейърът да остава хоризонтален</string>
+    <string name="ce_pref_player_keep_landscape_summary">Видеоклиповете се възпроизвеждат хоризонтално, дори когато обърнете таблета вертикално</string>
+    <string name="ce_pref_home_episode_images">Използване на изображения на епизодите</string>
+    <string name="ce_pref_home_episode_images_summary">Показване на изображението на епизода вместо това на сериала в „Продължете гледането“ и „Следващо“</string>
 </resources>

@@ -49,4 +49,10 @@
         <item quantity="one">Starts in %d second</item>
         <item quantity="other">Starts in %d seconds</item>
     </plurals>
+    <!-- CE (#451): a forced subtitle track in the track dialog. -->
+    <string name="ce_track_forced">Forced</string>
+    <!-- CE (#450): the phone player while it waits for the network to load again. -->
+    <string name="ce_player_connection_lost">Connection lost. Playback continues when the network is back.</string>
+    <!-- CE (#463): the TV player's dialog when playback stopped: load again. -->
+    <string name="ce_player_try_again">Try again</string>
 </resources>

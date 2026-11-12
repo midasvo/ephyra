@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">वे संग्रह जिनका कोई फ़िल्म हिस्सा है</string>
     <string name="ce_pref_detail_similar">ऐसे और</string>
     <string name="ce_pref_detail_similar_summary">आपकी लाइब्रेरी से मिलते-जुलते शीर्षक</string>
+    <string name="ce_pref_detail_credits">निर्देशक और लेखक</string>
+    <string name="ce_pref_detail_credits_summary">फ़िल्म और शो के पेज पर सारांश के नीचे</string>
+    <string name="ce_media_segments_auto_skip_pip">केवल पिक्चर-इन-पिक्चर में</string>
+    <string name="ce_media_segments_auto_skip_always">हमेशा</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d एपिसोड</item>
+        <item quantity="other">%d एपिसोड</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d दिन</item>
+        <item quantity="other">%d दिन</item>
+    </plurals>
+    <string name="ce_number_no_limit">कोई सीमा नहीं</string>
+    <string name="ce_number_off">बंद</string>
+    <string name="ce_pref_player_keep_landscape">प्लेयर को लैंडस्केप में रखें</string>
+    <string name="ce_pref_player_keep_landscape_summary">टैबलेट को सीधा घुमाने पर भी वीडियो लैंडस्केप में चलाएं</string>
+    <string name="ce_pref_home_episode_images">एपिसोड की छवियाँ इस्तेमाल करें</string>
+    <string name="ce_pref_home_episode_images_summary">देखना जारी रखें और आगे देखें में सीरीज़ की छवि की जगह एपिसोड की छवि दिखाएँ</string>
 </resources>

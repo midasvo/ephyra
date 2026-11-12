@@ -15,6 +15,7 @@ import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.models.FindroidSource
+import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
 import dev.jdtech.jellyfin.models.toFindroidCollection
@@ -54,7 +55,6 @@ import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.ItemFilter
 import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.MediaType
-import org.jellyfin.sdk.model.api.PlayMethod
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.jellyfin.sdk.model.api.PlaybackOrder
 import org.jellyfin.sdk.model.api.PlaybackProgressInfo
@@ -72,7 +72,10 @@ class JellyfinRepositoryImpl(
     private val database: ServerDatabaseDao,
     private val appPreferences: AppPreferences,
     private val deviceProfileBuilder: DeviceProfileBuilder,
+    private val syncRequester: UserDataSyncRequester = UserDataSyncRequester.NONE,
 ) : JellyfinRepository {
+    private val playSessions = PlaySessions()
+
     private val currentUserId: UUID
         get() = jellyfinApi.userId
             ?: throw IllegalStateException("No authenticated user. userId is null — session may have expired.")
@@ -394,8 +397,11 @@ class JellyfinRepositoryImpl(
                     limit = 12,
                     mediaTypes = listOf(MediaType.VIDEO),
                     includeItemTypes = listOf(BaseItemKind.MOVIE, BaseItemKind.EPISODE),
+                    // The TV hero shows it, and Jellyfin leaves it out of Resume, Latest and Next
+                    // Up unless asked (#410).
+                    fields = listOf(ItemFields.OVERVIEW),
                     imageTypeLimit = 1,
-                    enableImageTypes = ROW_IMAGE_TYPES,
+                    enableImageTypes = WIDE_ROW_IMAGE_TYPES,
                     enableTotalRecordCount = false,
                 )
                 .content
@@ -409,6 +415,7 @@ class JellyfinRepositoryImpl(
                 .getLatestMedia(
                     currentUserId,
                     parentId = parentId,
+                    fields = listOf(ItemFields.OVERVIEW),
                     limit = 16,
                     imageTypeLimit = 1,
                     enableImageTypes = ROW_IMAGE_TYPES,
@@ -437,8 +444,9 @@ class JellyfinRepositoryImpl(
                     currentUserId,
                     limit = 24,
                     seriesId = seriesId,
+                    fields = listOf(ItemFields.OVERVIEW),
                     imageTypeLimit = 1,
-                    enableImageTypes = ROW_IMAGE_TYPES,
+                    enableImageTypes = WIDE_ROW_IMAGE_TYPES,
                     nextUpDateCutoff =
                         nextUpDateCutoff(
                             seriesId = seriesId,
@@ -530,6 +538,7 @@ class JellyfinRepositoryImpl(
     override suspend fun getPlaybackSources(
         itemId: UUID,
         mediaSourceId: String?,
+        audioStreamIndex: Int?,
     ): List<FindroidSource> =
         withContext(Dispatchers.IO) {
             // A downloaded copy wins over any server source (see PlaylistManager), so do not wait
@@ -564,7 +573,7 @@ class JellyfinRepositoryImpl(
                 }
             val enableTranscoding = !useDirectPlay || maxBitrate != null
             val sources = mutableListOf<FindroidSource>()
-            sources.addAll(
+            val playbackInfo =
                 jellyfinApi.mediaInfoApi
                     .getPostedPlaybackInfo(
                         itemId,
@@ -577,17 +586,28 @@ class JellyfinRepositoryImpl(
                             allowVideoStreamCopy = true,
                             allowAudioStreamCopy = true,
                             autoOpenLiveStream = enableTranscoding,
+                            // CE (#580): the server ignores the index without the source's id.
+                            mediaSourceId = mediaSourceId.takeIf { audioStreamIndex != null },
+                            audioStreamIndex = audioStreamIndex.takeIf { mediaSourceId != null },
                         ),
                     )
                     .content
-                    .mediaSources
-                    .map {
-                        it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath = true)
-                    }
+            playSessions.onPlaybackInfo(
+                itemId,
+                playbackInfo.playSessionId,
+                transcodes = playbackInfo.mediaSources.any { !it.transcodingUrl.isNullOrBlank() },
+            )
+            sources.addAll(
+                playbackInfo.mediaSources.map {
+                    it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath = true)
+                }
             )
             sources.addAll(localSources)
             sources
         }
+
+    override suspend fun getSeriesTrackPreferences(seriesId: UUID): List<SeriesTrackPreferenceDto> =
+        withContext(Dispatchers.IO) { database.getSeriesTrackPreferences(currentUserId, seriesId) }
 
     override suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String =
         withContext(Dispatchers.IO) {
@@ -724,8 +744,10 @@ class JellyfinRepositoryImpl(
         }
     }
 
-    override suspend fun postPlaybackStart(itemId: UUID) {
-        Timber.d("Sending start $itemId")
+    override suspend fun postPlaybackStart(itemId: UUID, transcoded: Boolean) {
+        // CE (#599): Transcode with the transcode's play session, see PlaySessions.playReport.
+        val report = playSessions.playReport(itemId, transcoded)
+        Timber.d("Sending start $itemId, ${report.playMethod}")
         withContext(Dispatchers.IO) {
             jellyfinApi.sessionApi.reportPlaybackStart(
                 PlaybackStartInfo(
@@ -733,7 +755,8 @@ class JellyfinRepositoryImpl(
                     canSeek = true,
                     isPaused = false,
                     isMuted = false,
-                    playMethod = PlayMethod.DIRECT_PLAY,
+                    playMethod = report.playMethod,
+                    playSessionId = report.playSessionId,
                     repeatMode = RepeatMode.REPEAT_NONE,
                     playbackOrder = PlaybackOrder.DEFAULT,
                 )
@@ -755,11 +778,17 @@ class JellyfinRepositoryImpl(
             }
             try {
                 jellyfinApi.sessionApi.reportPlaybackStopped(
-                    PlaybackStopInfo(itemId = itemId, positionTicks = positionTicks, failed = false)
+                    PlaybackStopInfo(
+                        itemId = itemId,
+                        positionTicks = positionTicks,
+                        failed = false,
+                        // With it the server ends the item's transcode now, not a minute later.
+                        playSessionId = playSessions.sessionOf(itemId),
+                    )
                 )
             } catch (_: Exception) {
                 // Nothing local changed without user data, so there is nothing to sync later.
-                if (userData != null) database.setUserDataToBeSynced(currentUserId, itemId, true)
+                if (userData != null) markToBeSynced(itemId)
             }
         }
     }
@@ -768,8 +797,10 @@ class JellyfinRepositoryImpl(
         itemId: UUID,
         positionTicks: Long,
         isPaused: Boolean,
+        transcoded: Boolean,
     ) {
         Timber.d("Posting progress of $itemId, position: $positionTicks")
+        val report = playSessions.playReport(itemId, transcoded)
         withContext(Dispatchers.IO) {
             database.setPlaybackPositionTicks(itemId, currentUserId, positionTicks)
             try {
@@ -779,14 +810,15 @@ class JellyfinRepositoryImpl(
                         canSeek = true,
                         isPaused = isPaused,
                         isMuted = false,
-                        playMethod = PlayMethod.DIRECT_PLAY,
+                        playMethod = report.playMethod,
+                        playSessionId = report.playSessionId,
                         repeatMode = RepeatMode.REPEAT_NONE,
                         playbackOrder = PlaybackOrder.DEFAULT,
                         positionTicks = positionTicks,
                     )
                 )
             } catch (_: Exception) {
-                database.setUserDataToBeSynced(currentUserId, itemId, true)
+                markToBeSynced(itemId)
             }
         }
     }
@@ -797,7 +829,7 @@ class JellyfinRepositoryImpl(
             try {
                 jellyfinApi.userDataApi.markFavoriteItem(itemId)
             } catch (_: Exception) {
-                database.setUserDataToBeSynced(currentUserId, itemId, true)
+                markToBeSynced(itemId)
             }
         }
     }
@@ -808,7 +840,7 @@ class JellyfinRepositoryImpl(
             try {
                 jellyfinApi.userDataApi.unmarkFavoriteItem(itemId)
             } catch (_: Exception) {
-                database.setUserDataToBeSynced(currentUserId, itemId, true)
+                markToBeSynced(itemId)
             }
         }
     }
@@ -819,7 +851,7 @@ class JellyfinRepositoryImpl(
             try {
                 jellyfinApi.userDataApi.markPlayedItem(itemId)
             } catch (_: Exception) {
-                database.setUserDataToBeSynced(currentUserId, itemId, true)
+                markToBeSynced(itemId)
             }
         }
     }
@@ -830,9 +862,17 @@ class JellyfinRepositoryImpl(
             try {
                 jellyfinApi.userDataApi.markUnplayedItem(itemId)
             } catch (_: Exception) {
-                database.setUserDataToBeSynced(currentUserId, itemId, true)
+                markToBeSynced(itemId)
             }
         }
+    }
+
+    /**
+     * Marks the item's user data to be sent to the server later and asks for a sync. The request
+     * is only made when the mark is new, so a run of failed progress reports asks once.
+     */
+    private suspend fun markToBeSynced(itemId: UUID) {
+        if (database.markUserDataToBeSynced(currentUserId, itemId) > 0) syncRequester.request()
     }
 
     override fun getBaseUrl() = jellyfinApi.api.baseUrl.orEmpty()
@@ -923,6 +963,9 @@ class JellyfinRepositoryImpl(
          * for) every backdrop, logo, thumb and banner of each item.
          */
         val ROW_IMAGE_TYPES = listOf(ImageType.PRIMARY, ImageType.BACKDROP)
+
+        /** CE (#608): Continue Watching and Next Up also show the thumb, the art with the title. */
+        val WIDE_ROW_IMAGE_TYPES = ROW_IMAGE_TYPES + ImageType.THUMB
 
         /** Library grid page; a fling on a 2-4 column grid outruns anything smaller. */
         private const val LIBRARY_PAGE_SIZE = 40

@@ -35,6 +35,7 @@ class HomeViewModelPartialFailureTest {
     private val failing = mutableSetOf<String>()
     private val failingLibraries = mutableSetOf<UUID>()
     private val turnedOff = mutableSetOf<String>()
+    private var libraries = listOf(libraryA, libraryB)
 
     private val viewModel by lazy {
         HomeViewModel(
@@ -96,6 +97,20 @@ class HomeViewModelPartialFailureTest {
     }
 
     @Test
+    fun `no libraries left removes the Latest rows that were on screen`() {
+        // #428: offline with nothing downloaded there are no libraries, and the Latest rows
+        // remembered from an online start stayed. Rows from an earlier load stand in for them.
+        load { it.views.size == 2 }
+
+        libraries = emptyList()
+        runBlocking { withTimeout(5_000) { viewModel.loadData(silent = true).join() } }
+
+        assertEquals(0, viewModel.state.value.views.size)
+        assertNotNull(viewModel.state.value.resumeSection)
+        assertNull(viewModel.state.value.error)
+    }
+
+    @Test
     fun `every row failing shows the error`() {
         failing += listOf("getSuggestions", "getResumeItems", "getNextUp", "getUserViews")
 
@@ -148,7 +163,7 @@ class HomeViewModelPartialFailureTest {
                 "getSuggestions",
                 "getResumeItems",
                 "getNextUp" -> listOf(item())
-                "getUserViews" -> listOf(libraryA, libraryB)
+                "getUserViews" -> libraries
                 "getLatestMedia" -> {
                     if (args!![0] in failingLibraries) throw IOException("library")
                     listOf(item())

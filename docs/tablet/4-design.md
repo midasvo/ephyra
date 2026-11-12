@@ -50,8 +50,8 @@ Unchanged in structure; this is the part that already works.
 | Width | Navigation | Top area |
 |---|---|---|
 | Compact | Bottom `NavigationBar` | Server chip, search, avatar as today |
-| Medium | `NavigationRail` (library default) | Same |
-| Expanded | `NavigationRail` (forced, as today) | Same; the search icon opens the search *field docked in the top area*, not a full-width sheet (§5) |
+| Medium | `NavigationRail` (library default) | Same; the open search is docked as at expanded (§5) |
+| Expanded | `NavigationRail` (forced, as today) | Same; the search icon opens the search *field docked in the top area*, not a full-width sheet (§5). A window of compact height (a phone in landscape, expanded wide) keeps the full-screen search |
 
 - The rail stays an icon rail. No drawer on expanded: a drawer hides the content behind the libraries, and the Media tab already lists them. (This differs from the TV ADR 0002 on purpose: TV has no touch and needs the drawer for library names; a tablet has a tap.)
 - The rail hides on item pages exactly as the bar does today (`showBottomBar`). Back goes one level up; nothing else changes.
@@ -59,15 +59,17 @@ Unchanged in structure; this is the part that already works.
 
 ## 4. Home
 
-- Carousel: 1 / 2 / 3 pages (exists). At expanded the page height is `min(width / 3 × 9/16, window height × 0.4)` so three pages never push "Continue watching" below the fold on a 10.5" landscape tablet.
+- Carousel: 1 / 2 / 3 pages at compact / medium / expanded, by the window's width class (#438; it used to count from the pager's own width, the window minus the rail and the margins, so an 8" tablet in portrait and the fold showed a page fewer). A window of compact height (a phone in landscape) keeps 2 pages although it is expanded wide. Pages are smallest at the bottom of each class: about 230 dp at 600 and 841 dp, about 250 dp at 640 dp. At expanded the page height is `min(width / 3 × 9/16, window height × 0.4)` so three pages never push "Continue watching" below the fold on a 10.5" landscape tablet.
 - Rows use `Layout.cardHorizontal` / `cardVertical` instead of the fixed 260 / 150 dp (T10). Row headers keep their 42 dp. Row content padding is the rail-aware safe padding plus `Layout.margin`.
 - Nothing else changes. Home is the screen the user sees most, and its rhythm (carousel, rows) is already right.
 
 ## 5. Media, Library, Collection, Favorites, Search, Downloads
 
 - **Media**: library cards keep their 160 / 240 / 320 dp breakpoints. The search bar is capped at `textMaxWidth` and aligned to the start at medium and expanded (T9); expanded is the only width that actually hits the cap.
+- **Open search** (#439): at medium and expanded, unless the height is compact, the search opens docked: the rail stays, the field stays where the collapsed bar was and grows to at most `textMaxWidth` (keeping the margin at the end on narrower windows), and the results fill the content area beside the rail below it. A rail destination tapped while it is open closes the search and goes there; the query stays in the collapsed bar, as after Back. A phone, in either orientation, keeps the full-screen search.
 - **Grids** (Library, Collection, Favorites, search results): `gridMinCell` per width class, minimum 2 columns stays. Section headers in `CollectionGrid` use `maxLineSpan`. Nothing centred: a feed uses the width.
 - **Downloads**: at expanded the download rows become a two-column `LazyVerticalGrid(GridCells.Adaptive(minSize = 480.dp))`; a row never exceeds 720 dp. Favorites and Downloads put the title in the same place (T11): title first, actions in the top bar.
+- **Downloads, full-width items** (#434): the storage summary, the Downloading group and the section headers span the grid but are capped at 720 dp, aligned to the start with the columns below, not centred. A downloaded show's episode list is capped at 720 dp too.
 - **Dialogs and sheets**: M3 caps `AlertDialog` at 560 dp and `ModalBottomSheet` at 640 dp already (T13 is fine as is). The rule is: never pass `fillMaxWidth` to a dialog or sheet container, and `SortByDialog`'s `heightIn(max = 540.dp)` becomes `min(540 dp, window height − 96 dp)` so it fits a compact-height window.
 
 ## 6. Item pages (Movie, Show, Episode)
@@ -92,6 +94,7 @@ The core of the design. Today's page is one column under a header; it stays that
 
 - **Hero height**: `max(320 dp, min(width × 9/16, window height × 0.45))` at medium and expanded; compact keeps 288 dp. The backdrop is `ContentScale.Crop` with the focal point at the top centre (faces are usually in the upper half), the top `scrimOverArt` for the status bar, and a fade into the page background over its bottom half.
 - **Header row** sits below the backdrop, `Layout.margin` from the left edge: poster (`posterInHeader` wide, 2:3; for an episode a 16:9 still instead, 1.6 × that width) hanging half its height over the backdrop's bottom edge, then a column capped at `textMaxWidth` that starts under the backdrop: title (`headlineLarge` at expanded, `headlineMedium` at medium), original title, metadata line, chips, `ItemButtonsBar` (already compact at 600 dp+), overview collapsed to 4 lines with "more", then genres / director / writers. The text is in the theme's colours, never over the artwork (#339: text over the backdrop was hard to read, and a long column left the page under the hero empty).
+- **Narrow header** (#429): the header row picks its form from its own width, not the window's class. When the text column beside the poster would be narrower than 360 dp, the poster or still keeps its size (never wider than the room inside the margins) and the column goes below it, still capped at `textMaxWidth`. The buttons in `ItemButtonsBar` wrap to a second line when they do not fit beside each other; they are never clipped.
 - **Rows below** (`NextUp`, seasons, cast, and later "similar"/"more like this" when the ViewModel exposes it) span the width with `Layout.margin`, card sizes from §2. Next Up on the show page becomes a row item at `cardHorizontal` width, not a lone 420 dp card (T5).
 - **Phone landscape** (medium width, compact height, 412 dp tall): the hero would eat the screen. Rule 2 applies: compact height uses the compact layout. The helper exposes `isCompactHeight` for exactly this.
 - **Episode**: same layout; the "still" replaces the poster; "Season 1 · Episode 2" is the overline; the show's logo is not used (it competes with the title).
@@ -120,7 +123,7 @@ Compact and medium: today's page (header, then the episode list capped at `textM
       list 40 %                      detail 60 %
 ```
 
-- `ListDetailPaneScaffold` with `rememberListDetailPaneScaffoldNavigator<UUID>()`. The list pane is the current season header plus episode cards (compact variant: still, title, code, duration, download state; no overview). The detail pane is the episode layout from §6 **without its own back/home buttons**, driven by `EpisodeViewModel` for the selected id.
+- `ListDetailPaneScaffold` with `rememberListDetailPaneScaffoldNavigator<UUID>()`. The list pane is the current season header plus episode cards (compact variant: still, title, code, duration, download state; no overview). The detail pane is the episode layout from §6 **without its own back/home buttons**, driven by `EpisodeViewModel` for the selected id. The pane is narrower than the window, so below a window of about 1230 dp (and in book posture) its header uses §6's narrow form: the still above the text.
 - Selecting an episode updates the detail pane; it does **not** push a route. Opening the season selects the first unwatched episode (the same one `Play` on the season would start), so the right pane is never empty. Back leaves the season.
 - Play, watched, favourite and download in the detail pane act on that episode through `EpisodeAction` as today; the list pane refreshes through `SeasonViewModel` as it already does after a download.
 - Deep links to an episode (from Home "Next Up", search, a notification) still open `EpisodeRoute`; at expanded width that route renders the season list-detail with that episode selected, so the user lands in the same place either way.
@@ -130,17 +133,19 @@ Compact and medium: today's page (header, then the episode list capped at `textM
 
 Already two-column at 600 dp+ (image left, text right). Only the tokens change: the image is `posterInHeader × 1.6` tall instead of a fixed 320 dp, and the credit rows use `cardVertical`.
 
+- **Below the top bar** (#436): the image sits at the start margin, where the back and home buttons are, so the two-column page starts below the top bar (the status bar plus 64 dp) instead of under it. The name and biography column is capped at `textMaxWidth`. The compact page keeps its centred image between the buttons.
+
 ## 9. Player
 
 The player is the second biggest gap after the item pages. It is View/XML (`PlayerActivity`); the changes below are deliberately possible without rewriting it in Compose, because a rewrite is its own project.
 
-**Orientation (T7).** The manifest no longer sets `screenOrientation`; `PlayerActivity.onCreate` (and `onConfigurationChanged`) picks it: `SENSOR_LANDSCAPE` when the **shorter side of the maximum window** is under 600 dp (a phone, whichever way it is held, or a folded foldable), `UNSPECIFIED` otherwise. The shorter side rather than the current width, because the player opens in landscape on a phone and would otherwise unlock itself; the maximum window rather than the current one, so split-screen and a return from picture-in-picture don’t force landscape on a tablet. A tablet or unfolded foldable in portrait then plays in portrait, letterboxed, as every video app does. The lock button locks to the current orientation and unlock restores the chosen value. *(Built in R6, #289.)*
+**Orientation (T7).** The manifest no longer sets `screenOrientation`; `PlayerActivity.onCreate` (and `onConfigurationChanged`) picks it: `SENSOR_LANDSCAPE` when the **shorter side of the maximum window** is under 600 dp (a phone, whichever way it is held, or a folded foldable), `UNSPECIFIED` otherwise. The shorter side rather than the current width, because the player opens in landscape on a phone and would otherwise unlock itself; the maximum window rather than the current one, so split-screen and a return from picture-in-picture don’t force landscape on a tablet. A tablet or unfolded foldable in portrait then plays in portrait, letterboxed, as every video app does. The lock button locks to the current orientation and unlock restores the chosen value. *(Built in R6, #289.)* The player setting **Keep the player in landscape** (#363, off by default, shown only where the player can get a wide window: a shorter side of 600 dp or more, or a hinge sensor; never on TV) makes a wide window ask for `SENSOR_LANDSCAPE` again, as up to v2.1. It is left out in split-screen and freeform windows, in picture-in-picture and while a fold is half-opened in either orientation (a forced landscape turns a tabletop hinge vertical in window coordinates, so R9 would never see it). It is hidden and ignored from Android 16 (API 36): the system ignores orientation requests on large screens for apps targeting 36 or later. It has no effect on tablets whose display ignores orientation requests (`wm get-ignore-orientation-request` is true, as on the tablet AVDs; Android 12L to 15) when the player opens, or comes back from picture-in-picture, with the tablet upright: the display answers with a landscape box inside the upright screen instead of turning. `PlayerActivity` detects that box (`isLetterboxed`: a landscape window under 80 % of the area of an upright maximum window, outside multi-window and picture-in-picture) and gives the setting up for the rest of that player session, so the player follows the device as with the setting off. The switch stays visible there, since this cannot be detected up front. On the AVD, a player opened in landscape kept landscape when the tablet was then turned upright.
 
 **Gestures (T6, upstream #1144).** Vertical swipes for volume and brightness are accepted only in **edge zones** when the player view is at least **840 × 480 dp**; smaller players keep the left and right halves (a phone in landscape is about 900 × 410 dp and stays on halves). Each zone is `clamp(width × 0.2, 96 dp, 240 dp)` from its edge; a vertical swipe that starts between the zones is ignored until the finger lifts, so it can’t toggle the controls or become a seek. Horizontal seek and double-tap seek keep today’s rules. The bounds are `Constants` values, not a preference. *(Built in R6, #289.)*
 
 **Controls at expanded.** Same layout files, size-qualified where it matters: `layout-w840dp/exo_main_controls.xml` with 48 dp spacing between the five transport buttons (32 today), the title in `titleLarge`, time labels in `labelLarge`; `activity_player.xml` trickplay preview 320×180 dp and gesture panels 80 dp wide. Chapter thumbnails 160×90 dp. Nothing moves; it breathes.
 
-**Supporting pane at expanded (upstream #480, "episode list inside the player").** A button in the top-right of the controls opens a side sheet over the right 30 % of the window with the season's episodes (`SeasonViewModel`, same compact episode card as §7's list pane). Tapping one plays it through the existing queue; the video keeps playing while the sheet is open. The sheet is `surfaceContainer` at 92 % opacity, 24 dp corners (VISION §5 "large"), dismissed by tap outside, Back or Esc. Not for movies. *(Built in R10: the corners are on the sheet's left side only, as it is flush with the right edge; a tap outside closes the sheet rather than reaching the controls under it; a picked episode starts from its beginning, as a queue jump does; the button is not offered in picture-in-picture or while the controls are locked.)*
+**Supporting pane at expanded (upstream #480, "episode list inside the player").** A button in the top-right of the controls opens a side sheet over the right 30 % of the window with the season's episodes (`SeasonViewModel`, same compact episode card as §7's list pane). Tapping one plays it through the existing queue; the video keeps playing while the sheet is open. The sheet is `surfaceContainer` at 92 % opacity, 24 dp corners (VISION §5 "large"), dismissed by tap outside, Back or Esc. Not for movies. *(Built in R10: the corners are on the sheet's left side only, as it is flush with the right edge; a tap outside closes the sheet rather than reaching the controls under it; a picked episode starts from its beginning, as a queue jump does; the button is not offered in picture-in-picture or while the controls are locked.)* While the sheet is open, the whole seek row (the time labels and the seek bar), the skip button and every top-row or transport button the sheet covers or cuts fade out with the sheet's motion and take no focus, and come back when it closes (#456, #523).
 
 **Picture-in-picture.** Already supported. The tablet test adds: entering PiP from portrait, Esc leaves PiP (tier 2), and the queue continues in PiP.
 
@@ -166,13 +171,13 @@ Tier 2 items that cost little and make the app usable on a Chromebook or with a 
 | Screen | Compact | Medium (600–839) | Expanded (840+) |
 |---|---|---|---|
 | Home | bar, 1 page | rail, 2 pages, cards 300/170 | rail, 3 pages, cards 320/180 |
-| Media | as today | search ≤ 720 dp | search ≤ 720 dp |
+| Media | as today | search ≤ 720 dp, open search docked beside the rail | search ≤ 720 dp, open search docked beside the rail |
 | Library / Collection / Favorites / Search | 160 dp cells | 170 dp cells | 180 dp cells |
 | Downloads | list | list ≤ 720 dp | 2 columns |
 | Movie / Show / Episode | header + column | hero + poster 160 + column | hero + poster 200 + column, rows full width |
 | Season | header + list | header + list ≤ 720 dp | list-detail 40/60 |
 | Person | column | row (exists) | row (exists) |
-| Settings / setup | as today (640 / 480 caps) | same | same |
+| Settings / setup | as today (640 / 480 caps); Server addresses, opened from Servers, takes the setup cap (480) | same | same |
 | Player | sensor landscape, half-screen gestures | free orientation, half-screen gestures | free orientation, edge gestures, roomier controls, episode side sheet |
 | Compact height (phone landscape) | | item pages and Season use the compact layout | |
 

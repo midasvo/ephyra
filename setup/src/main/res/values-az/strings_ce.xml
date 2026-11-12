@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">Naxış təyin edildi</string>
     <string name="ce_profile_pattern_removed">Naxış silindi</string>
     <string name="ce_profile_pattern_grid">Kilid açma naxışı, 3 × 3 nöqtədən ibarət şəbəkə</string>
+    <string name="ce_server_address_in_use">Bu ünvan istifadədədir və silinə bilməz</string>
+    <string name="ce_server_address_already_added">Bu ünvan artıq əlavə edilib</string>
+    <string name="ce_local_network_denied">Yerli şəbəkəyə giriş söndürülüb. Onsuz şəbəkənizdəki serverləri tapmaq və onlara qoşulmaq mümkün deyil.</string>
+    <string name="ce_local_network_denied_where">Sistem ayarlarında İcazələr &gt; %1$s altındadır.</string>
+    <string name="ce_local_network_allow">Girişə icazə ver</string>
+    <string name="ce_local_network_off">Yerli şəbəkəyə giriş söndürülüb</string>
+    <string name="ce_add_server_error_local_network">Server tapılmadı. Yerli şəbəkəyə giriş söndürülüb, bu da şəbəkənizdəki ünvanları bloklayır.</string>
+    <string name="ce_permission_permanently_denied">%1$s rədd edildi. İstifadə etmək üçün sistem ayarlarında İcazələr altında \"%2$s\" icazəsini verin.</string>
+    <string name="ce_quick_connect_error_expired">Quick Connect kodunun vaxtı bitib. Yeni kod üçün Quick Connect düyməsini basın.</string>
+    <string name="ce_quick_connect_error_disabled">Bu serverdə Quick Connect söndürülüb. İstifadəçi adı və şifrə ilə daxil olun.</string>
 </resources>

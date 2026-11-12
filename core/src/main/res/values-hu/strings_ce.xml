@@ -98,4 +98,19 @@
     <string name="item_more_like_this">Hasonlók</string>
     <string name="ce_session_revoked">%1$s kijelentkeztetett. A folytatáshoz jelentkezz be újra.</string>
     <string name="ce_download_error_server">A szerver elutasította a letöltést (HTTP %1$d)</string>
+    <string name="ce_error_server_status">A szerver hibával válaszolt (HTTP %1$d). Próbáld újra később.</string>
+    <string name="ce_media_info">Médiainformáció</string>
+    <string name="ce_home_profile">Profil</string>
+    <string name="ce_watched">Megnézve</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d nem látott</item>
+        <item quantity="other">%d nem látott</item>
+    </plurals>
+    <string name="ce_delete_download_message">Biztosan törölni szeretnéd a letöltést az eszközről?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d sikertelen</item>
+        <item quantity="other">%d sikertelen</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Még nincs semmi letöltve</string>
+    <string name="ce_home_offline_empty_body">Nincs kapcsolat. A letöltött filmek és epizódok itt és a Letöltések között jelennek meg.</string>
 </resources>

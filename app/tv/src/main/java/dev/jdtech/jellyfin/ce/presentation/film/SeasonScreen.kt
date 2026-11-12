@@ -42,6 +42,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,6 +65,8 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
+import dev.jdtech.jellyfin.ce.ui.components.TvLoadError
+import dev.jdtech.jellyfin.ce.ui.components.TvOverviewText
 import dev.jdtech.jellyfin.ce.ui.focus.EphyraFocusScale
 import dev.jdtech.jellyfin.ce.ui.focus.FocusPosition
 import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
@@ -80,6 +83,7 @@ import dev.jdtech.jellyfin.core.presentation.dummy.dummyVideoMetadata
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeAction
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeState
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeViewModel
+import dev.jdtech.jellyfin.film.presentation.season.SeasonAction
 import dev.jdtech.jellyfin.film.presentation.season.SeasonState
 import dev.jdtech.jellyfin.film.presentation.season.SeasonViewModel
 import dev.jdtech.jellyfin.models.DisplayProfile
@@ -176,8 +180,22 @@ fun SeasonScreen(
             }
     }
 
+    // #405: opened from an episode, the season is only known once that episode has loaded, so
+    // until then the episode's load is the one that can fail. Derived, so an episode load that
+    // works doesn't recompose the page (#257).
+    val episodeError by remember { derivedStateOf { episodeState.value.error } }
+    val loadError = state.error ?: episodeError?.takeIf { currentSeasonId == null }
+
     SeasonScreenLayout(
         state = state,
+        loadError = loadError,
+        onRetry = {
+            if (currentSeasonId == null) {
+                episodeViewModel.onAction(EpisodeAction.OnRetryClick)
+            } else {
+                seasonViewModel.onAction(SeasonAction.OnRetryClick)
+            }
+        },
         // While another season loads, the old one stays on screen, so focus stays on its chip.
         episodes = state.episodes,
         selection = selection,
@@ -201,7 +219,7 @@ fun SeasonScreen(
  * season chips or the other cards. Saved, so a restored page focuses the same episode.
  */
 @Stable
-private class EpisodeSelection(initialId: String?) {
+internal class EpisodeSelection(initialId: String?) {
     /** The focused episode's ID, or null for [nextUp]. */
     var id by mutableStateOf(initialId)
 
@@ -222,8 +240,10 @@ private fun nextUp(episodes: List<FindroidEpisode>): FindroidEpisode? =
 
 @Composable
 @OptIn(ExperimentalTvMaterial3Api::class)
-private fun SeasonScreenLayout(
+internal fun SeasonScreenLayout(
     state: SeasonState,
+    loadError: Throwable?,
+    onRetry: () -> Unit,
     episodes: List<FindroidEpisode>,
     selection: EpisodeSelection,
     episodeState: () -> EpisodeState,
@@ -247,9 +267,19 @@ private fun SeasonScreenLayout(
 
     Box(modifier = Modifier.fillMaxSize()) {
         val season = state.season
-        // No episodes is the only case without a selected one.
-        if (season == null || episodes.isEmpty()) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        // No episodes is the only case without a selected one. CE (#505): a season that has
+        // loaded without episodes shows the page, with a line where the episodes would be.
+        val emptyLoaded = episodes.isEmpty() && !state.isLoading && loadError == null
+        if (season == null || (episodes.isEmpty() && !emptyLoaded)) {
+            if (loadError != null) {
+                TvLoadError(
+                    error = loadError,
+                    onRetry = onRetry,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            } else {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
             return@Box
         }
 
@@ -302,6 +332,17 @@ private fun SeasonScreenLayout(
                 }
             }
 
+            if (emptyLoaded) {
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth().testTag(SEASON_EMPTY_TAG),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(CoreR.string.nothing_here_yet),
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                }
+            }
             EpisodeDetails(
                 selected = selected,
                 episodeState = episodeState,
@@ -345,7 +386,14 @@ private fun SeasonScreenLayout(
             }
         }
 
-        RestoreFocus(position = focusPosition, ready = episodes.isNotEmpty()) { position ->
+        RestoreFocus(position = focusPosition, ready = episodes.isNotEmpty() || emptyLoaded) {
+            position ->
+            // CE (#505): without episodes, the season's own chip is what can take focus.
+            if (episodes.isEmpty()) {
+                val seasons = state.seriesSeasons.ifEmpty { listOf(season) }
+                val index = seasons.indexOfFirst { it.id == season.id }.coerceAtLeast(0)
+                position.save(ROW_SEASONS, index, season.id.toString())
+            }
             // First visit: no episode was focused yet, so point the default at the selected one.
             if (position.row == ROW_EPISODES && position.key == null) {
                 selected.value?.let { position.save(ROW_EPISODES, 0, it.id.toString()) }
@@ -439,11 +487,11 @@ private fun EpisodeDetails(
             color = Color.White.copy(alpha = .8f),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
-        Text(
+        // CE (#545): a cut overview takes focus and opens in full on OK.
+        TvOverviewText(
+            title = episode.name,
             text = episode.overview,
-            style = MaterialTheme.typography.bodyMedium,
             maxLines = 3,
-            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.width(640.dp),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
@@ -587,10 +635,7 @@ private fun technicalChips(episode: FindroidEpisode?, metadata: VideoMetadata?):
         metadata?.videoCodecs?.firstOrNull()?.let { add(it.raw) }
         metadata?.displayProfiles?.filter { it != DisplayProfile.SDR }?.forEach { add(it.raw) }
         audio?.let { stream ->
-            val language =
-                stream.language
-                    .takeIf { it.isNotBlank() }
-                    ?.let { code -> Locale.forLanguageTag(code).displayLanguage.ifBlank { code } }
+            val language = audioLanguageName(stream.language)
             val format =
                 listOfNotNull(
                         audioCodecName(stream.codec),
@@ -610,6 +655,23 @@ private fun resolutionName(height: Int): String =
         height >= 700 -> "720p"
         else -> "${height}p"
     }
+
+/**
+ * The name of an audio track's language in the app's language, or null when the track has none:
+ * no code, "und" (undetermined, #415) or a code without a name. The server sends three-letter
+ * codes ("nld"), which [Locale] only names by their two-letter form ("nl").
+ */
+internal fun audioLanguageName(code: String, locale: Locale = Locale.getDefault()): String? {
+    val tag = code.trim().lowercase()
+    if (tag.isEmpty() || tag == "und") return null
+    val language = twoLetterLanguages[tag] ?: tag
+    return Locale.forLanguageTag(language).getDisplayLanguage(locale).ifBlank { null }
+}
+
+/** ISO 639-2 codes to their ISO 639-1 form, e.g. "nld" to "nl". */
+private val twoLetterLanguages: Map<String, String> by lazy {
+    Locale.getISOLanguages().associateBy { Locale.forLanguageTag(it).isO3Language }
+}
 
 private fun audioCodecName(codec: String): String? =
     when (codec.lowercase()) {
@@ -698,6 +760,8 @@ private suspend fun LazyListState.scrollIntoView(index: Int) {
     if (layoutInfo.visibleItemsInfo.none { it.index == index }) scrollToItem(index)
 }
 
+internal const val SEASON_EMPTY_TAG = "ce_season_empty"
+
 private const val ROW_SEASONS = 0
 private const val ROW_BUTTONS = 1
 private const val ROW_EPISODES = 2
@@ -711,6 +775,8 @@ private fun SeasonScreenLayoutPreview() {
     FindroidTheme {
         SeasonScreenLayout(
             state = SeasonState(season = dummySeason, episodes = dummyEpisodes),
+            loadError = null,
+            onRetry = {},
             episodes = dummyEpisodes,
             selection = remember { EpisodeSelection(dummyEpisodes.first().id.toString()) },
             episodeState = {

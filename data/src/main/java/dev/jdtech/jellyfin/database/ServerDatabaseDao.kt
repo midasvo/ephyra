@@ -292,6 +292,13 @@ interface ServerDatabaseDao {
     @Query("SELECT * FROM episodes WHERE seasonId = :seasonId ORDER BY indexNumber ASC")
     suspend fun getEpisodesBySeasonId(seasonId: UUID): List<FindroidEpisodeDto>
 
+    /** CE (#379): every stored item of every server and user, which may own downloaded artwork. */
+    @Query(
+        "SELECT id FROM movies UNION SELECT id FROM shows UNION SELECT id FROM seasons " +
+            "UNION SELECT id FROM episodes"
+    )
+    suspend fun getAllItemIds(): List<UUID>
+
     /**
      * CE (#252): per season of [seriesId], how many episodes are stored and how many of them are
      * downloaded, in one query. Downloaded means what `FindroidItem.isDownloaded()` means: a LOCAL
@@ -362,17 +369,34 @@ interface ServerDatabaseDao {
 
     @Query("DELETE FROM userdata WHERE itemId = :itemId") suspend fun deleteUserData(itemId: UUID)
 
+    /**
+     * Removes the user data of an item whose download is deleted, except rows that still have to
+     * reach the server: those stay until the sync has sent them.
+     */
+    @Query("DELETE FROM userdata WHERE itemId = :itemId AND toBeSynced = 0")
+    suspend fun deleteSyncedUserData(itemId: UUID)
+
+    /** Removes a synced row whose download is gone. Does nothing while the item is stored. */
+    @Query(
+        "DELETE FROM userdata WHERE userId = :userId AND itemId = :itemId AND toBeSynced = 0 " +
+            "AND itemId NOT IN (SELECT id FROM movies) AND itemId NOT IN (SELECT id FROM episodes)"
+    )
+    suspend fun deleteUserDataIfOrphaned(userId: UUID, itemId: UUID)
+
     @Query("SELECT * FROM userdata WHERE userId = :userId AND itemId = :itemId AND toBeSynced = 1")
     suspend fun getUserDataToBeSynced(userId: UUID, itemId: UUID): FindroidUserDataDto?
 
     /**
-     * The user data rows of [userId] that still have to reach the server, limited to the downloaded
-     * movies and episodes of [serverId], which are the items the sync covers.
+     * The user data rows of [userId] that still have to reach the server: those of the downloaded
+     * movies and episodes of [serverId], which are the items the sync covers, and those of movies
+     * and episodes whose download was deleted before the sync ran.
      */
     @Query(
         "SELECT * FROM userdata WHERE userId = :userId AND toBeSynced = 1 AND (" +
             "itemId IN (SELECT id FROM movies WHERE serverId = :serverId) OR " +
-            "itemId IN (SELECT id FROM episodes WHERE serverId = :serverId))"
+            "itemId IN (SELECT id FROM episodes WHERE serverId = :serverId) OR (" +
+            "itemId NOT IN (SELECT id FROM movies) AND itemId NOT IN (SELECT id FROM episodes) " +
+            "AND itemId NOT IN (SELECT id FROM seasons) AND itemId NOT IN (SELECT id FROM shows)))"
     )
     suspend fun getAllUserDataToBeSynced(serverId: String, userId: UUID): List<FindroidUserDataDto>
 
@@ -380,6 +404,40 @@ interface ServerDatabaseDao {
         "UPDATE userdata SET toBeSynced = :toBeSynced WHERE itemId = :itemId AND userId = :userId"
     )
     suspend fun setUserDataToBeSynced(userId: UUID, itemId: UUID, toBeSynced: Boolean)
+
+    /** Whether any movie or episode row, stored or not, still has to reach the server. */
+    @Query(
+        "SELECT EXISTS(SELECT 1 FROM userdata WHERE toBeSynced = 1 " +
+            "AND itemId NOT IN (SELECT id FROM seasons) AND itemId NOT IN (SELECT id FROM shows))"
+    )
+    suspend fun hasUserDataToBeSynced(): Boolean
+
+    /**
+     * Marks a row as still to be sent to the server. Returns 1 when this call marked it, 0 when it
+     * was marked already or there is no row (the item is not stored).
+     */
+    @Query(
+        "UPDATE userdata SET toBeSynced = 1 " +
+            "WHERE itemId = :itemId AND userId = :userId AND toBeSynced = 0"
+    )
+    suspend fun markUserDataToBeSynced(userId: UUID, itemId: UUID): Int
+
+    /**
+     * Marks a row as sent, but only while it still holds the values that were sent: a write that
+     * failed during the sync keeps the row marked.
+     */
+    @Query(
+        "UPDATE userdata SET toBeSynced = 0 WHERE itemId = :itemId AND userId = :userId " +
+            "AND played = :played AND favorite = :favorite " +
+            "AND playbackPositionTicks = :playbackPositionTicks"
+    )
+    suspend fun clearUserDataToBeSynced(
+        userId: UUID,
+        itemId: UUID,
+        played: Boolean,
+        favorite: Boolean,
+        playbackPositionTicks: Long,
+    )
 
     @Query("SELECT * FROM movies WHERE serverId = :serverId AND name LIKE '%' || :name || '%'")
     suspend fun searchMovies(serverId: String, name: String): List<FindroidMovieDto>

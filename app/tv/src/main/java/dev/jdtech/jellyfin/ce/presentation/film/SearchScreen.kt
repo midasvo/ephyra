@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -47,6 +48,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
+import dev.jdtech.jellyfin.ce.ui.components.TvLoadError
 import dev.jdtech.jellyfin.ce.ui.focus.FocusPosition
 import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
@@ -139,15 +141,38 @@ internal fun SearchScreenLayout(
     // Not saveable: on the first visit the keyboard opens right away, on a return it doesn't.
     var editing by remember { mutableStateOf(query.isEmpty()) }
     var fieldFocused by remember { mutableStateOf(false) }
+    // #417: set by Retry, so focus goes to the first result once the retry finds something. Typing
+    // clears it. (When Retry goes away, Compose hands focus to the field first.)
+    var retried by remember { mutableStateOf(false) }
 
     LaunchedEffect(editing) { if (editing) keyboardController?.show() }
 
+    // The search for the text in the field failed. It stays while a Retry loads, so focus stays on
+    // Retry. A failed search keeps the previous query's items: those are not shown with it.
+    val error = state.error?.takeIf { query.isNotBlank() && state.query == query }
     val groups =
-        remember(state.items) {
+        remember(state.items, error) {
             SearchGroup.entries
-                .map { group -> group to state.items.filter { group.matches(it) } }
+                .map { group ->
+                    group to if (error != null) emptyList() else state.items.filter(group::matches)
+                }
                 .filter { (_, items) -> items.isNotEmpty() }
         }
+    // Down and the keyboard's Search key leave the field for the results or for Retry.
+    val canLeaveField = groups.isNotEmpty() || error != null
+
+    LaunchedEffect(groups) {
+        if (!retried || groups.isEmpty()) return@LaunchedEffect
+        retried = false
+        val (group, items) = groups.first()
+        focusPosition.save(group.row(), 0, items.first().id.toString())
+        // The text field is list item 0, the groups follow it.
+        listState.scrollToItem(1)
+        repeat(RETRY_FOCUS_FRAMES) {
+            withFrameNanos {}
+            if (focusPosition.requestFocus()) return@LaunchedEffect
+        }
+    }
 
     LazyColumn(
         state = listState,
@@ -162,6 +187,7 @@ internal fun SearchScreenLayout(
                 value = query,
                 onValueChange = {
                     query = it
+                    retried = false
                     onAction(SearchAction.Search(it))
                 },
                 placeholder = { M3Text(stringResource(CoreR.string.search_hint)) },
@@ -182,7 +208,7 @@ internal fun SearchScreenLayout(
                     KeyboardActions(
                         onSearch = {
                             keyboardController?.hide()
-                            if (groups.isNotEmpty()) focusManager.moveFocus(FocusDirection.Down)
+                            if (canLeaveField) focusManager.moveFocus(FocusDirection.Down)
                         }
                     ),
                 modifier =
@@ -200,10 +226,11 @@ internal fun SearchScreenLayout(
                                     if (event.type == KeyEventType.KeyUp) editing = true
                                     true
                                 }
-                                // Down always leaves the field for the results, also with text.
+                                // Down always leaves the field for the results (or Retry), also
+                                // with text.
                                 event.type == KeyEventType.KeyDown &&
                                     event.key == Key.DirectionDown &&
-                                    groups.isNotEmpty() -> {
+                                    canLeaveField -> {
                                     keyboardController?.hide()
                                     focusManager.moveFocus(FocusDirection.Down)
                                 }
@@ -216,19 +243,26 @@ internal fun SearchScreenLayout(
 
         if (groups.isEmpty()) {
             item(key = "status") {
-                val message =
-                    when {
-                        query.isBlank() || state.loading || state.query != query -> null
-                        state.error != null -> state.error?.localizedMessage
-                        else -> stringResource(CoreR.string.no_search_results)
-                    }
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    message?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                    when {
+                        // #417: the reason in plain words and Retry. It doesn't take focus: the
+                        // keyboard may still be open in the field.
+                        error != null ->
+                            TvLoadError(
+                                error = error,
+                                onRetry = {
+                                    retried = true
+                                    onAction(SearchAction.Search(query))
+                                },
+                                takeFocus = false,
+                            )
+                        query.isBlank() || state.loading || state.query != query -> Unit
+                        else ->
+                            Text(
+                                text = stringResource(CoreR.string.no_search_results),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                     }
                 }
             }
@@ -291,6 +325,9 @@ internal fun SearchScreenLayout(
         listState.scrollToItem(1 + index)
     }
 }
+
+/** About a second at 60 fps, for the first result row to be laid out after a Retry. */
+private const val RETRY_FOCUS_FRAMES = 60
 
 private fun Key.isOk() = this == Key.DirectionCenter || this == Key.Enter || this == Key.NumPadEnter
 

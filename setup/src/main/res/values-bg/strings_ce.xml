@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">Фигурата е зададена</string>
     <string name="ce_profile_pattern_removed">Фигурата е премахната</string>
     <string name="ce_profile_pattern_grid">Фигура за отключване, мрежа от 3 на 3 точки</string>
+    <string name="ce_server_address_in_use">Този адрес се използва и не може да бъде премахнат</string>
+    <string name="ce_server_address_already_added">Този адрес вече е добавен</string>
+    <string name="ce_local_network_denied">Достъпът до локалната мрежа е изключен. Без него сървърите във вашата мрежа не могат да бъдат намерени или достигнати.</string>
+    <string name="ce_local_network_denied_where">В системните настройки се намира в Разрешения &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Разрешаване на достъпа</string>
+    <string name="ce_local_network_off">Достъпът до локалната мрежа е изключен</string>
+    <string name="ce_add_server_error_local_network">Сървърът не е намерен. Достъпът до локалната мрежа е изключен, което блокира адресите във вашата мрежа.</string>
+    <string name="ce_permission_permanently_denied">%1$s беше отказано. За да го използвате, разрешете „%2$s“ в Разрешения в системните настройки.</string>
+    <string name="ce_quick_connect_error_expired">Кодът за Бързо свързване е изтекъл. Натиснете „Бързо свързване“ за нов код.</string>
+    <string name="ce_quick_connect_error_disabled">Бързото свързване е изключено на този сървър. Влезте с потребителското си име и парола.</string>
 </resources>

@@ -19,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -88,23 +90,34 @@ fun UsersScreen(
 }
 
 @Composable
-private fun UsersScreenLayout(state: UsersState, onAction: (UsersAction) -> Unit, baseUrl: String) {
+internal fun UsersScreenLayout(
+    state: UsersState,
+    onAction: (UsersAction) -> Unit,
+    baseUrl: String,
+) {
     val userRequesters = remember { mutableMapOf<UUID, FocusRequester>() }
     val addRequester = remember { FocusRequester() }
+    // CE (#541): the element that opened another screen, focused again on the way back.
+    val serverRequester = remember { FocusRequester() }
+    val publicRequesters = remember { mutableMapOf<UUID, FocusRequester>() }
+    var opener by rememberSaveable { mutableStateOf<String?>(null) }
     // The saved user that had focus last: what "Remove user" acts on.
     var focusedUserId by remember { mutableStateOf<UUID?>(null) }
     var removing by remember { mutableStateOf<User?>(null) }
     val hasUsers = state.users.isNotEmpty() || state.publicUsers.isNotEmpty()
     val focusedUser = state.users.firstOrNull { it.id == focusedUserId }
 
-    // Focus starts on the signed-in user, else the first saved user, else "Add user".
+    // Focus starts on the signed-in user, else the first saved user, else "Add user". CE (#541):
+    // after Back, on what was opened; with no users at all, on "Add user".
     LaunchedEffect(hasUsers, state.users.isNotEmpty(), state.currentUserId) {
-        if (!hasUsers) return@LaunchedEffect
         val target =
             state.users.firstOrNull { it.id == state.currentUserId } ?: state.users.firstOrNull()
         repeat(10) {
             withFrameNanos {}
-            val requester = target?.let { userRequesters[it.id] } ?: addRequester
+            val requester =
+                openerRequester(opener, addRequester, serverRequester, publicRequesters)
+                    ?: target?.let { userRequesters[it.id] }
+                    ?: addRequester
             if (runCatching { requester.requestFocus() }.getOrDefault(false)) return@LaunchedEffect
         }
     }
@@ -162,8 +175,12 @@ private fun UsersScreenLayout(state: UsersState, onAction: (UsersAction) -> Unit
                             baseUrl = baseUrl,
                             caption = stringResource(SetupR.string.ce_users_sign_in),
                             onClick = {
+                                opener = OPENER_PUBLIC + user.id // CE (#541)
                                 onAction(UsersAction.OnPublicUserClick(username = it.name))
                             },
+                            // CE (#541)
+                            focusRequester =
+                                publicRequesters.getOrPut(user.id) { FocusRequester() },
                         )
                     }
                 }
@@ -173,15 +190,22 @@ private fun UsersScreenLayout(state: UsersState, onAction: (UsersAction) -> Unit
                 modifier = Modifier.padding(bottom = 24.dp),
             ) {
                 OutlinedButton(
-                    onClick = { onAction(UsersAction.OnAddClick) },
+                    onClick = {
+                        opener = OPENER_ADD // CE (#541)
+                        onAction(UsersAction.OnAddClick)
+                    },
                     border = ephyraButtonBorder(),
-                    modifier = Modifier.focusRequester(addRequester),
+                    modifier = Modifier.focusRequester(addRequester).testTag(USERS_ADD_TAG),
                 ) {
                     Text(text = stringResource(id = SetupR.string.users_btn_add_user))
                 }
                 OutlinedButton(
-                    onClick = { onAction(UsersAction.OnChangeServerClick) },
+                    onClick = {
+                        opener = OPENER_SERVER // CE (#541)
+                        onAction(UsersAction.OnChangeServerClick)
+                    },
                     border = ephyraButtonBorder(),
+                    modifier = Modifier.focusRequester(serverRequester).testTag(USERS_SERVER_TAG),
                 ) {
                     Text(text = stringResource(id = SetupR.string.ce_users_switch_server))
                 }
@@ -211,6 +235,30 @@ private fun UsersScreenLayout(state: UsersState, onAction: (UsersAction) -> Unit
         )
     }
 }
+
+// CE (#541)
+internal const val USERS_ADD_TAG = "users_add"
+internal const val USERS_SERVER_TAG = "users_switch_server"
+private const val OPENER_ADD = "add"
+private const val OPENER_SERVER = "server"
+private const val OPENER_PUBLIC = "public:"
+
+/** CE (#541): the element that opened another screen, or null to use the default focus. */
+private fun openerRequester(
+    opener: String?,
+    addRequester: FocusRequester,
+    serverRequester: FocusRequester,
+    publicRequesters: Map<UUID, FocusRequester>,
+): FocusRequester? =
+    when {
+        opener == OPENER_ADD -> addRequester
+        opener == OPENER_SERVER -> serverRequester
+        opener?.startsWith(OPENER_PUBLIC) == true ->
+            publicRequesters.entries
+                .firstOrNull { it.key.toString() == opener.removePrefix(OPENER_PUBLIC) }
+                ?.value
+        else -> null
+    }
 
 @Composable
 private fun RemoveUserDialog(userName: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {

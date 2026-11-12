@@ -98,4 +98,19 @@
     <string name="item_more_like_this">Más como esto</string>
     <string name="ce_session_revoked">%1$s cerró tu sesión. Vuelve a iniciar sesión para continuar.</string>
     <string name="ce_download_error_server">El servidor rechazó la descarga (HTTP %1$d)</string>
+    <string name="ce_error_server_status">El servidor respondió con un error (HTTP %1$d). Vuelve a intentarlo más tarde.</string>
+    <string name="ce_media_info">Información multimedia</string>
+    <string name="ce_home_profile">Perfil</string>
+    <string name="ce_watched">Visto</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d sin ver</item>
+        <item quantity="other">%d sin ver</item>
+    </plurals>
+    <string name="ce_delete_download_message">¿Estás seguro de querer eliminar esta descarga de tu dispositivo?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d fallida</item>
+        <item quantity="other">%d fallidas</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Todavía no descargaste nada</string>
+    <string name="ce_home_offline_empty_body">No tienes conexión. Las películas y episodios que descargues aparecen aquí y en Descargas.</string>
 </resources>

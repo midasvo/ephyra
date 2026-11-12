@@ -3,6 +3,7 @@ package dev.jdtech.jellyfin.api
 import android.content.Context
 import dev.jdtech.jellyfin.data.BuildConfig
 import dev.jdtech.jellyfin.settings.domain.Constants
+import java.io.IOException
 import java.util.UUID
 import kotlin.time.DurationUnit
 import kotlin.time.Duration.Companion.seconds
@@ -17,6 +18,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.Response
 import org.jellyfin.sdk.android.androidDevice
 import org.jellyfin.sdk.api.client.HttpClientOptions
@@ -60,7 +62,7 @@ class JellyfinApi(
      * connection the API calls before playback left open.
      */
     private val okHttpFactory =
-        OkHttpFactory(base = OkHttpClient.Builder().addInterceptor(::detectRevokedToken).build())
+        OkHttpFactory(base = OkHttpClient.Builder().addInterceptor(::watchResponses).build())
 
     private val _unauthorized =
         MutableSharedFlow<String>(
@@ -74,6 +76,19 @@ class JellyfinApi(
      * session keeper checks and signs out.
      */
     val unauthorized: SharedFlow<String> = _unauthorized.asSharedFlow()
+
+    private val serverReturnDetector = ServerReturnDetector()
+    private val _serverReturned =
+        MutableSharedFlow<Unit>(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+
+    /**
+     * CE (#552): emits when the server answers again after requests that could not reach it. The
+     * user data sync uses it to send what is waiting without sitting out its retry delay.
+     */
+    val serverReturned: SharedFlow<Unit> = _serverReturned.asSharedFlow()
 
     /** The OkHttp client the API's clients are built from. Derive from it with `newBuilder()`. */
     val httpClient: OkHttpClient
@@ -109,17 +124,28 @@ class JellyfinApi(
         )
     var userId: UUID? = null
 
-    private fun detectRevokedToken(chain: Interceptor.Chain): Response {
+    private fun watchResponses(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        val response = chain.proceed(request)
-        if (response.code != 401) return response
-        val token = api.accessToken ?: return response
+        val response =
+            try {
+                chain.proceed(request)
+            } catch (e: IOException) {
+                serverReturnDetector.onFailure()
+                throw e
+            }
+        if (serverReturnDetector.onResponse(response.code)) _serverReturned.tryEmit(Unit)
+        detectRevokedToken(request, response)
+        return response
+    }
+
+    private fun detectRevokedToken(request: Request, response: Response) {
+        if (response.code != 401) return
+        val token = api.accessToken ?: return
         val sentToken =
             request.header("Authorization")?.contains(token) == true ||
                 request.url.queryParameter("api_key") == token ||
                 request.url.queryParameter("ApiKey") == token
         if (sentToken) _unauthorized.tryEmit(token)
-        return response
     }
 
     /**

@@ -30,4 +30,7 @@
         <item quantity="few">Začne se čez %d sekunde</item>
         <item quantity="other">Začne se čez %d sekund</item>
     </plurals>
+    <string name="ce_track_forced">Vsiljeni</string>
+    <string name="ce_player_connection_lost">Povezava je prekinjena. Predvajanje se bo nadaljevalo, ko bo omrežje spet na voljo.</string>
+    <string name="ce_player_try_again">Poskusi znova</string>
 </resources>

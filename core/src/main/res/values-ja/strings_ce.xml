@@ -95,4 +95,17 @@
     <string name="item_more_like_this">似た作品</string>
     <string name="ce_session_revoked">%1$s からサインアウトされました。続けるにはもう一度サインインしてください。</string>
     <string name="ce_download_error_server">サーバーがダウンロードを拒否しました (HTTP %1$d)</string>
+    <string name="ce_error_server_status">サーバーがエラーを返しました (HTTP %1$d)。しばらくしてからもう一度お試しください。</string>
+    <string name="ce_media_info">メディア情報</string>
+    <string name="ce_home_profile">プロフィール</string>
+    <string name="ce_watched">視聴済み</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="other">未視聴 %d</item>
+    </plurals>
+    <string name="ce_delete_download_message">このダウンロードをデバイスから削除してもよろしいですか？</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="other">%d件失敗</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">まだ何もダウンロードしていません</string>
+    <string name="ce_home_offline_empty_body">オフラインです。ダウンロードした映画やエピソードはここと「ダウンロード」に表示されます。</string>
 </resources>

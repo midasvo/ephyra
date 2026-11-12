@@ -63,6 +63,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
+import dev.jdtech.jellyfin.ce.ui.components.TvSortByDialog
 import dev.jdtech.jellyfin.ce.ui.focus.FocusPosition
 import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
@@ -79,7 +80,6 @@ import dev.jdtech.jellyfin.models.FindroidFolder
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidShow
-import dev.jdtech.jellyfin.presentation.film.components.SortByDialog
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.ui.components.Direction
@@ -303,7 +303,8 @@ internal fun LibraryScreenLayout(
                     Modifier.align(Alignment.BottomEnd)
                         .padding(
                             end = TvSafeArea.horizontal + LETTER_BAR_WIDTH,
-                            bottom = TvSafeArea.vertical / 2,
+                            // #423: the whole safe area; the grid's padding leaves room for it.
+                            bottom = TvSafeArea.vertical,
                         ),
             )
         }
@@ -327,7 +328,7 @@ internal fun LibraryScreenLayout(
     }
 
     if (showSortByDialog) {
-        SortByDialog(
+        TvSortByDialog(
             currentSortBy = state.sortBy,
             currentSortOrder = state.sortOrder,
             onUpdate = { sortBy, sortOrder ->

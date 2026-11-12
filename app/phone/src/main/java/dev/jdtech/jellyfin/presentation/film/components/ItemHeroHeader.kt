@@ -1,6 +1,5 @@
 package dev.jdtech.jellyfin.presentation.film.components
 
-import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
@@ -21,30 +20,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.ColorPainter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
+import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R as CoreR
-import dev.jdtech.jellyfin.core.presentation.ephyra.backdropCrossfadeMillis
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -70,6 +59,7 @@ fun ItemHeroHeader(
     scrollState: ScrollState,
     widthClass: WidthClass,
     title: @Composable ColumnScope.() -> Unit,
+    artwork: ArtworkState = rememberArtworkState(item, ArtworkPlacement.Hero),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val safePadding = rememberSafePadding()
@@ -79,48 +69,96 @@ fun ItemHeroHeader(
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val windowHeight =
             with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
-        val heroHeight = Layout.heroHeight(maxWidth, windowHeight)
+        // The form follows the room this header has (a Season detail pane, a split-screen
+        // half), not the window's width class (#429).
+        val innerWidth = maxWidth - safePadding.start - safePadding.end - margin * 2
+        val stacked = heroStacked(innerWidth, heroPosterWidth(item, widthClass), margin)
+        val posterWidth =
+            if (stacked) minOf(heroPosterWidth(item, widthClass), innerWidth)
+            else heroPosterWidth(item, widthClass)
         // The poster hangs half its height over the backdrop's bottom edge.
-        val posterOverlap = heroPosterHeight(item, widthClass) / 2
+        val posterOverlap = heroPosterHeight(item, posterWidth) / 2
+        val heroHeight =
+            if (artwork.hasArtwork) Layout.heroHeight(maxWidth, windowHeight)
+            else collapsedHeroHeight(safePadding.top, posterOverlap)
 
-        Box(modifier = Modifier.fillMaxWidth().height(heroHeight).clipToBounds()) {
-            HeroBackdrop(
-                item = item,
-                scrollState = scrollState,
-                modifier = Modifier.matchParentSize(),
-            )
-            Canvas(modifier = Modifier.matchParentSize()) {
-                drawRect(
-                    brush =
-                        Brush.verticalGradient(
-                            0.5f to Color.Transparent,
-                            1f to pageBackground,
-                        )
+        if (artwork.hasArtwork) {
+            Box(modifier = Modifier.fillMaxWidth().height(heroHeight).clipToBounds()) {
+                ArtworkBackdrop(
+                    state = artwork,
+                    modifier =
+                        Modifier.matchParentSize()
+                            .parallaxLayoutModifier(scrollState = scrollState, rate = 2),
+                    alignment = Alignment.TopCenter,
                 )
-                drawTopScrimOverArt()
-            }
-        }
-        Row(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .padding(
-                        start = safePadding.start + margin,
-                        top = heroHeight - posterOverlap,
-                        end = safePadding.end + margin,
-                    ),
-            horizontalArrangement = Arrangement.spacedBy(margin),
-        ) {
-            HeroPoster(item = item, widthClass = widthClass)
-            Column(modifier = Modifier.weight(1f, fill = false).widthIn(max = Layout.textMaxWidth)) {
-                Spacer(Modifier.height(posterOverlap + MaterialTheme.spacings.medium))
-                CompositionLocalProvider(
-                    LocalContentColor provides MaterialTheme.colorScheme.onBackground
-                ) {
-                    title()
-                    content()
+                Canvas(modifier = Modifier.matchParentSize()) {
+                    drawRect(
+                        brush =
+                            Brush.verticalGradient(
+                                0.5f to Color.Transparent,
+                                1f to pageBackground,
+                            )
+                    )
+                    drawTopScrimOverArt()
                 }
             }
         }
+        val headerPadding =
+            Modifier.fillMaxWidth()
+                .padding(
+                    start = safePadding.start + margin,
+                    top = heroHeight - posterOverlap,
+                    end = safePadding.end + margin,
+                )
+        if (stacked) {
+            // Too narrow for a column beside the poster: the text goes below it.
+            Column(modifier = headerPadding) {
+                HeroPoster(item = item, posterWidth = posterWidth)
+                Column(modifier = Modifier.widthIn(max = Layout.textMaxWidth)) {
+                    Spacer(Modifier.height(MaterialTheme.spacings.medium))
+                    HeroText(title = title, content = content)
+                }
+            }
+        } else {
+            Row(modifier = headerPadding, horizontalArrangement = Arrangement.spacedBy(margin)) {
+                HeroPoster(item = item, posterWidth = posterWidth)
+                Column(
+                    modifier = Modifier.weight(1f, fill = false).widthIn(max = Layout.textMaxWidth)
+                ) {
+                    Spacer(Modifier.height(posterOverlap + MaterialTheme.spacings.medium))
+                    HeroText(title = title, content = content)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * CE (#433): the hero without any artwork is only the top bar's room and the half of the poster
+ * that would hang over the backdrop, so the poster starts right below the top bar.
+ */
+internal fun collapsedHeroHeight(safeTop: Dp, posterOverlap: Dp): Dp =
+    safeTop + Layout.topBarHeight + posterOverlap
+
+/** The narrowest text column beside the poster; below it the header stacks (4-design.md §6). */
+internal val HeroMinColumnWidth: Dp = 360.dp
+
+/**
+ * True when a hero header [innerWidth] wide (inside its margins) has less than
+ * [HeroMinColumnWidth] beside a poster [posterWidth] wide and the [gap] after it, so the text
+ * column goes below the poster instead of beside it (#429).
+ */
+internal fun heroStacked(innerWidth: Dp, posterWidth: Dp, gap: Dp): Boolean =
+    innerWidth - posterWidth - gap < HeroMinColumnWidth
+
+@Composable
+private fun ColumnScope.HeroText(
+    title: @Composable ColumnScope.() -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onBackground) {
+        title()
+        content()
     }
 }
 
@@ -206,12 +244,11 @@ private fun heroTitleStyle(widthClass: WidthClass): TextStyle =
 private fun heroPosterWidth(item: FindroidItem, widthClass: WidthClass): Dp =
     Layout.posterInHeader(widthClass) * if (item is FindroidEpisode) 1.6f else 1f
 
-private fun heroPosterHeight(item: FindroidItem, widthClass: WidthClass): Dp =
-    heroPosterWidth(item, widthClass) / if (item is FindroidEpisode) 1.77f else 0.66f
+private fun heroPosterHeight(item: FindroidItem, posterWidth: Dp): Dp =
+    posterWidth / if (item is FindroidEpisode) 1.77f else 0.66f
 
 @Composable
-private fun HeroPoster(item: FindroidItem, widthClass: WidthClass) {
-    val posterWidth = heroPosterWidth(item, widthClass)
+private fun HeroPoster(item: FindroidItem, posterWidth: Dp) {
     if (item is FindroidEpisode) {
         ItemPoster(
             item = item,
@@ -225,46 +262,4 @@ private fun HeroPoster(item: FindroidItem, widthClass: WidthClass) {
             modifier = Modifier.width(posterWidth).clip(MaterialTheme.shapes.small),
         )
     }
-}
-
-/**
- * The backdrop. An episode shows its still beside the text, so the hero behind it uses the show's
- * backdrop and only falls back to the still.
- */
-@Composable
-private fun HeroBackdrop(item: FindroidItem, scrollState: ScrollState, modifier: Modifier) {
-    val context = LocalContext.current
-    val sources =
-        remember(item.id, item.images) {
-            when (item) {
-                    is FindroidEpisode -> listOf(item.images.showBackdrop, item.images.primary)
-                    else -> listOf(item.images.backdrop)
-                }
-                .filterNotNull()
-                .distinct()
-                .map { uri ->
-                    // Downloaded images are stored as paths relative to the files directory.
-                    if (uri.scheme == null) {
-                        Uri.Builder()
-                            .appendEncodedPath("${context.filesDir}")
-                            .appendEncodedPath(uri.path)
-                            .build()
-                    } else uri
-                }
-        }
-    var index by remember(sources) { mutableIntStateOf(0) }
-
-    AsyncImage(
-        model =
-            ImageRequest.Builder(context)
-                .data(sources.getOrNull(index))
-                .crossfade(backdropCrossfadeMillis())
-                .build(),
-        contentDescription = null,
-        modifier = modifier.parallaxLayoutModifier(scrollState = scrollState, rate = 2),
-        placeholder = ColorPainter(MaterialTheme.colorScheme.surfaceContainer),
-        onError = { if (index < sources.lastIndex) index++ },
-        contentScale = ContentScale.Crop,
-        alignment = Alignment.TopCenter,
-    )
 }

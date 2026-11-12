@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">Kuvio asetettu</string>
     <string name="ce_profile_pattern_removed">Kuvio poistettu</string>
     <string name="ce_profile_pattern_grid">Avauskuvio, 3 × 3 pisteen ruudukko</string>
+    <string name="ce_server_address_in_use">Tämä osoite on käytössä, eikä sitä voi poistaa</string>
+    <string name="ce_server_address_already_added">Tämä osoite on jo lisätty</string>
+    <string name="ce_local_network_denied">Paikallisverkon käyttö on pois päältä. Ilman sitä verkossasi olevia palvelimia ei voi löytää eikä niihin saa yhteyttä.</string>
+    <string name="ce_local_network_denied_where">Järjestelmän asetuksissa se on kohdassa Luvat &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Salli käyttö</string>
+    <string name="ce_local_network_off">Paikallisverkon käyttö on pois päältä</string>
+    <string name="ce_add_server_error_local_network">Palvelinta ei löytynyt. Paikallisverkon käyttö on pois päältä, mikä estää verkkosi osoitteet.</string>
+    <string name="ce_permission_permanently_denied">%1$s evättiin. Jos haluat käyttää sitä, salli ”%2$s” järjestelmän asetusten kohdassa Luvat.</string>
+    <string name="ce_quick_connect_error_expired">Quick Connect -koodi on vanhentunut. Saat uuden koodin painamalla Quick Connect.</string>
+    <string name="ce_quick_connect_error_disabled">Quick Connect on poistettu käytöstä tällä palvelimella. Kirjaudu sisään käyttäjänimellä ja salasanalla.</string>
 </resources>

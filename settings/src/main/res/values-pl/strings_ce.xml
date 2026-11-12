@@ -178,4 +178,26 @@
     <string name="ce_pref_detail_collections_summary">Kolekcje, do których należy film</string>
     <string name="ce_pref_detail_similar">Więcej podobnych</string>
     <string name="ce_pref_detail_similar_summary">Podobne tytuły z Twojej biblioteki</string>
+    <string name="ce_pref_detail_credits">Reżyser i scenarzyści</string>
+    <string name="ce_pref_detail_credits_summary">Pod opisem na stronach filmów i seriali</string>
+    <string name="ce_media_segments_auto_skip_pip">Tylko w trybie obrazu w obrazie</string>
+    <string name="ce_media_segments_auto_skip_always">Zawsze</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d odcinek</item>
+        <item quantity="few">%d odcinki</item>
+        <item quantity="many">%d odcinków</item>
+        <item quantity="other">%d odcinka</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d dzień</item>
+        <item quantity="few">%d dni</item>
+        <item quantity="many">%d dni</item>
+        <item quantity="other">%d dnia</item>
+    </plurals>
+    <string name="ce_number_no_limit">Bez limitu</string>
+    <string name="ce_number_off">Wyłączone</string>
+    <string name="ce_pref_player_keep_landscape">Utrzymuj odtwarzacz w poziomie</string>
+    <string name="ce_pref_player_keep_landscape_summary">Odtwarzaj filmy w poziomie, nawet gdy obrócisz tablet pionowo</string>
+    <string name="ce_pref_home_episode_images">Używaj obrazów odcinków</string>
+    <string name="ce_pref_home_episode_images_summary">Pokazuj obraz odcinka zamiast obrazu serialu w sekcjach Kontynuuj oglądanie i Następne</string>
 </resources>

@@ -17,6 +17,7 @@ import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.utils.NetworkConnectivity
 import dev.jdtech.jellyfin.utils.UiOfflineDecision
 import dev.jdtech.jellyfin.utils.useOfflineRepository
+import dev.jdtech.jellyfin.work.UserDataSync
 import javax.inject.Singleton
 
 @Module
@@ -45,6 +46,7 @@ object RepositoryModule {
         serverDatabase: ServerDatabaseDao,
         appPreferences: AppPreferences,
         deviceProfileBuilder: DeviceProfileBuilder,
+        userDataSync: UserDataSync,
     ): JellyfinRepositoryImpl {
 
         return JellyfinRepositoryImpl(
@@ -53,6 +55,7 @@ object RepositoryModule {
             serverDatabase,
             appPreferences,
             deviceProfileBuilder,
+            userDataSync,
         )
     }
 
@@ -63,6 +66,7 @@ object RepositoryModule {
         jellyfinApi: JellyfinApi,
         serverDatabase: ServerDatabaseDao,
         appPreferences: AppPreferences,
+        userDataSync: UserDataSync,
     ): JellyfinRepositoryOfflineImpl {
 
         return JellyfinRepositoryOfflineImpl(
@@ -70,6 +74,7 @@ object RepositoryModule {
             jellyfinApi,
             serverDatabase,
             appPreferences,
+            userDataSync,
         )
     }
 

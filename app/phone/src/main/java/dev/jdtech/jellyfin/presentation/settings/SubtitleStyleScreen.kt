@@ -123,7 +123,8 @@ private fun SubtitleStyleScreenLayout(
             item {
                 SubtitleStylePreview(
                     state = state,
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 640.dp),
+                    // The cap first: after fillMaxWidth it could not narrow the preview (#434).
+                    modifier = Modifier.widthIn(max = 640.dp).fillMaxWidth(),
                 )
             }
 

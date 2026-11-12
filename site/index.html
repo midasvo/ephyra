@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ephyra</title>
+  <title>Ephyra: Jellyfin client for Android phones, tablets and Android TV</title>
   <meta name="description" content="Ephyra is a Jellyfin client for Android phones, tablets and Android TV, forked from Findroid. Resumable downloads with a quality per download, Dolby Vision, subtitle styling, and a TV app built for the remote.">
   <meta name="theme-color" content="#070B16" media="(prefers-color-scheme: dark)">
   <meta name="theme-color" content="#F3FBFF" media="(prefers-color-scheme: light)">
@@ -11,13 +11,42 @@
   <link rel="apple-touch-icon" href="images/branding/ephyra-icon-rounded.png">
   <link rel="canonical" href="https://midasvo.nl/ephyra/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Ephyra">
+  <meta property="og:title" content="Ephyra: Jellyfin client for Android phones, tablets and Android TV">
+  <meta property="og:site_name" content="Ephyra">
   <meta property="og:description" content="A Jellyfin client for your phone, your tablet and your TV.">
   <meta property="og:url" content="https://midasvo.nl/ephyra/">
   <meta property="og:image" content="https://midasvo.nl/ephyra/images/branding/ephyra-feature-graphic.png">
   <meta property="og:image:width" content="1024">
   <meta property="og:image:height" content="500">
+  <meta property="og:image:alt" content="Ephyra, a Jellyfin client for your phone, tablet and TV">
   <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    "name": "Ephyra",
+    "alternateName": "Findroid CE",
+    "description": "Ephyra is a Jellyfin client for Android phones, tablets and Android TV, forked from Findroid. Resumable downloads with a quality per download, Dolby Vision, subtitle styling, and a TV app built for the remote.",
+    "url": "https://midasvo.nl/ephyra/",
+    "image": "https://midasvo.nl/ephyra/images/branding/ephyra-icon-rounded.png",
+    "screenshot": [
+      "https://midasvo.nl/ephyra/images/screenshots/home.webp",
+      "https://midasvo.nl/ephyra/images/screenshots/downloads.webp",
+      "https://midasvo.nl/ephyra/images/screenshots/tablet-home.webp",
+      "https://midasvo.nl/ephyra/images/screenshots/tv-home.webp"
+    ],
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Android 10 or newer, Android TV",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+    "downloadUrl": "https://github.com/midasvo/ephyra/releases/latest",
+    "releaseNotes": "https://github.com/midasvo/ephyra/blob/main/CHANGELOG.md",
+    "author": { "@type": "Person", "name": "Midas van Oene", "url": "https://midasvo.nl/" },
+    "isBasedOn": "https://github.com/jarnedemeulemeester/findroid",
+    "sameAs": "https://github.com/midasvo/ephyra"
+  }
+  </script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -30,6 +59,7 @@
       <a href="#tablet">Tablet</a>
       <a href="#tv">TV</a>
       <a href="#install">Install</a>
+      <a class="optional" href="#faq">Questions</a>
       <a class="optional" href="https://github.com/midasvo/ephyra">GitHub</a>
     </nav>
   </div>
@@ -51,11 +81,11 @@
           </a>
           <a class="btn btn-secondary" href="https://github.com/midasvo/ephyra">Source on GitHub</a>
         </div>
-        <p class="meta">Free, GPLv3. Needs a Jellyfin server and Android 10 or newer.</p>
+        <p class="meta">Free, GPLv3. Needs a Jellyfin server and Android 10 or newer. Formerly Findroid CE.</p>
       </div>
       <div class="hero-shots">
         <div class="tv"><img src="images/screenshots/tv-home.webp" alt="TV Home with a full-bleed backdrop hero for the focused movie and a Suggestions row with the focused card glowing" width="1280" height="720" fetchpriority="high"></div>
-        <div class="phone"><img src="images/screenshots/home.webp" alt="Home with a backdrop carousel, Continue Watching and the start of Latest Movies" width="540" height="1095"></div>
+        <div class="phone"><img src="images/screenshots/home.webp" alt="Home with a backdrop carousel, Continue Watching and Next Up" width="540" height="1095"></div>
       </div>
     </div>
   </section>
@@ -78,11 +108,13 @@
             <li><strong>Smart Downloads</strong> (opt-in) keeps the next episodes of what you're watching and removes them once watched.</li>
           </ul>
         </div>
-        <div class="shots four">
-          <figure><img src="images/screenshots/downloads.webp" alt="Downloads screen with a storage bar, three active downloads with progress rings, and a downloaded show" width="540" height="1095" loading="lazy"><figcaption>Downloads, with a storage breakdown</figcaption></figure>
+        <div class="shots three">
+          <figure><img src="images/screenshots/downloads.webp" alt="Downloads screen with a storage bar, two downloads with progress rings, one waiting, and a downloaded show" width="540" height="1095" loading="lazy"><figcaption>Downloads, with a storage breakdown</figcaption></figure>
           <figure><img src="images/screenshots/season.webp" alt="Season episode list showing downloaded, downloading and not yet downloaded episodes" width="540" height="1095" loading="lazy"><figcaption>Download progress per episode</figcaption></figure>
           <figure><img src="images/screenshots/download-quality.webp" alt="Download quality dialog listing original quality and bitrates from 4K down" width="540" height="1095" loading="lazy"><figcaption>Every download asks for a quality</figcaption></figure>
           <figure><img src="images/screenshots/downloaded-show.webp" alt="Downloaded show page listing episodes by season with their sizes" width="540" height="1095" loading="lazy"><figcaption>A page per downloaded show</figcaption></figure>
+          <figure><img src="images/screenshots/smart-downloads.webp" alt="Downloads settings with the storage location, the limit on concurrent downloads and Smart Downloads switched on" width="540" height="1095" loading="lazy"><figcaption>Smart Downloads keeps the next episodes ready</figcaption></figure>
+          <figure><img src="images/screenshots/offline.webp" alt="Home in offline mode with an Offline chip in the top bar, showing only downloaded movies and episodes" width="540" height="1095" loading="lazy"><figcaption>Offline mode shows what you downloaded</figcaption></figure>
         </div>
       </div>
 
@@ -103,6 +135,7 @@
         <div class="shots two">
           <figure><img src="images/screenshots/subtitle-style.webp" alt="Subtitle style screen with a live preview of yellow subtitles" width="540" height="1095" loading="lazy"><figcaption>Subtitle styling, with a live preview</figcaption></figure>
           <figure class="landscape wide"><img src="images/screenshots/player-quality.webp" alt="Video quality dialog open over the player" width="1080" height="486" loading="lazy"><figcaption>Change the video quality during playback</figcaption></figure>
+          <figure class="landscape wide"><img src="images/screenshots/up-next.webp" alt="Up next card in the corner of the player with the next episode, a countdown, Cancel and Play now" width="1080" height="486" loading="lazy"><figcaption>"Up next", with a countdown, as an episode ends</figcaption></figure>
         </div>
       </div>
 
@@ -122,11 +155,13 @@
             <li><strong>Its own look:</strong> deep navy, cyan for what is playing, downloading or focused, violet for what is yours. Material You colours are an option.</li>
           </ul>
         </div>
-        <div class="shots four">
-          <figure><img src="images/screenshots/home.webp" alt="Home with a backdrop carousel, Continue Watching and the start of Latest Movies" width="540" height="1095" loading="lazy"><figcaption>Home</figcaption></figure>
+        <div class="shots three">
+          <figure><img src="images/screenshots/home.webp" alt="Home with a backdrop carousel, Continue Watching and Next Up" width="540" height="1095" loading="lazy"><figcaption>Home</figcaption></figure>
           <figure><img src="images/screenshots/movie.webp" alt="Movie page for Sahara with the backdrop, media chips, a Play button and the overview" width="540" height="1095" loading="lazy"><figcaption>Movie page</figcaption></figure>
           <figure><img src="images/screenshots/library.webp" alt="Movies library grid of posters with the hide-watched and sort icons" width="540" height="1095" loading="lazy"><figcaption>Library grid</figcaption></figure>
+          <figure><img src="images/screenshots/favorites.webp" alt="Favorites tab with a grid of favorite movies" width="540" height="1095" loading="lazy"><figcaption>Favorites</figcaption></figure>
           <figure><img src="images/screenshots/home-rows.webp" alt="Home rows setting listing the Home rows with arrows to reorder them and switches to hide them" width="540" height="1095" loading="lazy"><figcaption>Choose and order the Home rows</figcaption></figure>
+          <figure><img src="images/screenshots/profile-lock.webp" alt="Profile lock dialog with an unlock pattern drawn across a grid of nine dots" width="540" height="1095" loading="lazy"><figcaption>Lock a profile with a PIN or a pattern</figcaption></figure>
         </div>
       </div>
 
@@ -150,6 +185,8 @@
         <figure class="tv"><img src="images/screenshots/tablet-library.webp" alt="The Movies library as a six-column poster grid" width="1280" height="740" loading="lazy"><figcaption>Grids use the width</figcaption></figure>
       </div>
 
+      <figure class="fold reveal"><img src="images/screenshots/fold-tabletop.webp" alt="The player on a half-folded foldable: the video on the upper half, the transport controls and seek bar on the lower half" width="920" height="1104" loading="lazy"><figcaption>Tabletop on a foldable: video above the fold, controls below</figcaption></figure>
+
       <ul class="tv-list reveal">
         <li>Navigation rail from 600 dp. Home shows two or three carousel pages and wider cards.</li>
         <li>Movie, show and episode pages put the poster and the text beside each other over a full-width backdrop.</li>
@@ -172,10 +209,12 @@
       <figure class="tv tv-hero reveal"><img src="images/screenshots/tv-home.webp" alt="TV Home with a full-bleed backdrop hero for the focused movie, its title logo and runtime, and a Suggestions row with the focused card glowing" width="1280" height="720" loading="lazy"><figcaption>Home, with a hero and a glow for the focused item</figcaption></figure>
 
       <div class="tv-grid reveal">
-        <figure class="tv"><img src="images/screenshots/tv-library.webp" alt="Movies library grid with Hide watched and Sort by buttons, an A to Z bar on the right and a 2 of 11 counter" width="1280" height="720" loading="lazy"><figcaption>Library grid with an A to Z jump bar</figcaption></figure>
+        <figure class="tv"><img src="images/screenshots/tv-library.webp" alt="Movies library grid with Hide watched and Sort by buttons, an A to Z bar on the right and a 5 of 11 counter" width="1280" height="720" loading="lazy"><figcaption>Library grid with an A to Z jump bar</figcaption></figure>
+        <figure class="tv"><img src="images/screenshots/tv-movie.webp" alt="Sahara's page on TV with the backdrop, ratings, tagline and overview, and Play, Watch trailer, Mark as played and Add to favorites buttons" width="1280" height="720" loading="lazy"><figcaption>Movie page, with Play in focus</figcaption></figure>
         <figure class="tv"><img src="images/screenshots/tv-season.webp" alt="Pioneer One season 1 with the details of the focused episode, Resume and Restart buttons, and a row of episodes" width="1280" height="720" loading="lazy"><figcaption>Episodes open in their season</figcaption></figure>
         <figure class="tv"><img src="images/screenshots/tv-player.webp" alt="Player overlay with the title, the clock, elapsed and remaining time, the seek bar and previous, pause, next, audio, subtitle and speed buttons" width="1280" height="720" loading="lazy"><figcaption>Player overlay</figcaption></figure>
         <figure class="tv"><img src="images/screenshots/tv-trickplay.webp" alt="A trickplay thumbnail above the seek time while skipping forward" width="1280" height="720" loading="lazy"><figcaption>Trickplay thumbnails while seeking</figcaption></figure>
+        <figure class="tv"><img src="images/screenshots/tv-screensaver.webp" alt="Screensaver showing a full-screen backdrop of Sahara with its title logo and a clock" width="1280" height="720" loading="lazy"><figcaption>Screensaver with your library's artwork</figcaption></figure>
       </div>
 
       <ul class="tv-list reveal">
@@ -223,6 +262,49 @@
           <h3>Beta</h3>
           <p>Every push to <code>main</code> publishes a prerelease. It installs as a separate app, <strong>Ephyra Beta</strong>, with its own data. Untested; expect bugs.</p>
           <p>In Obtainium, add the repository again with <strong>Include prereleases</strong> on, filter release titles by <code>^Beta</code> and APKs by <code>-beta\.\d+-libre-arm64-v8a\.apk$</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-title">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <h2 id="faq-title">Questions</h2>
+      </div>
+
+      <div class="cards reveal">
+        <div class="card">
+          <h3>What is Ephyra?</h3>
+          <p>A free, open-source Jellyfin client for Android phones, tablets and Android TV. It plays the movies and series on your own Jellyfin server; it has no content of its own and needs Android 10 or newer.</p>
+        </div>
+        <div class="card">
+          <h3>How is Ephyra different from Findroid?</h3>
+          <p>Ephyra is a fork of Findroid and keeps merging Findroid's changes. On top of that it adds resumable downloads with a quality per download, Dolby Vision, subtitle styling, profiles with a PIN, tablet layouts and a TV app rebuilt for the remote.</p>
+        </div>
+        <div class="card">
+          <h3>Is Ephyra the same app as Findroid CE?</h3>
+          <p>Yes. Ephyra was called Findroid CE until version 2.0.0. The update installs over Findroid CE and keeps your login, settings and downloads.</p>
+        </div>
+        <div class="card">
+          <h3>Can I download from Jellyfin to watch offline?</h3>
+          <p>Yes, on phones and tablets. Download an episode, a season or a whole series, to internal storage or an SD card, in the original quality or as a smaller copy converted by the server. Downloads resume after an interruption, and the app switches to offline mode by itself when there is no connection.</p>
+        </div>
+        <div class="card">
+          <h3>Does Ephyra play Dolby Vision and Dolby Atmos?</h3>
+          <p>Dolby Vision plays directly where the device supports it and is transcoded by the server where it doesn't. Atmos goes through the device's own decoder, with ffmpeg as the fallback.</p>
+        </div>
+        <div class="card">
+          <h3>Does it work on my Android TV box?</h3>
+          <p>Ephyra has a separate Android TV app in every release, for 64-bit devices and for 32-bit boxes such as the Xiaomi Mi Box. It uses the same server and login as the phone app.</p>
+        </div>
+        <div class="card">
+          <h3>Is Ephyra on Google Play or F-Droid?</h3>
+          <p>Not yet. The F-Droid submission is waiting for review. Until then, install it with Obtainium or from the releases page on GitHub; see <a href="#install">Install</a>.</p>
+        </div>
+        <div class="card">
+          <h3>Is it free, and what does it collect?</h3>
+          <p>Ephyra is free and licensed under the GPLv3, without ads or tracking. It collects nothing and only talks to the Jellyfin servers you add. See the <a href="privacy.html">privacy policy</a>.</p>
         </div>
       </div>
     </div>

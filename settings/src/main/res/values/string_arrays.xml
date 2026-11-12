@@ -10,6 +10,10 @@
         <item>light</item>
         <item>dark</item>
     </string-array>
+    <string-array name="player_backend_names">
+        <item>@string/ce_player_backend_exoplayer</item>
+        <item>@string/ce_player_backend_mpv</item>
+    </string-array>
     <string-array name="player_backends" translatable="false">
         <item>exoplayer</item>
         <item>mpv</item>
@@ -49,8 +53,8 @@
         <item>off</item>
     </string-array>
     <string-array name="media_segments_auto_skip">
-        <item>@string/media_segments_auto_skip_pip</item>
-        <item>@string/media_segments_auto_skip_always</item>
+        <item>@string/ce_media_segments_auto_skip_pip</item>
+        <item>@string/ce_media_segments_auto_skip_always</item>
     </string-array>
     <string-array name="media_segments_auto_skip_values" translatable="false">
         <item>pip</item>

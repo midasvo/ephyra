@@ -19,6 +19,8 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -78,6 +80,7 @@ import dev.jdtech.jellyfin.presentation.setup.servers.ServersScreen
 import dev.jdtech.jellyfin.presentation.setup.users.UsersScreen
 import dev.jdtech.jellyfin.presentation.setup.welcome.WelcomeScreen
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
+import dev.jdtech.jellyfin.presentation.utils.useDockedSearch
 import dev.jdtech.jellyfin.setup.presentation.permission.PermissionAction
 import dev.jdtech.jellyfin.setup.presentation.permission.PermissionViewModel
 import java.util.UUID
@@ -148,6 +151,7 @@ fun NavigationRoot(
     // Exposed as a state object (rather than a plain value) so the entry content closures, which
     // nav3 caches per back stack snapshot, always read the current value.
     val searchExpanded = rememberSearchExpanded()
+    val searchFromHome = rememberSearchFromHome()
 
     // Live setup condition: keep the back stacks in a consistent state across mode switches. The
     // stacks are reconciled during composition (rather than in a LaunchedEffect, which only runs
@@ -201,6 +205,7 @@ fun NavigationRoot(
                 isOfflineMode = LocalOfflineMode.current,
                 showFavoritesTab = showFavoritesTab,
                 searchExpanded = searchExpanded,
+                searchFromHome = searchFromHome,
                 permissionViewModel = permissionViewModel,
                 permissionApplicable = permissionState.currentRequest != null,
             )
@@ -222,6 +227,52 @@ fun NavigationRoot(
 @Composable
 internal fun rememberSearchExpanded(): MutableState<Boolean> =
     rememberSaveable { mutableStateOf(false) }
+
+/** Whether Home's search button opened the My media search (#394), saved like the open state. */
+@Composable
+internal fun rememberSearchFromHome(): MutableState<Boolean> =
+    rememberSaveable { mutableStateOf(false) }
+
+/**
+ * The My media search: whether it is open, and whether Home's search button opened it (#394).
+ * Home's button opens it on the My media tab, because the search bar lives there; closing a search
+ * opened that way goes back to Home instead of leaving the user on My media. Picking My media in
+ * the bar or the rail (which stays beside a docked search, #439) makes it a My media search, and
+ * leaving the tab forgets both.
+ */
+internal class MediaSearch(
+    val expanded: MutableState<Boolean>,
+    private val fromHome: MutableState<Boolean>,
+) {
+    /** Home's search button. The caller switches to My media. */
+    fun openFromHome() {
+        expanded.value = true
+        fromHome.value = true
+    }
+
+    /** A tab picked in the bar or the rail while [current] is shown. */
+    fun onTabClick(route: NavKey, current: NavKey) {
+        if (route != MediaRoute) return
+        fromHome.value = false
+        // A second press on My media opens its search.
+        if (current == MediaRoute) expanded.value = true
+    }
+
+    /** The search bar opened or closed itself: Back, its arrow, Esc. Returns the tab to go to. */
+    fun setExpanded(expand: Boolean): NavKey? {
+        expanded.value = expand
+        if (expand || !fromHome.value) return null
+        fromHome.value = false
+        return HomeRoute
+    }
+
+    /** The shown tab changed; the search belongs to My media. */
+    fun onTopLevelRoute(route: NavKey) {
+        if (route == MediaRoute) return
+        expanded.value = false
+        fromHome.value = false
+    }
+}
 
 /*
  * #388: a mode switch resets the stack of the incoming mode while its display is not shown, so nav3
@@ -344,9 +395,12 @@ private fun MainNavigation(
     isOfflineMode: Boolean,
     showFavoritesTab: Boolean,
     searchExpanded: MutableState<Boolean>,
+    searchFromHome: MutableState<Boolean>,
     permissionViewModel: PermissionViewModel,
     permissionApplicable: Boolean,
 ) {
+    val mediaSearch =
+        remember(searchExpanded, searchFromHome) { MediaSearch(searchExpanded, searchFromHome) }
     val navigationItems =
         when {
             isOfflineMode -> listOf(homeTab, downloadsTab)
@@ -357,7 +411,10 @@ private fun MainNavigation(
 
     val topLevelRoute = navigationState.topLevelRoute
     val atTabRoot = navigationState.currentBackStack().last() == topLevelRoute
-    val showBottomBar = atTabRoot && topLevelRoute in tabRoutes && !searchExpanded.value
+    // #439: on a window with room the open search is docked beside the rail, which stays.
+    val dockedSearch = useDockedSearch()
+    val showBottomBar =
+        atTabRoot && topLevelRoute in tabRoutes && (!searchExpanded.value || dockedSearch)
 
     LaunchedEffect(topLevelRoute, tabRoutes) {
         if (topLevelRoute !in tabRoutes) {
@@ -368,11 +425,7 @@ private fun MainNavigation(
     // The search bar belongs to the Media tab: collapse it when the active top level route
     // changes away from Media (e.g. via the home button on a detail screen) so that the bottom
     // bar is shown again.
-    LaunchedEffect(topLevelRoute) {
-        if (topLevelRoute != MediaRoute) {
-            searchExpanded.value = false
-        }
-    }
+    LaunchedEffect(topLevelRoute) { mediaSearch.onTopLevelRoute(topLevelRoute) }
 
     val navigationSuiteScaffoldState = rememberNavigationSuiteScaffoldState()
 
@@ -402,10 +455,10 @@ private fun MainNavigation(
         mainEntries(
             navigator = navigator,
             onSearchClick = {
-                searchExpanded.value = true
+                mediaSearch.openFromHome()
                 navigator.navigate(MediaRoute)
             },
-            searchExpanded = searchExpanded,
+            mediaSearch = mediaSearch,
             permissionViewModel = permissionViewModel,
             permissionApplicable = permissionApplicable,
         )
@@ -417,10 +470,7 @@ private fun MainNavigation(
                 item(
                     selected = topLevelRoute == item.route,
                     onClick = {
-                        if (item.route == MediaRoute && topLevelRoute == MediaRoute) {
-                            searchExpanded.value = true
-                        }
-
+                        mediaSearch.onTabClick(item.route, topLevelRoute)
                         navigator.navigate(item.route)
                     },
                     icon = {
@@ -431,6 +481,8 @@ private fun MainNavigation(
                     },
                     enabled = item.enabled,
                     label = { Text(text = stringResource(item.title)) },
+                    // #442: the hidden bar stays composed; Tab must not stop on it.
+                    modifier = Modifier.focusProperties { canFocus = showBottomBar },
                 )
             }
         },
@@ -563,7 +615,7 @@ private fun EntryProviderScope<NavKey>.setupEntries(
 private fun EntryProviderScope<NavKey>.mainEntries(
     navigator: Navigator,
     onSearchClick: () -> Unit,
-    searchExpanded: MutableState<Boolean>,
+    mediaSearch: MediaSearch,
     permissionViewModel: PermissionViewModel,
     permissionApplicable: Boolean,
 ) {
@@ -604,8 +656,10 @@ private fun EntryProviderScope<NavKey>.mainEntries(
     entry<MediaRoute> {
         MediaScreen(
             onItemClick = resumedAction { item -> navigateToItem(navigator, item) },
-            searchExpanded = searchExpanded.value,
-            onSearchExpand = { searchExpanded.value = it },
+            searchExpanded = mediaSearch.expanded.value,
+            onSearchExpand = { expand ->
+                mediaSearch.setExpanded(expand)?.let { tab -> navigator.navigate(tab) }
+            },
         )
     }
     entry<DownloadsRoute> {

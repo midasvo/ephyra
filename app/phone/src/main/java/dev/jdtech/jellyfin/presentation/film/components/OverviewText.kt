@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
@@ -40,7 +41,9 @@ fun OverviewText(text: String, maxCollapsedLines: Int = Int.MAX_VALUE) {
                     showChevron = textLayoutResult.hasVisualOverflow
                 }
             },
-            style = MaterialTheme.typography.bodyMedium,
+            // CE (#401): server text sets its own direction, so English stays left to right in an
+            // Arabic UI and its ellipsis is not clipped.
+            style = MaterialTheme.typography.bodyMedium.copy(textDirection = TextDirection.Content),
         )
     }
 }

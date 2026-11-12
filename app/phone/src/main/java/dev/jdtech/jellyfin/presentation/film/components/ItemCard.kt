@@ -30,6 +30,7 @@ import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.Layout
 import dev.jdtech.jellyfin.presentation.utils.currentWidthClass
+import dev.jdtech.jellyfin.presentation.utils.keyboardFocusRing
 import dev.jdtech.jellyfin.utils.copyOnLongClick
 
 @Composable
@@ -39,6 +40,8 @@ fun ItemCard(
     onClick: (FindroidItem) -> Unit,
     modifier: Modifier = Modifier,
     showSeriesName: Boolean = false,
+    // CE (#608): see ItemPoster.
+    preferThumb: Boolean = false,
 ) {
     val widthClass = currentWidthClass()
     val width =
@@ -50,12 +53,13 @@ fun ItemCard(
         modifier =
             modifier
                 .width(width)
+                .keyboardFocusRing(MaterialTheme.shapes.small)
                 .clip(MaterialTheme.shapes.small)
                 .copyOnLongClick(item.name, onClick = { onClick(item) })
     ) {
         Surface(shape = MaterialTheme.shapes.small) {
             Box {
-                ItemPoster(item = item, direction = direction)
+                ItemPoster(item = item, direction = direction, preferThumb = preferThumb)
                 Row(
                     modifier =
                         Modifier.align(Alignment.TopEnd).padding(MaterialTheme.spacings.small),

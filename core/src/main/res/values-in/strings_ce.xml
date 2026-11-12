@@ -95,4 +95,17 @@
     <string name="item_more_like_this">Lainnya yang serupa</string>
     <string name="ce_session_revoked">%1$s mengeluarkan Anda. Masuk lagi untuk melanjutkan.</string>
     <string name="ce_download_error_server">Server menolak unduhan (HTTP %1$d)</string>
+    <string name="ce_error_server_status">Server merespons dengan galat (HTTP %1$d). Coba lagi nanti.</string>
+    <string name="ce_media_info">Info media</string>
+    <string name="ce_home_profile">Profil</string>
+    <string name="ce_watched">Sudah ditonton</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="other">%d belum ditonton</item>
+    </plurals>
+    <string name="ce_delete_download_message">Apakah Anda yakin ingin menghapus unduhan ini dari perangkat Anda?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="other">%d gagal</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">Belum ada yang diunduh</string>
+    <string name="ce_home_offline_empty_body">Anda sedang offline. Film dan episode yang Anda unduh muncul di sini dan di Unduhan.</string>
 </resources>

@@ -30,4 +30,7 @@
         <item quantity="many">Начнётся через %d секунд</item>
         <item quantity="other">Начнётся через %d секунды</item>
     </plurals>
+    <string name="ce_track_forced">Принудительные</string>
+    <string name="ce_player_connection_lost">Соединение потеряно. Воспроизведение продолжится, когда сеть вернётся.</string>
+    <string name="ce_player_try_again">Повторить</string>
 </resources>

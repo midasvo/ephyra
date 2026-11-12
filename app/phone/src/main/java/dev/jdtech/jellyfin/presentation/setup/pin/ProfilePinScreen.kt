@@ -3,8 +3,11 @@ package dev.jdtech.jellyfin.presentation.setup.pin
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.recalculateWindowInsets
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -39,6 +42,7 @@ import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyUser
 import dev.jdtech.jellyfin.models.ProfileLockType
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.utils.Layout
 import dev.jdtech.jellyfin.setup.R as SetupR
 import dev.jdtech.jellyfin.setup.presentation.pin.PinStep
 import dev.jdtech.jellyfin.setup.presentation.pin.ProfilePinSettingsAction
@@ -108,7 +112,11 @@ private fun ProfilePinLayout(
         Column(
             modifier =
                 Modifier.padding(innerPadding)
+                    .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
+                    // The settings cap (4-design.md §12), centred as on the Settings screen.
+                    .wrapContentWidth()
+                    .widthIn(max = Layout.settingsMaxWidth)
                     .testTag("ce_profile_pin_settings")
         ) {
             ListItem(

@@ -110,4 +110,27 @@
     <string name="item_more_like_this">المزيد من هذا القبيل</string>
     <string name="ce_session_revoked">سجّل %1$s خروجك. سجّل الدخول مرة أخرى للمتابعة.</string>
     <string name="ce_download_error_server">رفض الخادم التنزيل (HTTP %1$d)</string>
+    <string name="ce_error_server_status">ردّ الخادم بخطأ (HTTP %1$d). حاول مرة أخرى لاحقًا.</string>
+    <string name="ce_media_info">معلومات الوسائط</string>
+    <string name="ce_home_profile">الملف الشخصي</string>
+    <string name="ce_watched">تمت المشاهدة</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="zero">%d غير مُشاهَد</item>
+        <item quantity="one">%d غير مُشاهَد</item>
+        <item quantity="two">%d غير مُشاهَد</item>
+        <item quantity="few">%d غير مُشاهَد</item>
+        <item quantity="many">%d غير مُشاهَد</item>
+        <item quantity="other">%d غير مُشاهَد</item>
+    </plurals>
+    <string name="ce_delete_download_message">هل أنت متأكد من حذف هذا التنزيل من جهازك؟</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="zero">فشل %d</item>
+        <item quantity="one">فشل %d</item>
+        <item quantity="two">فشل %d</item>
+        <item quantity="few">فشل %d</item>
+        <item quantity="many">فشل %d</item>
+        <item quantity="other">فشل %d</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">لم يتم تنزيل أي شيء بعد</string>
+    <string name="ce_home_offline_empty_body">أنت غير متصل. الأفلام والحلقات التي تنزّلها تظهر هنا وفي التنزيلات.</string>
 </resources>

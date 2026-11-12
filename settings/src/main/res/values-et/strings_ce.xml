@@ -178,4 +178,22 @@
     <string name="ce_pref_detail_collections_summary">Kogumikud, mille osa film on</string>
     <string name="ce_pref_detail_similar">Sarnased</string>
     <string name="ce_pref_detail_similar_summary">Sarnased pealkirjad sinu kogust</string>
+    <string name="ce_pref_detail_credits">Režissöör ja stsenaristid</string>
+    <string name="ce_pref_detail_credits_summary">Kirjelduse all filmide ja sarjade lehtedel</string>
+    <string name="ce_media_segments_auto_skip_pip">Ainult pilt-pildis-režiimis</string>
+    <string name="ce_media_segments_auto_skip_always">Alati</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d episood</item>
+        <item quantity="other">%d episoodi</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d päev</item>
+        <item quantity="other">%d päeva</item>
+    </plurals>
+    <string name="ce_number_no_limit">Piiranguta</string>
+    <string name="ce_number_off">Väljas</string>
+    <string name="ce_pref_player_keep_landscape">Hoia mängija rõhtpaigutuses</string>
+    <string name="ce_pref_player_keep_landscape_summary">Esita videoid rõhtpaigutuses ka siis, kui pöörad tahvelarvuti püsti</string>
+    <string name="ce_pref_home_episode_images">Kasuta episoodide pilte</string>
+    <string name="ce_pref_home_episode_images_summary">Kuva ridades Jätka vaatamist ja Järgmisena sarja pildi asemel episoodi pilti</string>
 </resources>

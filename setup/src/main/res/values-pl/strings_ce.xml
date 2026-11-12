@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">Wzór ustawiony</string>
     <string name="ce_profile_pattern_removed">Wzór usunięty</string>
     <string name="ce_profile_pattern_grid">Wzór odblokowania, siatka 3 na 3 punkty</string>
+    <string name="ce_server_address_in_use">Ten adres jest używany i nie można go usunąć</string>
+    <string name="ce_server_address_already_added">Ten adres jest już dodany</string>
+    <string name="ce_local_network_denied">Dostęp do sieci lokalnej jest wyłączony. Bez niego nie można znaleźć serwerów w Twojej sieci ani się z nimi połączyć.</string>
+    <string name="ce_local_network_denied_where">W ustawieniach systemu znajduje się w sekcji Uprawnienia &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Zezwól na dostęp</string>
+    <string name="ce_local_network_off">Dostęp do sieci lokalnej jest wyłączony</string>
+    <string name="ce_add_server_error_local_network">Nie znaleziono serwera. Dostęp do sieci lokalnej jest wyłączony, co blokuje adresy w Twojej sieci.</string>
+    <string name="ce_permission_permanently_denied">Odmówiono uprawnienia %1$s. Aby z niego korzystać, zezwól na „%2$s” w sekcji Uprawnienia w ustawieniach systemu.</string>
+    <string name="ce_quick_connect_error_expired">Kod Szybkiego połączenia wygasł. Naciśnij „Szybkie połączenie”, aby otrzymać nowy kod.</string>
+    <string name="ce_quick_connect_error_disabled">Szybkie połączenie jest wyłączone na tym serwerze. Zaloguj się, podając nazwę użytkownika i hasło.</string>
 </resources>

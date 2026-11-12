@@ -1,111 +1,106 @@
 package dev.jdtech.jellyfin.presentation.components
 
 import android.content.Intent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.localnetwork.localNetworkBlockFor
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
-import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.localNetworkDeniedText
+import dev.jdtech.jellyfin.setup.R as SetupR
+import dev.jdtech.jellyfin.utils.LoadErrorText
+import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 
+/**
+ * Why a screen failed to load, in plain words (#377). The stack trace stays out of sight: Share
+ * sends it, with tokens blanked out, for a bug report. [onRetry] adds Retry, which closes the
+ * dialog and does what the screen's own retry does.
+ */
 @Composable
-fun ErrorDialog(exception: Throwable, onDismissRequest: () -> Unit) {
+fun ErrorDialog(
+    exception: Throwable,
+    onDismissRequest: () -> Unit,
+    onRetry: (() -> Unit)? = null,
+) {
     val context = LocalContext.current
+    // CE (#571): a server out of reach because local network access is denied says so, and the
+    // dialog offers to allow it. The screen under the dialog loads again when access is back.
+    val block = localNetworkBlockFor(error = exception)
+    val request = block?.request
+    val reason = LoadErrorText.reason(exception).asString()
+    val text =
+        if (block != null) {
+            localNetworkDeniedText(block)
+        } else if (LoadErrorText.isConnectionError(exception)) {
+            reason + "\n\n" + stringResource(CoreR.string.error_loading_data_body)
+        } else {
+            reason
+        }
 
-    Dialog(onDismissRequest = { onDismissRequest() }) {
-        Card(
-            modifier = Modifier.fillMaxWidth().heightIn(200.dp, max = 540.dp),
-            shape = RoundedCornerShape(28.dp),
-        ) {
-            Column {
-                Spacer(modifier = Modifier.height(MaterialTheme.spacings.default))
-                Text(
-                    text = exception.message ?: stringResource(CoreR.string.unknown_error),
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = MaterialTheme.spacings.default),
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
-                HorizontalDivider()
-                Column(
-                    modifier =
-                        Modifier.weight(1f)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .verticalScroll(rememberScrollState())
-                ) {
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
-                    Text(
-                        text = exception.stackTraceToString(),
-                        fontFamily = FontFamily.Monospace,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(
-                                start = MaterialTheme.spacings.medium,
-                                top = MaterialTheme.spacings.extraSmall,
-                                end = MaterialTheme.spacings.medium,
-                                bottom = MaterialTheme.spacings.small,
-                            ),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(
-                        onClick = {
-                            val sendIntent =
-                                Intent().apply {
-                                    action = Intent.ACTION_SEND
-                                    putExtra(
-                                        Intent.EXTRA_TEXT,
-                                        "${exception.message}\n ${exception.stackTraceToString()}",
-                                    )
-                                    type = "text/plain"
-                                }
-                            val shareIntent = Intent.createChooser(sendIntent, null)
-                            context.startActivity(shareIntent)
-                        }
-                    ) {
-                        Text(stringResource(CoreR.string.share))
+    val share = {
+        val sendIntent =
+            Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, LoadErrorText.shareText(exception))
+                type = "text/plain"
+            }
+        context.startActivity(Intent.createChooser(sendIntent, null))
+    }
+
+    AlertDialog(
+        title = { Text(text = stringResource(CoreR.string.error_loading_data)) },
+        text = { Text(text = text) },
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            if (request != null) {
+                TextButton(
+                    onClick = {
+                        onDismissRequest()
+                        request()
                     }
-                    TextButton(onClick = { onDismissRequest() }) {
+                ) {
+                    Text(stringResource(SetupR.string.ce_local_network_allow))
+                }
+            } else if (onRetry != null) {
+                TextButton(
+                    onClick = {
+                        onDismissRequest()
+                        onRetry()
+                    }
+                ) {
+                    Text(stringResource(CoreR.string.retry))
+                }
+            } else {
+                TextButton(onClick = onDismissRequest) { Text(stringResource(CoreR.string.close)) }
+            }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = share) { Text(stringResource(CoreR.string.share)) }
+                if (onRetry != null || request != null) {
+                    TextButton(onClick = onDismissRequest) {
                         Text(stringResource(CoreR.string.close))
                     }
                 }
             }
-        }
-    }
+        },
+    )
 }
 
 @Preview
 @Composable
 private fun ErrorDialogPreview() {
     FindroidTheme {
-        ErrorDialog(exception = Exception("Error loading data"), onDismissRequest = {})
+        ErrorDialog(
+            exception = InvalidStatusException(503, null),
+            onDismissRequest = {},
+            onRetry = {},
+        )
     }
 }

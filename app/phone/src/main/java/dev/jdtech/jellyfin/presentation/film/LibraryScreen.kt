@@ -258,9 +258,14 @@ private fun ErrorGroup(
             onShowStacktrace = { showErrorDialog = true },
             onRetryClick = onRefresh,
             modifier = modifier,
+            error = it.error,
         )
         if (showErrorDialog) {
-            ErrorDialog(exception = it.error, onDismissRequest = { showErrorDialog = false })
+            ErrorDialog(
+                exception = it.error,
+                onDismissRequest = { showErrorDialog = false },
+                onRetry = onRefresh,
+            )
         }
     }
 }

@@ -98,4 +98,19 @@
     <string name="item_more_like_this">ऐसे और</string>
     <string name="ce_session_revoked">%1$s ने आपको साइन आउट कर दिया। जारी रखने के लिए फिर से साइन इन करें।</string>
     <string name="ce_download_error_server">सर्वर ने डाउनलोड अस्वीकार कर दिया (HTTP %1$d)</string>
+    <string name="ce_error_server_status">सर्वर ने त्रुटि के साथ जवाब दिया (HTTP %1$d)। बाद में फिर से कोशिश करें।</string>
+    <string name="ce_media_info">मीडिया जानकारी</string>
+    <string name="ce_home_profile">प्रोफ़ाइल</string>
+    <string name="ce_watched">देखा गया</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="one">%d अनदेखा</item>
+        <item quantity="other">%d अनदेखे</item>
+    </plurals>
+    <string name="ce_delete_download_message">क्या आप वाकई इस डाउनलोड को अपने डिवाइस से हटाना चाहते हैं?</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="one">%d विफल</item>
+        <item quantity="other">%d विफल</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">अभी तक कुछ भी डाउनलोड नहीं हुआ</string>
+    <string name="ce_home_offline_empty_body">आप ऑफ़लाइन हैं। आपकी डाउनलोड की गई फ़िल्में और एपिसोड यहाँ और डाउनलोड में दिखते हैं।</string>
 </resources>

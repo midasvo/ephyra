@@ -24,4 +24,7 @@
     <plurals name="player_up_next_starts_in">
         <item quantity="other">%d초 후 시작</item>
     </plurals>
+    <string name="ce_track_forced">강제</string>
+    <string name="ce_player_connection_lost">연결이 끊겼습니다. 네트워크가 돌아오면 재생이 계속됩니다.</string>
+    <string name="ce_player_try_again">다시 시도</string>
 </resources>

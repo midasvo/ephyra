@@ -135,7 +135,7 @@ constructor(
         loadJob = viewModelScope.launch {
             val token = reloadPolicy.begin()
             val previous = _state.value
-            _state.emit(previous.copy(error = null))
+            _state.emit(previous.copy(error = null, isLoading = true))
             // Another season of the same series (TV season chips) shares the series id.
             val knownSeriesId =
                 seriesId
@@ -196,6 +196,7 @@ constructor(
                             seriesSeasons = seriesSeasons,
                             episodeDownloadProgress =
                                 buildDownloadProgressMap(episodes, downloadQueue.entries.value),
+                            isLoading = false,
                         )
                     )
                 }
@@ -203,7 +204,7 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _state.emit(_state.value.copy(error = e))
+                _state.emit(_state.value.copy(error = e, isLoading = false))
             }
         }
     }

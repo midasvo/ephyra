@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -59,7 +61,7 @@ fun ProfileBottomSheet(
     onSettings: () -> Unit,
     onUserSwitched: () -> Unit,
     onDismissRequest: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(),
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     viewModel: UsersViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -90,7 +92,7 @@ fun ProfileBottomSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProfileBottomSheetLayout(
+internal fun ProfileBottomSheetLayout(
     state: UsersState,
     baseUrl: String?,
     onSwitchServer: () -> Unit,
@@ -99,15 +101,17 @@ private fun ProfileBottomSheetLayout(
     onSettings: () -> Unit,
     onUserClick: (UUID) -> Unit,
     onDismissRequest: () -> Unit,
-    sheetState: SheetState = rememberModalBottomSheetState(),
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
 ) {
     val currentUser = state.users.firstOrNull { it.id == state.currentUserId }
     val otherUsers = state.users.filter { it.id != state.currentUserId }
 
     ModalBottomSheet(onDismissRequest = onDismissRequest, sheetState = sheetState) {
+        // #440: in a window too short for all of it, the sheet scrolls to Settings.
         Column(
             modifier =
                 Modifier.fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(
                         start = MaterialTheme.spacings.medium,
                         end = MaterialTheme.spacings.medium,

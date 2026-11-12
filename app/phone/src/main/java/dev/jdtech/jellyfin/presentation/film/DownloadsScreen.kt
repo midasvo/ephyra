@@ -78,6 +78,7 @@ import dev.jdtech.jellyfin.film.presentation.downloads.ActiveDownload
 import dev.jdtech.jellyfin.film.presentation.downloads.DownloadSortOrder
 import dev.jdtech.jellyfin.film.presentation.downloads.DownloadsState
 import dev.jdtech.jellyfin.film.presentation.downloads.DownloadsViewModel
+import dev.jdtech.jellyfin.film.presentation.downloads.queueCounts
 import dev.jdtech.jellyfin.models.CollectionSection
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
@@ -150,7 +151,7 @@ fun DownloadsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DownloadsScreenLayout(
+internal fun DownloadsScreenLayout(
     state: DownloadsState,
     onItemClick: (FindroidItem) -> Unit,
     onShowClick: (FindroidShow) -> Unit,
@@ -322,16 +323,18 @@ private fun DownloadsScreenLayout(
                     span = { GridItemSpan(maxLineSpan) },
                     contentType = "storage",
                 ) {
-                    StorageSummary(
-                        moviesBytes = state.moviesBytes,
-                        showsBytes = state.showsBytes,
-                        usedBytes = state.storageUsedBytes,
-                        freeBytes = state.storageFreeBytes,
-                        totalBytes = state.storageTotalBytes,
-                        isExternal = state.storageIsExternal,
-                        onClick = onStorageClick,
-                        modifier = Modifier.widthIn(max = Layout.textMaxWidth).animateItem(),
-                    )
+                    RowWidth(modifier = Modifier.animateItem()) { capped ->
+                        StorageSummary(
+                            moviesBytes = state.moviesBytes,
+                            showsBytes = state.showsBytes,
+                            usedBytes = state.storageUsedBytes,
+                            freeBytes = state.storageFreeBytes,
+                            totalBytes = state.storageTotalBytes,
+                            isExternal = state.storageIsExternal,
+                            onClick = onStorageClick,
+                            modifier = capped,
+                        )
+                    }
                 }
             }
 
@@ -350,10 +353,9 @@ private fun DownloadsScreenLayout(
                     span = { GridItemSpan(maxLineSpan) },
                     contentType = "section:header",
                 ) {
-                    SectionHeader(
-                        title = section.name.asString(),
-                        modifier = Modifier.animateItem(),
-                    )
+                    RowWidth(modifier = Modifier.animateItem()) { capped ->
+                        SectionHeader(title = section.name.asString(), modifier = capped)
+                    }
                 }
                 itemsIndexed(
                     items = section.items,
@@ -364,32 +366,34 @@ private fun DownloadsScreenLayout(
                     fun toggle() {
                         selectedIds = if (selected) selectedIds - item.id else selectedIds + item.id
                     }
-                    LibraryRow(
-                        item = item,
-                        sizeBytes = state.itemSizes[item.id],
-                        episodeCount = state.episodeCounts[item.id],
-                        shape =
-                            if (expandedWidth) groupedItemShape(0, 1)
-                            else groupedItemShape(index, section.items.size),
-                        selected = if (selecting) selected else null,
-                        onClick = {
-                            when {
-                                selecting -> toggle()
-                                item is FindroidShow -> onShowClick(item)
-                                else -> onItemClick(item)
-                            }
-                        },
-                        onLongClick = {
-                            selecting = true
-                            toggle()
-                        },
-                        onPlayClick =
-                            if (!selecting && canPlayDirectly(item)) {
-                                { context.playDownloadedItem(item) }
-                            } else null,
-                        onRemove = { removeItems(listOf(item)) },
-                        modifier = Modifier.widthIn(max = Layout.textMaxWidth).animateItem(),
-                    )
+                    RowWidth(modifier = Modifier.animateItem()) { capped ->
+                        LibraryRow(
+                            item = item,
+                            sizeBytes = state.itemSizes[item.id],
+                            episodeCount = state.episodeCounts[item.id],
+                            shape =
+                                if (expandedWidth) groupedItemShape(0, 1)
+                                else groupedItemShape(index, section.items.size),
+                            selected = if (selecting) selected else null,
+                            onClick = {
+                                when {
+                                    selecting -> toggle()
+                                    item is FindroidShow -> onShowClick(item)
+                                    else -> onItemClick(item)
+                                }
+                            },
+                            onLongClick = {
+                                selecting = true
+                                toggle()
+                            },
+                            onPlayClick =
+                                if (!selecting && canPlayDirectly(item)) {
+                                    { context.playDownloadedItem(item) }
+                                } else null,
+                            onRemove = { removeItems(listOf(item)) },
+                            modifier = capped,
+                        )
+                    }
                 }
             }
         }
@@ -412,13 +416,33 @@ private fun LazyGridScope.downloadingSection(
             queueItems
                 .filter { it.progress.status == DownloadStatus.DOWNLOADING }
                 .sumOf { it.bytesPerSecond }
-        SectionHeader(
-            title = "${stringResource(CoreR.string.downloads_downloading)} · ${queueItems.size}",
-            trailing =
-                if (bytesPerSecond > 0) "${Formatter.formatShortFileSize(context, bytesPerSecond)}/s"
-                else null,
-            modifier = Modifier.animateItem(),
-        )
+        // CE (#546): "Downloading" counts only what is still on its way, the failed ones apart.
+        val counts = queueItems.queueCounts()
+        val failed =
+            if (counts.failed > 0) {
+                pluralStringResource(
+                    CoreR.plurals.ce_downloads_failed_count,
+                    counts.failed,
+                    counts.failed,
+                )
+            } else null
+        val downloading = "${stringResource(CoreR.string.downloads_downloading)} · ${counts.active}"
+        val title =
+            when {
+                failed == null -> downloading
+                counts.active == 0 -> failed
+                else -> "$downloading · $failed"
+            }
+        RowWidth(modifier = Modifier.animateItem()) { capped ->
+            SectionHeader(
+                title = title,
+                trailing =
+                    if (bytesPerSecond > 0) {
+                        "${Formatter.formatShortFileSize(context, bytesPerSecond)}/s"
+                    } else null,
+                modifier = capped,
+            )
+        }
     }
     item(
         key = "downloading:rows",
@@ -430,33 +454,47 @@ private fun LazyGridScope.downloadingSection(
         val collapsible = queueItems.size > COLLAPSED_QUEUE_SIZE + 1
         val visible =
             if (collapsible && !showAll) queueItems.take(COLLAPSED_QUEUE_SIZE) else queueItems
-        Column(
-            modifier = Modifier.widthIn(max = Layout.textMaxWidth).animateItem(),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            visible.forEachIndexed { index, download ->
-                key(download.item.id) {
-                    QueueRow(
-                        download = download,
-                        shape = groupedItemShape(index, visible.size),
-                        onCancel = { onCancelDownload(download) },
-                        onDismiss = { onDismissDownload(download) },
-                        onRetry = { onRetryDownload(download) },
-                    )
+        RowWidth(modifier = Modifier.animateItem()) { capped ->
+            Column(modifier = capped, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                visible.forEachIndexed { index, download ->
+                    key(download.item.id) {
+                        QueueRow(
+                            download = download,
+                            shape = groupedItemShape(index, visible.size),
+                            onCancel = { onCancelDownload(download) },
+                            onDismiss = { onDismissDownload(download) },
+                            onRetry = { onRetryDownload(download) },
+                        )
+                    }
                 }
-            }
-            if (collapsible) {
-                TextButton(
-                    onClick = { showAll = !showAll },
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                ) {
-                    Text(
-                        if (showAll) stringResource(CoreR.string.downloads_show_less)
-                        else stringResource(CoreR.string.downloads_show_all, queueItems.size)
-                    )
+                if (collapsible) {
+                    TextButton(
+                        onClick = { showAll = !showAll },
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    ) {
+                        Text(
+                            if (showAll) stringResource(CoreR.string.downloads_show_less)
+                            else stringResource(CoreR.string.downloads_show_all, queueItems.size)
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+/**
+ * CE (#434): a grid measures each item at the exact width of its cell or span, so a `widthIn` on
+ * the item itself has no effect. The item fills its cell and [content] gets the cap of a row
+ * (720 dp, 4-design.md §5), at the start, in line with the columns below.
+ */
+@Composable
+private fun RowWidth(
+    modifier: Modifier = Modifier,
+    content: @Composable (capped: Modifier) -> Unit,
+) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        content(Modifier.widthIn(max = Layout.textMaxWidth).fillMaxWidth())
     }
 }
 

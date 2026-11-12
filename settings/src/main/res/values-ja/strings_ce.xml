@@ -178,4 +178,20 @@
     <string name="ce_pref_detail_collections_summary">映画が含まれているコレクション</string>
     <string name="ce_pref_detail_similar">似た作品</string>
     <string name="ce_pref_detail_similar_summary">ライブラリ内の似たタイトル</string>
+    <string name="ce_pref_detail_credits">監督と脚本</string>
+    <string name="ce_pref_detail_credits_summary">映画と番組のページのあらすじの下に表示</string>
+    <string name="ce_media_segments_auto_skip_pip">ピクチャー イン ピクチャーのときのみ</string>
+    <string name="ce_media_segments_auto_skip_always">常に</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="other">%d エピソード</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="other">%d日</item>
+    </plurals>
+    <string name="ce_number_no_limit">制限なし</string>
+    <string name="ce_number_off">オフ</string>
+    <string name="ce_pref_player_keep_landscape">プレーヤーを横向きに固定</string>
+    <string name="ce_pref_player_keep_landscape_summary">タブレットを縦向きにしても、動画を横向きで再生します</string>
+    <string name="ce_pref_home_episode_images">エピソードの画像を使用</string>
+    <string name="ce_pref_home_episode_images_summary">「続きを見る」と「次のエピソード」で、シリーズの画像の代わりにエピソードの画像を表示</string>
 </resources>

@@ -178,4 +178,24 @@
     <string name="ce_pref_detail_collections_summary">האוספים שסרט הוא חלק מהם</string>
     <string name="ce_pref_detail_similar">עוד בסגנון הזה</string>
     <string name="ce_pref_detail_similar_summary">כותרים דומים מהספרייה שלך</string>
+    <string name="ce_pref_detail_credits">במאי וכותבים</string>
+    <string name="ce_pref_detail_credits_summary">מתחת לתקציר בדפי סרטים וסדרות</string>
+    <string name="ce_media_segments_auto_skip_pip">רק בתמונה-בתוך-תמונה</string>
+    <string name="ce_media_segments_auto_skip_always">תמיד</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">פרק אחד</item>
+        <item quantity="two">%d פרקים</item>
+        <item quantity="other">%d פרקים</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">יום אחד</item>
+        <item quantity="two">יומיים</item>
+        <item quantity="other">%d ימים</item>
+    </plurals>
+    <string name="ce_number_no_limit">ללא הגבלה</string>
+    <string name="ce_number_off">כבוי</string>
+    <string name="ce_pref_player_keep_landscape">להשאיר את הנגן לרוחב</string>
+    <string name="ce_pref_player_keep_landscape_summary">להפעיל סרטונים לרוחב, גם כשמסובבים את הטאבלט לאורך</string>
+    <string name="ce_pref_home_episode_images">שימוש בתמונות של פרקים</string>
+    <string name="ce_pref_home_episode_images_summary">הצגת תמונת הפרק במקום תמונת הסדרה ב\"המשך צפייה\" וב\"הבא בתור\"</string>
 </resources>

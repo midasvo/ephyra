@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">Minta beállítva</string>
     <string name="ce_profile_pattern_removed">Minta eltávolítva</string>
     <string name="ce_profile_pattern_grid">Feloldási minta, 3 × 3 pontból álló rács</string>
+    <string name="ce_server_address_in_use">Ez a cím használatban van, ezért nem távolítható el</string>
+    <string name="ce_server_address_already_added">Ez a cím már hozzá van adva</string>
+    <string name="ce_local_network_denied">A helyi hálózathoz való hozzáférés ki van kapcsolva. Enélkül a hálózatodon lévő szerverek nem találhatók meg és nem érhetők el.</string>
+    <string name="ce_local_network_denied_where">A rendszerbeállításokban az Engedélyek &gt; %1$s alatt található.</string>
+    <string name="ce_local_network_allow">Hozzáférés engedélyezése</string>
+    <string name="ce_local_network_off">A helyi hálózathoz való hozzáférés ki van kapcsolva</string>
+    <string name="ce_add_server_error_local_network">A szerver nem található. A helyi hálózathoz való hozzáférés ki van kapcsolva, ami blokkolja a hálózatod címeit.</string>
+    <string name="ce_permission_permanently_denied">A(z) %1$s engedély el lett utasítva. A használatához engedélyezd a(z) „%2$s” lehetőséget a rendszerbeállítások Engedélyek részében.</string>
+    <string name="ce_quick_connect_error_expired">A Gyors csatlakozás kódja lejárt. Új kódért nyomja meg a Gyors csatlakozás gombot.</string>
+    <string name="ce_quick_connect_error_disabled">A Gyors csatlakozás ki van kapcsolva ezen a szerveren. Jelentkezzen be felhasználónévvel és jelszóval.</string>
 </resources>

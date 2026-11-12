@@ -140,6 +140,9 @@ constructor(
                     val show = showAsync.await()
                     val displayCastAndCrew =
                         appPreferences.getValue(appPreferences.displayCastAndCrew)
+                    // CE (#510): the director and the writers have a switch of their own.
+                    val displayCredits =
+                        displayCastAndCrew && appPreferences.getValue(appPreferences.detailCredits)
                     val castAndCrewAsync =
                         async(Dispatchers.Default) {
                             if (displayCastAndCrew) castAndCrew(show) else CastAndCrew()
@@ -156,8 +159,8 @@ constructor(
                             nextUp = nextUp,
                             seasons = seasons,
                             actors = castAndCrew.actors,
-                            director = castAndCrew.director,
-                            writers = castAndCrew.writers,
+                            director = castAndCrew.director.takeIf { displayCredits },
+                            writers = castAndCrew.writers.takeIf { displayCredits }.orEmpty(),
                             hasDownloads =
                                 localCounts?.let { counts ->
                                     seasons.any { (counts[it.id]?.downloaded ?: 0) > 0 }

@@ -3,6 +3,7 @@ package dev.jdtech.jellyfin.presentation.film
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import dev.jdtech.jellyfin.core.Constants
@@ -36,8 +38,9 @@ import dev.jdtech.jellyfin.film.presentation.episode.EpisodeAction
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeState
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
+import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
+import dev.jdtech.jellyfin.presentation.film.components.ArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
-import dev.jdtech.jellyfin.presentation.film.components.ExtraInfoText
 import dev.jdtech.jellyfin.presentation.film.components.HeroChips
 import dev.jdtech.jellyfin.presentation.film.components.HeroMetadataLine
 import dev.jdtech.jellyfin.presentation.film.components.HeroSubtitle
@@ -48,6 +51,7 @@ import dev.jdtech.jellyfin.presentation.film.components.ItemTopBar
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
 import dev.jdtech.jellyfin.presentation.film.components.OverviewText
 import dev.jdtech.jellyfin.presentation.film.components.VideoMetadataBar
+import dev.jdtech.jellyfin.presentation.film.components.rememberArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.rememberTopBarBackgroundAlpha
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -68,9 +72,12 @@ fun EpisodeWideLayout(
     downloaderState: () -> DownloaderState,
     onAction: (EpisodeAction) -> Unit,
     onDownloaderAction: (DownloaderAction) -> Unit,
+    onMediaInfoClick: (() -> Unit)? = null,
 ) {
     val scrollState = rememberScrollState()
     val topBarBackgroundAlpha = rememberTopBarBackgroundAlpha(scrollState)
+    // CE (#437): the artwork under the top bar, if any; shared by the header and the bar.
+    val artwork = rememberArtworkState(state.episode, ArtworkPlacement.Hero)
 
     Box(modifier = Modifier.fillMaxSize()) {
         EpisodeWideContent(
@@ -78,43 +85,69 @@ fun EpisodeWideLayout(
             downloaderState = downloaderState,
             onAction = onAction,
             onDownloaderAction = onDownloaderAction,
+            onMediaInfoClick = onMediaInfoClick,
             scrollState = scrollState,
+            artwork = artwork,
         )
 
         LightStatusBarOverArtwork(
-            hasArtwork = state.episode != null,
+            hasArtwork = artwork.hasArtwork,
             topBarBackgroundAlpha = topBarBackgroundAlpha,
         )
         ItemTopBar(
             hasBackButton = true,
             hasHomeButton = true,
             backgroundAlpha = topBarBackgroundAlpha,
+            overArtwork = artwork.hasArtwork,
             onBackClick = { onAction(EpisodeAction.OnBackClick) },
             onHomeClick = { onAction(EpisodeAction.OnHomeClick) },
         ) {
-            Spacer(modifier = Modifier.width(MaterialTheme.spacings.extraSmall))
-            state.episode?.let { episode ->
-                Button(
-                    onClick = {
-                        onAction(EpisodeAction.NavigateToSeason(episode.seasonId, episode.seriesId))
-                    },
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = Color.Black.copy(alpha = 0.5f),
-                            contentColor = Color.White,
-                        ),
-                ) {
-                    Text(seasonName(episode))
-                }
-            }
+            state.episode?.let { episode -> EpisodeTopBarLinks(episode, onAction) }
         }
     }
 }
 
 /**
+ * CE (#395): the episode page's way up, as a breadcrumb after back and home: the show, then the
+ * season. A long show name gives way first, so the season button always stays whole.
+ */
+@Composable
+internal fun RowScope.EpisodeTopBarLinks(
+    episode: FindroidEpisode,
+    onAction: (EpisodeAction) -> Unit,
+) {
+    val colors =
+        ButtonDefaults.buttonColors(
+            containerColor = Color.Black.copy(alpha = 0.5f),
+            contentColor = Color.White,
+        )
+    Spacer(modifier = Modifier.width(MaterialTheme.spacings.extraSmall))
+    if (episode.seriesName.isNotBlank()) {
+        Button(
+            onClick = { onAction(EpisodeAction.NavigateToSeries(episode.seriesId)) },
+            modifier = Modifier.weight(1f, fill = false),
+            colors = colors,
+        ) {
+            Text(text = episode.seriesName, overflow = TextOverflow.Ellipsis, maxLines = 1)
+        }
+        Spacer(modifier = Modifier.width(MaterialTheme.spacings.small))
+    }
+    Button(
+        onClick = { onAction(EpisodeAction.NavigateToSeason(episode.seasonId, episode.seriesId)) },
+        colors = colors,
+    ) {
+        Text(text = seasonName(episode), maxLines = 1)
+    }
+}
+
+/**
  * The scrolling part of [EpisodeWideLayout] (hero, cast) and its download quality dialog, without
- * the top bar. The Season list-detail (4-design.md ง7) uses it as its detail pane, where the
+ * the top bar. The Season list-detail (4-design.md ยง7) uses it as its detail pane, where the
  * page's single top bar sits over the list.
+ *
+ * The media info sheet (#510) belongs to the caller, which opens it on [onMediaInfoClick]: it has
+ * to outlive a switch between this layout and the compact one. Null when there is no media info
+ * to show, and then the badge row has no info chip.
  */
 @Composable
 fun EpisodeWideContent(
@@ -122,8 +155,10 @@ fun EpisodeWideContent(
     downloaderState: () -> DownloaderState,
     onAction: (EpisodeAction) -> Unit,
     onDownloaderAction: (DownloaderAction) -> Unit,
+    onMediaInfoClick: (() -> Unit)?,
     scrollState: ScrollState,
     modifier: Modifier = Modifier,
+    artwork: ArtworkState = rememberArtworkState(state.episode, ArtworkPlacement.Hero),
 ) {
     val widthClass = currentWidthClass()
     val safePadding = rememberSafePadding()
@@ -140,6 +175,7 @@ fun EpisodeWideContent(
                     item = episode,
                     scrollState = scrollState,
                     widthClass = widthClass,
+                    artwork = artwork,
                     title = {
                         val episodeNumberText =
                             stringResource(id = CoreR.string.episode_number, episode.indexNumber)
@@ -165,7 +201,12 @@ fun EpisodeWideContent(
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
                     state.videoMetadata?.let { videoMetadata ->
-                        HeroChips { VideoMetadataBar(videoMetadata) }
+                        HeroChips {
+                            VideoMetadataBar(
+                                videoMetadata,
+                                onInfoClick = onMediaInfoClick,
+                            )
+                        }
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
                     }
                     ItemButtonsBar(
@@ -205,10 +246,6 @@ fun EpisodeWideContent(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
-                    if (state.displayExtraInfo && state.videoMetadata != null) {
-                        ExtraInfoText(videoMetadata = state.videoMetadata!!)
-                        Spacer(Modifier.height(MaterialTheme.spacings.medium))
-                    }
                     OverviewText(text = episode.overview, maxCollapsedLines = 4)
                     EpisodeWatchAndLinks(episode, onAction)
                 }
@@ -231,6 +268,7 @@ fun EpisodeWideContent(
                     onRetryClick = { onAction(EpisodeAction.OnRetryClick) },
                 )
             }
+
 
         if (downloadQualityDialogOpen) {
             DownloadQualityDialog(

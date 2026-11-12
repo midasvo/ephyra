@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.api.JellyfinApi
-import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.ServerAddress
 import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.setup.R as SetupR
+import dev.jdtech.jellyfin.setup.domain.LocalNetworkAccess
+import dev.jdtech.jellyfin.setup.domain.blocks
+import dev.jdtech.jellyfin.utils.LoadErrorText
 import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +24,11 @@ import timber.log.Timber
 @HiltViewModel
 class ServerAddressesViewModel
 @Inject
-constructor(val application: Application, private val database: ServerDatabaseDao) : ViewModel() {
+constructor(
+    val application: Application,
+    private val database: ServerDatabaseDao,
+    private val localNetworkAccess: LocalNetworkAccess,
+) : ViewModel() {
     private val _state = MutableStateFlow(ServerAddressesState())
     val state = _state.asStateFlow()
 
@@ -42,9 +48,11 @@ constructor(val application: Application, private val database: ServerDatabaseDa
 
     fun deleteAddress(addressId: UUID) {
         viewModelScope.launch(Dispatchers.IO) {
+            _state.emit(_state.value.copy(error = null))
             val currentAddress = database.getServerCurrentAddress(currentServerId)
             if (addressId == currentAddress?.id) {
-                Timber.e("You cannot delete the current address")
+                // CE (#390): say why instead of dropping the removal without a word.
+                setError(SetupR.string.ce_server_address_in_use)
                 return@launch
             }
             database.deleteServerAddress(addressId)
@@ -73,7 +81,15 @@ constructor(val application: Application, private val database: ServerDatabaseDa
                         it.systemInfo.getOrNull()?.id == currentServerId
                     }
                 if (match == null) {
-                    setError(SetupR.string.add_server_error_not_found)
+                    // CE (#376): an address on the local network, while access to it is denied,
+                    // names the permission.
+                    setError(
+                        if (localNetworkAccess.blocks(address)) {
+                            SetupR.string.ce_add_server_error_local_network
+                        } else {
+                            SetupR.string.add_server_error_not_found
+                        }
+                    )
                     return@launch
                 }
 
@@ -81,6 +97,8 @@ constructor(val application: Application, private val database: ServerDatabaseDa
                 val existingAddresses =
                     database.getServerWithAddresses(currentServerId).addresses
                 if (existingAddresses.any { it.address == match.address }) {
+                    // CE (#390): the dialog has closed, so say why nothing was added.
+                    setError(SetupR.string.ce_server_address_already_added)
                     return@launch
                 }
 
@@ -89,15 +107,8 @@ constructor(val application: Application, private val database: ServerDatabaseDa
                 loadAddresses(currentServerId)
             } catch (e: Exception) {
                 Timber.e(e)
-                _state.emit(
-                    _state.value.copy(
-                        error =
-                            listOf(
-                                if (e.message != null) UiText.DynamicString(e.message!!)
-                                else UiText.StringResource(CoreR.string.unknown_error)
-                            )
-                    )
-                )
+                // CE (#606): plain words, never the exception's own text (#377).
+                _state.emit(_state.value.copy(error = listOf(LoadErrorText.reason(e))))
             }
         }
     }

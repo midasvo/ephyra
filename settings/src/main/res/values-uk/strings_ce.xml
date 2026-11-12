@@ -178,4 +178,26 @@
     <string name="ce_pref_detail_collections_summary">Колекції, до яких входить фільм</string>
     <string name="ce_pref_detail_similar">Схоже</string>
     <string name="ce_pref_detail_similar_summary">Схожі назви з вашої бібліотеки</string>
+    <string name="ce_pref_detail_credits">Режисер і сценаристи</string>
+    <string name="ce_pref_detail_credits_summary">Під описом на сторінках фільмів і серіалів</string>
+    <string name="ce_media_segments_auto_skip_pip">Лише в режимі «картинка в картинці»</string>
+    <string name="ce_media_segments_auto_skip_always">Завжди</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="one">%d серія</item>
+        <item quantity="few">%d серії</item>
+        <item quantity="many">%d серій</item>
+        <item quantity="other">%d серії</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="one">%d день</item>
+        <item quantity="few">%d дні</item>
+        <item quantity="many">%d днів</item>
+        <item quantity="other">%d дня</item>
+    </plurals>
+    <string name="ce_number_no_limit">Без обмежень</string>
+    <string name="ce_number_off">Вимк.</string>
+    <string name="ce_pref_player_keep_landscape">Тримати плеєр в альбомній орієнтації</string>
+    <string name="ce_pref_player_keep_landscape_summary">Відтворювати відео в альбомній орієнтації, навіть якщо повернути планшет вертикально</string>
+    <string name="ce_pref_home_episode_images">Використовувати зображення серій</string>
+    <string name="ce_pref_home_episode_images_summary">Показувати зображення серії замість зображення серіалу в «Продовжити перегляд» і «Далі»</string>
 </resources>

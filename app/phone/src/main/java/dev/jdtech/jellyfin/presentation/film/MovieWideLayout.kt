@@ -28,8 +28,8 @@ import dev.jdtech.jellyfin.core.presentation.dummy.dummyVideoMetadata
 import dev.jdtech.jellyfin.film.presentation.movie.MovieAction
 import dev.jdtech.jellyfin.film.presentation.movie.MovieState
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
+import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
-import dev.jdtech.jellyfin.presentation.film.components.ExtraInfoText
 import dev.jdtech.jellyfin.presentation.film.components.HeroChips
 import dev.jdtech.jellyfin.presentation.film.components.HeroMetadataLine
 import dev.jdtech.jellyfin.presentation.film.components.HeroSubtitle
@@ -42,6 +42,7 @@ import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
 import dev.jdtech.jellyfin.presentation.film.components.OverviewText
 import dev.jdtech.jellyfin.presentation.film.components.TaglineText
 import dev.jdtech.jellyfin.presentation.film.components.VideoMetadataBar
+import dev.jdtech.jellyfin.presentation.film.components.rememberArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.rememberTopBarBackgroundAlpha
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -61,6 +62,7 @@ fun MovieWideLayout(
     downloaderState: () -> DownloaderState,
     onAction: (MovieAction) -> Unit,
     onDownloaderAction: (DownloaderAction) -> Unit,
+    onMediaInfoClick: (() -> Unit)? = null,
 ) {
     val widthClass = currentWidthClass()
     val safePadding = rememberSafePadding()
@@ -70,6 +72,8 @@ fun MovieWideLayout(
 
     val scrollState = rememberScrollState()
     val topBarBackgroundAlpha = rememberTopBarBackgroundAlpha(scrollState)
+    // CE (#437): the artwork under the top bar, if any; shared by the header and the bar.
+    val artwork = rememberArtworkState(state.movie, ArtworkPlacement.Hero)
 
     var downloadQualityDialogOpen by remember { mutableStateOf(false) }
 
@@ -80,6 +84,7 @@ fun MovieWideLayout(
                     item = movie,
                     scrollState = scrollState,
                     widthClass = widthClass,
+                    artwork = artwork,
                     title = {
                         HeroTitle(text = movie.name, widthClass = widthClass)
                         movie.originalTitle?.let { originalTitle ->
@@ -103,7 +108,13 @@ fun MovieWideLayout(
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
                     state.videoMetadata?.let { videoMetadata ->
-                        HeroChips { VideoMetadataBar(videoMetadata, is3D = movie.is3D) }
+                        HeroChips {
+                            VideoMetadataBar(
+                                videoMetadata,
+                                is3D = movie.is3D,
+                                onInfoClick = onMediaInfoClick,
+                            )
+                        }
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
                     }
                     ItemButtonsBar(
@@ -143,10 +154,6 @@ fun MovieWideLayout(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
-                    if (state.displayExtraInfo && state.videoMetadata != null) {
-                        ExtraInfoText(videoMetadata = state.videoMetadata!!)
-                        Spacer(Modifier.height(MaterialTheme.spacings.medium))
-                    }
                     movie.tagline?.let { tagline ->
                         TaglineText(tagline)
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
@@ -184,16 +191,18 @@ fun MovieWideLayout(
             }
 
         LightStatusBarOverArtwork(
-            hasArtwork = state.movie != null,
+            hasArtwork = artwork.hasArtwork,
             topBarBackgroundAlpha = topBarBackgroundAlpha,
         )
         ItemTopBar(
             hasBackButton = true,
             hasHomeButton = true,
             backgroundAlpha = topBarBackgroundAlpha,
+            overArtwork = artwork.hasArtwork,
             onBackClick = { onAction(MovieAction.OnBackClick) },
             onHomeClick = { onAction(MovieAction.OnHomeClick) },
         )
+
 
         if (downloadQualityDialogOpen) {
             DownloadQualityDialog(

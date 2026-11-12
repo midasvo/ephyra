@@ -15,6 +15,13 @@ data class HomeState(
     val rowOrder: List<String> = emptyList(),
     val isLoading: Boolean = true,
     val error: Exception? = null,
+    /** CE: offline, and this server has no downloads, so Home is empty for that reason. */
+    val nothingDownloaded: Boolean = false,
+    /**
+     * CE (#608): the cards of Continue Watching and Next Up show the episode's own image instead
+     * of the series' or movie's thumb.
+     */
+    val useEpisodeImages: Boolean = false,
 ) {
     val isEmpty: Boolean
         get() =

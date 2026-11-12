@@ -26,4 +26,7 @@
         <item quantity="one">Alkaa %d sekunnin kuluttua</item>
         <item quantity="other">Alkaa %d sekunnin kuluttua</item>
     </plurals>
+    <string name="ce_track_forced">Pakotetut</string>
+    <string name="ce_player_connection_lost">Yhteys katkesi. Toisto jatkuu, kun verkko palaa.</string>
+    <string name="ce_player_try_again">Yritä uudelleen</string>
 </resources>

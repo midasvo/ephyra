@@ -95,4 +95,17 @@
     <string name="item_more_like_this">類似內容</string>
     <string name="ce_session_revoked">%1$s 已將你登出。請重新登入以繼續。</string>
     <string name="ce_download_error_server">伺服器拒絕咗下載 (HTTP %1$d)</string>
+    <string name="ce_error_server_status">伺服器回應咗錯誤 (HTTP %1$d)。請稍後再試。</string>
+    <string name="ce_media_info">媒體資訊</string>
+    <string name="ce_home_profile">個人檔案</string>
+    <string name="ce_watched">睇咗</string>
+    <plurals name="ce_unwatched_count">
+        <item quantity="other">%d 個未睇</item>
+    </plurals>
+    <string name="ce_delete_download_message">你確定要喺裝置刪除呢個下載嗎？</string>
+    <plurals name="ce_downloads_failed_count">
+        <item quantity="other">%d 個失敗</item>
+    </plurals>
+    <string name="ce_home_offline_empty_title">仲未下載任何嘢</string>
+    <string name="ce_home_offline_empty_body">你而家離線。你下載嘅電影同集數會喺呢度同「下載」度顯示。</string>
 </resources>

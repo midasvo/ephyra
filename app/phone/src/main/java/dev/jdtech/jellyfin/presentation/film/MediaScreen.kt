@@ -15,9 +15,12 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -36,6 +39,7 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
+import dev.jdtech.jellyfin.presentation.film.components.ErrorCardInitialHeight
 import dev.jdtech.jellyfin.presentation.film.components.FilmSearchBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemCard
 import dev.jdtech.jellyfin.presentation.film.components.TopContentScrim
@@ -45,6 +49,7 @@ import dev.jdtech.jellyfin.presentation.utils.GridCellsAdaptiveWithMinColumns
 import dev.jdtech.jellyfin.presentation.utils.KeyboardShortcuts
 import dev.jdtech.jellyfin.presentation.utils.Layout
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
+import dev.jdtech.jellyfin.presentation.utils.useDockedSearch
 
 @Composable
 fun MediaScreen(
@@ -64,6 +69,8 @@ fun MediaScreen(
 
     // CE (R8): Ctrl+F opens the search bar, which focuses its field when it expands.
     KeyboardShortcuts.OnFind { if (!searchExpanded) onSearchExpand(true) }
+    // #430: Esc closes the open search, also when Tab has moved focus out of its field.
+    if (searchExpanded) KeyboardShortcuts.OnEscape { onSearchExpand(false) }
 
     MediaScreenLayout(
         state = state,
@@ -102,11 +109,14 @@ private fun MediaScreenLayout(
     val paddingEnd = safePadding.end + MaterialTheme.spacings.default
     val paddingBottom = safePadding.bottom + MaterialTheme.spacings.default
 
+    // CE (#571): the grid starts under the error card at its real height, as on Home.
+    val density = LocalDensity.current
+    var errorCardHeight by remember { mutableStateOf(ErrorCardInitialHeight) }
     val contentPaddingTop by
         animateDpAsState(
             targetValue =
                 if (state.error != null) {
-                    safePadding.top + 144.dp
+                    safePadding.top + 80.dp + errorCardHeight + MaterialTheme.spacings.medium
                 } else {
                     safePadding.top + 88.dp
                 },
@@ -132,12 +142,14 @@ private fun MediaScreenLayout(
             expanded = searchExpanded,
             onExpand = onSearchExpand,
             onAction = onSearchAction,
-            // Capped to a readable width while collapsed; the expanded results fill the window.
+            // Capped to a readable width while collapsed; the expanded results fill the content
+            // area (the window on a phone, the room beside the rail when docked, #439).
             modifier =
                 if (searchExpanded) Modifier.fillMaxWidth()
                 else Modifier.widthIn(max = Layout.textMaxWidth),
             paddingStart = paddingStart,
             paddingEnd = paddingEnd,
+            docked = useDockedSearch(),
         )
         LazyVerticalGrid(
             columns = GridCellsAdaptiveWithMinColumns(minSize = minColumnSize, minColumns = 2),
@@ -172,12 +184,15 @@ private fun MediaScreenLayout(
                             start = paddingStart,
                             top = safePadding.top + 80.dp,
                             end = paddingEnd,
-                        ),
+                        )
+                        .onSizeChanged { errorCardHeight = with(density) { it.height.toDp() } },
+                error = state.error,
             )
             if (showErrorDialog) {
                 ErrorDialog(
                     exception = state.error!!,
                     onDismissRequest = { showErrorDialog = false },
+                    onRetry = { onAction(MediaAction.OnRetryClick) },
                 )
             }
         }

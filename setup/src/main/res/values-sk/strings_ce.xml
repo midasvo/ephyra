@@ -50,4 +50,14 @@
     <string name="ce_profile_pattern_saved">Vzor nastavený</string>
     <string name="ce_profile_pattern_removed">Vzor odstránený</string>
     <string name="ce_profile_pattern_grid">Vzor na odomknutie, mriežka 3 × 3 bodov</string>
+    <string name="ce_server_address_in_use">Táto adresa sa používa a nedá sa odstrániť</string>
+    <string name="ce_server_address_already_added">Táto adresa už je pridaná</string>
+    <string name="ce_local_network_denied">Prístup k miestnej sieti je vypnutý. Bez neho nemožno servery vo vašej sieti nájsť ani sa k nim pripojiť.</string>
+    <string name="ce_local_network_denied_where">V nastaveniach systému ho nájdete v časti Povolenia &gt; %1$s.</string>
+    <string name="ce_local_network_allow">Povoliť prístup</string>
+    <string name="ce_local_network_off">Prístup k miestnej sieti je vypnutý</string>
+    <string name="ce_add_server_error_local_network">Server sa nenašiel. Prístup k miestnej sieti je vypnutý, čo blokuje adresy vo vašej sieti.</string>
+    <string name="ce_permission_permanently_denied">Povolenie %1$s bolo zamietnuté. Ak ho chcete používať, povoľte „%2$s“ v časti Povolenia v nastaveniach systému.</string>
+    <string name="ce_quick_connect_error_expired">Platnosť kódu Rýchleho pripojenia vypršala. Pre nový kód stlačte Rýchle pripojenie.</string>
+    <string name="ce_quick_connect_error_disabled">Rýchle pripojenie je na tomto serveri vypnuté. Prihláste sa používateľským menom a heslom.</string>
 </resources>

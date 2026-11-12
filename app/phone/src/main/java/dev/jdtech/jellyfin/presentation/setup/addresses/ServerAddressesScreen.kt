@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CardDefaults
@@ -32,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -47,6 +49,7 @@ import dev.jdtech.jellyfin.core.presentation.dummy.dummyServerAddress
 import dev.jdtech.jellyfin.models.ServerAddress
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.Layout
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import dev.jdtech.jellyfin.setup.R as SetupR
 import dev.jdtech.jellyfin.setup.presentation.addresses.ServerAddressesAction
@@ -145,11 +148,14 @@ fun ServerAddressesLayout(state: ServerAddressesState, onAction: (ServerAddresse
                         bottom = paddingBottom + innerPadding.calculateBottomPadding(),
                     ),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
+                // The setup cap of the Servers screen it opens from (4-design.md §12).
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 items(items = state.addresses, key = { it.id }) { address ->
                     Surface(
                         modifier =
-                            Modifier.fillMaxWidth()
+                            Modifier.widthIn(max = Layout.formMaxWidth)
+                                .fillMaxWidth()
                                 .clip(CardDefaults.outlinedShape)
                                 .combinedClickable(
                                     onClick = {},

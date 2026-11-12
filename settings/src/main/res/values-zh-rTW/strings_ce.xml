@@ -178,4 +178,20 @@
     <string name="ce_pref_detail_collections_summary">電影所屬的合集</string>
     <string name="ce_pref_detail_similar">更多類似內容</string>
     <string name="ce_pref_detail_similar_summary">媒體庫中的類似作品</string>
+    <string name="ce_pref_detail_credits">導演和編劇</string>
+    <string name="ce_pref_detail_credits_summary">顯示在電影和影集頁面的簡介下方</string>
+    <string name="ce_media_segments_auto_skip_pip">僅限子母畫面模式</string>
+    <string name="ce_media_segments_auto_skip_always">一律</string>
+    <plurals name="ce_episodes_count">
+        <item quantity="other">%d 集</item>
+    </plurals>
+    <plurals name="ce_days_count">
+        <item quantity="other">%d 天</item>
+    </plurals>
+    <string name="ce_number_no_limit">無限制</string>
+    <string name="ce_number_off">關閉</string>
+    <string name="ce_pref_player_keep_landscape">播放器保持橫向</string>
+    <string name="ce_pref_player_keep_landscape_summary">即使將平板電腦轉為直向，影片仍以橫向播放</string>
+    <string name="ce_pref_home_episode_images">使用單集圖片</string>
+    <string name="ce_pref_home_episode_images_summary">在「繼續觀看」和「接下來播放」中顯示單集的圖片，而不是影集的圖片</string>
 </resources>

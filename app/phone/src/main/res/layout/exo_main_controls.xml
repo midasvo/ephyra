@@ -25,33 +25,80 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/video_name"
+        <!-- CE: the title's area starts at the back button's top and is at least as tall, so the
+             title is centred on the button while it fits, and with a large font grows downwards
+             instead of past the top of the window. -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/video_title_area"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-            android:textColor="@android:color/white"
-            app:layout_constraintBottom_toBottomOf="@id/back_button"
+            android:minHeight="56dp"
             app:layout_constraintEnd_toStartOf="@id/extra_buttons"
             app:layout_constraintStart_toEndOf="@id/back_button"
-            app:layout_constraintTop_toTopOf="@id/back_button"
-            tools:text="The Dawn of Despair" />
+            app:layout_constraintTop_toTopOf="@id/back_button">
 
-        <!-- Scrolls in a window too narrow for every button, so the back button stays reachable. -->
+            <!-- CE (#452): the series name above "S1:E6 · Name". -->
+            <LinearLayout
+                android:id="@+id/video_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/video_series_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:alpha="0.8"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                    android:textColor="@android:color/white"
+                    android:visibility="gone"
+                    tools:text="Breaking Bad"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/video_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+                    android:textColor="@android:color/white"
+                    tools:text="S1:E6 · Crazy Handful of Nothin'" />
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- CE (#452): the buttons start no further left than this, so the title keeps 40%
+             of the row; in a narrower window the button row scrolls instead. -->
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/title_min_width"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.4" />
+
+        <!-- Scrolls in a window too narrow for every button, so the back button stays reachable.
+             CE: it then starts at its end (PlayerActivity), and fades on the side with more. -->
         <HorizontalScrollView
             android:id="@+id/extra_buttons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fadingEdgeLength="32dp"
             android:overScrollMode="never"
+            android:requiresFadingEdge="horizontal"
             android:scrollbars="none"
             app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1"
-            app:layout_constraintStart_toEndOf="@id/back_button"
+            app:layout_constraintStart_toEndOf="@id/title_min_width"
             app:layout_constraintTop_toTopOf="parent">
 
             <LinearLayout
@@ -317,7 +364,9 @@
                 android:contentDescription="@string/player_controls_skip_forward" />
         </LinearLayout>
 
+        <!-- CE (#523): fades out as one while the episode sheet is open. -->
         <LinearLayout
+            android:id="@+id/seek_row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"

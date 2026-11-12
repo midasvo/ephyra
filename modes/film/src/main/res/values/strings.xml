@@ -8,4 +8,6 @@
     <!-- CE (#142) -->
     <string name="home_rows_move_up">Move up</string>
     <string name="home_rows_move_down">Move down</string>
+    <!-- CE (#403): upstream's es-419 and es-MX translations read "Continar viendo" -->
+    <string name="ce_continue_watching">Continue Watching</string>
 </resources>

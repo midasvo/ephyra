@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +28,7 @@ import dev.jdtech.jellyfin.settings.domain.models.Preference as PreferenceBacken
 import dev.jdtech.jellyfin.settings.presentation.models.Preference
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceIntInput
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceLongInput
+import dev.jdtech.jellyfin.settings.presentation.models.numberInputText
 
 @Composable
 fun SettingsIntInputCard(
@@ -36,13 +38,22 @@ fun SettingsIntInputCard(
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
-    val prefix = preference.prefixRes?.let { stringResource(it) }
-
-    val suffix = preference.suffixRes?.let { stringResource(it) }
+    val resources = LocalResources.current
 
     SettingsNumberInputCard(
         preference = preference,
-        text = listOf(prefix, preference.value, suffix).fastFilterNotNull().joinToString(" "),
+        text =
+            numberInputText(
+                value = preference.value.toLong(),
+                prefixRes = preference.prefixRes,
+                suffixRes = preference.suffixRes,
+                string = resources::getString,
+                quantityString = { id, quantity ->
+                    resources.getQuantityString(id, quantity, quantity)
+                },
+                suffixPluralsRes = preference.suffixPluralsRes,
+                zeroLabelRes = preference.zeroLabelRes,
+            ),
         onClick = { showDialog = true },
         modifier = modifier,
     )
