@@ -72,6 +72,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.C
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import androidx.tv.material3.Button
@@ -172,6 +173,8 @@ fun TvPlayerScreen(
         )
     var controlsVisible by remember { mutableStateOf(true) }
     var interactions by remember { mutableIntStateOf(0) }
+    // CE (#462): play again after Home or standby if it was playing, or show the controls.
+    val resumeOnReturn = remember { TvResumeOnReturn() }
 
     ObserveAsEvents(viewModel.eventsChannelFlow) { event ->
         when (event) {
@@ -184,6 +187,8 @@ fun TvPlayerScreen(
             is PlayerEvents.SleepTimerFired -> {
                 controlsVisible = true
                 interactions++
+                // #462: fired while the app was away: the return must not undo its pause.
+                resumeOnReturn.cancel()
             }
         }
     }
@@ -227,11 +232,43 @@ fun TvPlayerScreen(
     // The media session is owned by PlayerViewModel; building a second one here would crash,
     // as Media3 requires session IDs to be unique.
     var lifecycle by remember { mutableStateOf(Lifecycle.Event.ON_CREATE) }
+    val currentShowStillWatching by rememberUpdatedState(uiState.showStillWatching)
+    val currentPlaybackError by rememberUpdatedState(playbackError)
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event -> lifecycle = event }
+        val observer = LifecycleEventObserver { _, event ->
+            // #462: the PlayerView's update below pauses on ON_PAUSE; this decides what the
+            // return does. Before the update runs, so playWhenReady is still the user's.
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> resumeOnReturn.onPause(player.playWhenReady)
+                Lifecycle.Event.ON_RESUME -> {
+                    val blocked = currentShowStillWatching || currentPlaybackError != null
+                    when (resumeOnReturn.onResume(blocked)) {
+                        TvResumeOnReturn.Action.PLAY -> player.play()
+                        TvResumeOnReturn.Action.SHOW_CONTROLS ->
+                            if (!player.isPlaying) {
+                                controlsVisible = true
+                                interactions++
+                            }
+                        TvResumeOnReturn.Action.NONE -> Unit
+                    }
+                }
+                else -> Unit
+            }
+            lifecycle = event
+        }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        val playerListener =
+            object : Player.Listener {
+                override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                    resumeOnReturn.onPlayWhenReadyChanged(playWhenReady)
+                }
+            }
+        player.addListener(playerListener)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            player.removeListener(playerListener)
+        }
     }
 
     // #458: progress reports to the server, as the phone player sends them: every

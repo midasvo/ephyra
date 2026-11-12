@@ -220,4 +220,22 @@ class PlayerInvariantsTest {
             onKeyUp!!.value.contains("okDown == keyCode"),
         )
     }
+
+    @Test
+    fun `the TV player plays again after Home if it was playing`() {
+        // #462: ON_PAUSE paused the player and ON_RESUME only resumed the view, so after Home and
+        // back the player sat paused with nothing on screen. app/tv's own tests
+        // (TvResumeOnReturnTest) are not part of the root task.
+        val file = File("../../app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/player/TvPlayerScreen.kt")
+        assertTrue("missing ${file.absolutePath}", file.isFile)
+        val screen = file.readText()
+        assertTrue(
+            "TvPlayerScreen must decide the return on ON_PAUSE (#462)",
+            screen.contains("resumeOnReturn.onPause(player.playWhenReady)"),
+        )
+        assertTrue(
+            "TvPlayerScreen must play again on ON_RESUME when it was playing (#462)",
+            screen.contains("TvResumeOnReturn.Action.PLAY -> player.play()"),
+        )
+    }
 }
