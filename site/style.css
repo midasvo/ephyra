@@ -539,6 +539,11 @@ figcaption {
   border-radius: var(--r-m);
 }
 
+.fold {
+  max-width: 26rem;
+  margin: 0 auto 2rem;
+}
+
 .tv-list {
   columns: 2;
   column-gap: 3rem;

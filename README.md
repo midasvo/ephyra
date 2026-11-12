@@ -23,7 +23,7 @@ Ephyra is a Jellyfin client for Android phones, tablets and Android TV, forked f
 
 <table>
   <tr>
-    <td width="33%" align="center"><img src="images/screenshots/home.webp" alt="Home with a backdrop carousel, Continue Watching and the start of Latest Movies"><br><sub>Home</sub></td>
+    <td width="33%" align="center"><img src="images/screenshots/home.webp" alt="Home with a backdrop carousel, Continue Watching and Next Up"><br><sub>Home</sub></td>
     <td width="33%" align="center"><img src="images/screenshots/movie.webp" alt="Movie page for Sahara with the backdrop, media chips, a Play button and the overview"><br><sub>Movie page</sub></td>
     <td width="33%" align="center"><img src="images/screenshots/episode.webp" alt="Episode page with the episode still, season and episode number, Play button and overview"><br><sub>Episode page</sub></td>
   </tr>

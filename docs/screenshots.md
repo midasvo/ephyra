@@ -17,17 +17,23 @@ Where they live:
 General rules: dark theme, English UI (`adb shell cmd locale set-app-locales
 nl.midasvo.findroid.ce.debug --locales en-US`; note the old value and restore it), status bar in
 demo mode, no open drawer on TV (it shows the user and server name). Look at every file before
-committing. Playing something on the demo server leaves a resume position; it resets daily, so
-that is fine.
+committing.
 
-Demo-mode status bar (12:00, wifi, full battery), and `exit` when done:
+The demo account is shared with everyone trying Jellyfin, so Continue Watching holds whatever
+the last visitor left: watched items with a resume position, a film at 111 %. Set the state you
+want before the Home shots, and again after each player shot, with
+`POST /UserItems/{id}/UserData?userId=…` (`Played`, `PlaybackPositionTicks`, `LastPlayedDate`):
+Pioneer One E1 played and E2 untouched gives a Next Up row. It resets daily.
+
+Demo-mode status bar (12:00, wifi, full battery), and `exit` when done. Without `-e fully true`
+the wifi icon carries the emulator's "no internet" mark:
 
 ```bash
 adb shell settings put global sysui_demo_allowed 1
 adb shell am broadcast -a com.android.systemui.demo -e command enter
 adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1200
 adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false
-adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4
+adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 -e fully true
 adb shell am broadcast -a com.android.systemui.demo -e command exit
 ```
 
@@ -41,15 +47,19 @@ MSYS_NO_PATHCONV=1 adb -s <serial> pull /sdcard/s.png out.png
 
 ## Emulators
 
-`scripts/tablet-avds.sh` creates and starts the throwaway AVDs (`create`, `start`, `stop`,
-`delete`, `portrait`, `landscape`, `shot`); see [tablet/6-test-matrix.md](tablet/6-test-matrix.md).
+`scripts/avds.sh` creates and starts the AVDs (`create`, `start`, `stop`, `delete`, `portrait`,
+`landscape`, `shot`); see [tablet/6-test-matrix.md](tablet/6-test-matrix.md). Its AVDs are also
+the test devices, logged in to the test server and often in use by another session: for
+screenshots, make your own with `avdmanager create avd` from the same device profiles (`pixel_6`,
+`small_tablet` with `hw.lcd` set to 2048×1280 at 320 dpi, `pixel_tablet`, `tv_1080p`) on a free
+port, and delete them afterwards.
 
-| AVD | Port | Window | Used for |
-|---|---|---|---|
-| `ce_phone_tmp` (Pixel 6) | 5580 | 1080×2400 px, 412×915 dp | phone README and listing |
-| `ce_tablet_8` (small_tablet, set to 2048×1280 at 320 dpi) | 5582 | 1024×640 dp | 7-inch listing |
-| `ce_tablet_10` (Pixel Tablet) | 5584 | 2560×1600 px, 1280×800 dp | tablet README and 10-inch listing |
-| `ce_tv_tmp` (`tv_1080p`, `android-tv;x86` image) | 5588 | 1920×1080 | TV README and listing |
+| Device profile | Window | Used for |
+|---|---|---|
+| `pixel_6` | 1080×2400 px, 412×915 dp | phone README and listing |
+| `small_tablet`, set to 2048×1280 at 320 dpi | 1024×640 dp | 7-inch listing |
+| `pixel_tablet` | 2560×1600 px, 1280×800 dp | tablet README and 10-inch listing |
+| `tv_1080p`, `android-tv;x86` image | 1920×1080 | TV README and listing |
 
 Install the debug build of `main` (`./gradlew :app:phone:assembleLibreDebug`, the `x86_64` APK;
 `:app:tv:assembleLibreDebug`, the `x86` APK) and sign in: Add server → Users → tap demo → Login.
@@ -76,9 +86,12 @@ so add or remove them in threes.
 
 | File | Screen | Source |
 |---|---|---|
-| `home.webp` | Home with the carousel and Continue Watching | demo |
+| `home.webp` | Home with the carousel, Continue Watching and Next Up | demo |
 | `movie.webp` | Sahara's page from the top | demo |
 | `episode.webp` | Pioneer One S1E2 from the top | demo |
+| `library.webp` | The Movies grid (website only) | demo |
+| `favorites.webp` | The Favorites tab, with a few items favorited through the API (website only) | demo |
+| `profile-lock.webp` | Settings → Profile lock → Pattern, captured while the pattern is being drawn (website only) | demo |
 | `downloads.webp` | Downloads with the storage bar, active rings and a finished show | **own server** |
 | `season.webp` | A season with downloaded, downloading and not downloaded episodes | **own server** |
 | `downloaded-show.webp` | A downloaded show page with episode sizes | **own server** |
@@ -86,6 +99,15 @@ so add or remove them in threes.
 | `subtitle-style.webp` | Settings → Player → Subtitle style with a non-default colour | demo |
 | `home-rows.webp` | Settings → Interface → Home rows | demo |
 | `player-quality.webp` | Landscape: the video quality dialog over the player | demo |
+| `up-next.webp` | Landscape: the "Up next" card in the last 15 seconds of Pioneer One S1E1 (website only) | demo |
+
+How the less obvious ones are made:
+
+- `up-next.webp`: ExoPlayer shows green at the end of the file on the emulator, so switch to mpv
+  (see Android TV below), set S1E1's position to 40 seconds before its end through the API,
+  resume it and take a screenshot every few seconds.
+- `profile-lock.webp`: `input motionevent DOWN`, a `MOVE` per dot, `screencap`, then `UP`, in one
+  `adb shell` call, so the pattern is still lit.
 
 For the four own-server shots: start a large movie and a few episodes together to get active rings
 and finished items in one shot, and remove them afterwards with Select on the Downloads screen
@@ -93,7 +115,8 @@ and finished items in one shot, and remove them afterwards with Select on the Do
 
 ## Tablet
 
-`ce_tablet_10` in landscape (`scripts/tablet-avds.sh landscape ce_tablet_10`). The launcher's
+A `pixel_tablet` AVD in landscape. For the portrait shot `adb emu rotate` turns it when
+`user_rotation` does not. The launcher's
 taskbar sits at the bottom of every screen except the player: crop it (it starts at y=1480 in
 landscape, 2440 in portrait).
 
@@ -105,6 +128,9 @@ ffmpeg -i in.png -vf "crop=2560:1480:0:0,scale=1280:-1:flags=lanczos" \
 ffmpeg -i in.png -vf "scale=1280:-1:flags=lanczos" -c:v libwebp -quality 80 -compression_level 6 out.webp
 ```
 
+The foldable has two displays: pass `screencap -d <id>` (from `dumpsys SurfaceFlinger
+--display-id`) and tap the lower half to bring up the controls in tabletop posture.
+
 | File | Screen |
 |---|---|
 | `tablet-home.webp` | Home: rail, three carousel pages, Continue Watching |
@@ -113,13 +139,29 @@ ffmpeg -i in.png -vf "scale=1280:-1:flags=lanczos" -c:v libwebp -quality 80 -com
 | `tablet-player.webp` | The player with the controls and the episode panel open |
 | `tablet-library.webp` | The Movies grid |
 | `tablet-home-portrait.webp` | Home in portrait (not in the README today) |
+| `fold-tabletop.webp` | A `pixel_fold` AVD, half-opened in portrait, the player with its controls (website only) |
 
 ## Android TV
 
-`ce_tv_tmp`. `adb shell input tap` doesn't reach the TV app: drive it with
-`input keyevent DPAD_UP|DPAD_DOWN|DPAD_LEFT|DPAD_RIGHT|DPAD_CENTER|BACK`, one key at a time with a
-screenshot before the next, because focus restore can put you somewhere unexpected. `input text`
-works in the search and login fields.
+A `tv_1080p` AVD. `adb shell input tap` doesn't reach the TV app: drive it with
+`scripts/tv-dpad.sh <serial> up|down|left|right|ok|back`, a few keys at a time with a screenshot
+before the next, because focus restore can put you somewhere unexpected. `input text` works in
+the server address field once the on-screen keyboard is closed (Back).
+
+ExoPlayer shows a solid green picture on this emulator. Play with mpv for the two player shots:
+with the app stopped, add `<string name="pref_player_backend">mpv</string>` to
+`shared_prefs/nl.midasvo.findroid.ce.debug_preferences.xml` through `run-as`. The trickplay
+thumbnail is gone a second after the last key, so take screenshots while a run of `right` keys is
+still going and keep the best one.
+
+The screensaver starts through Android's idle timeout, because `cmd dreams` needs root and the
+TV image has none. It changes slide every 20 seconds:
+
+```bash
+adb shell settings put secure screensaver_components   nl.midasvo.findroid.ce.debug/dev.jdtech.jellyfin.ce.presentation.screensaver.ScreensaverService
+adb shell settings put secure screensaver_activate_on_sleep 1
+adb shell settings put system screen_off_timeout 15000
+```
 
 ```bash
 ffmpeg -i in.png -vf "scale=1280:-1:flags=lanczos" \
@@ -134,6 +176,7 @@ ffmpeg -i in.png -vf "scale=1280:-1:flags=lanczos" \
 | `tv-movie.webp` | Sahara's page, Play focused | |
 | `tv-player.webp` | Player overlay, shown with Down | #131 |
 | `tv-trickplay.webp` | Right a few times with the controls hidden | #134 |
+| `tv-screensaver.webp` | The screensaver on a slide with a title logo (website only) | #140 |
 
 ## Play listing
 
