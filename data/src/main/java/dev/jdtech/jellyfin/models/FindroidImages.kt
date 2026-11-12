@@ -13,6 +13,10 @@ data class FindroidImages(
     val showPrimary: Uri? = null,
     val showBackdrop: Uri? = null,
     val showLogo: Uri? = null,
+    // CE (#608): the wide artwork with the title on it. Only the Continue Watching and Next Up
+    // rows ask the server for it, so it is null everywhere else.
+    val thumb: Uri? = null,
+    val showThumb: Uri? = null,
 )
 
 fun BaseItemDto.toFindroidImages(jellyfinRepository: JellyfinRepository): FindroidImages {
@@ -69,6 +73,35 @@ fun BaseItemDto.toFindroidImages(jellyfinRepository: JellyfinRepository): Findro
                 .appendQueryParameter("tag", tag)
                 .build()
         }
+    val thumb =
+        imageTags?.get(ImageType.THUMB)?.let { tag ->
+            baseUrl
+                .buildUpon()
+                .appendEncodedPath("items/$id/Images/${ImageType.THUMB}")
+                .appendQueryParameter("tag", tag)
+                .build()
+        }
+    // The series' thumb. The server names it for an episode; for anything else below a series it
+    // is the parent's, which is only sent when the item has no thumb of its own.
+    val showThumb =
+        seriesThumbImageTag
+            ?.takeIf { seriesId != null }
+            ?.let { tag ->
+                baseUrl
+                    .buildUpon()
+                    .appendEncodedPath("items/$seriesId/Images/${ImageType.THUMB}")
+                    .appendQueryParameter("tag", tag)
+                    .build()
+            }
+            ?: parentThumbImageTag?.let { tag ->
+                baseUrl
+                    .buildUpon()
+                    .appendEncodedPath(
+                        "items/${parentThumbItemId ?: seriesId}/Images/${ImageType.THUMB}"
+                    )
+                    .appendQueryParameter("tag", tag)
+                    .build()
+            }
 
     return FindroidImages(
         primary = primary,
@@ -77,6 +110,8 @@ fun BaseItemDto.toFindroidImages(jellyfinRepository: JellyfinRepository): Findro
         showPrimary = showPrimary,
         showBackdrop = showBackdrop,
         showLogo = showLogo,
+        thumb = thumb,
+        showThumb = showThumb,
     )
 }
 

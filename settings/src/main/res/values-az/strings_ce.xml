@@ -194,4 +194,6 @@
     <string name="ce_number_off">Söndürülüb</string>
     <string name="ce_pref_player_keep_landscape">Pleyeri üfüqi vəziyyətdə saxla</string>
     <string name="ce_pref_player_keep_landscape_summary">Planşeti şaquli çevirsəniz belə videoları üfüqi vəziyyətdə oynat</string>
+    <string name="ce_pref_home_episode_images">Bölüm şəkillərindən istifadə et</string>
+    <string name="ce_pref_home_episode_images_summary">\"İzləməyə davam et\" və \"Növbəti\" sıralarında serialın şəkli əvəzinə bölümün şəklini göstər</string>
 </resources>

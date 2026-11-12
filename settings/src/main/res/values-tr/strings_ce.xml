@@ -194,4 +194,6 @@
     <string name="ce_number_off">Kapalı</string>
     <string name="ce_pref_player_keep_landscape">Oynatıcıyı yatay tut</string>
     <string name="ce_pref_player_keep_landscape_summary">Tableti dik çevirseniz bile videoları yatay oynat</string>
+    <string name="ce_pref_home_episode_images">Bölüm görsellerini kullan</string>
+    <string name="ce_pref_home_episode_images_summary">İzlemeye devam et ve Sıradaki satırlarında dizinin görseli yerine bölümün görselini göster</string>
 </resources>

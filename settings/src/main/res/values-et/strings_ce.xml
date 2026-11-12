@@ -194,4 +194,6 @@
     <string name="ce_number_off">Väljas</string>
     <string name="ce_pref_player_keep_landscape">Hoia mängija rõhtpaigutuses</string>
     <string name="ce_pref_player_keep_landscape_summary">Esita videoid rõhtpaigutuses ka siis, kui pöörad tahvelarvuti püsti</string>
+    <string name="ce_pref_home_episode_images">Kasuta episoodide pilte</string>
+    <string name="ce_pref_home_episode_images_summary">Kuva ridades Jätka vaatamist ja Järgmisena sarja pildi asemel episoodi pilti</string>
 </resources>

@@ -179,6 +179,8 @@ private class HomeRow(
     val title: UiText,
     val items: List<FindroidItem>,
     val direction: Direction,
+    // #608: Continue Watching and Next Up show the thumb, unless the user chose episode images.
+    val preferThumb: Boolean = false,
 )
 
 /** The rows in the order the user chose (#142). Keyed on the row, so focus restore follows a move. */
@@ -186,7 +188,13 @@ private fun HomeState.rows(): List<HomeRow> =
     orderedRows().mapNotNull {
         when (it) {
             is HomeItem.Section ->
-                HomeRow(it.id, it.homeSection.name, it.homeSection.items, Direction.HORIZONTAL)
+                HomeRow(
+                    it.id,
+                    it.homeSection.name,
+                    it.homeSection.items,
+                    Direction.HORIZONTAL,
+                    preferThumb = !useEpisodeImages,
+                )
             is HomeItem.ViewItem ->
                 HomeRow(
                     it.id,
@@ -375,6 +383,7 @@ private fun HomeRowContent(
                 ItemCard(
                     item = item,
                     direction = row.direction,
+                    preferThumb = row.preferThumb,
                     showSeriesName = row.direction == Direction.VERTICAL,
                     // #423: a row of posters with two title lines runs into the bottom safe area.
                     titleMaxLines = 1,

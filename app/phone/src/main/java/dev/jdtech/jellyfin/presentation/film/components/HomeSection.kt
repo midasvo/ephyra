@@ -27,6 +27,8 @@ fun HomeSection(
     itemsPadding: PaddingValues,
     onAction: (HomeAction) -> Unit,
     modifier: Modifier = Modifier,
+    // CE (#608): the cards show the series' or movie's thumb instead of the episode's image.
+    preferThumb: Boolean = false,
 ) {
     Column(modifier = modifier) {
         Box(modifier = Modifier.fillMaxWidth().height(42.dp).padding(itemsPadding)) {
@@ -46,6 +48,7 @@ fun HomeSection(
                 ItemCard(
                     item = item,
                     direction = Direction.HORIZONTAL,
+                    preferThumb = preferThumb,
                     onClick = { onAction(HomeAction.OnItemClick(item)) },
                 )
             }

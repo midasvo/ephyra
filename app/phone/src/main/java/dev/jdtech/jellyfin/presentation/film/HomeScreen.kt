@@ -207,6 +207,7 @@ internal fun HomeScreenLayout(
                                 itemsPadding = itemsPadding,
                                 onAction = onAction,
                                 modifier = Modifier.animateItem(),
+                                preferThumb = !state.useEpisodeImages,
                             )
                         is HomeItem.ViewItem ->
                             HomeView(

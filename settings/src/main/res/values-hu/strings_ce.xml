@@ -194,4 +194,6 @@
     <string name="ce_number_off">Ki</string>
     <string name="ce_pref_player_keep_landscape">A lejátszó maradjon fekvő módban</string>
     <string name="ce_pref_player_keep_landscape_summary">A videók fekvő módban játszódnak le akkor is, ha álló helyzetbe fordítod a táblagépet</string>
+    <string name="ce_pref_home_episode_images">Epizódképek használata</string>
+    <string name="ce_pref_home_episode_images_summary">A sorozat képe helyett az epizód képének megjelenítése a Megtekintés folytatása és a Következő sorban</string>
 </resources>

@@ -198,4 +198,6 @@
     <string name="ce_number_off">Vypnuto</string>
     <string name="ce_pref_player_keep_landscape">Ponechat přehrávač na šířku</string>
     <string name="ce_pref_player_keep_landscape_summary">Přehrávat videa na šířku, i když tablet otočíte na výšku</string>
+    <string name="ce_pref_home_episode_images">Používat obrázky epizod</string>
+    <string name="ce_pref_home_episode_images_summary">Zobrazit obrázek epizody místo obrázku seriálu v řadách Pokračovat ve sledování a Další</string>
 </resources>

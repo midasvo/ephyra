@@ -194,4 +194,6 @@
     <string name="ce_number_off">Uit</string>
     <string name="ce_pref_player_keep_landscape">Speler liggend houden</string>
     <string name="ce_pref_player_keep_landscape_summary">Video\'s liggend afspelen, ook als je de tablet rechtop draait</string>
+    <string name="ce_pref_home_episode_images">Afleveringsafbeeldingen gebruiken</string>
+    <string name="ce_pref_home_episode_images_summary">Toon in Verder kijken en Volgende de afbeelding van de aflevering in plaats van die van de serie</string>
 </resources>
