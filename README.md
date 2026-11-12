@@ -28,7 +28,7 @@ Ephyra is a Jellyfin client for Android phones, tablets and Android TV, forked f
     <td width="33%" align="center"><img src="images/screenshots/episode.webp" alt="Episode page with the episode still, season and episode number, Play button and overview"><br><sub>Episode page</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="images/screenshots/downloads.webp" alt="Downloads screen with a storage bar, three active downloads with progress rings, and a downloaded show"><br><sub>Downloads, with a storage breakdown</sub></td>
+    <td align="center"><img src="images/screenshots/downloads.webp" alt="Downloads screen with a storage bar, two downloads with progress rings, one waiting, and a downloaded show"><br><sub>Downloads, with a storage breakdown</sub></td>
     <td align="center"><img src="images/screenshots/season.webp" alt="Season episode list showing downloaded, downloading and not yet downloaded episodes"><br><sub>Download progress per episode</sub></td>
     <td align="center"><img src="images/screenshots/downloaded-show.webp" alt="Downloaded show page listing episodes by season with their sizes"><br><sub>A page per downloaded show</sub></td>
   </tr>

@@ -3,9 +3,9 @@
 Every screenshot in the README, on the website and in the Play listing comes from the
 **Jellyfin demo server** (`https://demo.jellyfin.org/stable`, user `demo`, empty password): a
 public-domain library (Sahara, King Lear, Pioneer One, Caminandes…), so there is no third-party
-artwork and no personal server name in the repo. The one exception is the four download screens
+artwork and no personal server name in the repo. The one exception is the download screens
 (§Phone): the demo account can't download (`EnableContentDownloading` is off in its policy), so
-those come from your own server on your own phone.
+those come from the maintainer's own server.
 
 Where they live:
 
@@ -96,6 +96,8 @@ so add or remove them in threes.
 | `season.webp` | A season with downloaded, downloading and not downloaded episodes | **own server** |
 | `downloaded-show.webp` | A downloaded show page with episode sizes | **own server** |
 | `download-quality.webp` | The download quality dialog over a movie page | **own server** |
+| `smart-downloads.webp` | Settings → Downloads with Smart Downloads on (switch it off again) (website only) | **own server** |
+| `offline.webp` | Home with Settings → Offline Mode on, after the downloads finished (website only) | **own server** |
 | `subtitle-style.webp` | Settings → Player → Subtitle style with a non-default colour | demo |
 | `home-rows.webp` | Settings → Interface → Home rows | demo |
 | `player-quality.webp` | Landscape: the video quality dialog over the player | demo |
@@ -109,9 +111,13 @@ How the less obvious ones are made:
 - `profile-lock.webp`: `input motionevent DOWN`, a `MOVE` per dot, `screencap`, then `UP`, in one
   `adb shell` call, so the pattern is still lit.
 
-For the four own-server shots: start a large movie and a few episodes together to get active rings
-and finished items in one shot, and remove them afterwards with Select on the Downloads screen
-(wait for the undo snackbar). Check them for user names and server addresses.
+For the own-server shots: the same phone AVD and crop as the rest. Get it to the Add server
+screen and let the maintainer sign in; never type their password. Download two episodes first
+and wait for them, then start a large movie and three more episodes: that gives the season shot
+(downloaded, downloading, not downloaded) and the Downloads shot (two rings, one waiting, a
+finished show; the limit is two at a time). Use Bluey for the show. The server name and the
+user's initial show on Home, and that is fine; the server address is not: it is in the sheet
+behind the server name on Home, so never capture that. Deleting the AVD removes the downloads.
 
 ## Tablet
 
