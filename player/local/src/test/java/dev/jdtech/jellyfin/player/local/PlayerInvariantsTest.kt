@@ -110,7 +110,7 @@ class PlayerInvariantsTest {
     }
 
     @Test
-    fun `mpv reports a failed load at END_FILE without waiting for an error line`() {
+    fun `mpv reports a failed load at END_FILE without requiring an error line`() {
         // #446: libmpv can deliver END_FILE before the error lines that explain it. Requiring an
         // error line first left the player black and BUFFERING without an error.
         val mpvPlayer = source("mpv/MPVPlayer.kt")
@@ -119,7 +119,15 @@ class PlayerInvariantsTest {
         assertTrue("MPVPlayer's END_FILE branch not found", endFile != null)
         assertTrue(
             "END_FILE must ask MpvLoadState whether the load failed (#446)",
-            endFile!!.value.contains("loadState.endFile()"),
+            endFile!!.value.contains("loadState.endFile {"),
+        )
+        // #576: the report may wait a moment for the line, but never without a timer that
+        // reports it anyway.
+        assertTrue(
+            "A failure held for its error line must be reported when the timer runs out (#576)",
+            endFile.value.contains(
+                "handler.postDelayed(loadErrorHoldTimeout, MpvLoadState.HOLD_MS)"
+            ) && mpvPlayer.contains("if (!released && loadState.holdTimedOut()) onLoadError("),
         )
         assertFalse(
             "END_FILE must not require an error line before reporting (#446)",
