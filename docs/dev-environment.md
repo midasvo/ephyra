@@ -101,6 +101,7 @@ All of it is a test pattern with a tone, so it is small and free to share.
 | Empty Show, Empty Season Show, One Episode Show | A show without seasons, with one empty season, with one episode |
 | Long Season Show | 30 episodes in one season |
 | Und Audio Show | An audio track whose language is `und` |
+| Tracks Show | 3 episodes with two audio tracks (AAC English, the default, and AAC Dutch tagged `dut`), at about 2 Mbps so a quality cap of 1.5 Mbps transcodes them: the per-series audio choice on a transcode |
 
 **Real titles** (libraries `Real Movies` and `Real Shows`): the same test pattern under real
 names (14 movies, 5 shows such as Breaking Bad and Bluey), so the server fetches posters,
