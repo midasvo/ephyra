@@ -378,6 +378,8 @@ constructor(
         val positionMs: Long,
         val durationMs: Long,
         val startJob: Job? = null,
+        /** CE (#616): left from its closing outro, so the stop reports it as played to the end. */
+        val finished: Boolean = false,
     )
 
     private var playing: PlayingSnapshot? = null
@@ -841,6 +843,20 @@ constructor(
     }
 
     /**
+     * CE (#616): [refreshPlayingSnapshot] for a move on to the next item (an outro skip, the "Up
+     * next" card, autoplay). From inside the outro that closes the item, the item counts as
+     * finished, also when that outro starts before the 90 % at which a stop marks an item played.
+     * Only call this when the item is certain to be left: the mark stays on the snapshot.
+     */
+    private fun refreshPlayingSnapshotMovingOn() {
+        refreshPlayingSnapshot()
+        val current = playing ?: return
+        val outroStartMs =
+            segmentTracker.closingOutroStartMs(current.durationMs, hasNextItem = true) ?: return
+        if (current.positionMs >= outroStartMs) playing = current.copy(finished = true)
+    }
+
+    /**
      * Tell the server (and the local database) that [snapshot]'s item stopped playing. The only
      * caller of [JellyfinRepository.postPlaybackStop]. Before the duration is known the stop is
      * only sent if the start was, and it leaves the local database alone ([playbackStopReport]).
@@ -853,8 +869,9 @@ constructor(
      */
     @OptIn(DelicateCoroutinesApi::class)
     private fun reportStopped(snapshot: PlayingSnapshot): Job? {
-        val (itemId, position, duration, startJob) = snapshot
-        val report = playbackStopReport(position, duration, startSent = startJob != null)
+        val (itemId, position, duration, startJob, finished) = snapshot
+        val report =
+            playbackStopReport(position, duration, startSent = startJob != null, finished = finished)
         if (report == null) {
             Timber.d("No playback stop for $itemId: neither loaded nor started")
             return null
@@ -868,7 +885,10 @@ constructor(
                 if (report.playedPercentage == null) {
                     Timber.d("Sending playback stop for $itemId at its start, $position ms")
                 } else {
-                    Timber.d("Sending playback stop for $itemId at $position / $duration ms")
+                    Timber.d(
+                        "Sending playback stop for $itemId at $position / $duration ms" +
+                            if (finished) ", as finished" else ""
+                    )
                 }
                 repository.postPlaybackStop(itemId, report.positionTicks, report.playedPercentage)
             } catch (e: Exception) {
@@ -1214,7 +1234,7 @@ constructor(
             // and clear the snapshot so the transition after the prompt (confirm, or the user
             // pressing play or next after dismissing it) does not report it again.
             player.pause()
-            refreshPlayingSnapshot()
+            refreshPlayingSnapshotMovingOn()
             playing?.let { reportStopped(it) }
             playing = null
             showStillWatchingPrompt()
@@ -1284,7 +1304,7 @@ constructor(
         _upNext.value = null
         if (!player.hasNextMediaItem()) return
         // Exact position for the stop report onMediaItemTransition sends for this item.
-        refreshPlayingSnapshot()
+        refreshPlayingSnapshotMovingOn()
         player.seekToNextMediaItem()
         player.play()
     }
@@ -1308,9 +1328,11 @@ constructor(
      */
     private fun autoAdvanceToNextItem() {
         // Exact position for the stop report onMediaItemTransition sends for the item being left.
-        refreshPlayingSnapshot()
         if (player.hasNextMediaItem()) {
+            refreshPlayingSnapshotMovingOn()
             pendingAutoAdvanceSeek = true
+        } else {
+            refreshPlayingSnapshot()
         }
         player.seekToNextMediaItem()
         player.play()
@@ -2121,12 +2143,16 @@ constructor(
             is SkipTarget.SeekTo -> player.seekTo(target.positionMs)
             SkipTarget.NextItem -> {
                 // Exact position for the stop report onMediaItemTransition sends for this item.
-                // Past 90 % of the runtime, that report marks the item as played (#31).
-                refreshPlayingSnapshot()
+                // Past 90 % of the runtime, that report marks the item as played (#31); so does
+                // leaving from the closing outro, wherever it starts (#616).
+                refreshPlayingSnapshotMovingOn()
                 player.seekToNextMediaItem()
             }
             // An automatic outro skip with autoplay off: end the item and close the player.
-            SkipTarget.EndItem -> endItemWithoutAdvancing()
+            SkipTarget.EndItem -> {
+                refreshPlayingSnapshotMovingOn()
+                endItemWithoutAdvancing()
+            }
         }
     }
 
