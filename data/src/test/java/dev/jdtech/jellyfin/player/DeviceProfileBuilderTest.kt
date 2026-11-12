@@ -243,9 +243,73 @@ class DeviceProfileBuilderTest {
         assertTrue(
             "an h264 HLS transcoding profile is required for the DV fallback",
             profile.transcodingProfiles.any {
-                it.videoCodec == "h264" && it.protocol == MediaStreamProtocol.HLS
+                it.videoCodec?.startsWith("h264") == true && it.protocol == MediaStreamProtocol.HLS
             },
         )
+    }
+
+    private fun hlsProfile(profile: DeviceProfile) =
+        profile.transcodingProfiles.single { it.protocol == MediaStreamProtocol.HLS }
+
+    @Test
+    fun `e-ac-3 in mp4 is direct-played`() {
+        // Media3 reads E-AC-3 from mp4. Left out, every such file went through the server.
+        val profile = DeviceProfileBuilder.buildDeviceProfile(
+            ProbedCodecs(videoCodecProfiles = mapOf("h264" to setOf("high")), audioCodecs = setOf("aac")),
+        )
+
+        for (container in listOf("mp4", "fmp4", "mkv", "mpegts")) {
+            val audioCodecs = profile.directPlayProfiles
+                .first { it.container == container && it.videoCodec != null }
+                .audioCodec.orEmpty()
+                .split(",")
+            assertTrue("eac3 missing from $container: $audioCodecs", "eac3" in audioCodecs)
+        }
+    }
+
+    @Test
+    fun `the HLS transcode copies hevc when the device decodes it and still encodes to h264`() {
+        val profile = DeviceProfileBuilder.buildDeviceProfile(
+            ProbedCodecs(
+                videoCodecProfiles = mapOf("h264" to setOf("high"), "hevc" to setOf("Main", "Main 10")),
+                audioCodecs = setOf("aac"),
+            ),
+        )
+
+        // The server encodes to the first codec and copies any codec in the list.
+        assertEquals("h264,hevc", hlsProfile(profile).videoCodec)
+    }
+
+    @Test
+    fun `the HLS transcode is h264 only without an hevc decoder`() {
+        val profile = DeviceProfileBuilder.buildDeviceProfile(
+            ProbedCodecs(videoCodecProfiles = mapOf("h264" to setOf("high")), audioCodecs = setOf("aac")),
+        )
+
+        assertEquals("h264", hlsProfile(profile).videoCodec)
+        assertTrue(profile.codecProfiles.none { it.container == "ts" })
+    }
+
+    @Test
+    fun `hevc is only copied into the HLS transcode without dolby vision`() {
+        // Without a codec profile on the segment container the server copies any HEVC stream,
+        // Dolby Vision included, and MPEG-TS hides the Dolby Vision configuration from media3.
+        val profile = DeviceProfileBuilder.buildDeviceProfile(
+            probedWithDolbyVision(5 to uhd60, 8 to uhd60),
+        )
+
+        val rangeTypes = rangeTypes(profile, "hevc", container = "ts")
+        assertTrue("HDR10" in rangeTypes && "SDR" in rangeTypes)
+        assertFalse(
+            "DV ranges leaked into the HLS copy: $rangeTypes",
+            rangeTypes.any { it.startsWith("DOVI") },
+        )
+        val videoProfiles = profile.codecProfiles
+            .single { it.codec == "hevc" && it.container == "ts" }
+            .conditions
+            .first { it.property == ProfileConditionValue.VIDEO_PROFILE }
+            .value
+        assertEquals("Main 10", videoProfiles)
     }
 
     @Test
