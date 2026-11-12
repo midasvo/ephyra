@@ -2,8 +2,8 @@
 
 Macrobenchmark module for `app/phone` (#249): records the baseline profile and measures startup
 and scrolling. It is a `com.android.test` module with the `androidx.baselineprofile` plugin and
-targets the `libre` flavour. `app/tv` is not covered: it is a different app with different
-screens and would need its own journey and module.
+targets the `libre` flavour. `app/tv` has its own module with a D-pad journey:
+`baselineprofile-tv/README.md` (#286).
 
 Generation never runs as part of a normal build (`automaticGenerationDuringBuild = false`).
 
@@ -35,6 +35,10 @@ logged in is `nl.midasvo.findroid.ce` signed with your local debug key, so it ca
 over a GitHub or Play install of the same package. Add
 `-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true` to keep that install (and its
 login) when the run ends.
+
+On Windows, from a deep checkout such as a `.claude/worktrees/…` folder, the pull of the
+recorded profile fails on the 260-character path limit: see "Windows: path too long" in
+`baselineprofile-tv/README.md`.
 
 The profile is written to `app/phone/src/libreRelease/generated/baselineProfiles/`; commit it.
 `profileinstaller` then installs it on first run (the phone manifest keeps its initializer).

@@ -11,6 +11,7 @@ plugins {
     // CE (#211): the open-source licenses screen, the same list as the phone app.
     alias(libs.plugins.aboutlibraries)
     alias(libs.plugins.aboutlibraries.android)
+    alias(libs.plugins.androidx.baselineprofile)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -160,7 +161,13 @@ androidComponents {
     }
 }
 
+// CE-owned (#286): the profile is generated on demand (see baselineprofile-tv/README.md) and
+// committed under src/libreRelease/generated/baselineProfiles; it never runs as part of a build.
+baselineProfile { automaticGenerationDuringBuild = false }
+
 dependencies {
+    baselineProfile(projects.baselineprofileTv)
+    implementation(libs.androidx.profileinstaller)
     implementation(projects.core)
     implementation(projects.data)
     implementation(projects.setup)
