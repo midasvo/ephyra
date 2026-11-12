@@ -410,6 +410,20 @@ class PlayerActivity : BasePlayerActivity() {
                                 updateControlsUnderEpisodeSheet()
                             }
                         },
+                        wantsFocus = episodeSheetWantsFocus.value,
+                        mayTakeFocus = {
+                            episodeSheetTakesFocus(
+                                requested = episodeSheetWantsFocus.value,
+                                sheetOpen = episodeSheetBackCallback.isEnabled,
+                                focusParked = currentFocus.let { it == null || it === binding.playerView },
+                            )
+                        },
+                        onFocusSettled = { focused ->
+                            episodeSheetWantsFocus.value = false
+                            // The user opened the sheet from the keyboard, so the row is a
+                            // control they chose: the arrows and Space go to it (#448).
+                            if (focused) keyboardFocusChosen = true
+                        },
                     )
                 }
             }
@@ -427,12 +441,22 @@ class PlayerActivity : BasePlayerActivity() {
     private fun closeEpisodeSheet(animate: Boolean = true) {
         if (!episodeSheetBackCallback.isEnabled) return
         episodeSheetBackCallback.isEnabled = false
+        episodeSheetWantsFocus.value = false
+        val hadFocus = binding.episodeSheet.hasFocus()
         episodeSheetVisible.targetState = false
         if (!animate) binding.episodeSheet.isVisible = false
         // Restarts the hide timer when the controls are showing.
         binding.playerView.controllerShowTimeoutMs = controlsHideTimeoutMs
         updateControlsUnderEpisodeSheet(animate)
+        // CE (#588): focus goes back where it came from, not to whatever Android finds first.
+        if (hadFocus && !episodesButton.requestFocus()) parkFocusOnPlayerView(force = true)
     }
+
+    /**
+     * CE (#588): the sheet was opened from the keyboard and has yet to focus the playing episode's
+     * row. A Compose state: the sheet acts on it when its rows are there.
+     */
+    private val episodeSheetWantsFocus = mutableStateOf(false)
 
     /** CE (#456): the sheet's bounds in the window, from the sheet; null until it is laid out. */
     private var episodeSheetBounds: Rect? = null
@@ -530,12 +554,17 @@ class PlayerActivity : BasePlayerActivity() {
             }
         }
         if (covered && hadFocus) {
-            // Opened from the keyboard: the Episodes button has focus. It moves into the sheet
-            // once the sheet is laid out, or to the player view while the season is still
-            // loading, rather than to the first control.
+            // Opened from the keyboard: the Episodes button has focus. It moves to the player
+            // view, rather than to the first control.
+            // CE (#588): the sheet takes it from there, for the playing episode's row, once the
+            // rows are there. Asking the sheet's view for focus instead found nothing to focus
+            // on the first open, and the first row on a later one.
             binding.episodeSheet.post {
-                if (!binding.episodeSheet.requestFocus()) parkFocusOnPlayerView()
-                if (episodeSheetBackCallback.isEnabled) view.setFocusBlocked(true)
+                parkFocusOnPlayerView()
+                if (episodeSheetBackCallback.isEnabled) {
+                    view.setFocusBlocked(true)
+                    episodeSheetWantsFocus.value = true
+                }
             }
         } else {
             view.setFocusBlocked(covered)
@@ -1095,7 +1124,8 @@ class PlayerActivity : BasePlayerActivity() {
      *
      * Any key but the media keys and Escape also shows the controls, or keeps them up. While the
      * controls are showing and the user moved focus to one of them (with Tab), the arrows and Space
-     * go to that control; focus Android gave a control by itself does not count (#448). With the
+     * go to that control; focus Android gave a control by itself does not count (#448). A row of
+     * the open episode sheet is such a control too (#588). With the
      * controls locked only L, Escape and the media keys do anything, and Space presses Unlock or a
      * skip button only when the user moved to it.
      */
@@ -1127,7 +1157,14 @@ class PlayerActivity : BasePlayerActivity() {
             keyGoesToFocusedControl(
                 focusChosenByKeyboard = keyboardFocusChosen,
                 focusOnControl =
-                    currentFocus.let { it != null && it !== playerView && it.isInside(playerView) },
+                    focusIsOnControl(
+                        insideControls =
+                            currentFocus.let {
+                                it != null && it !== playerView && it.isInside(playerView)
+                            },
+                        insideEpisodeSheet = currentFocus?.isInside(binding.episodeSheet) == true,
+                        episodeSheetOpen = episodeSheetBackCallback.isEnabled,
+                    ),
                 controlsShowing = playerView.isControllerFullyVisible,
             )
         viewModel.markUserInteraction()
@@ -1200,10 +1237,10 @@ class PlayerActivity : BasePlayerActivity() {
      * Moves focus from a control to the player view itself, not its first focusable child, so no
      * control has focus until the user moves to one (#448). Focus outside the player stays put.
      */
-    private fun parkFocusOnPlayerView() {
+    private fun parkFocusOnPlayerView(force: Boolean = false) {
         keyboardFocusChosen = false
         val playerView = binding.playerView
-        if (currentFocus?.isInside(playerView) != true) return
+        if (!force && currentFocus?.isInside(playerView) != true) return
         val focusability = playerView.descendantFocusability
         playerView.descendantFocusability = ViewGroup.FOCUS_BEFORE_DESCENDANTS
         playerView.requestFocus()

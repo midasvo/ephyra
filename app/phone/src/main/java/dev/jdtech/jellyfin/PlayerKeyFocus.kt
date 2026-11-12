@@ -20,6 +20,29 @@ internal fun keyGoesToFocusedControl(
     controlsShowing: Boolean,
 ): Boolean = focusChosenByKeyboard && focusOnControl && controlsShowing
 
+/**
+ * CE (#588): whether focus is on something a key can go to. The episode sheet lies outside the
+ * player view, so focus on one of its rows did not count: Up and Down changed the volume instead
+ * of moving through the episodes. Only while the sheet is open: closed, it holds no focus a key
+ * should go to.
+ */
+internal fun focusIsOnControl(
+    insideControls: Boolean,
+    insideEpisodeSheet: Boolean,
+    episodeSheetOpen: Boolean,
+): Boolean = insideControls || (insideEpisodeSheet && episodeSheetOpen)
+
+/**
+ * CE (#588): whether the episode sheet moves focus to the playing episode's row. It was asked to
+ * (opened from the keyboard), is still open, and focus is still where opening it left it: the
+ * rows can arrive seconds later, and by then the user may have closed the sheet or moved on.
+ */
+internal fun episodeSheetTakesFocus(
+    requested: Boolean,
+    sheetOpen: Boolean,
+    focusParked: Boolean,
+): Boolean = requested && sheetOpen && focusParked
+
 /** CE (#448): with the controls locked, Space only presses an Unlock or skip the user moved to. */
 internal fun spaceKeyAction(locked: Boolean, goesToFocusedControl: Boolean): SpaceKeyAction =
     when {
