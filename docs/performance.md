@@ -37,6 +37,27 @@ For a performance change, paste a before/after table from the same device:
 Take it for both `journeyNoCompilation` and `journeyBaselineProfile`, plus the device model and
 Android version. State whether the device was logged in (full journey) or not (setup screens only).
 
+## TV
+
+`app/tv` has its own profile and benchmark module, `:baselineprofile-tv` (#286), with a D-pad
+journey: `baselineprofile-tv/README.md`. The profile lives in
+`app/tv/src/libreRelease/generated/baselineProfiles/`. Regenerate it on a signed-in Android TV
+emulator or box (sign in once with the module's `SignIn` test), with `ANDROID_SERIAL` set when
+more than one device is attached:
+
+```
+./gradlew :app:tv:generateLibreReleaseBaselineProfile -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true
+```
+
+Benchmark (`suppressErrors=EMULATOR` only on an emulator):
+
+```
+./gradlew :baselineprofile-tv:connectedLibreBenchmarkReleaseAndroidTest -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.suppressErrors=EMULATOR -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true
+```
+
+On Windows from a deep checkout (a worktree) the pull of the results fails on the 260-character
+path limit; the README has the `subst` workaround.
+
 ## R8
 
 App classes are renamed by R8 except the navigation routes (`-keepnames` on `NavKey`
@@ -71,3 +92,22 @@ from 190 to 247 ms, more than any difference between builds, and the warm-up lau
 runtime record a profile of its own before `bg-dexopt`. The profile shortens the journey's long
 frames (P99 95 → 83 ms). It should count more on slower devices and in the first launches after an
 update, before the runtime has recorded anything.
+
+### #286: TV baseline profile, emulator only (2026-11-12)
+
+Android TV emulator `ce_tv_1080p` (Android TV 14, x86, `user` build, no root), 1080p, software
+rendering, on a laptop with other emulators and Gradle builds running. Signed in to the local test
+server, full journey (Home rows, a show, a season). `benchmarkRelease` build with the committed
+profile, 10 iterations each.
+
+| Metric                               | `journeyNoCompilation` | `journeyBaselineProfile` |
+| ------------------------------------ | ---------------------- | ------------------------ |
+| `timeToInitialDisplayMs` median      | 596.4 (552–645)        | 626.5 (568–753)          |
+| `frameDurationCpuMs` P50 / P90 / P99 | 25.3 / 35.4 / 176.1    | 26.2 / 35.3 / 179.6      |
+| `frameOverrunMs` P90                 | 30.1                   | 29.8                     |
+
+These numbers only show a direction, and here they show none: the two runs overlap, and the
+emulator's software rendering and shared CPU dominate both startup and frame times. The emulator
+frame numbers are not meaningful at all. What is left for the Xiaomi box (32-bit ARM, the slowest
+device the app runs on): the same benchmark there, `timeToInitialDisplayMs` and frame timing with
+and without the profile, and cold `am start -W` times of a sideloaded release with and without it.
