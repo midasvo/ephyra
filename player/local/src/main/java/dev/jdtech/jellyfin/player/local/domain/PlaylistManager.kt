@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.player.local.domain
 
 import androidx.core.net.toUri
+import androidx.media3.common.C
 import androidx.media3.common.MimeTypes
 import dev.jdtech.jellyfin.models.FindroidChapter
 import dev.jdtech.jellyfin.models.FindroidEpisode
@@ -40,6 +41,13 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
      */
     private var queueLoader: (suspend () -> List<FindroidItem>)? = null
     private val queueMutex = Mutex()
+
+    /**
+     * CE (#580): the audio stream each item was last requested with, by the server's index. The
+     * stream of a transcode does not say which track it carries, so a quality switch from one
+     * transcode to another has only this to keep the track.
+     */
+    private val requestedAudio = HashMap<UUID, Int>()
 
     private suspend fun fetchEpisodes(seriesId: UUID, seasonId: UUID): List<FindroidEpisode> =
         repository
@@ -333,10 +341,22 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
      * queued stream URL. The cached entry is replaced (not just added) so the
      * duplicate check in [getPreviousPlayerItem]/[getNextPlayerItem] keeps
      * treating the item as already queued.
+     *
+     * CE (#580): [selectedAudio] is the audio track playing now, when the stream names it (a
+     * transcode's single track does not). It goes to the server with the request, so a transcode
+     * the switch leads to carries the same track.
      */
-    suspend fun recreatePlayerItem(playerItem: PlayerItem): PlayerItem {
+    suspend fun recreatePlayerItem(
+        playerItem: PlayerItem,
+        selectedAudio: StoredChoice? = null,
+    ): PlayerItem {
         val item = items.firstOrNull { it.id == playerItem.itemId } ?: return playerItem
-        val recreated = item.toPlayerItem(playerItem.mediaSourceId, playerItem.playbackPosition)
+        val recreated =
+            item.toPlayerItem(
+                playerItem.mediaSourceId,
+                playerItem.playbackPosition,
+                selectedAudio = selectedAudio,
+            )
         playerItems.removeAll { it.itemId == playerItem.itemId }
         playerItems.add(recreated)
         return recreated
@@ -346,6 +366,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         mediaSourceId: String?,
         playbackPosition: Long,
         prefetchedSources: List<FindroidSource>? = null,
+        selectedAudio: StoredChoice? = null,
     ): PlayerItem {
         Timber.d("Converting FindroidItem ${this.id} to PlayerItem")
 
@@ -361,7 +382,9 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
             mediaSources.firstOrNull {
                 it.type == FindroidSourceType.LOCAL && !it.path.endsWith(".download")
             }
-                ?: mediaSources.firstOrNull { it.type != FindroidSourceType.LOCAL }
+                ?: mediaSources
+                    .firstOrNull { it.type != FindroidSourceType.LOCAL }
+                    ?.let { withChosenAudio(it, selectedAudio) }
                 ?: throw NoSuchElementException()
         val externalSubtitles =
             mediaSource.mediaStreams
@@ -431,6 +454,56 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
             seasonId = if (this is FindroidEpisode) seasonId else null,
             artworkUri = images.primary ?: images.showPrimary,
         )
+    }
+
+    /**
+     * CE (#580): a transcode carries one audio track, the server's default unless the request
+     * names another. So when [source] is a transcode and the user's track is not that default,
+     * the source is asked for once more, with the track. In order: the track playing now
+     * ([selectedAudio], on a quality switch), the choice saved for the series, the track this
+     * item was last requested with. A source that plays directly is returned as it is: the player
+     * selects among its tracks itself.
+     */
+    private suspend fun FindroidItem.withChosenAudio(
+        source: FindroidSource,
+        selectedAudio: StoredChoice?,
+    ): FindroidSource {
+        if (!source.transcoded) return source
+        val index =
+            selectedAudio?.let { audioStreamIndex(it, source.mediaStreams) }
+                ?: savedAudioChoice()?.let { audioStreamIndex(it, source.mediaStreams) }
+                ?: requestedAudio[id]
+                ?: return source
+        requestedAudio[id] = index
+        if (index == source.defaultAudioStreamIndex) return source
+        return try {
+            repository
+                .getPlaybackSources(id, source.id, audioStreamIndex = index)
+                .firstOrNull { it.id == source.id && it.type != FindroidSourceType.LOCAL } ?: source
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // The default track is better than no playback.
+            Timber.e("Failed to request audio stream $index: $e")
+            source
+        }
+    }
+
+    /** The audio track saved for this episode's series, or null: a movie has none. */
+    private suspend fun FindroidItem.savedAudioChoice(): StoredChoice? {
+        if (this !is FindroidEpisode) return null
+        val preference =
+            try {
+                repository.getSeriesTrackPreferences(seriesId).firstOrNull {
+                    it.trackType == C.TRACK_TYPE_AUDIO && !it.disabled
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e("Failed to read the series' track choice: $e")
+                null
+            } ?: return null
+        return StoredChoice(preference.language, preference.title, preference.positionInLanguage)
     }
 
     private fun List<FindroidChapter>.toPlayerChapters(): List<PlayerChapter> {

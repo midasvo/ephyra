@@ -1,6 +1,8 @@
 package dev.jdtech.jellyfin.player.local.domain
 
+import dev.jdtech.jellyfin.models.FindroidMediaStream
 import java.util.Locale
+import org.jellyfin.sdk.model.api.MediaStreamType
 
 /** A track as the matcher sees it: just what survives from one file to the next. */
 data class TrackCandidate(val language: String?, val title: String?)
@@ -9,18 +11,49 @@ data class TrackCandidate(val language: String?, val title: String?)
 data class StoredChoice(val language: String?, val title: String?, val positionInLanguage: Int?)
 
 /**
- * Normalizes a language code to ISO 639-2, so the "en" ExoPlayer reports and the "eng" mpv reports
- * compare equal. Blank and undetermined codes give null.
+ * The ISO 639-2 languages with two codes: the bibliographic one, which Matroska files are tagged
+ * with ("dut"), to the terminologic one, which ExoPlayer and the server turn it into ("nld").
+ */
+private val BIBLIOGRAPHIC_CODES =
+    mapOf(
+        "alb" to "sqi",
+        "arm" to "hye",
+        "baq" to "eus",
+        "bur" to "mya",
+        "chi" to "zho",
+        "cze" to "ces",
+        "dut" to "nld",
+        "fre" to "fra",
+        "geo" to "kat",
+        "ger" to "deu",
+        "gre" to "ell",
+        "ice" to "isl",
+        "mac" to "mkd",
+        "mao" to "mri",
+        "may" to "msa",
+        "per" to "fas",
+        "rum" to "ron",
+        "slo" to "slk",
+        "tib" to "bod",
+        "wel" to "cym",
+    )
+
+/**
+ * Normalizes a language code to ISO 639-2/T, so the "en" ExoPlayer reports and the "eng" mpv
+ * reports compare equal, and so do the "dut" mpv reads from a file and the "nld" ExoPlayer and
+ * the server make of it (#580). Blank and undetermined codes give null.
  */
 fun normalizeLanguage(code: String?): String? {
     val base = code?.trim()?.lowercase()?.split('-', '_')?.firstOrNull().orEmpty()
     if (base.isEmpty() || base == "und") return null
     if (base.length != 2 && base.length != 3) return base
-    return try {
-        Locale(base).isO3Language.ifEmpty { base }
-    } catch (e: Exception) {
-        base
-    }
+    val iso3 =
+        try {
+            Locale(base).isO3Language.ifEmpty { base }
+        } catch (e: Exception) {
+            base
+        }
+    return BIBLIOGRAPHIC_CODES[iso3] ?: iso3
 }
 
 private fun sameTitle(a: String?, b: String?): Boolean {
@@ -65,4 +98,17 @@ fun seriesTrackChoice(candidates: List<TrackCandidate>, index: Int): StoredChoic
     val position =
         language?.let { candidates.take(index).count { normalizeLanguage(it.language) == language } }
     return StoredChoice(language, title, position)
+}
+
+/**
+ * CE (#580): the server's index of the audio stream in [streams] that [choice] names, or null
+ * when none matches. A transcode carries one audio track, so the choice has to go to the server
+ * with the request; the player cannot select it afterwards. External audio is left out: the
+ * server's transcode is of the file's own streams.
+ */
+fun audioStreamIndex(choice: StoredChoice, streams: List<FindroidMediaStream>): Int? {
+    val audio =
+        streams.filter { it.type == MediaStreamType.AUDIO && !it.isExternal && it.index != null }
+    val match = matchSeriesTrack(choice, audio.map { TrackCandidate(it.language, it.title) })
+    return match?.let { audio[it].index }
 }

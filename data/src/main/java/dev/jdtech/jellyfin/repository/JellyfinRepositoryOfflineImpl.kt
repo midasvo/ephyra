@@ -16,6 +16,7 @@ import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.models.FindroidSource
+import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
 import dev.jdtech.jellyfin.models.FindroidEpisodeDto
@@ -419,13 +420,18 @@ class JellyfinRepositoryOfflineImpl(
 
     // Offline playback is always a local file — no server, no transcoding. Only a finished
     // download: an unfinished one's partial file plays as far as it got, or not at all (#454).
+    // The audio stream index is for a server transcode: a download carries every track.
     override suspend fun getPlaybackSources(
         itemId: UUID,
         mediaSourceId: String?,
+        audioStreamIndex: Int?,
     ): List<FindroidSource> =
         withContext(Dispatchers.IO) {
             database.getCompletedSources(itemId).map { it.toFindroidSource(database) }
         }
+
+    override suspend fun getSeriesTrackPreferences(seriesId: UUID): List<SeriesTrackPreferenceDto> =
+        withContext(Dispatchers.IO) { database.getSeriesTrackPreferences(currentUserId, seriesId) }
 
     override suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String {
         TODO("Not yet implemented")

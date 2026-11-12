@@ -10,6 +10,7 @@ import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.models.FindroidSource
+import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
 import java.util.UUID
@@ -171,11 +172,19 @@ interface JellyfinRepository {
      *
      * When a downloaded copy exists and [mediaSourceId] is null or names it, the server is not
      * asked: the player plays the local copy then anyway, and waiting on the server only delays it.
+     *
+     * CE (#580): [audioStreamIndex] names the audio stream of [mediaSourceId] that a transcode
+     * has to carry, as a transcode carries one. The server only takes it together with the
+     * source's id. It means nothing for a source that plays directly or from a download.
      */
     suspend fun getPlaybackSources(
         itemId: UUID,
         mediaSourceId: String? = null,
+        audioStreamIndex: Int? = null,
     ): List<FindroidSource>
+
+    /** CE (#580): the tracks the user last picked by hand in [seriesId], one per track type. */
+    suspend fun getSeriesTrackPreferences(seriesId: UUID): List<SeriesTrackPreferenceDto>
 
     suspend fun getStreamUrl(itemId: UUID, mediaSourceId: String): String
 
