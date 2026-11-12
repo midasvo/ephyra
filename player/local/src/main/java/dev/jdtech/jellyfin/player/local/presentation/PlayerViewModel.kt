@@ -663,10 +663,26 @@ constructor(
             externalSubtitles.map { externalSubtitle ->
                 MediaItem.SubtitleConfiguration.Builder(externalSubtitle.uri)
                     .setLabel(
-                        externalSubtitle.title.ifBlank { application.getString(R.string.external) }
+                        // CE (#597): a track of the file itself that the server delivers apart
+                        // (during a transcode) is named as it is when the stream carries it.
+                        if (externalSubtitle.embedded) {
+                            externalSubtitle.title.ifBlank { null }
+                        } else {
+                            externalSubtitle.title.ifBlank {
+                                application.getString(R.string.external)
+                            }
+                        }
                     )
                     .setMimeType(externalSubtitle.mimeType)
                     .setLanguage(externalSubtitle.language)
+                    .setSelectionFlags(
+                        if (externalSubtitle.embedded) {
+                            (if (externalSubtitle.default) C.SELECTION_FLAG_DEFAULT else 0) or
+                                (if (externalSubtitle.forced) C.SELECTION_FLAG_FORCED else 0)
+                        } else {
+                            0
+                        }
+                    )
                     .build()
             }
 

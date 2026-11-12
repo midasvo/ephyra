@@ -94,6 +94,7 @@ All of it is a test pattern with a tone, so it is small and free to share.
 | Long Movie (12 min), Resume Show (4 episodes of 12 min) | Resume positions: Jellyfin keeps one only for items of 5 minutes or more, and a stop under 10 % resets it |
 | A Movie With A Really Long Title… | Wrapping in rows and on pages |
 | Tracks Movie | Two audio tracks (AAC stereo English, AC-3 5.1 Dutch), two embedded subtitles (one forced), one external `.de.srt` |
+| Image Subs Movie | Two image subtitle tracks, a white bar 4 of every 5 seconds: PGS (English) and VobSub (Dutch). At about 1.9 Mbps, so a quality cap of 1.5 Mbps transcodes it: which image subtitles the server delivers as a file during a transcode |
 | Hevc Movie, Hdr Ten Movie | HEVC 10-bit; HEVC 10-bit with PQ and BT.2020 (HDR10 signalling) |
 | Versions Movie | Two versions of one movie (360p, 720p) |
 | Broken Movie | A file that is not a video: playback has to fail cleanly |

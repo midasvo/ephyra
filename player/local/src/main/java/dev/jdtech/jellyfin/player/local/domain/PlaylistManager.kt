@@ -2,7 +2,6 @@ package dev.jdtech.jellyfin.player.local.domain
 
 import androidx.core.net.toUri
 import androidx.media3.common.C
-import androidx.media3.common.MimeTypes
 import dev.jdtech.jellyfin.models.FindroidChapter
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
@@ -25,7 +24,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ItemFields
-import org.jellyfin.sdk.model.api.MediaStreamType
 import timber.log.Timber
 
 class PlaylistManager @Inject internal constructor(private val repository: JellyfinRepository) {
@@ -423,38 +421,17 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
             }
         val mediaSource = local ?: remote?.source ?: throw NoSuchElementException()
         val externalSubtitles =
-            mediaSource.mediaStreams
-                .filter { mediaStream ->
-                    // isExternal reflects the *server's* original file layout, which only
-                    // matters for a REMOTE source riding along in the same stream ExoPlayer
-                    // is already playing. A LOCAL (downloaded) source only ever has a
-                    // mediastreams row for a subtitle that was saved as its own sidecar file
-                    // — downloadExternalMediaStreams never writes a row for a track that
-                    // stays muxed inside the downloaded video — so every row on a LOCAL
-                    // source is a real external file on disk, regardless of isExternal.
-                    (mediaSource.type == FindroidSourceType.LOCAL || mediaStream.isExternal) &&
-                        mediaStream.type == MediaStreamType.SUBTITLE &&
-                        !mediaStream.path.isNullOrBlank()
-                }
-                .map { mediaStream ->
-                    ExternalSubtitle(
-                        mediaStream.title,
-                        mediaStream.language,
-                        mediaStream.path!!.toUri(),
-                        when (mediaStream.codec) {
-                            "subrip" -> MimeTypes.APPLICATION_SUBRIP
-                            "webvtt" -> MimeTypes.TEXT_VTT
-                            "ass" -> MimeTypes.TEXT_SSA
-                            // Image-based subtitle sidecars. media3 ships native parsers
-                            // for these, so advertising the correct MIME lets the renderer
-                            // actually draw the bitmaps instead of dropping the track.
-                            "pgssub" -> MimeTypes.APPLICATION_PGS
-                            "dvdsub", "idx" -> MimeTypes.APPLICATION_VOBSUB
-                            "dvbsub" -> MimeTypes.APPLICATION_DVBSUBS
-                            else -> MimeTypes.TEXT_UNKNOWN
-                        },
-                    )
-                }
+            subtitleFiles(mediaSource).map {
+                ExternalSubtitle(
+                    title = it.title,
+                    language = it.language,
+                    uri = it.path.toUri(),
+                    mimeType = it.mimeType,
+                    embedded = it.embedded,
+                    forced = it.forced,
+                    default = it.default,
+                )
+            }
         val trickplayInfo =
             when (this) {
                 is FindroidSources -> {
