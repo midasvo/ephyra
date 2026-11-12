@@ -123,6 +123,12 @@ constructor(
 
     private var isSessionRestored = false
 
+    /**
+     * A load of ours is on its way to the receiver. Until the receiver answers, it still shows
+     * what it played before, and that must not be taken for the current item again.
+     */
+    private var loadPending = false
+
     /** The item whose start was reported and whose stop is still owed, if any. */
     private var reportingItemId: UUID? = null
     /** The last position the receiver gave for [reportingItemId], for its stop report. */
@@ -172,6 +178,7 @@ constructor(
             override fun onMetadataUpdated() {
                 val client = remoteMediaClient ?: return
                 val itemId = remoteItemId() ?: return
+                if (loadPending) return
                 if (_currentItem.value?.item?.itemId == itemId) {
                     itemDuration[itemId] = client.streamDuration
                     return
@@ -305,6 +312,7 @@ constructor(
     }
 
     private fun cancelJobs() {
+        loadPending = false
         playJob?.cancel()
         audioTrackJob?.cancel()
         queueJob?.cancel()
@@ -364,9 +372,7 @@ constructor(
                 if (playbackStatus != CastPlaybackStatus.IDLE || remoteItemId() == null) {
                     stopReporting()
                     // A load of ours that the receiver has not answered yet keeps its item.
-                    if (playJob?.isActive != true && audioTrackJob?.isActive != true) {
-                        _currentItem.value = null
-                    }
+                    if (!loadPending) _currentItem.value = null
                 }
                 removeListener(remoteMediaClientProgressListener)
             }
@@ -546,8 +552,9 @@ constructor(
                         }
                     val manager = playlistManagers.get()
                     val item = manager.getInitialItem(itemId = itemId, itemKind = kind)
-                    // The receiver moved on, or the session ended, while this was loading.
-                    if (item == null || remoteItemId() != itemId) return@launch
+                    // The receiver moved on, the session ended, or the user started something
+                    // else, while this was loading.
+                    if (item == null || loadPending || remoteItemId() != itemId) return@launch
 
                     val mediaSource = playbackInfo?.mediaSources?.firstOrNull()
                     if (playbackInfo != null && mediaSource != null) {
@@ -815,6 +822,7 @@ constructor(
     }
 
     private fun fail(e: Exception? = null, message: String) {
+        loadPending = false
         Timber.e(e, message)
         _errors.tryEmit(CastError.PLAYBACK_FAILED)
     }
@@ -831,6 +839,7 @@ constructor(
         forgetPlaylist()
         val manager = playlistManagers.get()
         playlistManager = manager
+        loadPending = true
 
         playJob =
             scope.launch {
@@ -875,7 +884,12 @@ constructor(
                         .build()
 
                 client.load(loadRequest).setResultCallback { result ->
-                    if (!result.status.isSuccess) {
+                    if (_currentItem.value === built.castItem) loadPending = false
+                    if (result.status.isSuccess) {
+                        // onMetadataUpdated skips an item that is current already, as this one
+                        // is, so the queue is filled from here.
+                        if (_currentItem.value === built.castItem) onCurrentItemSet(item.itemId)
+                    } else {
                         if (_currentItem.value === built.castItem) _currentItem.value = null
                         fail(message = "Error loading media: ${result.status.statusMessage}")
                     }
@@ -1067,9 +1081,11 @@ constructor(
             )
 
         audioTrackJob?.cancel()
+        loadPending = true
         audioTrackJob =
             scope.launch {
                 fun revert() {
+                    loadPending = false
                     if (_currentItem.value?.item?.itemId == currentItemId) {
                         _currentItem.value = current
                     }
@@ -1113,6 +1129,7 @@ constructor(
                         .build()
 
                 client.load(loadRequest).setResultCallback { result ->
+                    if (_currentItem.value === built.castItem) loadPending = false
                     if (result.status.isSuccess) {
                         onCurrentItemSet(currentItemId)
                     } else {

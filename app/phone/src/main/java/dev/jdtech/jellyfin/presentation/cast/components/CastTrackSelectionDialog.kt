@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -237,7 +238,7 @@ fun CastTrackSelectionDialog(
                 Column(
                     modifier =
                         Modifier.padding(top = 16.dp, bottom = 24.dp)
-                            .then(if (isCentered) Modifier.statusBarsPadding() else Modifier),
+                            .then(if (isCentered) Modifier.statusBarsPadding() else Modifier.navigationBarsPadding()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
