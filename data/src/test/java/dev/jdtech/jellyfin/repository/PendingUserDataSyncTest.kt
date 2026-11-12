@@ -102,7 +102,7 @@ class PendingUserDataSyncTest {
     fun `a failed write on a downloaded item asks for a sync`() = runBlocking {
         storeMovie()
 
-        repository.postPlaybackProgress(movieId, 600_000_000L, isPaused = false)
+        repository.postPlaybackProgress(movieId, 600_000_000L, isPaused = false, transcoded = false)
 
         assertEquals(1, syncRequests)
         assertEquals(600_000_000L, pending().single().playbackPositionTicks)
@@ -112,8 +112,8 @@ class PendingUserDataSyncTest {
     fun `a run of failed progress reports asks once`() = runBlocking {
         storeMovie()
 
-        repository.postPlaybackProgress(movieId, 600_000_000L, isPaused = false)
-        repository.postPlaybackProgress(movieId, 700_000_000L, isPaused = false)
+        repository.postPlaybackProgress(movieId, 600_000_000L, isPaused = false, transcoded = false)
+        repository.postPlaybackProgress(movieId, 700_000_000L, isPaused = false, transcoded = false)
         repository.postPlaybackStop(movieId, 800_000_000L, playedPercentage = 50)
 
         assertEquals(1, syncRequests)

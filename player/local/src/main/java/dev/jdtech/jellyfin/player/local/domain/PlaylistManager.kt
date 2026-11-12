@@ -59,6 +59,20 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
             .filter { !it.missing }
 
     /**
+     * CE (#594): [partial] as the server has it in full, with its trickplay and chapters. If that
+     * fails, [partial] itself: playback without thumbnails is better than none.
+     */
+    private suspend fun fullEpisode(partial: FindroidEpisode): FindroidEpisode =
+        try {
+            repository.getEpisode(partial.id)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e("Failed to retrieve episode ${partial.id}: $e")
+            partial
+        }
+
+    /**
      * Resolves the item to start playing. For a movie or episode, the item and its playback
      * sources are fetched concurrently, and the episode list for the queue is not fetched at all:
      * call [loadQueue] after the player is prepared (the neighbour lookups also wait for it).
@@ -110,12 +124,22 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                         val nextUpEpisode = repository.getNextUp(itemId).firstOrNull()
 
                         if (nextUpEpisode != null) {
-                            // The next-up episode is enough to start; the season's list only fills
-                            // the queue.
-                            val seasonId = nextUpEpisode.seasonId
-                            items = listOf(nextUpEpisode)
+                            // CE (#594): next-up answers without trickplay and chapters (Home's
+                            // rows do not need them), so the episode itself is fetched, next to its
+                            // sources. The season's list only fills the queue.
+                            val (episode, sources) =
+                                coroutineScope {
+                                    val episode = async { fullEpisode(nextUpEpisode) }
+                                    val sources = async {
+                                        repository.getPlaybackSources(nextUpEpisode.id, mediaSourceId)
+                                    }
+                                    episode.await() to sources.await()
+                                }
+                            prefetchedSources = sources
+                            val seasonId = episode.seasonId
+                            items = listOf(episode)
                             queueLoader = { fetchEpisodes(itemId, seasonId) }
-                            nextUpEpisode
+                            episode
                         } else {
                             val seasons = repository.getSeasons(itemId)
                             if (seasons.isEmpty()) {

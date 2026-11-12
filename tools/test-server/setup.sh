@@ -224,6 +224,28 @@ if [ ! -f "$ROOT/media/.generated-tracks-show" ]; then
   touch "$ROOT/media/.generated-tracks-show"
 fi
 
+# --- a series with chapters (chapters on the episode a show's Play starts, #594) -------------
+if [ ! -f "$ROOT/media/.generated-chapters" ]; then
+  docker run --rm --entrypoint bash -v "$ROOT/media:/media" "$IMAGE" -c '
+    set -e
+    FF=/usr/lib/jellyfin-ffmpeg/ffmpeg
+    chapter() { # chapter <start s> <end s> <title>
+      printf "[CHAPTER]\nTIMEBASE=1/1000\nSTART=%d\nEND=%d\ntitle=%s\n" $(($1 * 1000)) $(($2 * 1000)) "$3"
+    }
+    { echo ";FFMETADATA1"; chapter 0 60 Opening; chapter 60 180 "Part One"
+      chapter 180 300 "Part Two"; chapter 300 360 Credits; } > /tmp/chapters.txt
+    # 6 minutes, so a resume position sticks
+    $FF -v error -y -f lavfi -i "testsrc2=size=640x360:rate=24:duration=360" \
+        -f lavfi -i "sine=frequency=600:duration=360" -i /tmp/chapters.txt \
+        -map 0:v -map 1:a -map_metadata 2 -map_chapters 2 \
+        -c:v libx264 -preset veryfast -crf 30 -pix_fmt yuv420p -g 48 -c:a aac -b:a 64k -shortest /tmp/chapters.mkv
+    d="/media/shows/Chapters Show (2025)/Season 01"; mkdir -p "$d"
+    for e in 01 02; do cp /tmp/chapters.mkv "$d/Chapters Show - S01E$e - Episode $e.mkv"; done
+    chmod -R a+rX /media
+  '
+  touch "$ROOT/media/.generated-chapters"
+fi
+
 # --- container -----------------------------------------------------------------------------
 if ! docker ps -a --format '{{.Names}}' | grep -qx "$NAME"; then
   docker run -d --name "$NAME" --restart unless-stopped -p "$PORT:8096" \

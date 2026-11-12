@@ -123,4 +123,6 @@ withcast = [i["Name"] for i in q(IncludeItemTypes="Movie,Series", Fields="People
 print(f"with a poster: {withimg}; with cast: {len(withcast)}")
 trick = [i["Name"] for i in q(IncludeItemTypes="Movie,Episode", Fields="Trickplay")["Items"] if i.get("Trickplay")]
 print(f"with trickplay: {len(trick)}")
+chapters = [i["Name"] for i in q(IncludeItemTypes="Movie,Episode", Fields="Chapters")["Items"] if i.get("Chapters")]
+print(f"with chapters: {len(chapters)}")
 print("users:", ", ".join(sorted(u["Name"] for u in call("GET", "/Users"))))

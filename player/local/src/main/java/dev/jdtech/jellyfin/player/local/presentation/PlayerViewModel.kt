@@ -855,11 +855,14 @@ constructor(
             val mediaItem = player.currentMediaItem ?: return@launch
             if (mediaItem.mediaId.isNotEmpty()) {
                 val itemId = UUID.fromString(mediaItem.mediaId)
+                // CE (#599): the item as it plays now; a quality switch replaces it in items.
+                val transcoded = items.firstOrNull { it.itemId == itemId }?.isTranscoded == true
                 try {
                     repository.postPlaybackProgress(
                         itemId,
                         player.currentPosition.times(10000),
                         !player.isPlaying,
+                        transcoded,
                     )
                 } catch (e: Exception) {
                     Timber.e(e)
@@ -1032,7 +1035,7 @@ constructor(
         val start =
             GlobalScope.launch(Dispatchers.IO) {
                 try {
-                    repository.postPlaybackStart(item.itemId)
+                    repository.postPlaybackStart(item.itemId, item.isTranscoded)
                 } catch (e: Exception) {
                     Timber.e(e)
                 }
@@ -1877,12 +1880,18 @@ constructor(
             getTvTrickplay(item)
             return
         }
-        val trickplayInfo = item.trickplayInfo ?: return
+        _uiState.value.currentTrickplay?.loader?.release()
+        // CE (#594): an item without trickplay clears the previous item's, which would otherwise
+        // show its thumbnails on this item's seek bar.
+        val trickplayInfo = item.trickplayInfo
+        if (trickplayInfo == null) {
+            _uiState.update { it.copy(currentTrickplay = null) }
+            return
+        }
         Timber.d("Trickplay Resolution: ${trickplayInfo.width}")
 
         // Hand the consumer a loader instead of decoding the whole strip: a long film is
         // hundreds of bitmaps, which is a lot of memory and network while the player is starting.
-        _uiState.value.currentTrickplay?.loader?.release()
         val loader =
             TrickplayLoader(
                 repository = repository,

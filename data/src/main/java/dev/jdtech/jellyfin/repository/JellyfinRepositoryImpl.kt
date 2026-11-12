@@ -55,7 +55,6 @@ import org.jellyfin.sdk.model.api.ItemFields
 import org.jellyfin.sdk.model.api.ItemFilter
 import org.jellyfin.sdk.model.api.ItemSortBy
 import org.jellyfin.sdk.model.api.MediaType
-import org.jellyfin.sdk.model.api.PlayMethod
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.jellyfin.sdk.model.api.PlaybackOrder
 import org.jellyfin.sdk.model.api.PlaybackProgressInfo
@@ -745,8 +744,10 @@ class JellyfinRepositoryImpl(
         }
     }
 
-    override suspend fun postPlaybackStart(itemId: UUID) {
-        Timber.d("Sending start $itemId")
+    override suspend fun postPlaybackStart(itemId: UUID, transcoded: Boolean) {
+        // CE (#599): Transcode with the transcode's play session, see PlaySessions.playReport.
+        val report = playSessions.playReport(itemId, transcoded)
+        Timber.d("Sending start $itemId, ${report.playMethod}")
         withContext(Dispatchers.IO) {
             jellyfinApi.sessionApi.reportPlaybackStart(
                 PlaybackStartInfo(
@@ -754,7 +755,8 @@ class JellyfinRepositoryImpl(
                     canSeek = true,
                     isPaused = false,
                     isMuted = false,
-                    playMethod = PlayMethod.DIRECT_PLAY,
+                    playMethod = report.playMethod,
+                    playSessionId = report.playSessionId,
                     repeatMode = RepeatMode.REPEAT_NONE,
                     playbackOrder = PlaybackOrder.DEFAULT,
                 )
@@ -795,8 +797,10 @@ class JellyfinRepositoryImpl(
         itemId: UUID,
         positionTicks: Long,
         isPaused: Boolean,
+        transcoded: Boolean,
     ) {
         Timber.d("Posting progress of $itemId, position: $positionTicks")
+        val report = playSessions.playReport(itemId, transcoded)
         withContext(Dispatchers.IO) {
             database.setPlaybackPositionTicks(itemId, currentUserId, positionTicks)
             try {
@@ -806,7 +810,8 @@ class JellyfinRepositoryImpl(
                         canSeek = true,
                         isPaused = isPaused,
                         isMuted = false,
-                        playMethod = PlayMethod.DIRECT_PLAY,
+                        playMethod = report.playMethod,
+                        playSessionId = report.playSessionId,
                         repeatMode = RepeatMode.REPEAT_NONE,
                         playbackOrder = PlaybackOrder.DEFAULT,
                         positionTicks = positionTicks,

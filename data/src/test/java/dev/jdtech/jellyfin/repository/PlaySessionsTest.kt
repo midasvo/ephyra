@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.repository
 
 import java.util.UUID
+import org.jellyfin.sdk.model.api.PlayMethod
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -45,5 +46,43 @@ class PlaySessionsTest {
 
         sessions.onPlaybackInfo(item, " ", transcodes = true)
         assertNull(sessions.sessionOf(item))
+    }
+
+    @Test
+    fun `a transcode is reported as one, with its play session`() {
+        sessions.onPlaybackInfo(item, "abc", transcodes = true)
+
+        assertEquals(PlayReport(PlayMethod.TRANSCODE, "abc"), sessions.playReport(item, true))
+    }
+
+    @Test
+    fun `an item that plays directly is reported as direct play`() {
+        sessions.onPlaybackInfo(item, "abc", transcodes = false)
+
+        assertEquals(PlayReport(PlayMethod.DIRECT_PLAY, null), sessions.playReport(item, false))
+    }
+
+    @Test
+    fun `a stream that is not the transcode is direct play, whatever session is kept`() {
+        // A downloaded copy plays, or another version: the kept session is not this stream's.
+        sessions.onPlaybackInfo(item, "abc", transcodes = true)
+
+        assertEquals(PlayReport(PlayMethod.DIRECT_PLAY, null), sessions.playReport(item, false))
+    }
+
+    @Test
+    fun `a transcode without a known session is direct play`() {
+        // The server takes Transcode without a session for direct play anyway.
+        assertEquals(PlayReport(PlayMethod.DIRECT_PLAY, null), sessions.playReport(other, true))
+    }
+
+    @Test
+    fun `the report follows a quality switch both ways`() {
+        sessions.onPlaybackInfo(item, "abc", transcodes = true)
+        sessions.onPlaybackInfo(item, "def", transcodes = true)
+        assertEquals(PlayReport(PlayMethod.TRANSCODE, "def"), sessions.playReport(item, true))
+
+        sessions.onPlaybackInfo(item, "ghi", transcodes = false)
+        assertEquals(PlayReport(PlayMethod.DIRECT_PLAY, null), sessions.playReport(item, false))
     }
 }
