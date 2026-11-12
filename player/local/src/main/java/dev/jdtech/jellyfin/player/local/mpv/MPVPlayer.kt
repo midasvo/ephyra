@@ -702,7 +702,8 @@ class MPVPlayer(
         // (localized) text instead of an English sentence from here.
         Timber.e("mpv could not open the file: ${message ?: "no error logged before END_FILE"}")
         // #474: a reload after a network error that fails is a network error again.
-        val errorCode = errorRecovery.loadErrorCode(message)
+        // #576: so is a first load that could not connect.
+        val errorCode = errorRecovery.loadErrorCode(message, failure.errors)
         failPlayback(PlaybackException(message, null, errorCode))
     }
 
