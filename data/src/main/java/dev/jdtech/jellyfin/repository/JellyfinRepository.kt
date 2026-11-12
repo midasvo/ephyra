@@ -225,7 +225,12 @@ interface JellyfinRepository {
 
     suspend fun postCapabilities()
 
-    suspend fun postPlaybackStart(itemId: UUID)
+    /**
+     * Report that [itemId] started playing. [transcoded] says whether the stream playing is the
+     * server's transcode of it (`PlayerItem.isTranscoded`), which the server shows as the play
+     * method.
+     */
+    suspend fun postPlaybackStart(itemId: UUID, transcoded: Boolean)
 
     /**
      * Report that [itemId] stopped playing at [positionTicks]. [playedPercentage] decides what the
@@ -234,7 +239,13 @@ interface JellyfinRepository {
      */
     suspend fun postPlaybackStop(itemId: UUID, positionTicks: Long, playedPercentage: Int?)
 
-    suspend fun postPlaybackProgress(itemId: UUID, positionTicks: Long, isPaused: Boolean)
+    /** Report the position of [itemId]; [transcoded] as for [postPlaybackStart]. */
+    suspend fun postPlaybackProgress(
+        itemId: UUID,
+        positionTicks: Long,
+        isPaused: Boolean,
+        transcoded: Boolean,
+    )
 
     suspend fun markAsFavorite(itemId: UUID)
 

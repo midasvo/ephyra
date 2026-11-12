@@ -454,7 +454,7 @@ class JellyfinRepositoryOfflineImpl(
 
     override suspend fun postCapabilities() {}
 
-    override suspend fun postPlaybackStart(itemId: UUID) {}
+    override suspend fun postPlaybackStart(itemId: UUID, transcoded: Boolean) {}
 
     override suspend fun postPlaybackStop(
         itemId: UUID,
@@ -473,6 +473,7 @@ class JellyfinRepositoryOfflineImpl(
         itemId: UUID,
         positionTicks: Long,
         isPaused: Boolean,
+        transcoded: Boolean,
     ) {
         withContext(Dispatchers.IO) {
             database.setPlaybackPositionTicks(itemId, currentUserId, positionTicks)
