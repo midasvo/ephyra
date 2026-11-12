@@ -2,6 +2,7 @@ package dev.jdtech.jellyfin.player.local.presentation
 
 import android.app.Application
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -44,6 +45,7 @@ import dev.jdtech.jellyfin.models.MediaSegmentAction
 import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerItem
+import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
 import dev.jdtech.jellyfin.player.core.domain.models.Trickplay
 import dev.jdtech.jellyfin.player.local.PlaybackService
 import dev.jdtech.jellyfin.player.local.PlaybackSessionStore
@@ -59,7 +61,10 @@ import dev.jdtech.jellyfin.player.local.domain.SleepTimer
 import dev.jdtech.jellyfin.player.local.domain.SleepTimerOption
 import dev.jdtech.jellyfin.player.local.domain.StoredChoice
 import dev.jdtech.jellyfin.player.local.domain.StillWatchingTracker
+import dev.jdtech.jellyfin.player.local.domain.SessionTrackPicks
 import dev.jdtech.jellyfin.player.local.domain.TrackCandidate
+import dev.jdtech.jellyfin.player.local.domain.TrackChoices
+import dev.jdtech.jellyfin.player.local.domain.TrackPick
 import dev.jdtech.jellyfin.player.local.domain.TrickplayLoader
 import dev.jdtech.jellyfin.player.local.domain.TrickplayRegionLoader
 import dev.jdtech.jellyfin.player.local.domain.TrickplayTiles
@@ -68,12 +73,15 @@ import dev.jdtech.jellyfin.player.local.domain.UpNextCountdown
 import dev.jdtech.jellyfin.player.local.domain.UpNextDecision
 import dev.jdtech.jellyfin.player.local.domain.autoPlayNextFollowsServer
 import dev.jdtech.jellyfin.player.local.domain.buildMediaSourceFactory
+import dev.jdtech.jellyfin.player.local.domain.getTrackNames
 import dev.jdtech.jellyfin.player.local.domain.isNewEndOfItem
 import dev.jdtech.jellyfin.player.local.domain.matchSeriesTrack
 import dev.jdtech.jellyfin.player.local.domain.playbackStopReport
 import dev.jdtech.jellyfin.player.local.domain.playerTitle
 import dev.jdtech.jellyfin.player.local.domain.resolveAutoPlayNext
 import dev.jdtech.jellyfin.player.local.domain.seriesTrackChoice
+import dev.jdtech.jellyfin.player.local.domain.toTrackPick
+import dev.jdtech.jellyfin.player.local.domain.trackPreferenceKey
 import dev.jdtech.jellyfin.player.local.mpv.MPVPlayer
 import dev.jdtech.jellyfin.player.local.mpv.mpvSubtitleOptionChanges
 import dev.jdtech.jellyfin.player.local.mpv.mpvSubtitleOptions
@@ -284,7 +292,12 @@ constructor(
 
     private var items: MutableList<PlayerItem> = mutableListOf()
 
-    /** The item whose series audio and subtitle choice was last applied, so it happens once. */
+    /**
+     * The item whose audio and subtitle choice was last applied, and how many audio and subtitle
+     * tracks it had then ([trackPreferenceKey]), so it happens once per set of tracks. CE (#596):
+     * mpv lists the subtitle files of an item after the tracks of the stream, and a choice for
+     * one of those found nothing to select when it was applied to the first list only.
+     */
     private var appliedTrackPreferenceItemId: String? = null
 
     /**
@@ -292,6 +305,9 @@ constructor(
      * first item buffers. See [seriesTrackPreferences].
      */
     private var trackPreferences: Pair<UUID, Deferred<List<SeriesTrackPreferenceDto>>>? = null
+
+    /** CE (#596): the tracks picked by hand in an item without a series, such as a movie. */
+    private val sessionTrackPicks = SessionTrackPicks()
 
     private val displayRefreshRateManager = DisplayRefreshRateManager(appPreferences)
     private var loggedDisplayFrameRate: Float? = null
@@ -1626,30 +1642,49 @@ constructor(
     /** The audio track playing now, as the matcher describes it, or null when it has no name. */
     private fun selectedAudioChoice(): StoredChoice? {
         val groups = supportedGroups(C.TRACK_TYPE_AUDIO)
-        val candidates =
-            groups.map {
-                val format = it.mediaTrackGroup.getFormat(0)
-                TrackCandidate(format.language, format.label)
-            }
-        return seriesTrackChoice(candidates, groups.indexOfFirst { it.isSelected })
+        return seriesTrackChoice(
+            playerCandidates(C.TRACK_TYPE_AUDIO),
+            groups.indexOfFirst { it.isSelected },
+        )
     }
 
-    /** Remembers a track the user picked by hand for the rest of the series. */
-    private fun saveSeriesTrackPreference(trackType: @C.TrackType Int, index: Int) {
-        val seriesId = currentPlayerItem()?.seriesId ?: return
-        val userId = jellyfinApi.userId ?: return
+    private fun playerCandidates(trackType: @C.TrackType Int): List<TrackCandidate> =
+        supportedGroups(trackType).map {
+            val format = it.mediaTrackGroup.getFormat(0)
+            TrackCandidate(format.language, format.label)
+        }
+
+    /**
+     * Remembers the track at [index] of [candidates], picked by hand: for the rest of the series,
+     * or, in an item without a series (CE, #596), for as long as the player is open. Without that
+     * a movie fell back to its default tracks on every reload of the stream: a quality switch, or
+     * an audio switch while the server transcodes.
+     */
+    private fun rememberTrackChoice(
+        trackType: @C.TrackType Int,
+        index: Int,
+        candidates: List<TrackCandidate> = playerCandidates(trackType),
+    ) {
+        val item = currentPlayerItem() ?: return
         // Only subtitles can be remembered as off. Silent audio for a whole series is never wanted.
         if (index == -1 && trackType != C.TRACK_TYPE_TEXT) return
+        val choice = if (index == -1) null else seriesTrackChoice(candidates, index)
+        val seriesId = item.seriesId
+        if (seriesId == null) {
+            // A track with neither a language nor a title cannot be found again after a reload.
+            if (index != -1 && choice == null) {
+                sessionTrackPicks.forget(item.itemId, trackType)
+            } else {
+                sessionTrackPicks.remember(item.itemId, TrackPick(trackType, choice))
+            }
+            return
+        }
+        val userId = jellyfinApi.userId ?: return
         val preference =
             if (index == -1) {
                 SeriesTrackPreferenceDto(userId, seriesId, trackType, disabled = true)
             } else {
-                val candidates =
-                    supportedGroups(trackType).map {
-                        val format = it.mediaTrackGroup.getFormat(0)
-                        TrackCandidate(format.language, format.label)
-                    }
-                val choice = seriesTrackChoice(candidates, index) ?: return
+                if (choice == null) return
                 SeriesTrackPreferenceDto(
                     userId,
                     seriesId,
@@ -1675,11 +1710,13 @@ constructor(
 
     override fun onTracksChanged(tracks: Tracks) {
         handleDisplayRefreshRate(tracks)
-        val hasSelectableTracks =
-            tracks.groups.any { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }
+        val selectableTracks =
+            tracks.groups.count { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }
         val itemId = player.currentMediaItem?.mediaId
-        if (!hasSelectableTracks || itemId == null || itemId == appliedTrackPreferenceItemId) return
-        appliedTrackPreferenceItemId = itemId
+        if (selectableTracks == 0 || itemId == null) return
+        val key = trackPreferenceKey(itemId, selectableTracks)
+        if (key == appliedTrackPreferenceItemId) return
+        appliedTrackPreferenceItemId = key
 
         // Back to the global behaviour first, so a choice made in an earlier episode or series does
         // not carry over.
@@ -1689,42 +1726,39 @@ constructor(
         }
         val reset = parameters.build()
 
-        val preferences = currentPlayerItem()?.seriesId?.let { seriesTrackPreferences(it) }
-        if (preferences == null) {
+        val item = currentPlayerItem()
+        val preferences = item?.seriesId?.let { seriesTrackPreferences(it) }
+        // CE (#596): an item without a series has the picks of this session instead.
+        val sessionPicks =
+            if (item != null && item.seriesId == null) sessionTrackPicks.of(item.itemId)
+            else emptyList()
+        if (preferences == null && sessionPicks.isEmpty()) {
             player.trackSelectionParameters = reset
             return
         }
         // Normally read while the item buffered (#296): then the choice goes in with the reset, as
         // one track selection before the first frame, and nothing switches or rebuffers after it.
         // Otherwise reset now and apply the choice once it is read.
-        val ready = preferences.isCompleted
+        val ready = preferences?.isCompleted ?: true
         if (!ready) player.trackSelectionParameters = reset
         viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-            val stored = preferences.await()
+            val stored = preferences?.await()?.map { it.toTrackPick() } ?: sessionPicks
             if (player.currentMediaItem?.mediaId != itemId) return@launch
 
             var applied = (if (ready) reset else player.trackSelectionParameters).buildUpon()
-            for (preference in stored) {
-                val trackType = preference.trackType
-                if (preference.disabled) {
+            for (pick in stored) {
+                val trackType = pick.trackType
+                val choice = pick.choice
+                if (choice == null) {
                     if (trackType == C.TRACK_TYPE_TEXT) {
                         applied = applied.setTrackTypeDisabled(trackType, true)
                     }
                     continue
                 }
                 val groups = supportedGroups(trackType)
-                val candidates =
-                    groups.map {
-                        val format = it.mediaTrackGroup.getFormat(0)
-                        TrackCandidate(format.language, format.label)
-                    }
-                val stored =
-                    StoredChoice(
-                        preference.language,
-                        preference.title,
-                        preference.positionInLanguage,
-                    )
-                val group = matchSeriesTrack(stored, candidates)?.let { groups[it] } ?: continue
+                val group =
+                    matchSeriesTrack(choice, playerCandidates(trackType))?.let { groups[it] }
+                        ?: continue
                 applied =
                     applied
                         .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, 0))
@@ -1760,8 +1794,46 @@ constructor(
             emptyList()
         }
 
+    /**
+     * CE (#596): the file's audio streams when [trackType] is audio and the server transcodes
+     * the playing item, or null: then the player's own tracks are the ones to list and select.
+     */
+    private fun transcodeAudioTracks(trackType: @C.TrackType Int): List<ServerAudioTrack>? =
+        currentPlayerItem()
+            ?.takeIf { trackType == C.TRACK_TYPE_AUDIO && it.isTranscoded }
+            ?.audioTracks
+            ?.takeIf { it.isNotEmpty() }
+
+    /**
+     * CE (#596): what the track dialog of [trackType] lists, for [switchToTrack] to pick from by
+     * position. The player's tracks, except for audio while the server transcodes: that stream
+     * carries one track, so the file's audio streams are listed instead.
+     */
+    fun trackChoices(trackType: @C.TrackType Int, context: Context): TrackChoices {
+        val audioTracks = transcodeAudioTracks(trackType)
+        if (audioTracks != null) {
+            val off = C.TRACK_TYPE_AUDIO in player.trackSelectionParameters.disabledTrackTypes
+            val playing = currentPlayerItem()?.audioStreamIndex
+            return TrackChoices(
+                names = audioTracks.getTrackNames(context),
+                selected = if (off) -1 else audioTracks.indexOfFirst { it.index == playing },
+            )
+        }
+        val groups = supportedGroups(trackType)
+        return TrackChoices(
+            names = groups.getTrackNames(context).toList(),
+            selected = groups.indexOfFirst { it.isSelected },
+        )
+    }
+
+    /** Selects the track at [index] of [trackChoices]; -1 turns the track type off. */
     fun switchToTrack(trackType: @C.TrackType Int, index: Int) {
         markUserInteraction()
+        val audioTracks = transcodeAudioTracks(trackType)
+        if (index != -1 && audioTracks != null) {
+            switchTranscodeAudio(audioTracks, index)
+            return
+        }
         // Index -1 equals disable track
         if (index == -1) {
             player.trackSelectionParameters =
@@ -1786,7 +1858,72 @@ constructor(
                     .setTrackTypeDisabled(trackType, false)
                     .build()
         }
-        saveSeriesTrackPreference(trackType, index)
+        rememberTrackChoice(trackType, index)
+    }
+
+    /**
+     * CE (#596): plays the audio stream at [index] of [audioTracks] while the server transcodes.
+     * The transcode carries one track, so the server is asked for a new stream with the picked
+     * one, and the queue is reloaded at the same position, as on a quality switch.
+     */
+    private fun switchTranscodeAudio(audioTracks: List<ServerAudioTrack>, index: Int) {
+        val item = currentPlayerItem() ?: return
+        val track = audioTracks.getOrNull(index) ?: return
+        // "None" turns the stream's one track off in the player: any pick turns it on again.
+        player.trackSelectionParameters =
+            player.trackSelectionParameters
+                .buildUpon()
+                .clearOverridesOfType(C.TRACK_TYPE_AUDIO)
+                .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
+                .build()
+        rememberTrackChoice(
+            C.TRACK_TYPE_AUDIO,
+            index,
+            audioTracks.map { TrackCandidate(it.language, it.title) },
+        )
+        if (track.index == item.audioStreamIndex) return
+
+        viewModelScope.launch {
+            val rebuilt =
+                try {
+                    // An episode's pick is saved for its series: once it is written, the other
+                    // queued episodes are requested with it as well.
+                    if (item.seriesId != null) trackPreferences?.second?.await()
+                    items.toList().map {
+                        playlistManager.recreatePlayerItem(
+                            it,
+                            audioStreamIndex = track.index.takeIf { _ -> it.itemId == item.itemId },
+                        )
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e)
+                    // The stream that plays keeps playing, with the track it has.
+                    e.localizedMessage?.let {
+                        Toast.makeText(application, it, Toast.LENGTH_LONG).show()
+                    }
+                    return@launch
+                }
+            reloadQueue(rebuilt)
+        }
+    }
+
+    /**
+     * Swaps the whole queue for [rebuilt], the same items with new streams, keeping the item, the
+     * position and the pause state.
+     */
+    private fun reloadQueue(rebuilt: List<PlayerItem>) {
+        val currentIndex = player.currentMediaItemIndex
+        val position = player.currentPosition
+        val playWhenReady = player.playWhenReady
+        items = rebuilt.toMutableList()
+        appliedTrackPreferenceItemId = null
+        player.setMediaItems(rebuilt.map { it.toMediaItem() }, currentIndex, position)
+        player.prepare()
+        // Keep playing (or paused) as before, whatever the player does with the flag on a new
+        // playlist: mpv used to clear it, so the button showed Play while it played (#305).
+        player.playWhenReady = playWhenReady
     }
 
     fun selectSpeed(speed: Float) {
@@ -1850,16 +1987,7 @@ constructor(
                 return@launch
             }
 
-            val currentIndex = player.currentMediaItemIndex
-            val position = player.currentPosition
-            val playWhenReady = player.playWhenReady
-            items = rebuilt.toMutableList()
-            appliedTrackPreferenceItemId = null
-            player.setMediaItems(rebuilt.map { it.toMediaItem() }, currentIndex, position)
-            player.prepare()
-            // Keep playing (or paused) as before, whatever the player does with the flag on a new
-            // playlist: mpv used to clear it, so the button showed Play while it played (#305).
-            player.playWhenReady = playWhenReady
+            reloadQueue(rebuilt)
         }
     }
 

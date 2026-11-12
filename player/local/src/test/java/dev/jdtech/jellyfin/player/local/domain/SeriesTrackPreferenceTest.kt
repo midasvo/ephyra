@@ -132,6 +132,32 @@ class SeriesTrackPreferenceTest {
     }
 
     @Test
+    fun `the audio dialog of a transcode lists the file's own audio streams in order`() {
+        val streams =
+            listOf(
+                stream(0, "", type = MediaStreamType.VIDEO),
+                stream(1, "eng", "English"),
+                stream(2, "nld", external = true),
+                stream(null, "deu"),
+                stream(3, "nld", ""),
+                stream(4, "nld", type = MediaStreamType.SUBTITLE),
+            )
+        val tracks = serverAudioTracks(streams)
+        assertEquals(listOf(1, 3), tracks.map { it.index })
+        assertEquals(listOf("English", null), tracks.map { it.title })
+        assertEquals(listOf("eng", "nld"), tracks.map { it.language })
+    }
+
+    @Test
+    fun `a pick made in the audio dialog of a transcode is found among the player's tracks`() {
+        // #596: the server says "nld", ExoPlayer "nl", mpv "dut".
+        val server = serverAudioTracks(listOf(stream(1, "eng", "English"), stream(2, "nld", "Dutch")))
+        val pick = seriesTrackChoice(server.map { TrackCandidate(it.language, it.title) }, 1)!!
+        assertEquals(1, matchSeriesTrack(pick, listOf(track("en", "English"), track("nl", "Dutch"))))
+        assertEquals(1, matchSeriesTrack(pick, listOf(track("eng"), track("dut"))))
+    }
+
+    @Test
     fun `external audio and streams without an index are not requested`() {
         val streams = listOf(stream(1, "eng"), stream(2, "nld", external = true), stream(null, "deu"))
         assertNull(audioStreamIndex(StoredChoice("nld", null, 0), streams))

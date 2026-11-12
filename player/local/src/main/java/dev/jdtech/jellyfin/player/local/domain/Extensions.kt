@@ -7,6 +7,7 @@ import androidx.media3.common.Format
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
+import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
 import dev.jdtech.jellyfin.player.local.R
 import java.util.Locale
 
@@ -16,6 +17,37 @@ fun List<Tracks.Group>.getTrackNames(context: Context): Array<String> {
     return map { group -> trackName(group.mediaTrackGroup.getFormat(0), forcedLabel) }
         .toTypedArray()
 }
+
+/**
+ * CE (#596): the names of [this] audio streams of the server in the audio dialog, as
+ * [serverTrackName] gives them.
+ */
+@JvmName("getServerTrackNames")
+fun List<ServerAudioTrack>.getTrackNames(context: Context): List<String> {
+    val forcedLabel = context.getString(R.string.ce_track_forced)
+    return map { serverTrackName(it, forcedLabel) }
+}
+
+/**
+ * CE (#596): the name of an audio stream as the server lists it, by the rules of [trackName], so
+ * a track has the same name whether the player lists it or, during a transcode, the server.
+ */
+fun serverTrackName(
+    track: ServerAudioTrack,
+    forcedLabel: String,
+    locale: Locale = Locale.getDefault(),
+): String =
+    trackName(
+        Format.Builder()
+            .setId(track.index)
+            .setLabel(track.title)
+            .setLanguage(track.language)
+            .setCodecs(track.codec)
+            .setChannelCount(track.channels ?: Format.NO_VALUE)
+            .build(),
+        forcedLabel,
+        locale,
+    )
 
 /**
  * CE (#451): the name of a track in the track dialogs, the same on ExoPlayer and mpv, such as

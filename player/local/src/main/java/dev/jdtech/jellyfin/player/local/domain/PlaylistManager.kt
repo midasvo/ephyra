@@ -13,6 +13,7 @@ import dev.jdtech.jellyfin.models.FindroidSources
 import dev.jdtech.jellyfin.player.core.domain.models.ExternalSubtitle
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerItem
+import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
 import dev.jdtech.jellyfin.player.core.domain.models.TrickplayInfo
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.util.UUID
@@ -369,10 +370,14 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
      * CE (#580): [selectedAudio] is the audio track playing now, when the stream names it (a
      * transcode's single track does not). It goes to the server with the request, so a transcode
      * the switch leads to carries the same track.
+     *
+     * CE (#596): [audioStreamIndex] is the track the user picked in the audio dialog of a
+     * transcode, by the server's index ([ServerAudioTrack.index]). It wins over everything else.
      */
     suspend fun recreatePlayerItem(
         playerItem: PlayerItem,
         selectedAudio: StoredChoice? = null,
+        audioStreamIndex: Int? = null,
     ): PlayerItem {
         val item = items.firstOrNull { it.id == playerItem.itemId } ?: return playerItem
         val recreated =
@@ -380,6 +385,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                 playerItem.mediaSourceId,
                 playerItem.playbackPosition,
                 selectedAudio = selectedAudio,
+                audioStreamIndex = audioStreamIndex,
             )
         playerItems.removeAll { it.itemId == playerItem.itemId }
         playerItems.add(recreated)
@@ -391,6 +397,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         playbackPosition: Long,
         prefetchedSources: List<FindroidSource>? = null,
         selectedAudio: StoredChoice? = null,
+        audioStreamIndex: Int? = null,
     ): PlayerItem {
         Timber.d("Converting FindroidItem ${this.id} to PlayerItem")
 
@@ -402,14 +409,19 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         // Never an unfinished download (#454): its partial file plays as far as it got, or not at
         // all. With no other source (offline) there is nothing to play: the exception carries no
         // message, so the player shows its own error instead of a raw one.
-        val mediaSource =
+        val local =
             mediaSources.firstOrNull {
                 it.type == FindroidSourceType.LOCAL && !it.path.endsWith(".download")
             }
-                ?: mediaSources
+        val remote =
+            if (local != null) {
+                null
+            } else {
+                mediaSources
                     .firstOrNull { it.type != FindroidSourceType.LOCAL }
-                    ?.let { withChosenAudio(it, selectedAudio) }
-                ?: throw NoSuchElementException()
+                    ?.let { withChosenAudio(it, selectedAudio, audioStreamIndex) }
+            }
+        val mediaSource = local ?: remote?.source ?: throw NoSuchElementException()
         val externalSubtitles =
             mediaSource.mediaStreams
                 .filter { mediaStream ->
@@ -466,6 +478,13 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
             mediaSourceId = mediaSource.id,
             mediaSourceUri = mediaSource.path,
             isTranscoded = mediaSource.transcoded,
+            audioTracks =
+                if (remote != null && mediaSource.transcoded) {
+                    serverAudioTracks(mediaSource.mediaStreams)
+                } else {
+                    emptyList()
+                },
+            audioStreamIndex = remote?.audioStreamIndex,
             playbackPosition = playbackPosition,
             parentIndexNumber = if (this is FindroidEpisode) parentIndexNumber else null,
             indexNumber = if (this is FindroidEpisode) indexNumber else null,
@@ -480,36 +499,46 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         )
     }
 
+    /** A server source, and the audio stream the server put in it when it is a transcode. */
+    private class RemoteSource(val source: FindroidSource, val audioStreamIndex: Int?)
+
     /**
      * CE (#580): a transcode carries one audio track, the server's default unless the request
      * names another. So when [source] is a transcode and the user's track is not that default,
-     * the source is asked for once more, with the track. In order: the track playing now
-     * ([selectedAudio], on a quality switch), the choice saved for the series, the track this
-     * item was last requested with. A source that plays directly is returned as it is: the player
-     * selects among its tracks itself.
+     * the source is asked for once more, with the track. In order: the track picked in the audio
+     * dialog of a transcode ([pickedIndex], #596), the track playing now ([selectedAudio], on a
+     * quality switch), the choice saved for the series, the track this item was last requested
+     * with. A source that plays directly is returned as it is: the player selects among its
+     * tracks itself.
      */
     private suspend fun FindroidItem.withChosenAudio(
         source: FindroidSource,
         selectedAudio: StoredChoice?,
-    ): FindroidSource {
-        if (!source.transcoded) return source
+        pickedIndex: Int?,
+    ): RemoteSource {
+        if (!source.transcoded) return RemoteSource(source, null)
+        val default = RemoteSource(source, source.defaultAudioStreamIndex)
         val index =
-            selectedAudio?.let { audioStreamIndex(it, source.mediaStreams) }
+            pickedIndex?.takeIf { picked ->
+                serverAudioTracks(source.mediaStreams).any { it.index == picked }
+            }
+                ?: selectedAudio?.let { audioStreamIndex(it, source.mediaStreams) }
                 ?: savedAudioChoice()?.let { audioStreamIndex(it, source.mediaStreams) }
                 ?: requestedAudio[id]
-                ?: return source
+                ?: return default
         requestedAudio[id] = index
-        if (index == source.defaultAudioStreamIndex) return source
+        if (index == source.defaultAudioStreamIndex) return default
         return try {
             repository
                 .getPlaybackSources(id, source.id, audioStreamIndex = index)
-                .firstOrNull { it.id == source.id && it.type != FindroidSourceType.LOCAL } ?: source
+                .firstOrNull { it.id == source.id && it.type != FindroidSourceType.LOCAL }
+                ?.let { RemoteSource(it, index) } ?: default
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             // The default track is better than no playback.
             Timber.e("Failed to request audio stream $index: $e")
-            source
+            default
         }
     }
 

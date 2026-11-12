@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.player.local.domain
 
 import dev.jdtech.jellyfin.models.FindroidMediaStream
+import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
 import java.util.Locale
 import org.jellyfin.sdk.model.api.MediaStreamType
 
@@ -107,8 +108,25 @@ fun seriesTrackChoice(candidates: List<TrackCandidate>, index: Int): StoredChoic
  * server's transcode is of the file's own streams.
  */
 fun audioStreamIndex(choice: StoredChoice, streams: List<FindroidMediaStream>): Int? {
-    val audio =
-        streams.filter { it.type == MediaStreamType.AUDIO && !it.isExternal && it.index != null }
+    val audio = serverAudioTracks(streams)
     val match = matchSeriesTrack(choice, audio.map { TrackCandidate(it.language, it.title) })
     return match?.let { audio[it].index }
 }
+
+/**
+ * CE (#596): the audio streams in [streams] a transcode can carry, in the file's order, as the
+ * audio dialog lists them while the server transcodes. External audio is left out, as in
+ * [audioStreamIndex].
+ */
+fun serverAudioTracks(streams: List<FindroidMediaStream>): List<ServerAudioTrack> =
+    streams
+        .filter { it.type == MediaStreamType.AUDIO && !it.isExternal }
+        .mapNotNull { stream ->
+            ServerAudioTrack(
+                index = stream.index ?: return@mapNotNull null,
+                title = stream.title.trim().ifEmpty { null },
+                language = stream.language.trim().ifEmpty { null },
+                codec = stream.codec.trim().ifEmpty { null },
+                channels = stream.channels,
+            )
+        }

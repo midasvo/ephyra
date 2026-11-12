@@ -27,6 +27,8 @@ data class FindroidMediaStream(
     val sampleRate: Int? = null,
     /** CE (#580): the server's number for the stream, which a playback request names. */
     val index: Int? = null,
+    /** CE (#596): the channel count of an audio stream, for its name in the audio dialog. */
+    val channels: Int? = null,
 )
 
 fun MediaStream.toFindroidMediaStream(jellyfinRepository: JellyfinRepository): FindroidMediaStream {
@@ -51,6 +53,7 @@ fun MediaStream.toFindroidMediaStream(jellyfinRepository: JellyfinRepository): F
         bitDepth = bitDepth,
         sampleRate = sampleRate,
         index = index,
+        channels = channels,
     )
 }
 

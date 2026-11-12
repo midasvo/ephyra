@@ -14,6 +14,13 @@ data class PlayerItem(
     val mediaSourceUri: String = "",
     /** True when [mediaSourceUri] is a server-side transcode (an HLS manifest). */
     val isTranscoded: Boolean = false,
+    /**
+     * CE (#596): the file's audio streams when the server transcodes, and the one this stream was
+     * requested with ([ServerAudioTrack.index]). Empty for a stream that plays directly: the
+     * player lists and selects its tracks itself.
+     */
+    val audioTracks: List<ServerAudioTrack> = emptyList(),
+    val audioStreamIndex: Int? = null,
     val parentIndexNumber: Int? = null,
     val indexNumber: Int? = null,
     val indexNumberEnd: Int? = null,
