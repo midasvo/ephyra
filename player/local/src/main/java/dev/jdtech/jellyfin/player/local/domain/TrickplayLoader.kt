@@ -6,14 +6,19 @@ import android.util.LruCache
 import dev.jdtech.jellyfin.player.core.domain.models.TrickplayTileLoader
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-
-/** Max number of per-sheet load mutexes to keep around. See [TrickplayLoader.loadMutexes]. */
-private const val MUTEX_CACHE_SIZE = 8
 
 /**
  * Lazily decodes trickplay sprite-sheets on demand and crops out the right cell for the
@@ -21,13 +26,10 @@ private const val MUTEX_CACHE_SIZE = 8
  * keyed by sheet index, so seeks within a sheet are essentially free and seeks across
  * sheets only re-decode once.
  *
- * This is the experimental, developer-toggle path. The default trickplay path eagerly
- * decodes every tile in [dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel],
- * which is fine for short items but wasteful for long ones.
- *
- * Cache size is intentionally small (a handful of sheets): a single sheet at 320x180 with
- * 10x10 tiles is ~1.7MB decoded, and the user rarely scrubs across more than a few sheets
- * in quick succession.
+ * The cache is three sheets: the one being scrubbed and the one on either side, which are loaded
+ * ahead so crossing a sheet boundary doesn't wait for the network (#615). Sheets are decoded as
+ * RGB_565: a sheet of 10x10 thumbnails at 320x180 is 3200x1800 pixels, about 11.5 MB that way and
+ * twice that as ARGB_8888, and a JPEG has no alpha to lose.
  */
 class TrickplayLoader(
     private val repository: JellyfinRepository,
@@ -48,23 +50,28 @@ class TrickplayLoader(
     // We deliberately do not call recycle() in entryRemoved. tileAt holds a reference to
     // the evicted bitmap and reads from it on Dispatchers.Default after the LruCache lookup;
     // recycling on the main thread mid-read would crash with
-    // "Canvas: trying to use a recycled bitmap". The cache is small (a handful of sheets,
-    // a few MB) and Bitmap pixels are GC-managed, so we let the GC reclaim evicted entries.
+    // "Canvas: trying to use a recycled bitmap". Bitmap pixels are GC-managed, so we let the
+    // GC reclaim evicted entries.
     private val sheetCache: LruCache<Int, Bitmap> = LruCache(cacheSize)
 
-    // Per-sheet load mutex prevents two concurrent scrub frames from kicking off two
-    // identical network fetches for the same sprite-sheet. Keyed by sheet index.
-    //
-    // Bounded by [MUTEX_CACHE_SIZE] so rapid scrubbing across a long movie can't grow this
-    // map without bound. LruCache is already thread-safe so no extra synchronisation is
-    // needed; the per-mutex critical section in [loadSheet] handles the dedupe.
-    private val loadMutexes: LruCache<Int, Mutex> = LruCache(MUTEX_CACHE_SIZE)
+    // The loads in flight, by sheet index, so two scrub frames that want the same sheet share one
+    // download. A load runs in [loaderScope], not in the caller's job: the seek bar cancels the
+    // job of every frame it has moved past, and a download cancelled with it would start again on
+    // the next frame, so a sheet could take many attempts to arrive (#615).
+    private val loads = ConcurrentHashMap<Int, Deferred<Bitmap?>>()
+
+    /** Runs the sheet loads; cancelled by [release]. */
+    private val loaderScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    private val decodeOptions =
+        BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.RGB_565 }
 
     override suspend fun tileAt(positionMs: Long): Bitmap? {
         val location = tiles.locate(positionMs) ?: return null
         val sheetIndex = location.sheetIndex
 
         val sheet = loadSheet(sheetIndex) ?: return null
+        prefetchNeighbours(sheetIndex)
 
         // Defensive bounds check — a corrupt/short sheet shouldn't crash the player.
         val offsetX = location.offsetX
@@ -84,46 +91,50 @@ class TrickplayLoader(
         }
     }
 
-    private suspend fun loadSheet(sheetIndex: Int): Bitmap? {
-        sheetCache.get(sheetIndex)?.takeIf { !it.isRecycled }?.let { return it }
-        if (sheetIndex < 0 || sheetIndex >= tiles.sheetCount) return null
-
-        // LruCache.get/put are synchronized internally; the "check then insert" race
-        // here at worst creates an extra unused Mutex that the LruCache will evict — the
-        // per-mutex critical section below still dedupes the actual network fetch.
-        val mutex =
-            loadMutexes.get(sheetIndex) ?: Mutex().also { loadMutexes.put(sheetIndex, it) }
-
-        return mutex.withLock {
-            // Double-check after acquiring the per-sheet mutex: another coroutine may
-            // have populated the cache while we were waiting.
-            sheetCache.get(sheetIndex)?.takeIf { !it.isRecycled }?.let {
-                return@withLock it
-            }
-
-            val bitmap =
-                withContext(Dispatchers.IO) {
-                    try {
-                        val bytes = repository.getTrickplayData(itemId, width, sheetIndex)
-                        if (bytes == null) {
-                            null
-                        } else {
-                            BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                        }
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to load trickplay sheet $sheetIndex")
-                        null
-                    }
-                }
-
-            if (bitmap != null) {
-                sheetCache.put(sheetIndex, bitmap)
-            }
-            bitmap
+    /**
+     * CE (#615): fetches the sheets next to [sheetIndex] in the background. Only called while the
+     * user scrubs, so playback that is never scrubbed downloads nothing.
+     */
+    private fun prefetchNeighbours(sheetIndex: Int) {
+        for (neighbour in tiles.neighbourSheets(sheetIndex)) {
+            if (sheetCache.get(neighbour) == null) sheetLoad(neighbour).start()
         }
     }
 
+    private suspend fun loadSheet(sheetIndex: Int): Bitmap? {
+        sheetCache.get(sheetIndex)?.takeIf { !it.isRecycled }?.let { return it }
+        if (sheetIndex < 0 || sheetIndex >= tiles.sheetCount) return null
+        return try {
+            sheetLoad(sheetIndex).await()
+        } catch (e: CancellationException) {
+            // The caller was cancelled: pass it on. Otherwise the loader was released.
+            currentCoroutineContext().ensureActive()
+            null
+        }
+    }
+
+    /** The load of [sheetIndex] that is in flight, or a new one. Lazy: await or start it. */
+    private fun sheetLoad(sheetIndex: Int): Deferred<Bitmap?> =
+        loads.computeIfAbsent(sheetIndex) {
+            loaderScope.async(start = CoroutineStart.LAZY) {
+                try {
+                    val bytes = repository.getTrickplayData(itemId, width, sheetIndex)
+                    bytes
+                        ?.let { BitmapFactory.decodeByteArray(it, 0, it.size, decodeOptions) }
+                        ?.also { sheetCache.put(sheetIndex, it) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to load trickplay sheet $sheetIndex")
+                    null
+                } finally {
+                    loads.remove(sheetIndex)
+                }
+            }
+        }
+
     override fun release() {
+        loaderScope.cancel()
         sheetCache.evictAll()
     }
 
