@@ -101,6 +101,7 @@
     <string name="ce_local_network_denied">Local network access is off. Without it, servers on your network can\'t be found or reached.</string>
     <string name="ce_local_network_denied_where">In the system settings it is under Permissions &gt; %1$s.</string>
     <string name="ce_local_network_allow">Allow access</string>
+    <string name="ce_local_network_off">Local network access is off</string>
     <string name="ce_add_server_error_local_network">Server not found. Local network access is off, which blocks addresses on your network.</string>
     <!-- %1$s is the app's name for the permission, %2$s the system's name for the setting -->
     <string name="ce_permission_permanently_denied">%1$s was denied. To use it, allow \"%2$s\" under Permissions in the system settings.</string>

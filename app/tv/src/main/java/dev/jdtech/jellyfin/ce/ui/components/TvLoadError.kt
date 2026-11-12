@@ -18,7 +18,9 @@ import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
 import dev.jdtech.jellyfin.ce.ui.focus.rememberFocusPosition
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.localnetwork.localNetworkBlockFor
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.setup.R as SetupR
 import dev.jdtech.jellyfin.utils.LoadErrorText
 
 internal const val TV_LOAD_ERROR_TAG = "ce_tv_load_error"
@@ -39,9 +41,17 @@ fun TvLoadError(
     takeFocus: Boolean = true,
 ) {
     val focusPosition = rememberFocusPosition()
+    // CE (#571): a server out of reach because local network access is denied says so. Text only
+    // on TV, as on its Add server screen (#376).
+    val block = localNetworkBlockFor(error = error)
     val reason = LoadErrorText.reason(error).asString()
     val text =
-        if (LoadErrorText.isConnectionError(error)) {
+        if (block != null) {
+            stringResource(SetupR.string.ce_local_network_denied) +
+                (block.settingName?.let {
+                    " " + stringResource(SetupR.string.ce_local_network_denied_where, it)
+                } ?: "")
+        } else if (LoadErrorText.isConnectionError(error)) {
             reason + "\n" + stringResource(CoreR.string.error_loading_data_body)
         } else {
             reason

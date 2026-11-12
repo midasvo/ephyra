@@ -55,6 +55,7 @@
     <string name="ce_local_network_denied">الوصول إلى الشبكة المحلية متوقف. بدونه لا يمكن العثور على الخوادم الموجودة على شبكتك أو الوصول إليها.</string>
     <string name="ce_local_network_denied_where">تجده في إعدادات النظام ضمن الأذونات &gt; %1$s.</string>
     <string name="ce_local_network_allow">السماح بالوصول</string>
+    <string name="ce_local_network_off">الوصول إلى الشبكة المحلية متوقف</string>
     <string name="ce_add_server_error_local_network">لم يُعثر على الخادم. الوصول إلى الشبكة المحلية متوقف، وهذا يحظر العناوين الموجودة على شبكتك.</string>
     <string name="ce_permission_permanently_denied">تم رفض %1$s. لاستخدامه، اسمح بـ «%2$s» ضمن الأذونات في إعدادات النظام.</string>
 </resources>

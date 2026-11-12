@@ -55,6 +55,7 @@
     <string name="ce_local_network_denied">Yerli şəbəkəyə giriş söndürülüb. Onsuz şəbəkənizdəki serverləri tapmaq və onlara qoşulmaq mümkün deyil.</string>
     <string name="ce_local_network_denied_where">Sistem ayarlarında İcazələr &gt; %1$s altındadır.</string>
     <string name="ce_local_network_allow">Girişə icazə ver</string>
+    <string name="ce_local_network_off">Yerli şəbəkəyə giriş söndürülüb</string>
     <string name="ce_add_server_error_local_network">Server tapılmadı. Yerli şəbəkəyə giriş söndürülüb, bu da şəbəkənizdəki ünvanları bloklayır.</string>
     <string name="ce_permission_permanently_denied">%1$s rədd edildi. İstifadə etmək üçün sistem ayarlarında İcazələr altında \"%2$s\" icazəsini verin.</string>
 </resources>

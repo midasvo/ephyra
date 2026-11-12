@@ -1,5 +1,7 @@
 package dev.jdtech.jellyfin.setup.presentation
 
+import dev.jdtech.jellyfin.setup.domain.FakeLocalNetworkAccess
+import dev.jdtech.jellyfin.setup.domain.ServerLocalNetworkBlock
 import dev.jdtech.jellyfin.setup.domain.SetupRepository
 import dev.jdtech.jellyfin.setup.presentation.login.LoginAction
 import dev.jdtech.jellyfin.setup.presentation.login.LoginViewModel
@@ -44,7 +46,7 @@ class LoginQuickConnectTest {
     @Test
     fun `a second press cancels the code and a third press starts a new one`() =
         runTest(scheduler) {
-            val viewModel = LoginViewModel(fakeRepository())
+            val viewModel = LoginViewModel(fakeRepository(), ServerLocalNetworkBlock(FakeLocalNetworkAccess(), { null }))
 
             viewModel.onAction(LoginAction.OnQuickConnectClick)
             runCurrent()
@@ -74,7 +76,7 @@ class LoginQuickConnectTest {
     @Test
     fun `a fast double press leaves no code and nothing polling`() =
         runTest(scheduler) {
-            val viewModel = LoginViewModel(fakeRepository())
+            val viewModel = LoginViewModel(fakeRepository(), ServerLocalNetworkBlock(FakeLocalNetworkAccess(), { null }))
 
             // Both presses land before the first one has asked the server for a code.
             viewModel.onAction(LoginAction.OnQuickConnectClick)

@@ -6,10 +6,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.settings.domain.models.PermissionDefinitions
 import dev.jdtech.jellyfin.setup.domain.LocalNetworkAccess
 import dev.jdtech.jellyfin.setup.domain.LocalNetworkAccessImpl
+import dev.jdtech.jellyfin.setup.domain.ServerLocalNetworkBlock
 import dev.jdtech.jellyfin.setup.presentation.permission.PermissionRequest
 import javax.inject.Singleton
 
@@ -32,4 +34,13 @@ object PermissionModule {
     @Singleton
     fun provideLocalNetworkAccess(@ApplicationContext context: Context): LocalNetworkAccess =
         LocalNetworkAccessImpl(context)
+
+    /** CE (#571): whether the denied permission is what keeps the server in use out of reach. */
+    @Provides
+    @Singleton
+    fun provideServerLocalNetworkBlock(
+        access: LocalNetworkAccess,
+        jellyfinApi: JellyfinApi,
+    ): ServerLocalNetworkBlock =
+        ServerLocalNetworkBlock(access = access, serverAddress = { jellyfinApi.api.baseUrl })
 }

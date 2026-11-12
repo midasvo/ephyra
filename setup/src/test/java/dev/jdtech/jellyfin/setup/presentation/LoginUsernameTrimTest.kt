@@ -1,5 +1,7 @@
 package dev.jdtech.jellyfin.setup.presentation
 
+import dev.jdtech.jellyfin.setup.domain.FakeLocalNetworkAccess
+import dev.jdtech.jellyfin.setup.domain.ServerLocalNetworkBlock
 import dev.jdtech.jellyfin.setup.domain.SetupRepository
 import dev.jdtech.jellyfin.setup.presentation.login.LoginAction
 import dev.jdtech.jellyfin.setup.presentation.login.LoginViewModel
@@ -51,7 +53,7 @@ class LoginUsernameTrimTest {
 
     @Test
     fun `a username with spaces around it reaches the repository trimmed`() = runTest {
-        val viewModel = LoginViewModel(repository)
+        val viewModel = LoginViewModel(repository, ServerLocalNetworkBlock(FakeLocalNetworkAccess(), { null }))
 
         viewModel.onAction(LoginAction.OnLoginClick(" demo  ", " pass word "))
 

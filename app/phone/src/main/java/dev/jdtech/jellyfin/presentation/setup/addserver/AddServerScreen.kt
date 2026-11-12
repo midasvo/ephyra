@@ -1,8 +1,5 @@
 package dev.jdtech.jellyfin.presentation.setup.addserver
 
-import android.app.Activity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -52,16 +49,13 @@ import dev.jdtech.jellyfin.presentation.setup.components.DiscoveredServerItem
 import dev.jdtech.jellyfin.presentation.setup.components.LoadingButton
 import dev.jdtech.jellyfin.presentation.setup.components.RootLayout
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
-import dev.jdtech.jellyfin.settings.domain.models.PermissionDefinitions
+import dev.jdtech.jellyfin.presentation.utils.rememberLocalNetworkRequest
 import dev.jdtech.jellyfin.setup.R as SetupR
-import dev.jdtech.jellyfin.setup.domain.shouldOpenSettingsAfterRefusal
 import dev.jdtech.jellyfin.setup.presentation.addserver.AddServerAction
 import dev.jdtech.jellyfin.setup.presentation.addserver.AddServerEvent
 import dev.jdtech.jellyfin.setup.presentation.addserver.AddServerState
 import dev.jdtech.jellyfin.setup.presentation.addserver.AddServerViewModel
 import dev.jdtech.jellyfin.utils.ObserveAsEvents
-import dev.jdtech.jellyfin.utils.openAppSettings
-import dev.jdtech.jellyfin.utils.shouldShowPermissionRationale
 
 @Composable
 fun AddServerScreen(
@@ -79,26 +73,9 @@ fun AddServerScreen(
         onPauseOrDispose {}
     }
 
-    // CE (#376): the request behind the notice's button. The system shows no dialog once the
-    // permission was denied twice; only then the button opens the system settings.
-    val context = LocalContext.current
-    val permission = PermissionDefinitions.localNetwork
-    var rationaleBefore by rememberSaveable { mutableStateOf(false) }
-    val launcher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            val activity = context as? Activity
-            if (granted) {
-                viewModel.onAction(AddServerAction.OnResume)
-            } else if (
-                activity != null &&
-                    shouldOpenSettingsAfterRefusal(
-                        rationaleBefore = rationaleBefore,
-                        rationaleAfter = shouldShowPermissionRationale(activity, permission),
-                    )
-            ) {
-                openAppSettings(context)
-            }
-        }
+    // CE (#376): the request behind the notice's button, shared with the error screens (#571).
+    val requestLocalNetwork =
+        rememberLocalNetworkRequest(onGranted = { viewModel.onAction(AddServerAction.OnResume) })
 
     ObserveAsEvents(viewModel.events) { event ->
         when (event) {
@@ -115,12 +92,7 @@ fun AddServerScreen(
             }
             viewModel.onAction(action)
         },
-        onAllowLocalNetworkClick = {
-            rationaleBefore =
-                (context as? Activity)?.let { shouldShowPermissionRationale(it, permission) }
-                    ?: false
-            launcher.launch(permission.id)
-        },
+        onAllowLocalNetworkClick = requestLocalNetwork,
     )
 }
 

@@ -55,6 +55,7 @@
     <string name="ce_local_network_denied">로컬 네트워크 액세스가 꺼져 있습니다. 이 권한이 없으면 네트워크에 있는 서버를 찾거나 연결할 수 없습니다.</string>
     <string name="ce_local_network_denied_where">시스템 설정의 권한 &gt; %1$s에 있습니다.</string>
     <string name="ce_local_network_allow">액세스 허용</string>
+    <string name="ce_local_network_off">로컬 네트워크 액세스가 꺼져 있습니다</string>
     <string name="ce_add_server_error_local_network">서버를 찾을 수 없습니다. 로컬 네트워크 액세스가 꺼져 있어 네트워크의 주소가 차단됩니다.</string>
     <string name="ce_permission_permanently_denied">%1$s 권한이 거부되었습니다. 사용하려면 시스템 설정의 권한에서 \"%2$s\"을(를) 허용하세요.</string>
 </resources>
