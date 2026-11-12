@@ -249,20 +249,45 @@ class PlayerInvariantsTest {
             Regex("""MpvEvent\.MPV_EVENT_START_FILE -> \{[\s\S]*?\n {16}\}""").find(mpvPlayer)
         assertTrue("MPVPlayer's START_FILE branch not found", startFile != null)
         assertTrue(
-            "START_FILE must execute subtitle loading on subtitleExecutor (#617)",
-            startFile!!.value.contains("subtitleExecutor.execute"),
+            "START_FILE must submit subtitle loading to subtitleExecutor (#617)",
+            startFile!!.value.contains("subtitleExecutor.submit") &&
+                startFile.value.contains("loadSubtitles("),
         )
         assertFalse(
             "START_FILE must not run sub-add directly on the main thread (#617)",
             startFile.value.contains("mpvLib.command("),
         )
-        assertFalse(
-            "START_FILE must not clear initialCommands, or a reload after an error loses subtitles (#617)",
-            startFile.value.contains("initialCommands.clear()"),
+
+        // The subtitle list must only be cleared when resetting internal state, not on START_FILE
+        // or during load, so error recovery (reloadAfterError) still has and loads them.
+        val clearMatches = Regex("""\binitialCommands\.clear\(\)""").findAll(mpvPlayer).toList()
+        org.junit.Assert.assertEquals(
+            "initialCommands.clear() must only be called in resetInternalState (#617)",
+            1,
+            clearMatches.size,
+        )
+        val resetInternalState =
+            Regex("""private fun resetInternalState\(\)\s*\{[\s\S]*?\n    \}""").find(mpvPlayer)
+        assertTrue("resetInternalState not found", resetInternalState != null)
+        assertTrue(
+            "resetInternalState must clear initialCommands",
+            resetInternalState!!.value.contains("initialCommands.clear()"),
+        )
+
+        val loadSubtitles =
+            Regex("""private fun loadSubtitles\([\s\S]*?\n    \}""").find(mpvPlayer)
+        assertTrue("MPVPlayer.loadSubtitles not found (#617)", loadSubtitles != null)
+        assertTrue(
+            "loadSubtitles must execute the subtitle commands via mpvLib.command (#617)",
+            loadSubtitles!!.value.contains("mpvLib.command(command)"),
         )
         assertTrue(
-            "MPVPlayer must preserve the subtitle track selection across sub-add (#617)",
-            mpvPlayer.contains("targetSubtitleTrack("),
+            "loadSubtitles must evaluate targetSubtitleTrack after command completes (#617)",
+            loadSubtitles.value.contains("targetSubtitleTrack(trackSelectionParameters)"),
+        )
+        assertTrue(
+            "loadSubtitles must restore the target track using selectTrack (#617)",
+            loadSubtitles.value.contains("selectTrack(MPVTrackType.SUBTITLE, targetSid)"),
         )
     }
 }

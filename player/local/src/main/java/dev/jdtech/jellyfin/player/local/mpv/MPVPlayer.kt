@@ -47,6 +47,7 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -420,13 +421,14 @@ class MPVPlayer(
 
     /**
      * CE (#617): runs `sub-add` commands off the main thread so slow subtitle downloads do not
-     * block the UI. A single-thread executor preserves the queue order (#597).
+     * block the UI.
      */
     private val subtitleExecutor =
-        Executors.newSingleThreadExecutor { runnable ->
+        Executors.newCachedThreadPool { runnable ->
             Thread(runnable, "mpv-subtitles").apply { isDaemon = true }
         }
-    private val mpvLock = Any()
+    @Volatile
+    private var activeSubtitleJob: Future<*>? = null
     @Volatile
     private var loadGeneration: Long = 0L
     private var subtitlesLoadedGeneration: Long = -1L
@@ -641,9 +643,11 @@ class MPVPlayer(
                         subtitlesLoadedGeneration = loadGeneration
                         val commands = initialCommands.toList()
                         val currentGen = loadGeneration
-                        subtitleExecutor.execute {
-                            loadSubtitles(commands, currentGen)
-                        }
+                        val expectedIndex = currentMediaItemIndex
+                        activeSubtitleJob =
+                            subtitleExecutor.submit {
+                                loadSubtitles(commands, currentGen, expectedIndex)
+                            }
                     }
                 }
                 MpvEvent.MPV_EVENT_FILE_LOADED -> {
@@ -852,27 +856,46 @@ class MPVPlayer(
     /**
      * CE (#617): loads external subtitles off the main thread.
      *
-     * `sub-add` with `auto` causes mpv to re-evaluate auto track selection, which would switch away
-     * from an already selected track or undo a track choice (e.g. forced subtitles of #597, or
-     * subtitles disabled by the user). We preserve the active or configured selection across each
-     * `sub-add`.
+     * In mpv, `sub-add` with `auto` causes mpv to re-evaluate auto track selection. If the user or
+     * series preference explicitly disabled subtitles or picked an override, we restore that
+     * selection after `sub-add` completes so late-arriving subtitles do not override it.
      */
-    private fun loadSubtitles(commands: List<Array<String>>, generation: Long) {
+    private fun loadSubtitles(commands: List<Array<String>>, generation: Long, expectedIndex: Int) {
         for (command in commands) {
-            synchronized(mpvLock) {
-                if (released || loadGeneration != generation) return
-                val targetSid =
-                    targetSubtitleTrack(
-                        trackSelectionParameters,
-                        mpvLib.getPropertyString("sid"),
-                    )
+            try {
+                if (
+                    Thread.interrupted() ||
+                        released ||
+                        loadGeneration != generation ||
+                        currentMediaItemIndex != expectedIndex
+                ) {
+                    return
+                }
 
                 mpvLib.command(command)
 
-                if (released || loadGeneration != generation) return
+                if (
+                    Thread.interrupted() ||
+                        released ||
+                        loadGeneration != generation ||
+                        currentMediaItemIndex != expectedIndex
+                ) {
+                    // Item transitioned or playback stopped while sub-add was downloading; remove the
+                    // subtitle so it does not attach to the newly selected item.
+                    try {
+                        mpvLib.command(arrayOf("sub-remove"))
+                    } catch (_: Throwable) {}
+                    return
+                }
+
+                // Check track selection parameters AFTER sub-add finishes so any user selection
+                // made while sub-add was in flight is honored and not overwritten.
+                val targetSid = targetSubtitleTrack(trackSelectionParameters)
                 if (targetSid != null && mpvLib.getPropertyString("sid") != targetSid) {
                     selectTrack(MPVTrackType.SUBTITLE, targetSid)
                 }
+            } catch (_: Throwable) {
+                return
             }
         }
     }
@@ -1272,6 +1295,8 @@ class MPVPlayer(
         forcedSubtitleFiles.clear()
         loadGeneration++
         subtitlesLoadedGeneration = -1L
+        activeSubtitleJob?.cancel(true)
+        activeSubtitleJob = null
     }
 
     /** Prepares the player. */
@@ -1304,6 +1329,9 @@ class MPVPlayer(
      * the failure of the file before it ([MpvLoadState]) and drops a report that was still held.
      */
     private fun startNewLoad(index: Int?) {
+        loadGeneration++
+        activeSubtitleJob?.cancel(true)
+        activeSubtitleJob = null
         loadState.newLoad(index)
         handler.removeCallbacks(loadErrorHoldTimeout)
     }
@@ -1711,10 +1739,10 @@ class MPVPlayer(
         handler.removeCallbacksAndMessages(null)
         listeners.release()
         released = true
+        activeSubtitleJob?.cancel(true)
+        activeSubtitleJob = null
         subtitleExecutor.shutdownNow()
-        synchronized(mpvLock) {
-            mpvLib.destroy()
-        }
+        mpvLib.destroy()
     }
 
     private fun detachVideoSurface() {

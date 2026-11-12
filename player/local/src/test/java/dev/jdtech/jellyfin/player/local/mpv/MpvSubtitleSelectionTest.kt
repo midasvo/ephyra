@@ -14,9 +14,10 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * #617: a subtitle that arrives late must not undo the track selection. When sub-add runs, mpv
- * re-evaluates automatic track selection and would otherwise switch to the newly loaded subtitle,
- * overriding the user's choice or the forced subtitle of #597.
+ * #617: a subtitle that arrives late must not undo the user's explicit track selection. When sub-add
+ * runs, mpv re-evaluates automatic track selection and would otherwise switch to the newly loaded
+ * subtitle, overriding the user's choice or disabled state. Automatic selection remains unforced so
+ * mpv can select the best language match across all added subtitles.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -26,41 +27,28 @@ class MpvSubtitleSelectionTest {
         TrackGroup(Format.Builder().setId(id).setSampleMimeType(type).build())
 
     @Test
-    fun `automatic selection with no subtitle selected lets mpv choose`() {
-        assertNull(targetSubtitleTrack(TrackSelectionParameters.DEFAULT, null))
-        assertNull(targetSubtitleTrack(TrackSelectionParameters.DEFAULT, "no"))
-        assertNull(targetSubtitleTrack(TrackSelectionParameters.DEFAULT, "auto"))
+    fun `automatic selection lets mpv choose without forcing a track`() {
+        assertNull(targetSubtitleTrack(TrackSelectionParameters.DEFAULT))
     }
 
     @Test
-    fun `an already selected subtitle track is preserved`() {
-        // #597: a forced subtitle added before external ones, or an embedded track inside the file.
-        assertEquals("1", targetSubtitleTrack(TrackSelectionParameters.DEFAULT, "1"))
-        assertEquals("2", targetSubtitleTrack(TrackSelectionParameters.DEFAULT, "2"))
-    }
-
-    @Test
-    fun `disabled subtitles stay disabled`() {
+    fun `disabled subtitles return no`() {
         val parameters =
             TrackSelectionParameters.DEFAULT.buildUpon()
                 .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
                 .build()
 
-        assertEquals("no", targetSubtitleTrack(parameters, null))
-        assertEquals("no", targetSubtitleTrack(parameters, "no"))
-        assertEquals("no", targetSubtitleTrack(parameters, "1"))
+        assertEquals("no", targetSubtitleTrack(parameters))
     }
 
     @Test
-    fun `an explicit subtitle override is preserved`() {
+    fun `explicit subtitle override returns format id`() {
         val parameters =
             TrackSelectionParameters.DEFAULT.buildUpon()
                 .setOverrideForType(TrackSelectionOverride(group(MimeTypes.TEXT_VTT, "3"), 0))
                 .build()
 
-        assertEquals("3", targetSubtitleTrack(parameters, null))
-        assertEquals("3", targetSubtitleTrack(parameters, "no"))
-        assertEquals("3", targetSubtitleTrack(parameters, "1"))
+        assertEquals("3", targetSubtitleTrack(parameters))
     }
 
     @Test
@@ -70,7 +58,6 @@ class MpvSubtitleSelectionTest {
                 .setOverrideForType(TrackSelectionOverride(group(MimeTypes.AUDIO_AAC, "2"), 0))
                 .build()
 
-        assertNull(targetSubtitleTrack(parameters, "no"))
-        assertEquals("1", targetSubtitleTrack(parameters, "1"))
+        assertNull(targetSubtitleTrack(parameters))
     }
 }
