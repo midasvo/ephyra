@@ -121,7 +121,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlinx.coroutines.flow.flow
@@ -444,11 +443,18 @@ constructor(
         itemDurationUs.set(if (durationMs == C.TIME_UNSET) C.TIME_UNSET else durationMs * 1000)
     }
 
-    var subtitleDelayMs: Int = 0
-        private set
+    private val _subtitleDelay = MutableStateFlow(0)
+
+    /**
+     * CE (#619): the subtitle delay of the playing item. The sheets collect it, so they show 0
+     * again when the next item starts while they are open.
+     */
+    val subtitleDelay: StateFlow<Int> = _subtitleDelay.asStateFlow()
+
+    val subtitleDelayMs: Int
+        get() = _subtitleDelay.value
 
     private val _currentTrackCues = MutableStateFlow<List<SubtitleSyncCue>>(emptyList())
-    val currentTrackCues: StateFlow<List<SubtitleSyncCue>> = _currentTrackCues.asStateFlow()
 
     private val _isLoadingCues = MutableStateFlow(false)
     val isLoadingCues: StateFlow<Boolean> = _isLoadingCues.asStateFlow()
@@ -463,13 +469,15 @@ constructor(
         }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private var cueLoadingJob: Job? = null
-    private var loadedTrackIndex: Int? = null
+
+    /** The item and track the cues are for, so the same track is not loaded twice. */
+    private var loadedCueKey: String? = null
 
     /** CE (#619): adjusts subtitle delay for the active item. */
     fun setSubtitleDelay(delayMs: Int) {
         val clamped = delayMs.coerceIn(-180_000, 180_000)
         if (clamped == subtitleDelayMs) return
-        subtitleDelayMs = clamped
+        _subtitleDelay.value = clamped
         // ExoPlayer: SubtitleOffsetRenderer picks the new delay up on its next render, also
         // while paused, so the player is not asked to seek.
         subtitleOffsetUs.set(clamped * 1000L)
@@ -478,48 +486,46 @@ constructor(
         }
     }
 
-    /** CE (#619): Returns the dialogue cues closest in time to [positionMs]. */
-    fun getNearbyCues(positionMs: Long, count: Int = 5): List<SubtitleSyncCue> {
-        val cues = activeCues.value
-        if (cues.isEmpty()) return emptyList()
-        return cues
-            .sortedBy { abs(it.startTimeMs - positionMs) }
-            .take(count)
-            .sortedBy { it.startTimeMs }
-    }
+    /** The subtitle track the cues were last collected for, see [onTracksChanged]. */
+    private var selectedTextCueKey: String? = null
 
-    /** CE (#619): Asynchronously parses dialogue cues for the currently selected subtitle track. */
-    fun loadCuesForActiveTrack(trackIndex: Int) {
-        if (trackIndex < 0) {
-            cueLoadingJob?.cancel()
-            loadedTrackIndex = null
-            _currentTrackCues.value = emptyList()
+    private fun textTrackFormat(trackIndex: Int): Format? =
+        if (trackIndex < 0) null
+        else supportedGroups(C.TRACK_TYPE_TEXT).getOrNull(trackIndex)?.mediaTrackGroup?.getFormat(0)
+
+    private fun cueKey(trackIndex: Int, format: Format): String =
+        "${player.currentMediaItem?.mediaId}|$trackIndex|${format.id}|${format.language}|${format.label}"
+
+    /**
+     * CE (#619): Drops the cues of the previous track or item, and any load still running.
+     * [keepLiveCues] keeps the ones seen on screen: they are the playing track's.
+     */
+    private fun clearSubtitleCues(keepLiveCues: Boolean = false) {
+        cueLoadingJob?.cancel()
+        cueLoadingJob = null
+        loadedCueKey = null
+        _currentTrackCues.value = emptyList()
+        if (!keepLiveCues) {
             synchronized(_observedLiveCues) { _observedLiveCues.clear() }
             _liveTrackCues.value = emptyList()
-            _isLoadingCues.value = false
-            return
         }
+        _isLoadingCues.value = false
+    }
 
-        if (trackIndex == loadedTrackIndex && _currentTrackCues.value.isNotEmpty()) {
-            return
-        }
+    /**
+     * CE (#619): loads the dialogue cues of the subtitle track at [trackIndex] of
+     * [trackChoices], for the sync sheet. -1 (no subtitles) clears them. Asking again for the
+     * track whose cues are loaded or loading does nothing. Main thread only.
+     */
+    fun loadCuesForActiveTrack(trackIndex: Int) {
+        val format = textTrackFormat(trackIndex)
+        val key = format?.let { cueKey(trackIndex, it) }
+        if (key != null && key == loadedCueKey) return
 
-        cueLoadingJob?.cancel()
-        synchronized(_observedLiveCues) { _observedLiveCues.clear() }
-        _liveTrackCues.value = emptyList()
-        _currentTrackCues.value = emptyList()
-        loadedTrackIndex = trackIndex
-
-        val item = currentPlayerItem() ?: run {
-            _isLoadingCues.value = false
-            return
-        }
-        val groups = supportedGroups(C.TRACK_TYPE_TEXT)
-        val group = groups.getOrNull(trackIndex) ?: run {
-            _isLoadingCues.value = false
-            return
-        }
-        val format = group.mediaTrackGroup.getFormat(0)
+        clearSubtitleCues(keepLiveCues = key != null && key == selectedTextCueKey)
+        val item = currentPlayerItem()
+        if (format == null || item == null) return
+        loadedCueKey = key
 
         val extSub =
             item.externalSubtitles.firstOrNull { it.uri.toString() == format.id }
@@ -527,40 +533,42 @@ constructor(
                     it.language.equals(format.language, ignoreCase = true) &&
                         it.title.equals(format.label, ignoreCase = true)
                 }
+        // An embedded track has no file to read: its cues are the ones onCues sees.
+        val uri = extSub?.uri ?: return
+        val subtitleUrl = uri.toString()
 
-        val subtitleUrl = extSub?.uri?.toString()
-        if (subtitleUrl.isNullOrBlank()) {
-            _isLoadingCues.value = false
-            return
-        }
-
-        val currentJob = viewModelScope.launch(Dispatchers.IO) {
-            _isLoadingCues.value = true
-            try {
-                val text =
-                    if (extSub.uri.scheme == "file") {
-                        val file = java.io.File(extSub.uri.path!!)
-                        if (file.exists() && file.length() <= 5L * 1024 * 1024) {
-                            file.readText()
-                        } else ""
-                    } else {
-                        fetchSubtitleTextSafely(subtitleUrl)
+        _isLoadingCues.value = true
+        // Runs on the main thread, only the reading on IO, so the state is written in one place,
+        // and a newer load cancels this one before it can publish anything.
+        cueLoadingJob =
+            viewModelScope.launch {
+                val parsed =
+                    try {
+                        withContext(Dispatchers.IO) {
+                            val text =
+                                if (uri.scheme == "file") {
+                                    val file = java.io.File(uri.path.orEmpty())
+                                    if (file.exists() && file.length() <= MAX_SUBTITLE_BYTES) {
+                                        file.readText()
+                                    } else ""
+                                } else {
+                                    fetchSubtitleTextSafely(subtitleUrl)
+                                }
+                            if (text.isBlank()) null
+                            else AutoSyncSubtitleCueParser.parse(text, subtitleUrl)
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Timber.w(e, "Could not load subtitle cues for sync")
+                        null
                     }
-                if (isActive && text.isNotBlank()) {
-                    val parsed = AutoSyncSubtitleCueParser.parse(text, subtitleUrl)
-                    _currentTrackCues.value = parsed
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.w(e, "Could not load subtitle cues for sync")
-            } finally {
-                if (cueLoadingJob == coroutineContext[Job]) {
-                    _isLoadingCues.value = false
-                }
+                // Nothing loaded: the next request for this track tries again.
+                if (parsed.isNullOrEmpty()) loadedCueKey = null
+                _currentTrackCues.value = parsed.orEmpty()
+                _isLoadingCues.value = false
+                cueLoadingJob = null
             }
-        }
-        cueLoadingJob = currentJob
     }
 
     private suspend fun fetchSubtitleTextSafely(url: String): String =
@@ -587,31 +595,33 @@ constructor(
                     }
 
                     override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
-                        response.use { resp ->
-                            if (!resp.isSuccessful) {
-                                if (continuation.isActive) continuation.resume("")
-                                return
+                        // Whatever happens while the body is read, resume: OkHttp calls neither
+                        // callback again after this one throws, and the load would never end.
+                        val text =
+                            try {
+                                response.use { resp ->
+                                    val body = resp.body
+                                    if (
+                                        !resp.isSuccessful ||
+                                            body == null ||
+                                            body.contentLength() > MAX_SUBTITLE_BYTES
+                                    ) {
+                                        ""
+                                    } else {
+                                        val source = body.source()
+                                        source.request(MAX_SUBTITLE_BYTES)
+                                        val buffer = source.buffer
+                                        buffer.readString(
+                                            minOf(buffer.size, MAX_SUBTITLE_BYTES),
+                                            java.nio.charset.StandardCharsets.UTF_8,
+                                        )
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Timber.w(e, "Could not read subtitle cues for sync")
+                                ""
                             }
-                            val body = resp.body
-                            if (body == null) {
-                                if (continuation.isActive) continuation.resume("")
-                                return
-                            }
-                            val maxBytes = 5L * 1024 * 1024
-                            val length = body.contentLength()
-                            if (length > maxBytes) {
-                                if (continuation.isActive) continuation.resume("")
-                                return
-                            }
-                            val source = body.source()
-                            source.request(maxBytes)
-                            val buffer = source.buffer
-                            val toRead = minOf(buffer.size, maxBytes)
-                            val string = buffer.clone().readString(toRead, java.nio.charset.StandardCharsets.UTF_8)
-                            if (continuation.isActive) {
-                                continuation.resume(string)
-                            }
-                        }
+                        if (continuation.isActive) continuation.resume(text)
                     }
                 }
             )
@@ -1232,13 +1242,8 @@ constructor(
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         Timber.d("Playing MediaItem: ${mediaItem?.mediaId}")
         updateItemDuration()
-        cueLoadingJob?.cancel()
-        loadedTrackIndex = null
         setSubtitleDelay(0)
-        _currentTrackCues.value = emptyList()
-        synchronized(_observedLiveCues) { _observedLiveCues.clear() }
-        _liveTrackCues.value = emptyList()
-        _isLoadingCues.value = false
+        clearSubtitleCues()
         displayRefreshRateManager.onMediaItemTransition()
         loggedDisplayFrameRate = null
         // CE (#450): another item: no reload of the one that lost its connection.
@@ -2011,6 +2016,7 @@ constructor(
 
     override fun onTracksChanged(tracks: Tracks) {
         handleDisplayRefreshRate(tracks)
+        onTextTrackMaybeChanged()
         val selectableTracks =
             tracks.groups.count { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }
         val itemId = player.currentMediaItem?.mediaId
@@ -2067,17 +2073,28 @@ constructor(
             }
             player.trackSelectionParameters = applied.build()
         }
-        val textGroups = tracks.groups.filter { it.type == C.TRACK_TYPE_TEXT && it.isSupported }
-        val selectedTextIndex = textGroups.indexOfFirst { it.isSelected }
-        if (selectedTextIndex >= 0) {
-            loadCuesForActiveTrack(selectedTextIndex)
-        }
+    }
+
+    /**
+     * CE (#619): forgets the cues once another subtitle track plays (or none), whoever switched
+     * it: the sync sheet must not offer one track's lines for another. The new track's cues are
+     * loaded when the sheet asks for them, not on every item.
+     */
+    private fun onTextTrackMaybeChanged() {
+        val index = supportedGroups(C.TRACK_TYPE_TEXT).indexOfFirst { it.isSelected }
+        val key = textTrackFormat(index)?.let { cueKey(index, it) }
+        if (key == selectedTextCueKey) return
+        selectedTextCueKey = key
+        // The sheet may have asked for the new track before the player switched to it.
+        if (key == null || key != loadedCueKey) clearSubtitleCues()
     }
 
     override fun onCues(cueGroup: CueGroup) {
         val cues = cueGroup.cues
         if (cues.isNotEmpty()) {
-            val currentPos = player.currentPosition
+            // The cue shows the delay later than the track has it. The sheet sets the delay
+            // from the track's own times, like those of a parsed file, so take the delay off.
+            val currentPos = (player.currentPosition - subtitleDelayMs).coerceAtLeast(0L)
             var addedAny = false
             for (cue in cues) {
                 val text = cue.text?.toString()?.trim()
@@ -2188,9 +2205,6 @@ constructor(
                     )
                     .setTrackTypeDisabled(trackType, false)
                     .build()
-        }
-        if (trackType == C.TRACK_TYPE_TEXT) {
-            loadCuesForActiveTrack(index)
         }
         rememberTrackChoice(trackType, index)
     }
@@ -2650,6 +2664,9 @@ sealed interface PlayerEvents {
 
 /** How often a running sleep timer updates [PlayerViewModel.sleepTimerState] and checks its end. */
 private const val SLEEP_TIMER_TICK_MS = 1_000L
+
+/** CE (#619): the largest subtitle file read for the sync sheet's cues. */
+private const val MAX_SUBTITLE_BYTES = 5L * 1024 * 1024
 
 /** How often [PlayerViewModel.upNext] is updated. */
 private const val UP_NEXT_TICK_MS = 500L

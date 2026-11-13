@@ -763,7 +763,8 @@ fun TvPlayerScreen(
             }
             PlayerDialog.SUBTITLES -> {
                 val choices = remember { viewModel.trackChoices(C.TRACK_TYPE_TEXT, context) }
-                var delayMs by remember { mutableIntStateOf(viewModel.subtitleDelayMs) }
+                // Observed: the next item starts at 0 also while the dialog is open.
+                val delayMs by viewModel.subtitleDelay.collectAsStateWithLifecycle()
                 TvSubtitleDialog(
                     options = listOf(stringResource(PlayerR.string.none)) + choices.names,
                     selectedIndex = choices.selected + 1,
@@ -771,10 +772,7 @@ fun TvPlayerScreen(
                     onSelectTrack = { index ->
                         viewModel.switchToTrack(C.TRACK_TYPE_TEXT, index - 1)
                     },
-                    onDelayChanged = { newDelay ->
-                        delayMs = newDelay
-                        viewModel.setSubtitleDelay(newDelay)
-                    },
+                    onDelayChanged = { newDelay -> viewModel.setSubtitleDelay(newDelay) },
                     onDismiss = close,
                 )
             }

@@ -35,19 +35,20 @@ class SubtitleSyncDialogFragment : DialogFragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 FindroidTheme(darkTheme = true) {
-                    val currentItemId = viewModel.player.currentMediaItem?.mediaId
-                    key(currentItemId) {
+                    // Observed, so the sheet starts over with the next item's tracks when the
+                    // queue moves on while it is open.
+                    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                    key(uiState.currentItemId) {
                         val choices = remember { viewModel.trackChoices(C.TRACK_TYPE_TEXT, context) }
                         var selectedTrackIndex by remember { mutableIntStateOf(choices.selected) }
-                        var delayMs by remember { mutableIntStateOf(viewModel.subtitleDelayMs) }
+                        val delayMs by viewModel.subtitleDelay.collectAsStateWithLifecycle()
 
                         val cues by viewModel.activeCues.collectAsStateWithLifecycle()
                         val isLoadingCues by viewModel.isLoadingCues.collectAsStateWithLifecycle()
 
-                        LaunchedEffect(Unit) {
-                            if (selectedTrackIndex >= 0 && cues.isEmpty()) {
-                                viewModel.loadCuesForActiveTrack(selectedTrackIndex)
-                            }
+                        // The view model loads a track once and ignores asking again for it.
+                        LaunchedEffect(selectedTrackIndex) {
+                            viewModel.loadCuesForActiveTrack(selectedTrackIndex)
                         }
 
                         val tracks =
@@ -72,10 +73,7 @@ class SubtitleSyncDialogFragment : DialogFragment() {
                                 selectedTrackIndex = newIndex
                                 viewModel.switchToTrack(C.TRACK_TYPE_TEXT, newIndex)
                             },
-                            onDelayChanged = { newDelay ->
-                                delayMs = newDelay
-                                viewModel.setSubtitleDelay(newDelay)
-                            },
+                            onDelayChanged = { newDelay -> viewModel.setSubtitleDelay(newDelay) },
                             onDismiss = { dismiss() },
                         )
                     }
