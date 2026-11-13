@@ -106,6 +106,9 @@ class JellyfinApi(
         okHttpFactory.base
             .newBuilder()
             .apply { interceptors().clear() }
+            // A redirect is an answer already; the probe goes nowhere the server sends it.
+            .followRedirects(false)
+            .followSslRedirects(false)
             .connectTimeout(PROBE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .readTimeout(PROBE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .callTimeout(PROBE_TIMEOUT_MS, TimeUnit.MILLISECONDS)

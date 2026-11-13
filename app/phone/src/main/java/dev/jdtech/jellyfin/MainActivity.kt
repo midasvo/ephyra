@@ -55,13 +55,18 @@ class MainActivity : AppCompatActivity() {
             // CE (#281): whether the server answers, for the banner and the error pages.
             val server by viewModel.serverStatus.collectAsStateWithLifecycle()
             val serverStatus =
-                remember(server) {
-                    ServerStatusUi(
-                        unreachable = server.unreachable,
-                        confirmedUnreachable = server.confirmedUnreachable,
-                        hasDownloads = server.hasDownloads,
-                        check = viewModel::checkServer,
-                    )
+                remember(server, state.isOfflineMode) {
+                    if (state.isOfflineMode) {
+                        // Offline Mode shows its own chip and asks nothing of the server.
+                        ServerStatusUi()
+                    } else {
+                        ServerStatusUi(
+                            unreachable = server.unreachable,
+                            confirmedUnreachable = server.confirmedUnreachable,
+                            hasDownloads = server.hasDownloads,
+                            check = viewModel::checkServer,
+                        )
+                    }
                 }
 
             FindroidTheme(dynamicColor = state.isDynamicColors) {

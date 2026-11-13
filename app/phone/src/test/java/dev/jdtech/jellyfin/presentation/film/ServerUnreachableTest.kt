@@ -23,6 +23,8 @@ import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyServer
 import dev.jdtech.jellyfin.core.presentation.localnetwork.LocalLocalNetworkBlock
 import dev.jdtech.jellyfin.core.presentation.localnetwork.LocalNetworkBlock
+import dev.jdtech.jellyfin.film.presentation.collection.CollectionAction
+import dev.jdtech.jellyfin.film.presentation.collection.CollectionState
 import dev.jdtech.jellyfin.film.presentation.home.HomeAction
 import dev.jdtech.jellyfin.film.presentation.home.HomeState
 import dev.jdtech.jellyfin.models.FindroidTrailer
@@ -254,6 +256,38 @@ class ServerUnreachableTest {
 
         rule.onNodeWithText(string(SetupR.string.ce_local_network_off)).assertIsDisplayed()
         assertAbsent(unreachableText)
+    }
+
+    // Favorites
+
+    private fun setFavorites(state: CollectionState) = setContent {
+        CollectionScreenLayout(
+            collectionName = "Favorites",
+            state = state,
+            onAction = { if (it is CollectionAction.OnRetryClick) retries++ },
+            emptyTitle = "No favorites",
+            showNavigationIcon = false,
+            serverBanner = true,
+        )
+    }
+
+    @Test
+    fun favoritesWithNothingInThemStillSayTheServerIsAway() {
+        status = unreachable()
+        setFavorites(CollectionState(isLoading = false))
+
+        rule.onNodeWithText(unreachableText).assertIsDisplayed()
+        rule.onNodeWithText("No favorites").assertIsDisplayed()
+        rule.onNodeWithText(string(CoreR.string.title_download)).performClick()
+        assertEquals(1, downloadsOpened)
+    }
+
+    @Test
+    fun favoritesThatFailedWithNothingToShowSayItOnce() {
+        status = unreachable()
+        setFavorites(CollectionState(isLoading = false, error = ConnectException("Failed")))
+
+        rule.onAllNodes(hasText(unreachableText)).assertCountEquals(1)
     }
 
     // The error page of the other screens

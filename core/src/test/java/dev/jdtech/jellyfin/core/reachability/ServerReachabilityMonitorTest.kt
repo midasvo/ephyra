@@ -314,6 +314,62 @@ class ServerReachabilityMonitorTest {
     }
 
     @Test
+    fun `Offline Mode switched on while unreachable clears what was known`() = runTest {
+        probe = { false }
+        val monitor = monitor()
+        monitor.onForeground()
+        runCurrent()
+        assertTrue(monitor.state.value.unreachable)
+
+        // The setting restarts the activity: the app is in front again with the mode on.
+        enabled = false
+        monitor.onBackground()
+        monitor.onForeground()
+        runCurrent()
+
+        assertEquals(Reachability.Unknown, monitor.reachability)
+    }
+
+    @Test
+    fun `an answer about the old server is dropped and the new one is asked`() = runTest {
+        var reached = false
+        probe = {
+            delay(1_000)
+            reached
+        }
+        val monitor = monitor()
+        monitor.check()
+        runCurrent()
+        assertEquals(1, probes)
+
+        // The user switches server while the probe to the old, dead one is out.
+        reached = true
+        monitor.reset()
+        advanceTimeBy(1_001)
+        runCurrent()
+        assertFalse("the old server's answer", monitor.state.value.unreachable)
+
+        advanceTimeBy(250 + 1_001)
+        runCurrent()
+        assertEquals(2, probes)
+        assertEquals(Reachability.Reachable, monitor.reachability)
+    }
+
+    @Test
+    fun `a probe that throws counts as not reached and the next one still runs`() = runTest {
+        probe = { throw IllegalStateException("boom") }
+        val monitor = monitor()
+        monitor.check()
+        runCurrent()
+        assertTrue(monitor.state.value.unreachable)
+
+        probe = { true }
+        monitor.check()
+        runCurrent()
+        assertEquals(Reachability.Reachable, monitor.reachability)
+    }
+
+    @Test
     fun `without a server nothing is known`() = runTest {
         probe = { null }
         val monitor = monitor()
