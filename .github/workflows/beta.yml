@@ -235,7 +235,19 @@ jobs:
         with:
           pattern: beta-*
           path: dist
-          merge-multiple: true
+
+      # Artifacts are kept for a day. A failed build that is rerun after that would leave this
+      # job with only the artifacts that still exist, so check that every app is there.
+      - name: Check that every app is present
+        run: |
+          for id in phone-libre phone-proprietary tv-libre; do
+            dir="dist/beta-$id"
+            if ! ls "$dir"/apk/*.apk >/dev/null 2>&1 || ! ls "$dir"/mapping/*.txt >/dev/null 2>&1; then
+              echo "::error::The APKs or the R8 mapping of $id are missing; rerun all jobs."
+              exit 1
+            fi
+          done
+          ls -l dist/*/apk dist/*/mapping
 
       - name: Create GitHub prerelease
         uses: softprops/action-gh-release@v3
@@ -261,8 +273,8 @@ jobs:
             Mi Box, `arm64-v8a` for 64-bit ones. Phone and TV share one app ID, so the TV APK replaces
             the phone beta on a device and keeps its login.
           files: |
-            dist/apk/*.apk
-            dist/mapping/*.txt
+            dist/*/apk/*.apk
+            dist/*/mapping/*.txt
           fail_on_unmatched_files: true
 
       - name: Delete old beta prereleases
