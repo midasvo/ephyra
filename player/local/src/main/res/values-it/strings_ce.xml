@@ -32,15 +32,15 @@
     <string name="ce_player_connection_lost">Connessione persa. La riproduzione riprenderà quando la rete tornerà disponibile.</string>
     <string name="ce_player_try_again">Riprova</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">Ritardo sottotitoli</string>
-    <string name="subtitle_sync">Sincronizzazione sottotitoli</string>
-    <string name="capture_spoken_line">Cattura battuta pronunciata</string>
-    <string name="capture_line_hint">Tocca quando una battuta viene pronunciata per sincronizzarla con i sottotitoli</string>
-    <string name="no_cues_found">Nessuna riga di sottotitoli trovata vicino a questa posizione</string>
-    <string name="reset">Ripristina</string>
-    <string name="recapture_spoken_line">Ricattura</string>
-    <string name="dialogue_near_position">Battuta vicino a %1$s:</string>
-    <string name="loading_dialogue">Caricamento dialogo…</string>
-    <string name="decrease_delay">Riduci ritardo</string>
-    <string name="increase_delay">Aumenta ritardo</string>
+    <string name="ce_subtitle_delay">Ritardo sottotitoli</string>
+    <string name="ce_subtitle_sync">Sincronizzazione sottotitoli</string>
+    <string name="ce_capture_spoken_line">Cattura battuta pronunciata</string>
+    <string name="ce_capture_line_hint">Tocca quando una battuta viene pronunciata per sincronizzarla con i sottotitoli</string>
+    <string name="ce_no_cues_found">Nessuna riga di sottotitoli trovata vicino a questa posizione</string>
+    <string name="ce_reset">Ripristina</string>
+    <string name="ce_recapture_spoken_line">Ricattura</string>
+    <string name="ce_dialogue_near_position">Battuta vicino a %1$s:</string>
+    <string name="ce_loading_dialogue">Caricamento dialogo…</string>
+    <string name="ce_decrease_delay">Riduci ritardo</string>
+    <string name="ce_increase_delay">Aumenta ritardo</string>
 </resources>

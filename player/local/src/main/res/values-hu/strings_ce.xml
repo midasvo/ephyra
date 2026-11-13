@@ -30,15 +30,15 @@
     <string name="ce_player_connection_lost">Megszakadt a kapcsolat. A lejátszás folytatódik, amint visszatér a hálózat.</string>
     <string name="ce_player_try_again">Próbáld újra</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">Felirat késleltetése</string>
-    <string name="subtitle_sync">Felirat szinkronizálása</string>
-    <string name="capture_spoken_line">Kimondott sor rögzítése</string>
-    <string name="capture_line_hint">Koppintson, amikor elhangzik egy mondat, hogy szinkronizálja a felirattal</string>
-    <string name="no_cues_found">Nem találhatók feliratsorok ezen pozíció közelében</string>
-    <string name="reset">Visszaállítás</string>
-    <string name="recapture_spoken_line">Újrarögzítés</string>
-    <string name="dialogue_near_position">Párbeszéd %1$s közelében:</string>
-    <string name="loading_dialogue">Párbeszéd betöltése…</string>
-    <string name="decrease_delay">Késleltetés csökkentése</string>
-    <string name="increase_delay">Késleltetés növelése</string>
+    <string name="ce_subtitle_delay">Felirat késleltetése</string>
+    <string name="ce_subtitle_sync">Felirat szinkronizálása</string>
+    <string name="ce_capture_spoken_line">Kimondott sor rögzítése</string>
+    <string name="ce_capture_line_hint">Koppintson, amikor elhangzik egy mondat, hogy szinkronizálja a felirattal</string>
+    <string name="ce_no_cues_found">Nem találhatók feliratsorok ezen pozíció közelében</string>
+    <string name="ce_reset">Visszaállítás</string>
+    <string name="ce_recapture_spoken_line">Újrarögzítés</string>
+    <string name="ce_dialogue_near_position">Párbeszéd %1$s közelében:</string>
+    <string name="ce_loading_dialogue">Párbeszéd betöltése…</string>
+    <string name="ce_decrease_delay">Késleltetés csökkentése</string>
+    <string name="ce_increase_delay">Késleltetés növelése</string>
 </resources>

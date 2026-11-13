@@ -34,15 +34,15 @@
     <string name="ce_player_connection_lost">Соединение потеряно. Воспроизведение продолжится, когда сеть вернётся.</string>
     <string name="ce_player_try_again">Повторить</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">Задержка субтитров</string>
-    <string name="subtitle_sync">Синхронизация субтитров</string>
-    <string name="capture_spoken_line">Захватить сказанную фразу</string>
-    <string name="capture_line_hint">Нажмите при произнесении фразы для сопоставления с субтитрами</string>
-    <string name="no_cues_found">Рядом с этой позицией не найдено строк субтитров</string>
-    <string name="reset">Сброс</string>
-    <string name="recapture_spoken_line">Захватить снова</string>
-    <string name="dialogue_near_position">Диалог около %1$s:</string>
-    <string name="loading_dialogue">Загрузка диалога…</string>
-    <string name="decrease_delay">Уменьшить задержку</string>
-    <string name="increase_delay">Увеличить задержку</string>
+    <string name="ce_subtitle_delay">Задержка субтитров</string>
+    <string name="ce_subtitle_sync">Синхронизация субтитров</string>
+    <string name="ce_capture_spoken_line">Захватить сказанную фразу</string>
+    <string name="ce_capture_line_hint">Нажмите при произнесении фразы для сопоставления с субтитрами</string>
+    <string name="ce_no_cues_found">Рядом с этой позицией не найдено строк субтитров</string>
+    <string name="ce_reset">Сброс</string>
+    <string name="ce_recapture_spoken_line">Захватить снова</string>
+    <string name="ce_dialogue_near_position">Диалог около %1$s:</string>
+    <string name="ce_loading_dialogue">Загрузка диалога…</string>
+    <string name="ce_decrease_delay">Уменьшить задержку</string>
+    <string name="ce_increase_delay">Увеличить задержку</string>
 </resources>

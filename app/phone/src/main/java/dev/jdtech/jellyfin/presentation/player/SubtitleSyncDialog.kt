@@ -232,7 +232,7 @@ private fun SubtitleSyncSheetContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        Text(stringResource(PlayerR.string.subtitle_sync))
+                        Text(stringResource(PlayerR.string.ce_subtitle_sync))
                         if (subtitleDelayMs != 0) {
                             Surface(
                                 shape = CircleShape,
@@ -400,7 +400,7 @@ private fun SubtitleTimingPanel(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = stringResource(PlayerR.string.subtitle_delay),
+                            text = stringResource(PlayerR.string.ce_subtitle_delay),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -408,7 +408,7 @@ private fun SubtitleTimingPanel(
                             onClick = { onDelayChanged(0) },
                             enabled = subtitleDelayMs != 0,
                         ) {
-                            Text(stringResource(PlayerR.string.reset))
+                            Text(stringResource(PlayerR.string.ce_reset))
                         }
                     }
 
@@ -457,7 +457,7 @@ private fun SubtitleTimingPanel(
                             modifier = Modifier.size(18.dp),
                         )
                         Text(
-                            text = stringResource(PlayerR.string.subtitle_sync),
+                            text = stringResource(PlayerR.string.ce_subtitle_sync),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -466,7 +466,7 @@ private fun SubtitleTimingPanel(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = stringResource(PlayerR.string.capture_line_hint),
+                        text = stringResource(PlayerR.string.ce_capture_line_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -494,8 +494,8 @@ private fun SubtitleTimingPanel(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             if (capturedPositionMs == null)
-                                stringResource(PlayerR.string.capture_spoken_line)
-                            else stringResource(PlayerR.string.recapture_spoken_line)
+                                stringResource(PlayerR.string.ce_capture_spoken_line)
+                            else stringResource(PlayerR.string.ce_recapture_spoken_line)
                         )
                     }
 
@@ -504,7 +504,7 @@ private fun SubtitleTimingPanel(
                         Text(
                             text =
                                 stringResource(
-                                    PlayerR.string.dialogue_near_position,
+                                    PlayerR.string.ce_dialogue_near_position,
                                     formatCueTimestamp(capturedPositionMs!!),
                                 ),
                             style = MaterialTheme.typography.labelMedium,
@@ -522,7 +522,7 @@ private fun SubtitleTimingPanel(
                                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = stringResource(PlayerR.string.loading_dialogue),
+                                    text = stringResource(PlayerR.string.ce_loading_dialogue),
                                     style = MaterialTheme.typography.bodySmall,
                                 )
                             }
@@ -534,7 +534,7 @@ private fun SubtitleTimingPanel(
 
                             if (nearby.isEmpty()) {
                                 Text(
-                                    text = stringResource(PlayerR.string.no_cues_found),
+                                    text = stringResource(PlayerR.string.ce_no_cues_found),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(vertical = 8.dp),
@@ -635,7 +635,7 @@ private fun HoldToRepeatStepper(
     ) {
         HoldToRepeatButton(
             iconRes = CoreR.drawable.ic_minus_fat,
-            contentDescription = stringResource(PlayerR.string.decrease_delay),
+            contentDescription = stringResource(PlayerR.string.ce_decrease_delay),
             onAction = onDecrease,
         )
 
@@ -660,7 +660,7 @@ private fun HoldToRepeatStepper(
 
         HoldToRepeatButton(
             iconRes = CoreR.drawable.ic_plus,
-            contentDescription = stringResource(PlayerR.string.increase_delay),
+            contentDescription = stringResource(PlayerR.string.ce_increase_delay),
             onAction = onIncrease,
         )
     }

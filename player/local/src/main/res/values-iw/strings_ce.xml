@@ -32,15 +32,15 @@
     <string name="ce_player_connection_lost">החיבור אבד. ההפעלה תימשך כשהרשת תחזור.</string>
     <string name="ce_player_try_again">נסה שוב</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">השהיית כתוביות</string>
-    <string name="subtitle_sync">סנכרון כתוביות</string>
-    <string name="capture_spoken_line">לכידת שורה מדוברת</string>
-    <string name="capture_line_hint">הקש כאשר נאמרת שורה כדי להתאים אותה לכתוביות</string>
-    <string name="no_cues_found">לא נמצאו שורות כתוביות ליד מיקום זה</string>
-    <string name="reset">איפוס</string>
-    <string name="recapture_spoken_line">לכידה מחדש</string>
-    <string name="dialogue_near_position">דיאלוג ליד %1$s:</string>
-    <string name="loading_dialogue">טוען דיאלוג…</string>
-    <string name="decrease_delay">הקטנת השהיה</string>
-    <string name="increase_delay">הגדלת השהיה</string>
+    <string name="ce_subtitle_delay">השהיית כתוביות</string>
+    <string name="ce_subtitle_sync">סנכרון כתוביות</string>
+    <string name="ce_capture_spoken_line">לכידת שורה מדוברת</string>
+    <string name="ce_capture_line_hint">הקש כאשר נאמרת שורה כדי להתאים אותה לכתוביות</string>
+    <string name="ce_no_cues_found">לא נמצאו שורות כתוביות ליד מיקום זה</string>
+    <string name="ce_reset">איפוס</string>
+    <string name="ce_recapture_spoken_line">לכידה מחדש</string>
+    <string name="ce_dialogue_near_position">דיאלוג ליד %1$s:</string>
+    <string name="ce_loading_dialogue">טוען דיאלוג…</string>
+    <string name="ce_decrease_delay">הקטנת השהיה</string>
+    <string name="ce_increase_delay">הגדלת השהיה</string>
 </resources>

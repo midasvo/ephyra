@@ -30,15 +30,15 @@
     <string name="ce_player_connection_lost">Връзката е прекъсната. Възпроизвеждането ще продължи, когато мрежата се върне.</string>
     <string name="ce_player_try_again">Опитай отново</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">Забавяне на субтитрите</string>
-    <string name="subtitle_sync">Синхронизиране на субтитрите</string>
-    <string name="capture_spoken_line">Заснемане на изречена реплика</string>
-    <string name="capture_line_hint">Докоснете при изричане на реплика, за да я напаснете със субтитрите</string>
-    <string name="no_cues_found">Не са намерени субтитри близо до тази позиция</string>
-    <string name="reset">Нулиране</string>
-    <string name="recapture_spoken_line">Повторно заснемане</string>
-    <string name="dialogue_near_position">Реплики близо до %1$s:</string>
-    <string name="loading_dialogue">Зареждане на реплики…</string>
-    <string name="decrease_delay">Намаляване на забавянето</string>
-    <string name="increase_delay">Увеличаване на забавянето</string>
+    <string name="ce_subtitle_delay">Забавяне на субтитрите</string>
+    <string name="ce_subtitle_sync">Синхронизиране на субтитрите</string>
+    <string name="ce_capture_spoken_line">Заснемане на изречена реплика</string>
+    <string name="ce_capture_line_hint">Докоснете при изричане на реплика, за да я напаснете със субтитрите</string>
+    <string name="ce_no_cues_found">Не са намерени субтитри близо до тази позиция</string>
+    <string name="ce_reset">Нулиране</string>
+    <string name="ce_recapture_spoken_line">Повторно заснемане</string>
+    <string name="ce_dialogue_near_position">Реплики близо до %1$s:</string>
+    <string name="ce_loading_dialogue">Зареждане на реплики…</string>
+    <string name="ce_decrease_delay">Намаляване на забавянето</string>
+    <string name="ce_increase_delay">Увеличаване на забавянето</string>
 </resources>

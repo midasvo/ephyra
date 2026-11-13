@@ -77,7 +77,7 @@ fun TvSubtitleDialog(
                     ) {
                         Column {
                             Text(
-                                text = stringResource(PlayerR.string.subtitle_delay),
+                                text = stringResource(PlayerR.string.ce_subtitle_delay),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -115,7 +115,7 @@ fun TvSubtitleDialog(
                                     onClick = { onDelayChanged(0) },
                                     colors = ButtonDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                                 ) {
-                                    Text(stringResource(PlayerR.string.reset))
+                                    Text(stringResource(PlayerR.string.ce_reset))
                                 }
                             }
                         }

@@ -28,15 +28,15 @@
     <string name="ce_player_connection_lost">Koneksi terputus. Pemutaran berlanjut saat jaringan kembali.</string>
     <string name="ce_player_try_again">Coba lagi</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">Penundaan subtitle</string>
-    <string name="subtitle_sync">Sinkronisasi subtitle</string>
-    <string name="capture_spoken_line">Rekam kalimat terucap</string>
-    <string name="capture_line_hint">Ketuk saat kalimat diucapkan untuk mencocokkan dengan dialog subtitle</string>
-    <string name="no_cues_found">Tidak ada baris subtitle yang ditemukan di dekat posisi ini</string>
-    <string name="reset">Atur ulang</string>
-    <string name="recapture_spoken_line">Rekam ulang</string>
-    <string name="dialogue_near_position">Dialog dekat %1$s:</string>
-    <string name="loading_dialogue">Memuat dialog…</string>
-    <string name="decrease_delay">Kurangi penundaan</string>
-    <string name="increase_delay">Tambah penundaan</string>
+    <string name="ce_subtitle_delay">Penundaan subtitle</string>
+    <string name="ce_subtitle_sync">Sinkronisasi subtitle</string>
+    <string name="ce_capture_spoken_line">Rekam kalimat terucap</string>
+    <string name="ce_capture_line_hint">Ketuk saat kalimat diucapkan untuk mencocokkan dengan dialog subtitle</string>
+    <string name="ce_no_cues_found">Tidak ada baris subtitle yang ditemukan di dekat posisi ini</string>
+    <string name="ce_reset">Atur ulang</string>
+    <string name="ce_recapture_spoken_line">Rekam ulang</string>
+    <string name="ce_dialogue_near_position">Dialog dekat %1$s:</string>
+    <string name="ce_loading_dialogue">Memuat dialog…</string>
+    <string name="ce_decrease_delay">Kurangi penundaan</string>
+    <string name="ce_increase_delay">Tambah penundaan</string>
 </resources>

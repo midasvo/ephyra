@@ -28,15 +28,15 @@
     <string name="ce_player_connection_lost">連線中斷咗。網絡返嚟之後會繼續播放。</string>
     <string name="ce_player_try_again">再試一次</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">字幕延遲</string>
-    <string name="subtitle_sync">字幕同步</string>
-    <string name="capture_spoken_line">擷取講出嘅說話</string>
-    <string name="capture_line_hint">喺講出某句說話嗰陣撳一下嚟同字幕對齊</string>
-    <string name="no_cues_found">喺呢個位置附近搵唔到字幕</string>
-    <string name="reset">重設</string>
-    <string name="recapture_spoken_line">重新擷取</string>
-    <string name="dialogue_near_position">%1$s 附近嘅對白：</string>
-    <string name="loading_dialogue">載入對白中…</string>
-    <string name="decrease_delay">減少延遲</string>
-    <string name="increase_delay">增加延遲</string>
+    <string name="ce_subtitle_delay">字幕延遲</string>
+    <string name="ce_subtitle_sync">字幕同步</string>
+    <string name="ce_capture_spoken_line">擷取講出嘅說話</string>
+    <string name="ce_capture_line_hint">喺講出某句說話嗰陣撳一下嚟同字幕對齊</string>
+    <string name="ce_no_cues_found">喺呢個位置附近搵唔到字幕</string>
+    <string name="ce_reset">重設</string>
+    <string name="ce_recapture_spoken_line">重新擷取</string>
+    <string name="ce_dialogue_near_position">%1$s 附近嘅對白：</string>
+    <string name="ce_loading_dialogue">載入對白中…</string>
+    <string name="ce_decrease_delay">減少延遲</string>
+    <string name="ce_increase_delay">增加延遲</string>
 </resources>

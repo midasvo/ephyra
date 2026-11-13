@@ -30,15 +30,15 @@
     <string name="ce_player_connection_lost">Se perdió la conexión. La reproducción continuará cuando vuelva la red.</string>
     <string name="ce_player_try_again">Reintentar</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">Retraso de subtítulos</string>
-    <string name="subtitle_sync">Sincronización de subtítulos</string>
-    <string name="capture_spoken_line">Capturar línea hablada</string>
-    <string name="capture_line_hint">Presiona cuando se diga una línea para sincronizarla con el diálogo</string>
-    <string name="no_cues_found">No se encontraron líneas de subtítulos cerca de esta posición</string>
-    <string name="reset">Restablecer</string>
-    <string name="recapture_spoken_line">Volver a capturar</string>
-    <string name="dialogue_near_position">Diálogo cerca de %1$s:</string>
-    <string name="loading_dialogue">Cargando diálogo…</string>
-    <string name="decrease_delay">Disminuir retraso</string>
-    <string name="increase_delay">Aumentar retraso</string>
+    <string name="ce_subtitle_delay">Retraso de subtítulos</string>
+    <string name="ce_subtitle_sync">Sincronización de subtítulos</string>
+    <string name="ce_capture_spoken_line">Capturar línea hablada</string>
+    <string name="ce_capture_line_hint">Presiona cuando se diga una línea para sincronizarla con el diálogo</string>
+    <string name="ce_no_cues_found">No se encontraron líneas de subtítulos cerca de esta posición</string>
+    <string name="ce_reset">Restablecer</string>
+    <string name="ce_recapture_spoken_line">Volver a capturar</string>
+    <string name="ce_dialogue_near_position">Diálogo cerca de %1$s:</string>
+    <string name="ce_loading_dialogue">Cargando diálogo…</string>
+    <string name="ce_decrease_delay">Disminuir retraso</string>
+    <string name="ce_increase_delay">Aumentar retraso</string>
 </resources>

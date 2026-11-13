@@ -34,15 +34,15 @@
     <string name="ce_player_connection_lost">Pripojenie sa stratilo. Prehrávanie bude pokračovať, keď sa sieť vráti.</string>
     <string name="ce_player_try_again">Skúsiť znova</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">Oneskorenie titulkov</string>
-    <string name="subtitle_sync">Synchronizácia titulkov</string>
-    <string name="capture_spoken_line">Zachytiť hovorený riadok</string>
-    <string name="capture_line_hint">Klepnite pri vyslovení riadka pre zosúladenie s titulkami</string>
-    <string name="no_cues_found">V blízkosti tejto pozície sa nenašli žiadne riadky titulkov</string>
-    <string name="reset">Resetovať</string>
-    <string name="recapture_spoken_line">Znova zachytiť</string>
-    <string name="dialogue_near_position">Dialóg v blízkosti %1$s:</string>
-    <string name="loading_dialogue">Načítava sa dialóg…</string>
-    <string name="decrease_delay">Znížiť oneskorenie</string>
-    <string name="increase_delay">Zvýšiť oneskorenie</string>
+    <string name="ce_subtitle_delay">Oneskorenie titulkov</string>
+    <string name="ce_subtitle_sync">Synchronizácia titulkov</string>
+    <string name="ce_capture_spoken_line">Zachytiť hovorený riadok</string>
+    <string name="ce_capture_line_hint">Klepnite pri vyslovení riadka pre zosúladenie s titulkami</string>
+    <string name="ce_no_cues_found">V blízkosti tejto pozície sa nenašli žiadne riadky titulkov</string>
+    <string name="ce_reset">Resetovať</string>
+    <string name="ce_recapture_spoken_line">Znova zachytiť</string>
+    <string name="ce_dialogue_near_position">Dialóg v blízkosti %1$s:</string>
+    <string name="ce_loading_dialogue">Načítava sa dialóg…</string>
+    <string name="ce_decrease_delay">Znížiť oneskorenie</string>
+    <string name="ce_increase_delay">Zvýšiť oneskorenie</string>
 </resources>

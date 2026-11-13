@@ -38,15 +38,15 @@
     <string name="ce_player_connection_lost">انقطع الاتصال. سيستمر التشغيل عند عودة الشبكة.</string>
     <string name="ce_player_try_again">حاول مجددًا</string>
     <!-- CE (#619): Subtitle delay & synchronization controls. -->
-    <string name="subtitle_delay">تأخير الترجمة</string>
-    <string name="subtitle_sync">مزامنة الترجمة</string>
-    <string name="capture_spoken_line">التقاط السطر المنطوق</string>
-    <string name="capture_line_hint">اضغط عند نطق السطر لمطابقته مع نص الترجمة</string>
-    <string name="no_cues_found">لم يتم العثور على أسطر ترجمة بالقرب من هذا الموضع</string>
-    <string name="reset">إعادة تعيين</string>
-    <string name="recapture_spoken_line">إعادة الالتقاط</string>
-    <string name="dialogue_near_position">الحوار بالقرب من %1$s:</string>
-    <string name="loading_dialogue">جارٍ تحميل الحوار…</string>
-    <string name="decrease_delay">تقليل التأخير</string>
-    <string name="increase_delay">زيادة التأخير</string>
+    <string name="ce_subtitle_delay">تأخير الترجمة</string>
+    <string name="ce_subtitle_sync">مزامنة الترجمة</string>
+    <string name="ce_capture_spoken_line">التقاط السطر المنطوق</string>
+    <string name="ce_capture_line_hint">اضغط عند نطق السطر لمطابقته مع نص الترجمة</string>
+    <string name="ce_no_cues_found">لم يتم العثور على أسطر ترجمة بالقرب من هذا الموضع</string>
+    <string name="ce_reset">إعادة تعيين</string>
+    <string name="ce_recapture_spoken_line">إعادة الالتقاط</string>
+    <string name="ce_dialogue_near_position">الحوار بالقرب من %1$s:</string>
+    <string name="ce_loading_dialogue">جارٍ تحميل الحوار…</string>
+    <string name="ce_decrease_delay">تقليل التأخير</string>
+    <string name="ce_increase_delay">زيادة التأخير</string>
 </resources>
