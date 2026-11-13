@@ -468,17 +468,13 @@ constructor(
     /** CE (#619): adjusts subtitle delay for the active item. */
     fun setSubtitleDelay(delayMs: Int) {
         val clamped = delayMs.coerceIn(-180_000, 180_000)
-        // Every item transition resets the delay: without a change there is nothing to
-        // refresh, and the paused ExoPlayer would seek for nothing.
         if (clamped == subtitleDelayMs) return
         subtitleDelayMs = clamped
+        // ExoPlayer: SubtitleOffsetRenderer picks the new delay up on its next render, also
+        // while paused, so the player is not asked to seek.
         subtitleOffsetUs.set(clamped * 1000L)
         if (player is MPVPlayer) {
             player.setSubtitleDelayMs(clamped)
-        } else {
-            if (!player.isPlaying && player.playbackState == Player.STATE_READY) {
-                player.seekTo(player.currentPosition)
-            }
         }
     }
 
