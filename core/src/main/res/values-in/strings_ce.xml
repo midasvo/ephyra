@@ -108,4 +108,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Belum ada yang diunduh</string>
     <string name="ce_home_offline_empty_body">Anda sedang offline. Film dan episode yang Anda unduh muncul di sini dan di Unduhan.</string>
+    <string name="ce_server_unreachable_downloads">Unduhan Anda masih bisa diputar.</string>
 </resources>

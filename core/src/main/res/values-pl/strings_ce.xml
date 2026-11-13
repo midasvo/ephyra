@@ -123,4 +123,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Nic jeszcze nie pobrano</string>
     <string name="ce_home_offline_empty_body">Jesteś offline. Pobrane filmy i odcinki pojawią się tutaj i w sekcji Pobrane.</string>
+    <string name="ce_server_unreachable_downloads">Pobrane materiały nadal można odtwarzać.</string>
 </resources>

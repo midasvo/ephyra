@@ -123,4 +123,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Пока ничего не загружено</string>
     <string name="ce_home_offline_empty_body">Нет подключения. Загруженные фильмы и эпизоды появятся здесь и в разделе «Загрузки».</string>
+    <string name="ce_server_unreachable_downloads">Загруженное по-прежнему можно смотреть.</string>
 </resources>

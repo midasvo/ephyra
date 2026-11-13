@@ -46,6 +46,7 @@ import dev.jdtech.jellyfin.models.getVersions
 import dev.jdtech.jellyfin.models.isDownloaded
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
+import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
 import dev.jdtech.jellyfin.presentation.theme.spacings
 
 @Composable
@@ -71,7 +72,9 @@ fun ItemButtonsBar(
     // screen that hosts it.
     val currentDownloaderState = downloaderStateProvider?.invoke() ?: downloaderState
     val context = LocalContext.current
-    val isOfflineMode = LocalOfflineMode.current
+    // CE (#281): what needs the server is also left out while it is known not to answer. Not on
+    // one failed probe alone, so a slow server does not make the buttons flash.
+    val serverAway = LocalOfflineMode.current || LocalServerStatus.current.confirmedUnreachable
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
 
     // CE (#332): every remote trailer; a menu picks one when there are several.
@@ -159,7 +162,7 @@ fun ItemButtonsBar(
                         }
                     }
                 }
-                if (trailers.isNotEmpty() && !isOfflineMode) {
+                if (trailers.isNotEmpty() && !serverAway) {
                     Box {
                         FilledTonalIconButton(
                             onClick = {
@@ -231,7 +234,7 @@ fun ItemButtonsBar(
                     }
                 }
                 if (currentDownloaderState != null && !currentDownloaderState.isDownloading) {
-                    if (canDownload && !isOfflineMode && (!isDownloaded || hasMoreToDownload)) {
+                    if (canDownload && !serverAway && (!isDownloaded || hasMoreToDownload)) {
                         FilledTonalIconButton(onClick = onDownloadClick) {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_download),

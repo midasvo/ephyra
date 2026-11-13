@@ -133,4 +133,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">لم يتم تنزيل أي شيء بعد</string>
     <string name="ce_home_offline_empty_body">أنت غير متصل. الأفلام والحلقات التي تنزّلها تظهر هنا وفي التنزيلات.</string>
+    <string name="ce_server_unreachable_downloads">ما زال بإمكانك تشغيل تنزيلاتك.</string>
 </resources>

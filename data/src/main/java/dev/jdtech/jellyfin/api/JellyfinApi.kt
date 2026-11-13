@@ -5,6 +5,7 @@ import dev.jdtech.jellyfin.data.BuildConfig
 import dev.jdtech.jellyfin.settings.domain.Constants
 import java.io.IOException
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import kotlin.time.DurationUnit
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toDuration
@@ -14,8 +15,12 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlin.coroutines.resume
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -90,6 +95,59 @@ class JellyfinApi(
      */
     val serverReturned: SharedFlow<Unit> = _serverReturned.asSharedFlow()
 
+    /**
+     * CE (#281): told how each request of the app goes. The reachability banner follows these, so
+     * no request is made to learn that the server is there. Called on the request's own thread.
+     */
+    @Volatile var requestWatcher: RequestWatcher? = null
+
+    /** The probe has a short limit of its own and is not one of the requests that are watched. */
+    private val probeClient by lazy {
+        okHttpFactory.base
+            .newBuilder()
+            .apply { interceptors().clear() }
+            // A redirect is an answer already; the probe goes nowhere the server sends it.
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .connectTimeout(PROBE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .readTimeout(PROBE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .callTimeout(PROBE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            .build()
+    }
+
+    /**
+     * CE (#281): asks the server in use for its public info, the smallest request it answers
+     * without a token. True when it answered, false when it did not within [PROBE_TIMEOUT_MS] or
+     * a proxy answered for it, null when no server is set.
+     */
+    suspend fun probeServer(): Boolean? {
+        val baseUrl = api.baseUrl?.trimEnd('/')?.takeIf { it.isNotEmpty() } ?: return null
+        val request =
+            try {
+                Request.Builder().url("$baseUrl/System/Info/Public").build()
+            } catch (e: IllegalArgumentException) {
+                // An address OkHttp cannot parse: nothing to reach.
+                return false
+            }
+        // Enqueued, so a caller that stops waiting cancels the call instead of blocking on it.
+        return suspendCancellableCoroutine { continuation ->
+            val call = probeClient.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(
+                object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        if (continuation.isActive) continuation.resume(false)
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        val answered = response.use { it.code < HTTP_SERVER_ERROR }
+                        if (continuation.isActive) continuation.resume(answered)
+                    }
+                }
+            )
+        }
+    }
+
     /** The OkHttp client the API's clients are built from. Derive from it with `newBuilder()`. */
     val httpClient: OkHttpClient
         get() = okHttpFactory.base
@@ -126,14 +184,27 @@ class JellyfinApi(
 
     private fun watchResponses(chain: Interceptor.Chain): Response {
         val request = chain.request()
+        val watcher = requestWatcher
+        watcher?.onStarted()
         val response =
             try {
                 chain.proceed(request)
             } catch (e: IOException) {
-                serverReturnDetector.onFailure()
+                // CE (#281): a request the app gave up on itself says nothing about the server.
+                if (chain.call().isCanceled()) {
+                    watcher?.onCancelled()
+                } else {
+                    serverReturnDetector.onFailure()
+                    watcher?.onUnanswered()
+                }
+                throw e
+            } catch (e: RuntimeException) {
+                // Not about the server, but every start gets its end.
+                watcher?.onCancelled()
                 throw e
             }
         if (serverReturnDetector.onResponse(response.code)) _serverReturned.tryEmit(Unit)
+        if (response.code < HTTP_SERVER_ERROR) watcher?.onAnswered() else watcher?.onUnanswered()
         detectRevokedToken(request, response)
         return response
     }
@@ -209,6 +280,13 @@ class JellyfinApi(
 
     companion object {
         private val END_SESSION_TIMEOUT = 5.seconds
+
+        /**
+         * CE (#281): how long the reachability probe waits. Short on purpose: a probe that waits
+         * out the connect timeout is the hang the banner is there to avoid.
+         */
+        const val PROBE_TIMEOUT_MS = 3_000L
+        private const val HTTP_SERVER_ERROR = 500
 
         @Volatile private var INSTANCE: JellyfinApi? = null
 

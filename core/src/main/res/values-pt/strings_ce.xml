@@ -113,4 +113,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Ainda não transferiu nada</string>
     <string name="ce_home_offline_empty_body">Está offline. Os filmes e episódios que transferir aparecem aqui e em Downloads.</string>
+    <string name="ce_server_unreachable_downloads">Os seus downloads ainda podem ser reproduzidos.</string>
 </resources>

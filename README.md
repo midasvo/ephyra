@@ -115,8 +115,8 @@ filter stops the entry from switching to stable right after a release.
 - Favorites tab.
 - Home rows you choose and reorder (Settings → Interface → Home rows).
 - Hide-watched filter, kept across libraries.
-- Offline mode switches on by itself without a connection. Downloads open even when the server
-  doesn't answer.
+- When the server doesn't answer, a banner says so and leads to your downloads, which open and
+  play without it. It goes by itself when the server is back.
 - Error screens with Retry, and real empty states.
 - Long-press to copy text on detail screens. Option to hide cast and crew.
 - HDR10+ and Dolby Atmos badges on movie and episode pages.

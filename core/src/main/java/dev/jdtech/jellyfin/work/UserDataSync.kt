@@ -1,11 +1,5 @@
 package dev.jdtech.jellyfin.work
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.Network
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
@@ -13,8 +7,8 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jdtech.jellyfin.api.JellyfinApi
+import dev.jdtech.jellyfin.core.reachability.ServerReachability
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.repository.UserDataSyncRequester
 import java.util.concurrent.TimeUnit
@@ -34,10 +28,10 @@ import timber.log.Timber
  * not reach the server (#552).
  * - [request]: at app start and whenever a write is marked to be synced. The work is unique and
  *   kept, so asking while a run is waiting for the network or for a retry does nothing.
- * - [start] watches for signs that the server may be reachable again: the app coming to the
- *   foreground, the device changing network (home Wi-Fi after mobile data), and a request of the
- *   app's own reaching the server after failed ones. With rows waiting, each of those starts the
- *   sync over, so it does not sit out the delay of a retry.
+ * - [start] watches for signs that the server is reachable again: a request of the app's own
+ *   reaching the server after failed ones, and [ServerReachability] finding it there when the app
+ *   comes to the foreground or the device changes network (home Wi-Fi after mobile data). With
+ *   rows waiting, each of those starts the sync over, so it does not sit out the delay of a retry.
  *
  * With the process gone only the retries are left, which is why they back off linearly: after a
  * day without the server the next try is at most about 40 minutes away, not 5 hours.
@@ -48,10 +42,10 @@ import timber.log.Timber
 class UserDataSync
 @Inject
 constructor(
-    @ApplicationContext private val context: Context,
     private val workManager: Provider<WorkManager>,
     private val database: ServerDatabaseDao,
     private val jellyfinApi: JellyfinApi,
+    private val serverReachability: ServerReachability,
 ) : UserDataSyncRequester {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var started = false
@@ -67,31 +61,10 @@ constructor(
 
         scope.launch { jellyfinApi.serverReturned.collect { restartIfWaiting("server answered") } }
 
-        scope.launch(Dispatchers.Main) {
-            ProcessLifecycleOwner.get()
-                .lifecycle
-                .addObserver(
-                    object : DefaultLifecycleObserver {
-                        override fun onStart(owner: LifecycleOwner) {
-                            scope.launch { restartIfWaiting("app in foreground") }
-                        }
-                    }
-                )
-        }
-
-        try {
-            context
-                .getSystemService(ConnectivityManager::class.java)
-                ?.registerDefaultNetworkCallback(
-                    object : ConnectivityManager.NetworkCallback() {
-                        override fun onAvailable(network: Network) {
-                            scope.launch { restartIfWaiting("network changed") }
-                        }
-                    }
-                )
-        } catch (e: RuntimeException) {
-            // Too many callbacks registered, or a device that refuses: the other signs remain.
-            Timber.w(e, "No network callback for the user data sync")
+        // CE (#281): the foreground and the network are watched in one place. It probes the server
+        // on those signs, so the sync starts over when the server is there, not on the sign alone.
+        scope.launch {
+            serverReachability.serverConfirmed.collect { restartIfWaiting("server reachable") }
         }
     }
 

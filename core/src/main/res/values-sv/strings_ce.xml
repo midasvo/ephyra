@@ -113,4 +113,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Inget nedladdat än</string>
     <string name="ce_home_offline_empty_body">Du är offline. Filmer och avsnitt som du laddar ned visas här och under Nedladdningar.</string>
+    <string name="ce_server_unreachable_downloads">Dina nedladdningar går fortfarande att spela upp.</string>
 </resources>
