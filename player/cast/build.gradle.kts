@@ -47,4 +47,6 @@ dependencies {
     // Only the proprietary flavor has Google Cast; libre gets none of it.
     "proprietaryImplementation"(libs.androidx.mediarouter)
     "proprietaryImplementation"(libs.play.services.cast.framework)
+
+    testImplementation(libs.junit)
 }

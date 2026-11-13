@@ -66,6 +66,9 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     // device profile still has its own.
     val castEnabled = Preference("pref_cast_enabled", true)
     val castMaxBitrateMbps = Preference("pref_cast_max_bitrate_mbps", 0)
+    // The receiver does not tell a sender which codecs it plays, so HEVC is sent as it is only to
+    // the models known to play it, and to every receiver once the user says theirs does.
+    val castReceiverHevc = Preference("pref_cast_receiver_hevc", false)
 
     // Player
     val playerBackend = Preference("pref_player_backend", "exoplayer")

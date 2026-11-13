@@ -14,6 +14,7 @@ import com.google.android.gms.cast.framework.CastStateListener
 import com.google.android.gms.cast.framework.SessionManagerListener
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jdtech.jellyfin.api.JellyfinApi
+import dev.jdtech.jellyfin.player.cast.models.CastAvailability
 import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
 import dev.jdtech.jellyfin.player.cast.models.Device
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
@@ -68,11 +69,15 @@ constructor(
             }
         }
 
-    override val isSupported: Boolean
+    override val availability: CastAvailability
         get() =
-            castContext != null &&
-                appPreferences.getValue(appPreferences.castEnabled) &&
-                (jellyfinApi.api.baseUrl?.startsWith("https://", ignoreCase = true) ?: false)
+            when {
+                !appPreferences.getValue(appPreferences.castEnabled) -> CastAvailability.DISABLED
+                castContext == null -> CastAvailability.NO_PLAY_SERVICES
+                jellyfinApi.api.baseUrl?.startsWith("https://", ignoreCase = true) != true ->
+                    CastAvailability.INSECURE_SERVER
+                else -> CastAvailability.AVAILABLE
+            }
 
     private val _connectionState = MutableStateFlow(CastConnectionState.DISCONNECTED)
     override val connectionState: StateFlow<CastConnectionState> = _connectionState.asStateFlow()

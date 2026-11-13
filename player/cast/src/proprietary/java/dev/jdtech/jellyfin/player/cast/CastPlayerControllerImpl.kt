@@ -2,6 +2,7 @@ package dev.jdtech.jellyfin.player.cast
 
 import android.content.Context
 import android.net.Uri
+import android.os.SystemClock
 import com.google.android.gms.cast.Cast
 import com.google.android.gms.cast.MediaError
 import com.google.android.gms.cast.MediaInfo
@@ -56,7 +57,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.MediaSourceInfo
-import org.jellyfin.sdk.model.api.MediaStreamType
 import org.jellyfin.sdk.model.api.PlaybackInfoDto
 import org.jellyfin.sdk.model.api.PlaybackInfoResponse
 import org.json.JSONObject
@@ -129,10 +129,11 @@ constructor(
      */
     private var loadPending = false
 
-    /** The item whose start was reported and whose stop is still owed, if any. */
-    private var reportingItemId: UUID? = null
-    /** The last position the receiver gave for [reportingItemId], for its stop report. */
-    private var reportingPositionMs = 0L
+    /** Decides which reports the server gets; [send] sends them. */
+    private val reporter = CastPlaybackReporter(clock = { SystemClock.elapsedRealtime() })
+
+    /** [playbackReportingCallback] is on the client: the interval of the progress reports runs. */
+    private var intervalRunning = false
 
     /**
      * One per thing the user started (or per restored session). A [PlaylistManager] remembers every
@@ -143,27 +144,14 @@ constructor(
 
     /** What was built for each item in the receiver's queue. */
     private val itemCache = ConcurrentHashMap<UUID, CastMediaItem>()
-    private val itemDuration = ConcurrentHashMap<UUID, Long>()
 
-    /**
-     * The playlist's order, as far as it is known. [playlistManager] returns a neighbour once, so
-     * the answer is kept: it is asked again each time the receiver moves to another item, and after
-     * an audio switch replaced the receiver's queue.
-     */
-    private val playerItems = HashMap<UUID, PlayerItem>()
-    private val nextOf = HashMap<UUID, UUID>()
-    private val previousOf = HashMap<UUID, UUID>()
+    /** The playlist's order, as far as [playlistManager] has told it. */
+    private val playlist = CastPlaylistOrder()
 
     private class BuiltMedia(
         val mediaInfo: MediaInfo,
         val castItem: CastMediaItem,
         val activeTrackIds: LongArray,
-    )
-
-    private class Tracks(
-        val castTracks: List<MediaTrack>,
-        val subtitles: List<Track>,
-        val audio: List<Track>,
     )
 
     private val remoteMediaClientCallback =
@@ -180,14 +168,14 @@ constructor(
                 val itemId = remoteItemId() ?: return
                 if (loadPending) return
                 if (_currentItem.value?.item?.itemId == itemId) {
-                    itemDuration[itemId] = client.streamDuration
+                    reporter.durationChanged(itemId, client.streamDuration)
                     return
                 }
 
                 val cachedItem = itemCache[itemId]
                 if (cachedItem != null) {
                     _currentItem.value = cachedItem
-                    itemDuration[itemId] = client.streamDuration
+                    reporter.durationChanged(itemId, client.streamDuration)
                     onCurrentItemSet(itemId)
                 } else {
                     restoreRemoteItem()
@@ -197,8 +185,7 @@ constructor(
             override fun onQueueStatusUpdated() {
                 // The receiver moved on: the item that was playing is done, wherever the
                 // reports for the new one stand.
-                val reporting = reportingItemId ?: return
-                if (remoteItemId() != reporting) stopReporting()
+                send(reporter.queueChanged(remoteItemId()))
             }
 
             override fun onMediaError(error: MediaError) {
@@ -210,7 +197,7 @@ constructor(
 
     private val playbackReportingCallback =
         RemoteMediaClient.ProgressListener { progressMs, _ ->
-            reportPlaybackProgressAndState(progressMs)
+            remoteMediaClient?.let { send(reporter.tick(receiverState(it, progressMs))) }
         }
 
     private val remoteMediaClientProgressListener =
@@ -220,11 +207,7 @@ constructor(
             _playerState.update {
                 it.copy(currentPosition = safeProgress, duration = safeDuration)
             }
-            val playingItemId = remoteItemId()
-            if (playingItemId != null) {
-                if (safeDuration > 0L) itemDuration[playingItemId] = safeDuration
-                if (playingItemId == reportingItemId) reportingPositionMs = safeProgress
-            }
+            remoteItemId()?.let { reporter.positionChanged(it, safeProgress, safeDuration) }
         }
 
     private val castSessionListener =
@@ -290,6 +273,7 @@ constructor(
             Timber.e(e, "Failed to unregister remote media client listeners")
         }
         remoteMediaClient = null
+        intervalRunning = false
 
         try {
             castSession?.removeCastListener(castSessionListener)
@@ -321,10 +305,8 @@ constructor(
 
     private fun forgetPlaylist() {
         itemCache.clear()
-        itemDuration.clear()
-        playerItems.clear()
-        nextOf.clear()
-        previousOf.clear()
+        reporter.forget()
+        playlist.clear()
     }
 
     /** The Jellyfin id of the item the receiver has loaded now, from its custom data. */
@@ -358,11 +340,25 @@ constructor(
         }
     }
 
+    /** What [reporter] is told: the receiver's state next to [currentItem]. */
+    private fun receiverState(
+        client: RemoteMediaClient,
+        positionMs: Long = client.approximateStreamPosition,
+    ) =
+        CastReceiverState(
+            status = mapPlaybackStatus(client),
+            receiverItemId = remoteItemId(),
+            currentItemId = _currentItem.value?.item?.itemId,
+            positionMs = positionMs,
+            loadPending = loadPending,
+        )
+
     private fun updatePlaybackStatus() {
         val client = remoteMediaClient ?: return
         val playbackStatus = mapPlaybackStatus(client)
 
         _playerState.update { it.copy(status = playbackStatus) }
+        send(reporter.statusChanged(receiverState(client)))
 
         when (playbackStatus) {
             CastPlaybackStatus.ENDED,
@@ -370,14 +366,12 @@ constructor(
             CastPlaybackStatus.IDLE -> {
                 // Idle between two loads still has an item; idle with none is the end.
                 if (playbackStatus != CastPlaybackStatus.IDLE || remoteItemId() == null) {
-                    stopReporting()
                     // A load of ours that the receiver has not answered yet keeps its item.
                     if (!loadPending) _currentItem.value = null
                 }
                 removeListener(remoteMediaClientProgressListener)
             }
             CastPlaybackStatus.PLAYING -> {
-                startReporting()
                 try {
                     client.removeProgressListener(remoteMediaClientProgressListener)
                     client.addProgressListener(remoteMediaClientProgressListener, 1000L)
@@ -386,11 +380,10 @@ constructor(
                 }
             }
             CastPlaybackStatus.PAUSED -> {
-                reportPlaybackProgressAndState()
-                removeListener(playbackReportingCallback)
+                stopInterval()
                 removeListener(remoteMediaClientProgressListener)
             }
-            CastPlaybackStatus.BUFFERING -> reportPlaybackProgressAndState()
+            CastPlaybackStatus.BUFFERING -> Unit
         }
     }
 
@@ -403,99 +396,96 @@ constructor(
     }
 
     /**
-     * The item whose reports are running, when it is also what the receiver plays and what
-     * [currentItem] holds. During a queue transition those three disagree for a moment, and a
-     * report sent then would be about the wrong item.
+     * Sends what [reporter] decided, and keeps the interval of the progress reports running while
+     * an item plays. It is not started again while it runs: that would push the next report back
+     * with every status update.
      */
-    private fun reportableItem(): CastMediaItem? {
-        val current = _currentItem.value ?: return null
-        val itemId = current.item.itemId
-        return current.takeIf { itemId == reportingItemId && itemId == remoteItemId() }
+    private fun send(reports: List<CastReport>) {
+        reports.forEach { report ->
+            when (report) {
+                is CastReport.Start -> sendStart(report)
+                is CastReport.Progress -> sendProgress(report)
+                is CastReport.Stop -> sendStop(report)
+            }
+        }
+
+        val client = remoteMediaClient
+        if (!reporter.isReporting || client == null) {
+            stopInterval()
+        } else if (!intervalRunning && client.isPlaying) {
+            try {
+                client.removeProgressListener(playbackReportingCallback)
+                client.addProgressListener(
+                    playbackReportingCallback,
+                    CastPlaybackReporter.PROGRESS_INTERVAL_MS,
+                )
+                intervalRunning = true
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to add playback reporting progress listener")
+            }
+        }
     }
 
-    private fun reportPlaybackProgressAndState(positionMs: Long? = null) {
-        val client = remoteMediaClient ?: return
-        val current = reportableItem() ?: return
-        val safePosition = (positionMs ?: client.approximateStreamPosition).coerceAtLeast(0L)
-        reportingPositionMs = safePosition
-        val isPaused = !client.isPlaying
-        val transcoded = current.isTranscoded()
+    private fun stopInterval() {
+        if (!intervalRunning) return
+        intervalRunning = false
+        removeListener(playbackReportingCallback)
+    }
 
+    /** Whether the stream of [itemId] is a transcode, which the reports name. */
+    private fun isTranscoded(itemId: UUID): Boolean =
+        (_currentItem.value?.takeIf { it.item.itemId == itemId } ?: itemCache[itemId])
+            ?.isTranscoded() == true
+
+    private fun sendStart(report: CastReport.Start) {
+        val itemId = report.itemId
+        val transcoded = isTranscoded(itemId)
+        scope.launch {
+            try {
+                repository.postPlaybackStart(itemId = itemId, transcoded = transcoded)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to report start for $itemId")
+            }
+        }
+    }
+
+    private fun sendProgress(report: CastReport.Progress) {
+        val transcoded = isTranscoded(report.itemId)
         scope.launch {
             try {
                 repository.postPlaybackProgress(
-                    itemId = current.item.itemId,
-                    positionTicks = safePosition * 10_000L,
-                    isPaused = isPaused,
+                    itemId = report.itemId,
+                    positionTicks = report.positionMs * 10_000L,
+                    isPaused = report.isPaused,
                     transcoded = transcoded,
                 )
             } catch (e: Exception) {
-                Timber.e(e, "Failed to report playback progress for ${current.item.itemId}")
+                Timber.e(e, "Failed to report playback progress for ${report.itemId}")
             }
         }
     }
 
-    /**
-     * Reports the start of the current item once the receiver plays it. Called when playback
-     * starts and again when [currentItem] catches up with the receiver, whichever comes last.
-     */
-    private fun startReporting() {
-        val client = remoteMediaClient ?: return
-        val current = _currentItem.value ?: return
-        val itemId = current.item.itemId
-        if (!client.isPlaying || itemId != remoteItemId()) return
-
-        if (reportingItemId != itemId) {
-            stopReporting()
-            reportingItemId = itemId
-            reportingPositionMs = client.approximateStreamPosition.coerceAtLeast(0L)
-            val transcoded = current.isTranscoded()
-            scope.launch {
-                try {
-                    repository.postPlaybackStart(itemId = itemId, transcoded = transcoded)
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to report start for $itemId")
-                }
-            }
-        } else {
-            reportPlaybackProgressAndState()
-        }
-
-        try {
-            client.removeProgressListener(playbackReportingCallback)
-            client.addProgressListener(playbackReportingCallback, 10_000L)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to add playback reporting progress listener")
-        }
-    }
-
-    private fun stopReporting() {
-        val itemId = reportingItemId ?: return
-        reportingItemId = null
-        removeListener(playbackReportingCallback)
-
-        val positionMs = reportingPositionMs.coerceAtLeast(0L)
-        val duration = itemDuration[itemId]?.takeIf { it > 0L }
-        val playedPercentage =
-            duration?.let { (positionMs.toFloat() / it.toFloat() * 100).toInt().coerceIn(0, 100) }
-
+    private fun sendStop(report: CastReport.Stop) {
         scope.launch {
             try {
                 repository.postPlaybackStop(
-                    itemId = itemId,
-                    positionTicks = positionMs * 10_000L,
-                    playedPercentage = playedPercentage,
+                    itemId = report.itemId,
+                    positionTicks = report.positionMs * 10_000L,
+                    playedPercentage = report.playedPercentage,
                 )
             } catch (e: Exception) {
-                Timber.e(e, "Failed to report playback stop for $itemId")
+                Timber.e(e, "Failed to report playback stop for ${report.itemId}")
             }
         }
     }
+
+    /** Ends the reports of the item that has them running: its stop goes out. */
+    private fun stopReporting() = send(reporter.stop())
 
     /** [currentItem] now holds the item the receiver plays. */
     private fun onCurrentItemSet(itemId: UUID) {
         manageQueue(itemId)
-        startReporting()
+        remoteMediaClient?.let { send(reporter.currentItemChanged(receiverState(it))) }
     }
 
     /** Picks up what the receiver is already playing: after a reconnect, or a new process. */
@@ -531,13 +521,7 @@ constructor(
                 }
         // The audio track is part of the stream the server was asked for; the subtitle is
         // whichever text track the receiver shows.
-        val audioIndex =
-            media.contentId?.let { url ->
-                val uri = Uri.parse(url)
-                uri.queryParameterNames
-                    .firstOrNull { it.equals("AudioStreamIndex", ignoreCase = true) }
-                    ?.let { uri.getQueryParameter(it)?.toIntOrNull() }
-            }
+        val audioIndex = media.contentId?.let { audioStreamIndexOf(it) }
         val subtitleTrackId = client.mediaStatus?.activeTrackIds?.firstOrNull()?.toInt()
 
         restoreJob?.cancel()
@@ -576,10 +560,7 @@ constructor(
                         )
 
                     playlistManager = manager
-                    playerItems.clear()
-                    nextOf.clear()
-                    previousOf.clear()
-                    playerItems[itemId] = item
+                    playlist.restart(item)
                     itemCache[itemId] = castItem
                     _currentItem.value = castItem
                     onCurrentItemSet(itemId)
@@ -596,8 +577,13 @@ constructor(
         audioStreamIndex: Int?,
     ): PlaybackInfoResponse =
         withContext(ioDispatcher) {
+            // A model known to play HEVC, or the user saying theirs does: the receiver itself
+            // tells a sender nothing about its codecs.
+            val hevc =
+                sessionManager.connectedDevice.value?.supportsH265 == true ||
+                    appPreferences.getValue(appPreferences.castReceiverHevc)
             val profile =
-                if (sessionManager.connectedDevice.value?.supportsH265 == true) {
+                if (hevc) {
                     ChromecastH265.deviceProfile
                 } else {
                     Chromecast.deviceProfile
@@ -676,32 +662,27 @@ constructor(
                 }
 
         val streamUrl =
-            if (!transcodingUrl.isNullOrBlank()) {
-                baseUrl + "/" + transcodingUrl.removePrefix("/")
-            } else {
-                Uri.parse("$baseUrl/Videos/${item.itemId}/stream")
-                    .buildUpon()
-                    .appendQueryParameter("static", "true")
-                    .appendQueryParameter("mediaSourceId", mediaSource.id)
-                    .apply {
-                        jellyfinApi.api.accessToken?.let { appendQueryParameter("api_key", it) }
-                    }
-                    .build()
-                    .toString()
-            }
-        // Direct play is MP4 only (see the device profiles). The source's own container is no
-        // help: the server gives ffprobe's list for it, "mov,mp4,m4a,3gp,3g2,mj2".
-        val contentType = if (isTranscoded) "application/x-mpegurl" else "video/mp4"
+            castStreamUrl(
+                baseUrl = baseUrl,
+                itemId = item.itemId,
+                mediaSourceId = mediaSource.id,
+                transcodingUrl = transcodingUrl,
+                accessToken = jellyfinApi.api.accessToken,
+            )
 
         val subtitleId =
-            if (defaultSubtitle) {
-                mediaSource.defaultSubtitleStreamIndex?.takeIf { it >= 0 }?.let {
-                    it + SUBTITLE_TRACK_ID_OFFSET
-                }
-            } else {
-                subtitleTrackId
-            }
+            if (defaultSubtitle) defaultSubtitleTrackId(mediaSource) else subtitleTrackId
         val tracks = getTracks(mediaSource, audioStreamIndex, subtitleId)
+        val mediaTracks =
+            tracks.receiverTracks.map {
+                MediaTrack.Builder(it.id, MediaTrack.TYPE_TEXT)
+                    .setContentId(it.url)
+                    .setSubtype(MediaTrack.SUBTYPE_SUBTITLES)
+                    .setContentType("text/vtt")
+                    .setLanguage(it.language)
+                    .setName(it.name)
+                    .build()
+            }
 
         val customData =
             JSONObject().apply {
@@ -711,10 +692,10 @@ constructor(
         val mediaInfo =
             MediaInfo.Builder(streamUrl)
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
-                .setContentType(contentType)
+                .setContentType(castContentType(isTranscoded))
                 .setMetadata(mediaMetadata)
                 .setCustomData(customData)
-                .apply { if (tracks.castTracks.isNotEmpty()) setMediaTracks(tracks.castTracks) }
+                .apply { if (mediaTracks.isNotEmpty()) setMediaTracks(mediaTracks) }
                 .build()
 
         return BuiltMedia(
@@ -726,100 +707,21 @@ constructor(
                     subtitleTracks = tracks.subtitles,
                     audioTracks = tracks.audio,
                 ),
-            activeTrackIds =
-                tracks.subtitles
-                    .filter { it.selected && it.supported }
-                    .map { it.id.toLong() }
-                    .toLongArray(),
+            activeTrackIds = tracks.activeTrackIds.toLongArray(),
         )
     }
 
-    /**
-     * The tracks of [mediaSource], for the receiver and for the track dialogs. [audioStreamIndex]
-     * is the audio stream that plays (`null`: the source's default), [subtitleTrackId] the subtitle
-     * track that shows (`null`: none). Subtitle track ids are the stream index plus
-     * [SUBTITLE_TRACK_ID_OFFSET]; the receiver gets only those the server delivers as a file.
-     */
     private fun getTracks(
         mediaSource: MediaSourceInfo,
         audioStreamIndex: Int?,
         subtitleTrackId: Int?,
-    ): Tracks {
-        val baseUrl = jellyfinApi.api.baseUrl?.removeSuffix("/").orEmpty()
-        val castTracks = mutableListOf<MediaTrack>()
-        val subtitles = mutableListOf<Track>()
-        val audio = mutableListOf<Track>()
-
-        val streams = mediaSource.mediaStreams.orEmpty()
-        val playingAudioIndex =
-            audioStreamIndex
-                ?: mediaSource.defaultAudioStreamIndex
-                ?: streams.firstOrNull { it.type == MediaStreamType.AUDIO }?.index
-
-        streams.forEach { stream ->
-            if (stream.type == MediaStreamType.SUBTITLE) {
-                val trackId = stream.index + SUBTITLE_TRACK_ID_OFFSET
-                val trackUrl = stream.deliveryUrl?.let { receiverUrl(baseUrl, it) }
-
-                if (trackUrl != null) {
-                    castTracks.add(
-                        MediaTrack.Builder(trackId.toLong(), MediaTrack.TYPE_TEXT)
-                            .setContentId(trackUrl)
-                            .setSubtype(MediaTrack.SUBTYPE_SUBTITLES)
-                            .setContentType("text/vtt")
-                            .setLanguage(stream.language)
-                            .setName(stream.title ?: stream.displayTitle)
-                            .build()
-                    )
-                }
-
-                subtitles.add(
-                    Track(
-                        id = trackId,
-                        label = stream.title ?: stream.displayTitle,
-                        language = stream.language,
-                        codec = stream.codec,
-                        selected = trackUrl != null && trackId == subtitleTrackId,
-                        supported = trackUrl != null,
-                        isExternal = stream.isExternal,
-                        isForced = stream.isForced,
-                        isHearingImpaired = stream.isHearingImpaired,
-                        isDefault = stream.isDefault,
-                    )
-                )
-            } else if (stream.type == MediaStreamType.AUDIO) {
-                audio.add(
-                    Track(
-                        id = stream.index,
-                        label = stream.title ?: stream.displayTitle,
-                        language = stream.language,
-                        codec = stream.codec,
-                        selected = stream.index == playingAudioIndex,
-                        supported = true,
-                        isExternal = stream.isExternal,
-                        isForced = stream.isForced,
-                        isHearingImpaired = stream.isHearingImpaired,
-                        isDefault = stream.isDefault,
-                        channelLayout = stream.channelLayout,
-                    )
-                )
-            }
-        }
-
-        return Tracks(castTracks, subtitles, audio)
-    }
-
-    /**
-     * [url] as the receiver can fetch it: a path on the server, or an absolute URL on the server's
-     * own host. The receiver sits on the user's network and fetches whatever it is given, so a URL
-     * that points anywhere else is not passed on.
-     */
-    private fun receiverUrl(baseUrl: String, url: String): String? {
-        if (url.isEmpty()) return null
-        val uri = Uri.parse(url)
-        if (uri.scheme == null) return baseUrl + "/" + url.removePrefix("/")
-        return url.takeIf { uri.host != null && uri.host == Uri.parse(baseUrl).host }
-    }
+    ): CastTracks =
+        castTracks(
+            mediaSource = mediaSource,
+            baseUrl = jellyfinApi.api.baseUrl?.removeSuffix("/").orEmpty(),
+            audioStreamIndex = audioStreamIndex,
+            subtitleTrackId = subtitleTrackId,
+        )
 
     private fun fail(e: Exception? = null, message: String) {
         loadPending = false
@@ -871,7 +773,7 @@ constructor(
                     return@launch
                 }
 
-                playerItems[item.itemId] = item
+                playlist.add(item)
                 itemCache[item.itemId] = built.castItem
                 _currentItem.value = built.castItem
 
@@ -911,20 +813,15 @@ constructor(
                     manager.loadQueue()
                     manager.setCurrentMediaItemIndex(itemId)
 
-                    manager.getNextPlayerItem()?.let { next ->
-                        playerItems[next.itemId] = next
-                        nextOf[itemId] = next.itemId
-                        previousOf[next.itemId] = itemId
-                    }
-                    manager.getPreviousPlayerItem()?.let { previous ->
-                        playerItems[previous.itemId] = previous
-                        previousOf[itemId] = previous.itemId
-                        nextOf[previous.itemId] = itemId
-                    }
+                    val nextItem = manager.getNextPlayerItem()
+                    val previousItem = manager.getPreviousPlayerItem()
+                    // The order of another playlist is of no use to the one that replaced it.
+                    if (playlistManager !== manager) return@launch
+                    playlist.setNeighbours(itemId, next = nextItem, previous = previousItem)
                     if (_currentItem.value?.item?.itemId != itemId) return@launch
 
-                    val next = nextOf[itemId]?.let { playerItems[it] }
-                    val previous = previousOf[itemId]?.let { playerItems[it] }
+                    val next = playlist.next(itemId)
+                    val previous = playlist.previous(itemId)
                     _playerState.update {
                         it.copy(hasNextItem = next != null, hasPreviousItem = previous != null)
                     }
@@ -939,22 +836,38 @@ constructor(
             }
     }
 
-    private fun remoteQueueItemIds(status: MediaStatus): Set<UUID> =
-        status.queueItems.mapNotNullTo(HashSet()) {
-            it.media?.customData?.optString("itemId")?.toUuidOrNull()
-        }
+    private fun queueInsert(status: MediaStatus, current: UUID, item: PlayerItem, before: Boolean) =
+        queueInsertPosition(
+            queue =
+                status.queueItems.map {
+                    ReceiverQueueItem(
+                        queueItemId = it.itemId,
+                        itemId = it.media?.customData?.optString("itemId")?.toUuidOrNull(),
+                    )
+                },
+            currentQueueItemId = status.currentItemId,
+            current = current,
+            itemId = item.itemId,
+            before = before,
+        )
 
     /** Puts [item] in the receiver's queue right [before] or after [current], unless it is in. */
     private suspend fun queueItem(current: UUID, item: PlayerItem, before: Boolean) {
-        val queued = remoteMediaClient?.mediaStatus?.let { remoteQueueItemIds(it) } ?: return
-        if (item.itemId in queued) return
+        val statusBefore = remoteMediaClient?.mediaStatus ?: return
+        if (queueInsert(statusBefore, current, item, before) == QueueInsert.Skip) return
 
         val built = buildMedia(item) ?: return
 
         queueMutex.withLock {
             val client = remoteMediaClient ?: return
             val status = client.mediaStatus ?: return
-            if (remoteItemId() != current || item.itemId in remoteQueueItemIds(status)) return
+            // Asked again: building the item took a request to the server.
+            val insertBefore =
+                when (val insert = queueInsert(status, current, item, before)) {
+                    QueueInsert.Skip -> return
+                    is QueueInsert.Before -> insert.queueItemId
+                    QueueInsert.AtEnd -> MediaQueueItem.INVALID_ITEM_ID
+                }
             itemCache[item.itemId] = built.castItem
 
             val queueItem =
@@ -963,17 +876,6 @@ constructor(
                     .setPreloadTime(20.0)
                     .setActiveTrackIds(built.activeTrackIds)
                     .build()
-
-            val currentItemId = status.currentItemId
-            val insertBefore =
-                if (before) {
-                    currentItemId
-                } else {
-                    val queueItems = status.queueItems
-                    val currentIndex = queueItems.indexOfFirst { it.itemId == currentItemId }
-                    queueItems.getOrNull(currentIndex + 1)?.takeIf { currentIndex != -1 }?.itemId
-                        ?: MediaQueueItem.INVALID_ITEM_ID
-                }
 
             try {
                 client.queueInsertItems(arrayOf(queueItem), insertBefore, null)
@@ -1038,9 +940,6 @@ constructor(
         }
     }
 
-    private fun CastMediaItem.withSubtitle(trackIds: Collection<Long>): CastMediaItem =
-        copy(subtitleTracks = subtitleTracks.map { it.copy(selected = it.id.toLong() in trackIds) })
-
     override fun setSubtitleTrack(track: Track?) {
         val client = remoteMediaClient ?: return
         val current = _currentItem.value ?: return
@@ -1075,10 +974,7 @@ constructor(
         if (current.audioTracks.firstOrNull { it.selected }?.id == track.id) return
         val currentItemId = current.item.itemId
 
-        _currentItem.value =
-            current.copy(
-                audioTracks = current.audioTracks.map { it.copy(selected = it.id == track.id) }
-            )
+        _currentItem.value = current.withAudio(track.id)
 
         audioTrackJob?.cancel()
         loadPending = true
@@ -1149,10 +1045,5 @@ constructor(
         }
         _currentItem.value = null
         forgetPlaylist()
-    }
-
-    private companion object {
-        /** Keeps subtitle track ids apart from the audio stream indices the dialogs also use. */
-        const val SUBTITLE_TRACK_ID_OFFSET = 100
     }
 }
