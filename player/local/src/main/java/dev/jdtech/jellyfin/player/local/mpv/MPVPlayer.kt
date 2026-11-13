@@ -46,9 +46,6 @@ import dev.jdtech.mpv.MPVLib.MpvFormat
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.CopyOnWriteArraySet
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -58,7 +55,6 @@ class MPVPlayer(
     context: Context,
     private val audioAttributes: AudioAttributes = AudioAttributes.DEFAULT,
     private val handleAudioFocus: Boolean = true,
-    @Volatile
     private var trackSelectionParameters: TrackSelectionParameters =
         TrackSelectionParameters.DEFAULT,
     private val seekBackIncrement: Long = C.DEFAULT_SEEK_BACK_INCREMENT_MS,
@@ -86,7 +82,6 @@ class MPVPlayer(
      * Set by [release]. After it every [MPVLib] call throws, and the activity's window, and with it
      * the SurfaceView, is torn down after the view model has released the player (#318).
      */
-    @Volatile
     private var released = false
 
     // Headphones were unplugged: pause rather than carry on over the speaker.
@@ -408,10 +403,7 @@ class MPVPlayer(
     // MPV Custom
     private var isPlayerReady: Boolean = false
     private var isSeekable: Boolean = false
-    @Volatile
     private var currentMediaItemIndex: Int = 0
-    @Volatile
-    private var targetMediaItemIndex: Int = 0
     private var currentPositionMs: Long? = null
     private var currentDurationMs: Long? = null
     private var currentCacheDurationMs: Long? = null
@@ -424,19 +416,10 @@ class MPVPlayer(
     private val forcedSubtitleFiles = HashSet<String>()
 
     /**
-     * CE (#617): runs `sub-add` commands off the main thread so slow subtitle downloads do not
-     * block the UI. A single-thread executor serializes subtitle jobs so concurrent workers do not
-     * race or overlap across item transitions.
+     * CE (#617): the subtitle files of the item being loaded, in its order. mpv downloads them side
+     * by side and lists each when it is there, so the track list puts them back in this order.
      */
-    private val subtitleExecutor =
-        Executors.newSingleThreadExecutor { runnable ->
-            Thread(runnable, "mpv-subtitles").apply { isDaemon = true }
-        }
-    @Volatile
-    private var activeSubtitleJob: Future<*>? = null
-    @Volatile
-    private var loadGeneration: Long = 0L
-    private var subtitlesLoadedGeneration: Long = -1L
+    private val subtitleFiles = ArrayList<String>()
     private var initialIndex: Int = 0
     private var initialSeekTo: Long = 0L
 
@@ -487,7 +470,7 @@ class MPVPlayer(
             when (property) {
                 "track-list" -> {
                     val hadVideo = currentTracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
-                    val newTracks = getTracks(value, forcedSubtitleFiles)
+                    val newTracks = getTracks(value, forcedSubtitleFiles, subtitleFiles)
                     currentTracks = newTracks
                     // The selected video track's frame rate, not the last video group's:
                     // mpv also lists attached pictures as 1fps video tracks.
@@ -644,15 +627,11 @@ class MPVPlayer(
                     reloadingAfterError = false
                     loadState.startFile()
                     streamBreak.reset()
-                    if (!isPlayerReady && initialCommands.isNotEmpty() && subtitlesLoadedGeneration != loadGeneration) {
-                        subtitlesLoadedGeneration = loadGeneration
-                        val commands = initialCommands.toList()
-                        val currentGen = loadGeneration
-                        val expectedIndex = targetMediaItemIndex
-                        activeSubtitleJob =
-                            subtitleExecutor.submit {
-                                loadSubtitles(commands, currentGen, expectedIndex)
-                            }
+                    if (!isPlayerReady) {
+                        // CE (#617): async, so these return without waiting for the download.
+                        for (command in initialCommands) {
+                            mpvLib.command(command)
+                        }
                     }
                 }
                 MpvEvent.MPV_EVENT_FILE_LOADED -> {
@@ -856,60 +835,6 @@ class MPVPlayer(
      */
     private fun selectTrack(trackType: MPVTrackType, id: String) {
         mpvLib.setPropertyString(trackType.type, id)
-    }
-
-    /**
-     * CE (#617): loads external subtitles off the main thread.
-     *
-     * In mpv, `sub-add` with `auto` causes mpv to re-evaluate auto track selection. If the user or
-     * series preference explicitly disabled subtitles or picked an override, we restore that
-     * selection after `sub-add` completes so late-arriving subtitles do not override it.
-     */
-    private fun loadSubtitles(commands: List<Array<String>>, generation: Long, expectedIndex: Int) {
-        for (command in commands) {
-            try {
-                if (
-                    Thread.interrupted() ||
-                        released ||
-                        loadGeneration != generation ||
-                        targetMediaItemIndex != expectedIndex
-                ) {
-                    return
-                }
-
-                mpvLib.command(command)
-
-                if (
-                    Thread.interrupted() ||
-                        released ||
-                        loadGeneration != generation ||
-                        targetMediaItemIndex != expectedIndex
-                ) {
-                    return
-                }
-
-                // Check track selection parameters AFTER sub-add finishes so any user selection
-                // made while sub-add was in flight is honored and not overwritten.
-                val targetSid = targetSubtitleTrack(trackSelectionParameters)
-                if (targetSid != null && mpvLib.getPropertyString("sid") != targetSid) {
-                    val currentTarget = targetSubtitleTrack(trackSelectionParameters)
-                    if (currentTarget == targetSid) {
-                        selectTrack(MPVTrackType.SUBTITLE, targetSid)
-                    }
-                }
-            } catch (e: Throwable) {
-                Timber.w(e, "Failed to load external subtitle: ${command.joinToString(" ")}")
-                if (
-                    e is InterruptedException ||
-                        Thread.interrupted() ||
-                        released ||
-                        loadGeneration != generation ||
-                        targetMediaItemIndex != expectedIndex
-                ) {
-                    return
-                }
-            }
-        }
     }
 
     // Timeline wrapper
@@ -1305,10 +1230,7 @@ class MPVPlayer(
         playbackParameters = PlaybackParameters.DEFAULT
         initialCommands.clear()
         forcedSubtitleFiles.clear()
-        loadGeneration++
-        subtitlesLoadedGeneration = -1L
-        activeSubtitleJob?.cancel(true)
-        activeSubtitleJob = null
+        subtitleFiles.clear()
     }
 
     /** Prepares the player. */
@@ -1341,9 +1263,6 @@ class MPVPlayer(
      * the failure of the file before it ([MpvLoadState]) and drops a report that was still held.
      */
     private fun startNewLoad(index: Int?) {
-        loadGeneration++
-        activeSubtitleJob?.cancel(true)
-        activeSubtitleJob = null
         loadState.newLoad(index)
         handler.removeCallbacks(loadErrorHoldTimeout)
     }
@@ -1656,12 +1575,18 @@ class MPVPlayer(
 
     private fun prepareMediaItem(index: Int) {
         internalMediaItems.getOrNull(index)?.let { mediaItem ->
-            targetMediaItemIndex = index
             startNewLoad(index)
             resetInternalState()
             mediaItem.localConfiguration?.subtitleConfigurations?.forEach { subtitle ->
+                subtitleFiles.add("${subtitle.uri}")
                 initialCommands.add(
                     arrayOf(
+                        // CE (#617): mpv downloads the file on its own thread and this call
+                        // returns at once instead of blocking the main thread until it is there.
+                        // mpv cancels the download when the file ends (another item, stop, an
+                        // error reload) and waits for it in destroy(). Without a reply, so mpv's
+                        // log is the only trace of a failed one, as before.
+                        /* prefix= */ "async",
                         /* command= */ "sub-add",
                         /* url= */ "${subtitle.uri}",
                         /* flags= */ "auto",
@@ -1752,14 +1677,6 @@ class MPVPlayer(
         handler.removeCallbacksAndMessages(null)
         listeners.release()
         released = true
-        activeSubtitleJob?.cancel(true)
-        activeSubtitleJob = null
-        subtitleExecutor.shutdownNow()
-        try {
-            subtitleExecutor.awaitTermination(2, TimeUnit.SECONDS)
-        } catch (_: InterruptedException) {
-            Thread.currentThread().interrupt()
-        }
         mpvLib.destroy()
     }
 
@@ -2406,18 +2323,23 @@ class MPVPlayer(
             )
         }
 
-        private fun getTracks(trackList: String, forcedSubtitleFiles: Set<String>): Tracks {
+        private fun getTracks(
+            trackList: String,
+            forcedSubtitleFiles: Set<String>,
+            subtitleFiles: List<String>,
+        ): Tracks {
             var tracks = Tracks.EMPTY
             val trackGroups = mutableListOf<Tracks.Group>()
             try {
                 val currentTrackList = JSONArray(trackList)
-                for (index in 0 until currentTrackList.length()) {
-                    val tracksGroup =
-                        createTracksGroupfromMpvJson(
-                            currentTrackList.getJSONObject(index),
-                            forcedSubtitleFiles,
-                        )
-                    trackGroups.add(tracksGroup)
+                // CE (#617): the item's subtitle files in its order, whichever finished first.
+                // The other tracks keep mpv's order, ahead of them as mpv lists them.
+                val sorted =
+                    (0 until currentTrackList.length())
+                        .map { currentTrackList.getJSONObject(it) }
+                        .sortedBy { subtitleFiles.indexOf(it.optNullableString("external-filename")) }
+                for (json in sorted) {
+                    trackGroups.add(createTracksGroupfromMpvJson(json, forcedSubtitleFiles))
                 }
                 if (trackGroups.isNotEmpty()) {
                     tracks = Tracks(trackGroups)

@@ -240,76 +240,26 @@ class PlayerInvariantsTest {
     }
 
     @Test
-    fun `mpv loads external subtitles off the main thread`() {
-        // #617: sub-add blocks while downloading an external subtitle. MPVPlayer must run them
-        // off the main thread, keep the list so a reload after an error still adds them, and not
-        // undo the track selection when a subtitle arrives late.
+    fun `mpv adds external subtitles without blocking the main thread`() {
+        // #617: START_FILE runs on the main thread, and a plain sub-add waits there until the
+        // subtitle is downloaded. With the async prefix mpv downloads it on its own thread, cancels
+        // it when the file ends and waits for it in destroy(), so no thread of ours can race
+        // destroy(). The list stays after running, so a reload after an error (#474) adds them.
         val mpvPlayer = source("mpv/MPVPlayer.kt")
+        assertTrue(
+            "the sub-add commands must carry mpv's async prefix (#617)",
+            Regex(""""async",\s*(/\* command= \*/\s*)?"sub-add"""").containsMatchIn(mpvPlayer),
+        )
+        assertFalse(
+            "MPVPlayer must not call mpv from a thread of its own (#617)",
+            mpvPlayer.contains("Executors.") || mpvPlayer.contains("Thread("),
+        )
         val startFile =
             Regex("""MpvEvent\.MPV_EVENT_START_FILE -> \{[\s\S]*?\n {16}\}""").find(mpvPlayer)
         assertTrue("MPVPlayer's START_FILE branch not found", startFile != null)
-        assertTrue(
-            "START_FILE must submit subtitle loading to subtitleExecutor (#617)",
-            startFile!!.value.contains("subtitleExecutor.submit") &&
-                startFile.value.contains("loadSubtitles("),
-        )
         assertFalse(
-            "START_FILE must not run sub-add directly on the main thread (#617)",
-            startFile.value.contains("mpvLib.command("),
-        )
-
-        // The subtitle list must only be cleared when resetting internal state, not on START_FILE
-        // or during load, so error recovery (reloadAfterError) still has and loads them.
-        val clearMatches = Regex("""\binitialCommands\.clear\(\)""").findAll(mpvPlayer).toList()
-        org.junit.Assert.assertEquals(
-            "initialCommands.clear() must only be called in resetInternalState (#617)",
-            1,
-            clearMatches.size,
-        )
-        val resetInternalState =
-            Regex("""private fun resetInternalState\(\)\s*\{[\s\S]*?\n    \}""").find(mpvPlayer)
-        assertTrue("resetInternalState not found", resetInternalState != null)
-        assertTrue(
-            "resetInternalState must clear initialCommands",
-            resetInternalState!!.value.contains("initialCommands.clear()"),
-        )
-
-        val loadSubtitles =
-            Regex("""private fun loadSubtitles\([\s\S]*?\n    \}""").find(mpvPlayer)
-        assertTrue("MPVPlayer.loadSubtitles not found (#617)", loadSubtitles != null)
-        assertTrue(
-            "loadSubtitles must execute the subtitle commands via mpvLib.command (#617)",
-            loadSubtitles!!.value.contains("mpvLib.command(command)"),
-        )
-        assertTrue(
-            "loadSubtitles must evaluate targetSubtitleTrack after command completes (#617)",
-            loadSubtitles.value.contains("targetSubtitleTrack(trackSelectionParameters)"),
-        )
-        val commandIdx = loadSubtitles.value.indexOf("mpvLib.command(command)")
-        val targetTrackIdx =
-            loadSubtitles.value.indexOf("targetSubtitleTrack(trackSelectionParameters)")
-        assertTrue(
-            "loadSubtitles must execute the command before sampling targetSubtitleTrack (#617)",
-            commandIdx in 0..<targetTrackIdx,
-        )
-        assertTrue(
-            "loadSubtitles must restore the target track using selectTrack (#617)",
-            loadSubtitles.value.contains("selectTrack(MPVTrackType.SUBTITLE, targetSid)"),
-        )
-
-        assertTrue(
-            "subtitleExecutor must be a single thread executor with daemon threads (#617)",
-            mpvPlayer.contains("Executors.newSingleThreadExecutor") &&
-                mpvPlayer.contains("isDaemon = true"),
-        )
-
-        val releaseMethod =
-            Regex("""override fun release\(\)\s*\{[\s\S]*?\n    \}""").find(mpvPlayer)
-        assertTrue("MPVPlayer.release not found", releaseMethod != null)
-        assertTrue(
-            "release must shut down and await termination of subtitleExecutor before destroying mpvLib (#617)",
-            releaseMethod!!.value.contains("subtitleExecutor.shutdownNow()") &&
-                releaseMethod.value.contains("subtitleExecutor.awaitTermination"),
+            "START_FILE must not clear initialCommands, or a reload after an error loses them (#474)",
+            startFile!!.value.contains("initialCommands.clear()"),
         )
     }
 }
