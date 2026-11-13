@@ -242,6 +242,12 @@ class MPVPlayer(
         mpvLib.setOptionString("hwdec", hwDec)
         mpvLib.setOptionString("hwdec-codecs", "h264,hevc,mpeg4,mpeg2video,vp8,vp9,av1")
 
+        // #652: AV1 film grain on the CPU. With gpu-next the default is the GPU, and the grain
+        // shader of the libplacebo in libmpv 1.0.0 (7.360.1) flips the luma plane on OpenGL ES
+        // when a software-decoded video is shown unscaled (mpv-player/mpv#14651). Fixed in
+        // libplacebo 7.387.0: drop this line with the libmpv that has it. mpv.conf overrides it.
+        mpvLib.setOptionString("vd-lavc-film-grain", "cpu")
+
         // TLS
         mpvLib.setOptionString("tls-verify", "no")
 
