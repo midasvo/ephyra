@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">टैबलेट को सीधा घुमाने पर भी वीडियो लैंडस्केप में चलाएं</string>
     <string name="ce_pref_home_episode_images">एपिसोड की छवियाँ इस्तेमाल करें</string>
     <string name="ce_pref_home_episode_images_summary">देखना जारी रखें और आगे देखें में सीरीज़ की छवि की जगह एपिसोड की छवि दिखाएँ</string>
+    <string name="ce_pref_home_episode_images_summary_phone">देखना जारी रखें और आगे देखें में, और एपिसोड के पेज के ऊपर, सीरीज़ की छवि की जगह एपिसोड की छवि दिखाएँ</string>
 </resources>

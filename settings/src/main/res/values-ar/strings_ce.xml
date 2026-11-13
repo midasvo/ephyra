@@ -204,4 +204,5 @@
     <string name="ce_pref_player_keep_landscape_summary">تشغيل الفيديوهات بالوضع الأفقي حتى عند تدوير الجهاز اللوحي عموديًا</string>
     <string name="ce_pref_home_episode_images">استخدام صور الحلقات</string>
     <string name="ce_pref_home_episode_images_summary">عرض صورة الحلقة بدلًا من صورة المسلسل في «متابعة المشاهدة» و«التالي»</string>
+    <string name="ce_pref_home_episode_images_summary_phone">عرض صورة الحلقة بدلًا من صورة المسلسل في «متابعة المشاهدة» و«التالي» وأعلى صفحة الحلقة</string>
 </resources>

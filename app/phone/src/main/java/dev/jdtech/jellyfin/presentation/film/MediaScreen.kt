@@ -38,8 +38,9 @@ import dev.jdtech.jellyfin.film.presentation.search.SearchViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.film.components.Direction
-import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCardInitialHeight
+import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
+import dev.jdtech.jellyfin.presentation.film.components.showsServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.FilmSearchBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemCard
 import dev.jdtech.jellyfin.presentation.film.components.TopContentScrim
@@ -112,10 +113,12 @@ private fun MediaScreenLayout(
     // CE (#571): the grid starts under the error card at its real height, as on Home.
     val density = LocalDensity.current
     var errorCardHeight by remember { mutableStateOf(ErrorCardInitialHeight) }
+    // CE (#281): the same slot holds the unreachable banner, also when no load has failed.
+    val showCard = showsServerOrErrorCard(state.error)
     val contentPaddingTop by
         animateDpAsState(
             targetValue =
-                if (state.error != null) {
+                if (showCard) {
                     safePadding.top + 80.dp + errorCardHeight + MaterialTheme.spacings.medium
                 } else {
                     safePadding.top + 88.dp
@@ -174,21 +177,20 @@ private fun MediaScreenLayout(
             }
         }
         TopContentScrim(height = safePadding.top + 88.dp)
-        if (state.error != null) {
-            ErrorCard(
+        if (showCard) {
+            ServerOrErrorCard(
+                error = state.error,
                 onShowStacktrace = { showErrorDialog = true },
                 onRetryClick = { onAction(MediaAction.OnRetryClick) },
                 modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(
+                    Modifier.padding(
                             start = paddingStart,
                             top = safePadding.top + 80.dp,
                             end = paddingEnd,
                         )
                         .onSizeChanged { errorCardHeight = with(density) { it.height.toDp() } },
-                error = state.error,
             )
-            if (showErrorDialog) {
+            if (state.error != null && showErrorDialog) {
                 ErrorDialog(
                     exception = state.error!!,
                     onDismissRequest = { showErrorDialog = false },

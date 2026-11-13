@@ -22,6 +22,7 @@ import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import com.google.android.material.color.DynamicColors
 import dagger.hilt.android.HiltAndroidApp
+import dev.jdtech.jellyfin.core.reachability.ServerReachability
 import dev.jdtech.jellyfin.core.session.ServerSessionKeeper
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.core.presentation.downloader.SmartDownloads
@@ -53,6 +54,8 @@ class BaseApplication : Application(), Configuration.Provider, SingletonImageLoa
     @Inject lateinit var smartDownloads: SmartDownloads
 
     @Inject lateinit var userDataSync: UserDataSync
+
+    @Inject lateinit var serverReachability: ServerReachability
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -89,6 +92,10 @@ class BaseApplication : Application(), Configuration.Provider, SingletonImageLoa
 
         // CE (#334): keep the session list on the server in step with the app.
         serverSessionKeeper.start()
+
+        // CE (#281): know while the app runs whether the server answers, for the banner that
+        // points at Downloads. Takes over the network callback the sync below had.
+        serverReachability.start()
 
         // CE (#552): send progress watched offline as soon as the server can be reached again.
         userDataSync.start()

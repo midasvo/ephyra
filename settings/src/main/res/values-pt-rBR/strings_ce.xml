@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Reproduzir os vídeos na horizontal, mesmo quando você gira o tablet para a vertical</string>
     <string name="ce_pref_home_episode_images">Usar imagens dos episódios</string>
     <string name="ce_pref_home_episode_images_summary">Mostrar a imagem do episódio em vez da imagem da série em Continuar assistindo e A seguir</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Mostrar a imagem do episódio em vez da imagem da série em Continuar assistindo, em A seguir e no topo da página do episódio</string>
 </resources>

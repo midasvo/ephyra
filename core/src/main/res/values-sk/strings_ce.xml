@@ -118,4 +118,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Zatiaľ nič stiahnuté</string>
     <string name="ce_home_offline_empty_body">Ste offline. Filmy a epizódy, ktoré si stiahnete, sa zobrazia tu a v Stiahnutých.</string>
+    <string name="ce_server_unreachable_downloads">Stiahnutý obsah sa dá stále prehrávať.</string>
 </resources>

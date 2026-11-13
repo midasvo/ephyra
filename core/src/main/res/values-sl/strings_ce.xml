@@ -123,4 +123,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Prenesenega še ni nič</string>
     <string name="ce_home_offline_empty_body">Brez povezave ste. Filmi in epizode, ki jih prenesete, so prikazani tukaj in v Prenosih.</string>
+    <string name="ce_server_unreachable_downloads">Prenose lahko še vedno predvajate.</string>
 </resources>

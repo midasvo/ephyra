@@ -77,7 +77,9 @@ Events that fire once (navigation, toasts) use a `Channel<FooEvent>` exposed as 
 
 **Navigation:** Navigation 3 with `@Serializable` route objects. `NavigationRoot.kt` in `app/phone` is the single source of truth for the nav graph.
 
-**Offline mode:** `RepositoryModule` provides `JellyfinRepositoryImpl` or `JellyfinRepositoryOfflineImpl`, depending on `isOfflineModeActive()` (the preference, or no connection). The UI reads the same state from the `LocalOfflineMode` CompositionLocal.
+**Offline mode:** `RepositoryModule` provides `JellyfinRepositoryImpl` or `JellyfinRepositoryOfflineImpl`, depending on the Offline Mode preference alone (`useOfflineRepository`); a lost connection never swaps it. The UI reads the same state from the `LocalOfflineMode` CompositionLocal.
+
+**Server reachability:** `ServerReachability` (in `core`) follows the app's own requests and probes the server on a network change, on return to the app and after a failed request. Phone screens read it through `LocalServerStatus` and show the unreachable banner (`ServerOrErrorCard`) with a way to Downloads. It is not started on TV.
 
 ## Key Patterns
 

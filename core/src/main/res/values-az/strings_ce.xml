@@ -108,4 +108,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Hələ heç nə endirilməyib</string>
     <string name="ce_home_offline_empty_body">Oflaynsınız. Endirdiyiniz filmlər və epizodlar burada və Endirmələrdə görünür.</string>
+    <string name="ce_server_unreachable_downloads">Endirmələrinizi yenə də oynada bilərsiniz.</string>
 </resources>

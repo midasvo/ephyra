@@ -200,4 +200,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Prehrávať videá na šírku, aj keď tablet otočíte na výšku</string>
     <string name="ce_pref_home_episode_images">Používať obrázky epizód</string>
     <string name="ce_pref_home_episode_images_summary">Zobraziť obrázok epizódy namiesto obrázka seriálu v radoch Pokračovať v sledovaní a Ďalšie</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Zobraziť obrázok epizódy namiesto obrázka seriálu v radoch Pokračovať v sledovaní a Ďalšie a v hornej časti stránky epizódy</string>
 </resources>

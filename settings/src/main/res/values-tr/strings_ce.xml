@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Tableti dik çevirseniz bile videoları yatay oynat</string>
     <string name="ce_pref_home_episode_images">Bölüm görsellerini kullan</string>
     <string name="ce_pref_home_episode_images_summary">İzlemeye devam et ve Sıradaki satırlarında dizinin görseli yerine bölümün görselini göster</string>
+    <string name="ce_pref_home_episode_images_summary_phone">İzlemeye devam et ve Sıradaki satırlarında ve bölüm sayfasının üst kısmında dizinin görseli yerine bölümün görselini göster</string>
 </resources>

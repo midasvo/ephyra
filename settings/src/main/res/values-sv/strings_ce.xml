@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Spela upp videor i liggande läge, även när du vänder surfplattan stående</string>
     <string name="ce_pref_home_episode_images">Använd avsnittsbilder</string>
     <string name="ce_pref_home_episode_images_summary">Visa avsnittets bild i stället för seriens bild i Fortsätt titta och Nästa</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Visa avsnittets bild i stället för seriens bild i Fortsätt titta, i Nästa och överst på avsnittets sida</string>
 </resources>

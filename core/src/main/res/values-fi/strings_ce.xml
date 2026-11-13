@@ -113,4 +113,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Mitään ei ole vielä ladattu</string>
     <string name="ce_home_offline_empty_body">Olet offline-tilassa. Lataamasi elokuvat ja jaksot näkyvät täällä ja Latauksissa.</string>
+    <string name="ce_server_unreachable_downloads">Latauksesi ovat edelleen toistettavissa.</string>
 </resources>

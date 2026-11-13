@@ -196,4 +196,5 @@
     <string name="ce_pref_player_keep_landscape_summary">Toista videot vaakasuunnassa, vaikka käännät tabletin pystyyn</string>
     <string name="ce_pref_home_episode_images">Käytä jaksojen kuvia</string>
     <string name="ce_pref_home_episode_images_summary">Näytä jakson kuva sarjan kuvan sijaan riveillä Jatka katsomista ja Seuraavaksi</string>
+    <string name="ce_pref_home_episode_images_summary_phone">Näytä jakson kuva sarjan kuvan sijaan riveillä Jatka katsomista ja Seuraavaksi sekä jakson sivun yläosassa</string>
 </resources>

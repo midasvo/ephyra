@@ -229,4 +229,6 @@
     <!-- CE: Home while offline, with nothing downloaded from this server -->
     <string name="ce_home_offline_empty_title">Nothing downloaded yet</string>
     <string name="ce_home_offline_empty_body">You\'re offline. Movies and episodes you download show up here and in Downloads.</string>
+    <!-- CE (#281): under "Can't reach the Jellyfin server", when something is downloaded -->
+    <string name="ce_server_unreachable_downloads">Your downloads still play.</string>
 </resources>

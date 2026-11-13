@@ -108,4 +108,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Henüz hiçbir şey indirilmedi</string>
     <string name="ce_home_offline_empty_body">Çevrimdışısınız. İndirdiğiniz filmler ve bölümler burada ve İndirilenler\'de görünür.</string>
+    <string name="ce_server_unreachable_downloads">İndirdikleriniz hâlâ oynatılabilir.</string>
 </resources>

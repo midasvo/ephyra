@@ -108,4 +108,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">尚未下載任何內容</string>
     <string name="ce_home_offline_empty_body">你目前離線。你下載的電影和單集會顯示在這裡和「下載」中。</string>
+    <string name="ce_server_unreachable_downloads">已下載的內容仍可播放。</string>
 </resources>

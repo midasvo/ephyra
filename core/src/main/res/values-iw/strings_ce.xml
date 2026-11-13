@@ -113,4 +113,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">עדיין לא הורד דבר</string>
     <string name="ce_home_offline_empty_body">אין חיבור. סרטים ופרקים שתוריד יופיעו כאן ובהורדות.</string>
+    <string name="ce_server_unreachable_downloads">עדיין אפשר לנגן את ההורדות שלך.</string>
 </resources>
