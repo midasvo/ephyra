@@ -27,4 +27,16 @@
     <string name="ce_track_forced">强制</string>
     <string name="ce_player_connection_lost">连接已断开。网络恢复后将继续播放。</string>
     <string name="ce_player_try_again">重试</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">字幕延迟</string>
+    <string name="ce_subtitle_sync">字幕同步</string>
+    <string name="ce_capture_spoken_line">捕获台词</string>
+    <string name="ce_capture_line_hint">在台词说出时点击以匹配字幕对话</string>
+    <string name="ce_no_cues_found">此位置附近未找到字幕台词</string>
+    <string name="ce_reset">重置</string>
+    <string name="ce_recapture_spoken_line">重新捕获</string>
+    <string name="ce_dialogue_near_position">%1$s 附近的台词：</string>
+    <string name="ce_loading_dialogue">正在加载台词…</string>
+    <string name="ce_decrease_delay">减少延迟</string>
+    <string name="ce_increase_delay">增加延迟</string>
 </resources>

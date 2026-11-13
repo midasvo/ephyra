@@ -29,4 +29,16 @@
     <string name="ce_track_forced">Erzwungen</string>
     <string name="ce_player_connection_lost">Verbindung verloren. Die Wiedergabe geht weiter, sobald das Netzwerk wieder da ist.</string>
     <string name="ce_player_try_again">Erneut versuchen</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Untertitelverzögerung</string>
+    <string name="ce_subtitle_sync">Untertitelsynchronisierung</string>
+    <string name="ce_capture_spoken_line">Gesprochene Zeile erfassen</string>
+    <string name="ce_capture_line_hint">Tippen, wenn eine Zeile gesprochen wird, um sie mit den Untertiteln abzugleichen</string>
+    <string name="ce_no_cues_found">Keine Untertitelzeilen in der Nähe dieser Position gefunden</string>
+    <string name="ce_reset">Zurücksetzen</string>
+    <string name="ce_recapture_spoken_line">Erneut erfassen</string>
+    <string name="ce_dialogue_near_position">Dialog bei %1$s:</string>
+    <string name="ce_loading_dialogue">Dialog wird geladen…</string>
+    <string name="ce_decrease_delay">Verzögerung verringern</string>
+    <string name="ce_increase_delay">Verzögerung erhöhen</string>
 </resources>

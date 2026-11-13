@@ -31,4 +31,16 @@
     <string name="ce_track_forced">Forcés</string>
     <string name="ce_player_connection_lost">Connexion perdue. La lecture reprendra au retour du réseau.</string>
     <string name="ce_player_try_again">Réessayer</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Délai des sous-titres</string>
+    <string name="ce_subtitle_sync">Synchronisation des sous-titres</string>
+    <string name="ce_capture_spoken_line">Capturer la réplique prononcée</string>
+    <string name="ce_capture_line_hint">Appuyez lorsqu\'une réplique est prononcée pour la synchroniser avec les sous-titres</string>
+    <string name="ce_no_cues_found">Aucune réplique trouvée près de cette position</string>
+    <string name="ce_reset">Réinitialiser</string>
+    <string name="ce_recapture_spoken_line">Capturer à nouveau</string>
+    <string name="ce_dialogue_near_position">Dialogue près de %1$s :</string>
+    <string name="ce_loading_dialogue">Chargement du dialogue…</string>
+    <string name="ce_decrease_delay">Diminuer le délai</string>
+    <string name="ce_increase_delay">Augmenter le délai</string>
 </resources>

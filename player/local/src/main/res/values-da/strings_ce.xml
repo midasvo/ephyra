@@ -29,4 +29,16 @@
     <string name="ce_track_forced">Tvungne</string>
     <string name="ce_player_connection_lost">Forbindelsen blev afbrudt. Afspilningen fortsætter, når netværket er tilbage.</string>
     <string name="ce_player_try_again">Prøv igen</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Undertekstforsinkelse</string>
+    <string name="ce_subtitle_sync">Undertekstsynkronisering</string>
+    <string name="ce_capture_spoken_line">Fang talt linje</string>
+    <string name="ce_capture_line_hint">Tryk, når en linje siges, for at matche med undertekstdialogen</string>
+    <string name="ce_no_cues_found">Ingen undertekstlinjer fundet i nærheden af denne position</string>
+    <string name="ce_reset">Nulstil</string>
+    <string name="ce_recapture_spoken_line">Genoptag</string>
+    <string name="ce_dialogue_near_position">Dialog nær %1$s:</string>
+    <string name="ce_loading_dialogue">Indlæser dialog…</string>
+    <string name="ce_decrease_delay">Formindsk forsinkelse</string>
+    <string name="ce_increase_delay">Forøg forsinkelse</string>
 </resources>

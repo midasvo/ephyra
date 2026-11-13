@@ -29,4 +29,16 @@
     <string name="ce_track_forced">Pakotetut</string>
     <string name="ce_player_connection_lost">Yhteys katkesi. Toisto jatkuu, kun verkko palaa.</string>
     <string name="ce_player_try_again">Yritä uudelleen</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Tekstityksen viive</string>
+    <string name="ce_subtitle_sync">Tekstityksen synkronointi</string>
+    <string name="ce_capture_spoken_line">Tallenna puhuttu lause</string>
+    <string name="ce_capture_line_hint">Napauta, kun vuorosana lausutaan, sovittaaksesi tekstitykseen</string>
+    <string name="ce_no_cues_found">Tämän kohdan läheltä ei löytynyt tekstitysrivejä</string>
+    <string name="ce_reset">Palauta</string>
+    <string name="ce_recapture_spoken_line">Tallenna uudelleen</string>
+    <string name="ce_dialogue_near_position">Vuorosana kohdassa %1$s:</string>
+    <string name="ce_loading_dialogue">Ladataan vuorosanoja…</string>
+    <string name="ce_decrease_delay">Vähennä viivettä</string>
+    <string name="ce_increase_delay">Lisää viivettä</string>
 </resources>

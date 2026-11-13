@@ -29,4 +29,16 @@
     <string name="ce_track_forced">Sunnitud</string>
     <string name="ce_player_connection_lost">Ühendus katkes. Taasesitus jätkub, kui võrk on tagasi.</string>
     <string name="ce_player_try_again">Proovi uuesti</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Subtiitrite viivitus</string>
+    <string name="ce_subtitle_sync">Subtiitrite sünkroonimine</string>
+    <string name="ce_capture_spoken_line">Jäädvusta räägitud rida</string>
+    <string name="ce_capture_line_hint">Puuduta rea rääkimisel, et see subtiitritega sobitada</string>
+    <string name="ce_no_cues_found">Selle asukoha lähedalt ei leitud subtiitriridu</string>
+    <string name="ce_reset">Lähtesta</string>
+    <string name="ce_recapture_spoken_line">Püüa uuesti</string>
+    <string name="ce_dialogue_near_position">Dialoog kellaaja %1$s lähedal:</string>
+    <string name="ce_loading_dialogue">Dialoogi laadimine…</string>
+    <string name="ce_decrease_delay">Vähenda viivitust</string>
+    <string name="ce_increase_delay">Suurenda viivitust</string>
 </resources>

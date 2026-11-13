@@ -31,4 +31,16 @@
     <string name="ce_track_forced">Forțate</string>
     <string name="ce_player_connection_lost">Conexiunea s-a pierdut. Redarea continuă când revine rețeaua.</string>
     <string name="ce_player_try_again">Încearcă din nou</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Decalaj subtitrare</string>
+    <string name="ce_subtitle_sync">Sincronizare subtitrare</string>
+    <string name="ce_capture_spoken_line">Înregistrează replica rostită</string>
+    <string name="ce_capture_line_hint">Atinge când este rostită o replică pentru a o potrivi cu subtitrarea</string>
+    <string name="ce_no_cues_found">Nu s-au găsit linii de subtitrare în apropierea acestei poziții</string>
+    <string name="ce_reset">Resetare</string>
+    <string name="ce_recapture_spoken_line">Reînregistrează</string>
+    <string name="ce_dialogue_near_position">Dialog în apropiere de %1$s:</string>
+    <string name="ce_loading_dialogue">Se încarcă dialogul…</string>
+    <string name="ce_decrease_delay">Redu decalajul</string>
+    <string name="ce_increase_delay">Crește decalajul</string>
 </resources>

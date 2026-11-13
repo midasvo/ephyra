@@ -27,4 +27,16 @@
     <string name="ce_track_forced">Məcburi</string>
     <string name="ce_player_connection_lost">Bağlantı kəsildi. Şəbəkə qayıdanda oxutma davam edəcək.</string>
     <string name="ce_player_try_again">Yenidən cəhd et</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Altyazı gecikməsi</string>
+    <string name="ce_subtitle_sync">Altyazı sinxronizasiyası</string>
+    <string name="ce_capture_spoken_line">Danışılan sətri qeyd et</string>
+    <string name="ce_capture_line_hint">Altyazı mətni ilə uyğunlaşdırmaq üçün sətir deyiləndə toxunun</string>
+    <string name="ce_no_cues_found">Bu mövqenin yaxınlığında altyazı sətri tapılmadı</string>
+    <string name="ce_reset">Sıfırla</string>
+    <string name="ce_recapture_spoken_line">Yenidən qeyd et</string>
+    <string name="ce_dialogue_near_position">%1$s yaxınlığındakı dialoq:</string>
+    <string name="ce_loading_dialogue">Dialoq yüklənir…</string>
+    <string name="ce_decrease_delay">Gecikməni azalt</string>
+    <string name="ce_increase_delay">Gecikməni artır</string>
 </resources>

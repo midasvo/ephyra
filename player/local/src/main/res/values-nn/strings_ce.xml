@@ -29,4 +29,16 @@
     <string name="ce_track_forced">Tvungne</string>
     <string name="ce_player_connection_lost">Tilkoplinga vart broten. Avspelinga held fram når nettverket er tilbake.</string>
     <string name="ce_player_try_again">Prøv på nytt</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Undertekstforseinking</string>
+    <string name="ce_subtitle_sync">Undertekstsynkronisering</string>
+    <string name="ce_capture_spoken_line">Fang opp talt linje</string>
+    <string name="ce_capture_line_hint">Trykk når ei linje vert sagt for å samsvara med underteksten</string>
+    <string name="ce_no_cues_found">Fann inge undertekstlinjer nær denne posisjonen</string>
+    <string name="ce_reset">Tilbakestill</string>
+    <string name="ce_recapture_spoken_line">Fang opp på nytt</string>
+    <string name="ce_dialogue_near_position">Dialog nær %1$s:</string>
+    <string name="ce_loading_dialogue">Lastar inn dialog…</string>
+    <string name="ce_decrease_delay">Reduser forseinking</string>
+    <string name="ce_increase_delay">Auk forseinking</string>
 </resources>

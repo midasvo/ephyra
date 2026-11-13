@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
+import android.os.Looper
 import android.os.SystemClock
 import android.net.ConnectivityManager
 import android.net.Network
@@ -30,12 +31,20 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
+import androidx.media3.common.text.CueGroup
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.Renderer
+import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.ArrayList
+import java.util.Collections
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.math.abs
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.FindroidItem
@@ -46,11 +55,13 @@ import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerItem
 import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
+import dev.jdtech.jellyfin.player.core.domain.models.SubtitleSyncCue
 import dev.jdtech.jellyfin.player.core.domain.models.Trickplay
 import dev.jdtech.jellyfin.player.local.PlaybackService
 import dev.jdtech.jellyfin.player.local.PlaybackSessionStore
 import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.domain.AudioDecoderFallback
+import dev.jdtech.jellyfin.player.local.domain.AutoSyncSubtitleCueParser
 import dev.jdtech.jellyfin.player.local.domain.DebugSegments
 import dev.jdtech.jellyfin.player.local.domain.NetworkRecovery
 import dev.jdtech.jellyfin.player.local.domain.PlaybackStartGate
@@ -108,6 +119,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -415,6 +430,219 @@ constructor(
             resolveAutoPlayNext(pref, server).also { Timber.d("Autoplay next item: $it") }
         }
 
+    val subtitleOffsetUs = AtomicLong(0L)
+
+    /**
+     * CE (#619): the playing item's duration for [SubtitleOffsetRenderer], which runs on the
+     * playback thread and must not ask the player itself.
+     */
+    private val itemDurationUs = AtomicLong(C.TIME_UNSET)
+
+    private fun updateItemDuration() {
+        val durationMs = player.duration
+        itemDurationUs.set(if (durationMs == C.TIME_UNSET) C.TIME_UNSET else durationMs * 1000)
+    }
+
+    private val _subtitleDelay = MutableStateFlow(0)
+
+    /**
+     * CE (#619): the subtitle delay of the playing item. The sheets collect it, so they show 0
+     * again when the next item starts while they are open.
+     */
+    val subtitleDelay: StateFlow<Int> = _subtitleDelay.asStateFlow()
+
+    val subtitleDelayMs: Int
+        get() = _subtitleDelay.value
+
+    private val _tracksVersion = MutableStateFlow(0)
+
+    /**
+     * CE (#619): goes up on every track change, so a sheet that lists [trackChoices] reads them
+     * again: the next item's tracks arrive after the item itself.
+     */
+    val tracksVersion: StateFlow<Int> = _tracksVersion.asStateFlow()
+
+    /** The item [subtitleDelay] belongs to. */
+    private var subtitleDelayItemId: String? = null
+
+    private val _currentTrackCues = MutableStateFlow<List<SubtitleSyncCue>>(emptyList())
+
+    private val _isLoadingCues = MutableStateFlow(false)
+    val isLoadingCues: StateFlow<Boolean> = _isLoadingCues.asStateFlow()
+
+    private val _observedLiveCues = Collections.synchronizedList(mutableListOf<SubtitleSyncCue>())
+    private val _liveTrackCues = MutableStateFlow<List<SubtitleSyncCue>>(emptyList())
+
+    /** CE (#619): Combined cues from parsed external file or observed live stream. */
+    val activeCues: StateFlow<List<SubtitleSyncCue>> =
+        combine(_currentTrackCues, _liveTrackCues) { parsed, live ->
+            parsed.ifEmpty { live }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private var cueLoadingJob: Job? = null
+
+    /** The item and track the cues are for, so the same track is not loaded twice. */
+    private var loadedCueKey: String? = null
+
+    /** CE (#619): adjusts subtitle delay for the active item. */
+    fun setSubtitleDelay(delayMs: Int) {
+        val clamped = delayMs.coerceIn(-180_000, 180_000)
+        if (clamped == subtitleDelayMs) return
+        _subtitleDelay.value = clamped
+        // ExoPlayer: SubtitleOffsetRenderer picks the new delay up on its next render, also
+        // while paused, so the player is not asked to seek.
+        subtitleOffsetUs.set(clamped * 1000L)
+        if (player is MPVPlayer) {
+            player.setSubtitleDelayMs(clamped)
+        }
+    }
+
+    /** The subtitle track the cues were last collected for, see [onTracksChanged]. */
+    private var selectedTextCueKey: String? = null
+
+    private fun textTrackFormat(trackIndex: Int): Format? =
+        if (trackIndex < 0) null
+        else supportedGroups(C.TRACK_TYPE_TEXT).getOrNull(trackIndex)?.mediaTrackGroup?.getFormat(0)
+
+    private fun cueKey(trackIndex: Int, format: Format): String =
+        "${player.currentMediaItem?.mediaId}|$trackIndex|${format.id}|${format.language}|${format.label}"
+
+    /**
+     * CE (#619): Drops the cues of the previous track or item, and any load still running.
+     * [keepLiveCues] keeps the ones seen on screen: they are the playing track's.
+     */
+    private fun clearSubtitleCues(keepLiveCues: Boolean = false) {
+        cueLoadingJob?.cancel()
+        cueLoadingJob = null
+        loadedCueKey = null
+        _currentTrackCues.value = emptyList()
+        if (!keepLiveCues) {
+            synchronized(_observedLiveCues) { _observedLiveCues.clear() }
+            _liveTrackCues.value = emptyList()
+        }
+        _isLoadingCues.value = false
+    }
+
+    /**
+     * CE (#619): loads the dialogue cues of the subtitle track at [trackIndex] of
+     * [trackChoices], for the sync sheet. -1 (no subtitles) clears them. Asking again for the
+     * track whose cues are loaded or loading does nothing. Main thread only.
+     */
+    fun loadCuesForActiveTrack(trackIndex: Int) {
+        val format = textTrackFormat(trackIndex)
+        val key = format?.let { cueKey(trackIndex, it) }
+        if (key != null && key == loadedCueKey) return
+
+        clearSubtitleCues(keepLiveCues = key != null && key == selectedTextCueKey)
+        val item = currentPlayerItem()
+        if (format == null || item == null) return
+        loadedCueKey = key
+
+        // The player prefixes the id it was given with its source's index ("1:<uri>").
+        val formatId = format.id
+        val extSub =
+            item.externalSubtitles.firstOrNull {
+                val uri = it.uri.toString()
+                formatId == uri || formatId?.substringAfter(':') == uri
+            }
+                ?: item.externalSubtitles.firstOrNull {
+                    it.language.equals(format.language, ignoreCase = true) &&
+                        it.title.equals(format.label, ignoreCase = true)
+                }
+        // An embedded track has no file to read: its cues are the ones onCues sees.
+        val uri = extSub?.uri ?: return
+        val subtitleUrl = uri.toString()
+
+        _isLoadingCues.value = true
+        // Runs on the main thread, only the reading on IO, so the state is written in one place,
+        // and a newer load cancels this one before it can publish anything.
+        cueLoadingJob =
+            viewModelScope.launch {
+                val parsed =
+                    try {
+                        withContext(Dispatchers.IO) {
+                            val text =
+                                if (uri.scheme == "file") {
+                                    val file = java.io.File(uri.path.orEmpty())
+                                    if (file.exists() && file.length() <= MAX_SUBTITLE_BYTES) {
+                                        file.readText()
+                                    } else ""
+                                } else {
+                                    fetchSubtitleTextSafely(subtitleUrl)
+                                }
+                            if (text.isBlank()) null
+                            else AutoSyncSubtitleCueParser.parse(text, subtitleUrl)
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Timber.w(e, "Could not load subtitle cues for sync")
+                        null
+                    }
+                // Nothing loaded: the next request for this track tries again.
+                if (parsed.isNullOrEmpty()) loadedCueKey = null
+                _currentTrackCues.value = parsed.orEmpty()
+                _isLoadingCues.value = false
+                cueLoadingJob = null
+            }
+    }
+
+    private suspend fun fetchSubtitleTextSafely(url: String): String =
+        suspendCancellableCoroutine { continuation ->
+            val client =
+                jellyfinApi.httpClient
+                    .newBuilder()
+                    .followRedirects(false)
+                    .followSslRedirects(false)
+                    .callTimeout(java.time.Duration.ofSeconds(8))
+                    .readTimeout(java.time.Duration.ofSeconds(5))
+                    .build()
+
+            val request = okhttp3.Request.Builder().url(url).build()
+            val call = client.newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+
+            call.enqueue(
+                object : okhttp3.Callback {
+                    override fun onFailure(call: okhttp3.Call, e: java.io.IOException) {
+                        if (continuation.isActive) {
+                            continuation.resume("")
+                        }
+                    }
+
+                    override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                        // Whatever happens while the body is read, resume: OkHttp calls neither
+                        // callback again after this one throws, and the load would never end.
+                        val text =
+                            try {
+                                response.use { resp ->
+                                    val body = resp.body
+                                    if (
+                                        !resp.isSuccessful ||
+                                            body == null ||
+                                            body.contentLength() > MAX_SUBTITLE_BYTES
+                                    ) {
+                                        ""
+                                    } else {
+                                        val source = body.source()
+                                        source.request(MAX_SUBTITLE_BYTES)
+                                        val buffer = source.buffer
+                                        buffer.readString(
+                                            minOf(buffer.size, MAX_SUBTITLE_BYTES),
+                                            java.nio.charset.StandardCharsets.UTF_8,
+                                        )
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Timber.w(e, "Could not read subtitle cues for sync")
+                                ""
+                            }
+                        if (continuation.isActive) continuation.resume(text)
+                    }
+                }
+            )
+        }
+
     init {
         sessionStore.onSessionCreated()
 
@@ -495,7 +723,32 @@ constructor(
                 // ffmpeg always decodes to PCM. It picks up what no platform decoder
                 // handles, and what a broken one fails on, see AudioDecoderFallback.
                 val renderersFactory =
-                    DefaultRenderersFactory(application)
+                    object : DefaultRenderersFactory(application) {
+                        override fun buildTextRenderers(
+                            context: Context,
+                            output: TextOutput,
+                            outputLooper: Looper,
+                            extensionRendererMode: Int,
+                            out: ArrayList<Renderer>,
+                        ) {
+                            val startIndex = out.size
+                            super.buildTextRenderers(
+                                context,
+                                output,
+                                outputLooper,
+                                extensionRendererMode,
+                                out,
+                            )
+                            for (index in startIndex until out.size) {
+                                out[index] =
+                                    SubtitleOffsetRenderer(
+                                        baseRenderer = out[index],
+                                        subtitleDelayUsProvider = subtitleOffsetUs::get,
+                                        itemDurationUsProvider = itemDurationUs::get,
+                                    )
+                            }
+                        }
+                    }
                         .setExtensionRendererMode(
                             DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
                         )
@@ -668,6 +921,7 @@ constructor(
         val mediaSubtitles =
             externalSubtitles.map { externalSubtitle ->
                 MediaItem.SubtitleConfiguration.Builder(externalSubtitle.uri)
+                    .setId(externalSubtitle.uri.toString())
                     .setLabel(
                         // CE (#597): a track of the file itself that the server delivers apart
                         // (during a transcode) is named as it is when the stream carries it.
@@ -1003,6 +1257,14 @@ constructor(
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         Timber.d("Playing MediaItem: ${mediaItem?.mediaId}")
+        updateItemDuration()
+        // CE (#619): the delay is the item's. A reload of the same item (quality or transcode
+        // audio switch, reconnect) also lands here and keeps it.
+        if (mediaItem?.mediaId != subtitleDelayItemId) {
+            subtitleDelayItemId = mediaItem?.mediaId
+            setSubtitleDelay(0)
+        }
+        clearSubtitleCues()
         displayRefreshRateManager.onMediaItemTransition()
         loggedDisplayFrameRate = null
         // CE (#450): another item: no reload of the one that lost its connection.
@@ -1602,7 +1864,12 @@ constructor(
         }
     }
 
+    override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+        updateItemDuration()
+    }
+
     override fun onPlaybackStateChanged(state: Int) {
+        updateItemDuration()
         var stateString = "UNKNOWN_STATE             -"
         when (state) {
             ExoPlayer.STATE_IDLE -> {
@@ -1615,6 +1882,11 @@ constructor(
                 stateString = "ExoPlayer.STATE_READY     -"
                 // CE (#450): loaded again after the connection was lost.
                 if (networkRecovery.isWaiting) endNetworkWait()
+                // CE (#619): mpv sets sub-delay back to 0 whenever it loads a file, also a reload
+                // of the same item that keeps the delay.
+                if (player is MPVPlayer && subtitleDelayMs != 0) {
+                    player.setSubtitleDelayMs(subtitleDelayMs)
+                }
                 _uiState.update { it.copy(fileLoaded = true) }
                 // CE (#601): the item loaded, so its start report is due.
                 startGate.onReady()?.let { item ->
@@ -1770,6 +2042,8 @@ constructor(
 
     override fun onTracksChanged(tracks: Tracks) {
         handleDisplayRefreshRate(tracks)
+        onTextTrackMaybeChanged()
+        _tracksVersion.value++
         val selectableTracks =
             tracks.groups.count { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }
         val itemId = player.currentMediaItem?.mediaId
@@ -1825,6 +2099,47 @@ constructor(
                         .setTrackTypeDisabled(trackType, false)
             }
             player.trackSelectionParameters = applied.build()
+        }
+    }
+
+    /**
+     * CE (#619): forgets the cues once another subtitle track plays (or none), whoever switched
+     * it: the sync sheet must not offer one track's lines for another. The new track's cues are
+     * loaded when the sheet asks for them, not on every item.
+     */
+    private fun onTextTrackMaybeChanged() {
+        val index = supportedGroups(C.TRACK_TYPE_TEXT).indexOfFirst { it.isSelected }
+        val key = textTrackFormat(index)?.let { cueKey(index, it) }
+        if (key == selectedTextCueKey) return
+        selectedTextCueKey = key
+        // The sheet may have asked for the new track before the player switched to it.
+        if (key == null || key != loadedCueKey) clearSubtitleCues()
+    }
+
+    override fun onCues(cueGroup: CueGroup) {
+        val cues = cueGroup.cues
+        if (cues.isNotEmpty()) {
+            // The cue shows the delay later than the track has it. The sheet sets the delay
+            // from the track's own times, like those of a parsed file, so take the delay off.
+            val currentPos = (player.currentPosition - subtitleDelayMs).coerceAtLeast(0L)
+            var addedAny = false
+            for (cue in cues) {
+                val text = cue.text?.toString()?.trim()
+                if (!text.isNullOrBlank()) {
+                    synchronized(_observedLiveCues) {
+                        if (_observedLiveCues.none { it.text == text && abs(it.startTimeMs - currentPos) < 2000L }) {
+                            _observedLiveCues.add(SubtitleSyncCue(startTimeMs = currentPos, text = text))
+                            if (_observedLiveCues.size > 100) {
+                                _observedLiveCues.removeAt(0)
+                            }
+                            addedAny = true
+                        }
+                    }
+                }
+            }
+            if (addedAny && _currentTrackCues.value.isEmpty()) {
+                _liveTrackCues.value = synchronized(_observedLiveCues) { _observedLiveCues.toList() }
+            }
         }
     }
 
@@ -2376,6 +2691,9 @@ sealed interface PlayerEvents {
 
 /** How often a running sleep timer updates [PlayerViewModel.sleepTimerState] and checks its end. */
 private const val SLEEP_TIMER_TICK_MS = 1_000L
+
+/** CE (#619): the largest subtitle file read for the sync sheet's cues. */
+private const val MAX_SUBTITLE_BYTES = 5L * 1024 * 1024
 
 /** How often [PlayerViewModel.upNext] is updated. */
 private const val UP_NEXT_TICK_MS = 500L

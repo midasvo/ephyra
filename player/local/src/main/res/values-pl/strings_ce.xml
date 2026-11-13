@@ -33,4 +33,16 @@
     <string name="ce_track_forced">Wymuszone</string>
     <string name="ce_player_connection_lost">Utracono połączenie. Odtwarzanie będzie kontynuowane po powrocie sieci.</string>
     <string name="ce_player_try_again">Spróbuj ponownie</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Opóźnienie napisów</string>
+    <string name="ce_subtitle_sync">Synchronizacja napisów</string>
+    <string name="ce_capture_spoken_line">Przechwyć wypowiedzianą kwestię</string>
+    <string name="ce_capture_line_hint">Stuknij, gdy kwestia zostanie wypowiedziana, aby dopasować ją do napisów</string>
+    <string name="ce_no_cues_found">Nie znaleziono linii dialogowych w pobliżu tej pozycji</string>
+    <string name="ce_reset">Resetuj</string>
+    <string name="ce_recapture_spoken_line">Przechwyć ponownie</string>
+    <string name="ce_dialogue_near_position">Kwestia w okolicy %1$s:</string>
+    <string name="ce_loading_dialogue">Wczytywanie dialogu…</string>
+    <string name="ce_decrease_delay">Zmniejsz opóźnienie</string>
+    <string name="ce_increase_delay">Zwiększ opóźnienie</string>
 </resources>

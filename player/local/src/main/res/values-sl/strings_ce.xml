@@ -33,4 +33,16 @@
     <string name="ce_track_forced">Vsiljeni</string>
     <string name="ce_player_connection_lost">Povezava je prekinjena. Predvajanje se bo nadaljevalo, ko bo omrežje spet na voljo.</string>
     <string name="ce_player_try_again">Poskusi znova</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Zakasnitev podnapisov</string>
+    <string name="ce_subtitle_sync">Sinhronizacija podnapisov</string>
+    <string name="ce_capture_spoken_line">Ujemi izgovorjeno vrstico</string>
+    <string name="ce_capture_line_hint">Dotaknite se, ko je vrstica izgovorjena, da jo uskladite s podnapisi</string>
+    <string name="ce_no_cues_found">V bližini tega položaja ni bilo mogoče najti vrstic podnapisov</string>
+    <string name="ce_reset">Ponastavi</string>
+    <string name="ce_recapture_spoken_line">Znova ujemi</string>
+    <string name="ce_dialogue_near_position">Dialog blizu %1$s:</string>
+    <string name="ce_loading_dialogue">Nalaganje dialoga…</string>
+    <string name="ce_decrease_delay">Zmanjšaj zakasnitev</string>
+    <string name="ce_increase_delay">Povečaj zakasnitev</string>
 </resources>

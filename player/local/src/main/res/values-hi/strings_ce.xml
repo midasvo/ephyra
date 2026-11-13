@@ -29,4 +29,16 @@
     <string name="ce_track_forced">अनिवार्य</string>
     <string name="ce_player_connection_lost">कनेक्शन टूट गया। नेटवर्क वापस आने पर प्लेबैक जारी रहेगा।</string>
     <string name="ce_player_try_again">फिर से कोशिश करें</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">उपशीर्षक विलंब</string>
+    <string name="ce_subtitle_sync">उपशीर्षक सिंक</string>
+    <string name="ce_capture_spoken_line">बोली गई पंक्ति कैप्चर करें</string>
+    <string name="ce_capture_line_hint">उपशीर्षक संवाद से मिलान करने के लिए कोई पंक्ति बोले जाने पर टैप करें</string>
+    <string name="ce_no_cues_found">इस स्थिति के पास कोई उपशीर्षक पंक्ति नहीं मिली</string>
+    <string name="ce_reset">रीसेट करें</string>
+    <string name="ce_recapture_spoken_line">पुनः कैप्चर करें</string>
+    <string name="ce_dialogue_near_position">%1$s के पास संवाद:</string>
+    <string name="ce_loading_dialogue">संवाद लोड हो रहा है…</string>
+    <string name="ce_decrease_delay">विलंब कम करें</string>
+    <string name="ce_increase_delay">विलंब बढ़ाएं</string>
 </resources>

@@ -1231,6 +1231,7 @@ class MPVPlayer(
         initialCommands.clear()
         forcedSubtitleFiles.clear()
         subtitleFiles.clear()
+        mpvLib.setPropertyDouble("sub-delay", 0.0)
     }
 
     /** Prepares the player. */
@@ -2126,6 +2127,11 @@ class MPVPlayer(
     /** CE (#300, #308): applies [options] from [mpvSubtitleOptions] to the playing subtitles. */
     fun updateSubtitleOptions(options: Map<String, String>) {
         options.forEach { (name, value) -> mpvLib.setOptionString(name, value) }
+    }
+
+    /** CE (#619): shifts subtitles by [delayMs] (positive = later, negative = earlier). */
+    fun setSubtitleDelayMs(delayMs: Int) {
+        mpvLib.setPropertyDouble("sub-delay", delayMs / 1000.0)
     }
 
     fun updateZoomMode(enabled: Boolean) {

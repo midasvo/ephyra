@@ -29,4 +29,16 @@
     <string name="ce_track_forced">Forçats</string>
     <string name="ce_player_connection_lost">S\'ha perdut la connexió. La reproducció continuarà quan torni la xarxa.</string>
     <string name="ce_player_try_again">Torna-ho a provar</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">Retard dels subtítols</string>
+    <string name="ce_subtitle_sync">Sincronització de subtítols</string>
+    <string name="ce_capture_spoken_line">Captura la frase dits</string>
+    <string name="ce_capture_line_hint">Toqueu quan es digui una frase per sincronitzar-la amb el diàleg</string>
+    <string name="ce_no_cues_found">No s\'han trobat línies de subtítols a prop d\'aquesta posició</string>
+    <string name="ce_reset">Restableix</string>
+    <string name="ce_recapture_spoken_line">Torna a capturar</string>
+    <string name="ce_dialogue_near_position">Diàleg a prop de %1$s:</string>
+    <string name="ce_loading_dialogue">S\'està carregant el diàleg…</string>
+    <string name="ce_decrease_delay">Redueix el retard</string>
+    <string name="ce_increase_delay">Augmenta el retard</string>
 </resources>

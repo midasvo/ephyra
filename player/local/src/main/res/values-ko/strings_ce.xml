@@ -27,4 +27,16 @@
     <string name="ce_track_forced">강제</string>
     <string name="ce_player_connection_lost">연결이 끊겼습니다. 네트워크가 돌아오면 재생이 계속됩니다.</string>
     <string name="ce_player_try_again">다시 시도</string>
+    <!-- CE (#619): Subtitle delay & synchronization controls. -->
+    <string name="ce_subtitle_delay">자막 지연</string>
+    <string name="ce_subtitle_sync">자막 동기화</string>
+    <string name="ce_capture_spoken_line">대사 캡처</string>
+    <string name="ce_capture_line_hint">대사가 나올 때 탭하여 자막과 동기화합니다</string>
+    <string name="ce_no_cues_found">이 위치 근처에서 자막을 찾을 수 없습니다</string>
+    <string name="ce_reset">초기화</string>
+    <string name="ce_recapture_spoken_line">다시 캡처</string>
+    <string name="ce_dialogue_near_position">%1$s 부근 대사:</string>
+    <string name="ce_loading_dialogue">대사 불러오는 중…</string>
+    <string name="ce_decrease_delay">지연 줄이기</string>
+    <string name="ce_increase_delay">지연 늘리기</string>
 </resources>
