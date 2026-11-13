@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
+import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
@@ -95,6 +96,7 @@ fun ShowScreen(
     viewModel: ShowViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val castPlayback = LocalCastPlayback.current
     val uriHandler = LocalUriHandler.current
 
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -141,10 +143,13 @@ fun ShowScreen(
         onAction = { action ->
             when (action) {
                 is ShowAction.Play -> {
-                    val intent = Intent(context, PlayerActivity::class.java)
-                    intent.putExtra("itemId", showId.toString())
-                    intent.putExtra("itemKind", BaseItemKind.SERIES.serialName)
-                    context.startActivity(intent)
+                    // CE (#626): on the Cast receiver when one is connected.
+                    if (!castPlayback.play(showId, BaseItemKind.SERIES, false, null)) {
+                        val intent = Intent(context, PlayerActivity::class.java)
+                        intent.putExtra("itemId", showId.toString())
+                        intent.putExtra("itemKind", BaseItemKind.SERIES.serialName)
+                        context.startActivity(intent)
+                    }
                 }
                 is ShowAction.PlayTrailer -> {
                     try {

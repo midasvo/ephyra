@@ -194,5 +194,13 @@
     <string name="ce_pref_player_keep_landscape_summary">태블릿을 세로로 돌려도 동영상을 가로 모드로 재생합니다</string>
     <string name="ce_pref_home_episode_images">에피소드 이미지 사용</string>
     <string name="ce_pref_home_episode_images_summary">이어서 보기와 다음 에피소드에서 시리즈 이미지 대신 에피소드 이미지 표시</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">TV로 전송</string>
+    <string name="ce_pref_cast_enabled_summary">전송 버튼을 표시하고 네트워크에서 Chromecast 기기를 찾습니다</string>
+    <string name="ce_pref_cast_max_bitrate">최대 비트 전송률</string>
+    <string name="ce_pref_cast_max_bitrate_summary">전송 중에는 서버가 이보다 높은 콘텐츠의 화질을 낮춥니다</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">TV에서 HEVC 재생 가능</string>
+    <string name="ce_pref_cast_hevc_summary">HEVC(H.265) 동영상을 H.264로 변환하지 않고 그대로 보냅니다. 4K Chromecast는 자동으로 적용됩니다. HEVC를 재생하는 다른 TV나 셋톱박스라면 켜세요</string>
     <string name="ce_pref_home_episode_images_summary_phone">이어서 보기와 다음 에피소드, 그리고 에피소드 페이지 상단에서 시리즈 이미지 대신 에피소드 이미지 표시</string>
 </resources>

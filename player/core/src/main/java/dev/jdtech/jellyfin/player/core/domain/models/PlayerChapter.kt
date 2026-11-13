@@ -11,6 +11,8 @@ data class PlayerChapter(
     val name: String? = null,
     /** The Jellyfin image tag for the chapter thumbnail, if one was extracted server-side. */
     val imageTag: String? = null,
+    /** The resolved image URI if available. */
+    val imageUri: String? = null,
 ) : Parcelable
 
 /**

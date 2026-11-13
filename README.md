@@ -46,22 +46,38 @@ Ephyra is a Jellyfin client for Android phones, tablets and Android TV, forked f
 
 ## Install
 
+### Two variants
+
+The phone app comes in two variants with the same application ID and the same signing key, so one
+installs over the other and keeps your login, settings and downloads.
+
+- **libre**: no Google code.
+- **proprietary**: libre plus Google Cast (Chromecast), which needs Google Play services. Without
+  them it still runs; Cast is just unavailable.
+
+Every GitHub release and beta has both, so Obtainium can follow either. The Android TV app is libre
+only. Stores are coming soon: F-Droid and the Amazon Appstore with libre, Google Play with proprietary on
+phones and libre on Android TV.
+
 ### Obtainium
 
 Add `https://github.com/midasvo/ephyra` in [Obtainium](https://github.com/ImranR98/Obtainium).
-Leave **Include prereleases** off and set **Filter APKs by regular expression**:
+Leave **Include prereleases** off and set **Filter APKs by regular expression**. A release has more
+than one APK, so without a filter Obtainium asks which one to install.
 
 | Device | Filter |
 |---|---|
-| Phone or tablet | `-libre-arm64-v8a\.apk$` |
+| Phone or tablet, libre | `-libre-arm64-v8a\.apk$` |
+| Phone or tablet, proprietary (Cast) | `-proprietary-arm64-v8a\.apk$` |
 | Android TV, 64-bit | `.*-tv-arm64-v8a\.apk` |
 | Android TV, 32-bit (Xiaomi Mi Box and similar) | `.*-tv-armeabi-v7a\.apk` |
 
 ### Releases page
 
 Download from [Releases](https://github.com/midasvo/ephyra/releases):
-`ephyra-v<version>-libre-<abi>.apk` for phones and tablets, `ephyra-v<version>-libre-tv-<abi>.apk`
-for Android TV. Nearly everything is `arm64-v8a`; 32-bit TV boxes need `armeabi-v7a`.
+`ephyra-v<version>-libre-<abi>.apk` or `ephyra-v<version>-proprietary-<abi>.apk` for phones and
+tablets, `ephyra-v<version>-libre-tv-<abi>.apk` for Android TV. Nearly everything is `arm64-v8a`;
+32-bit TV boxes need `armeabi-v7a`.
 
 ### F-Droid
 
@@ -83,8 +99,8 @@ app, **Ephyra Beta**, with its own data. Untested; expect bugs.
 
 Obtainium: add the repository URL again with **Include prereleases** on, **Filter release titles by
 regular expression** `^Beta`, and **Filter APKs by regular expression**
-`-beta\.\d+-libre-arm64-v8a\.apk$` (TV, 32-bit: `-beta\.\d+-libre-tv-armeabi-v7a\.apk$`). The title
-filter stops the entry from switching to stable right after a release.
+`-beta\.\d+-libre-arm64-v8a\.apk$` (with Cast: `-beta\.\d+-proprietary-arm64-v8a\.apk$`; TV, 32-bit:
+`-beta\.\d+-libre-tv-armeabi-v7a\.apk$`). The title filter stops the entry from switching to stable right after a release.
 
 ## What Ephyra adds to Findroid
 
@@ -109,6 +125,23 @@ filter stops the entry from switching to stable right after a release.
   "Still watching?" prompt after a run of autoplayed episodes.
 - "Up next" card with a countdown at the end of an episode. Sleep timer.
 - Background audio with lock screen controls (opt-in, Settings → Player → Background playback).
+
+**Cast**
+
+- Google Chromecast: pick a device from the top bar and cast from any item. A mini player and a
+  remote control player (seek, previous and next, volume, audio and subtitle tracks, skip segments)
+  take over. Phone and tablet only, in the proprietary variant ([Install](#two-variants)).
+
+<table>
+  <tr>
+    <td width="33%" align="center"><img src="images/screenshots/cast-devices.webp" alt="The Cast to a device sheet over Home, listing Living room TV and Bedroom"><br><sub>Pick a device from the top bar</sub></td>
+    <td width="33%" align="center"><img src="images/screenshots/cast-player.webp" alt="The Cast player for Sahara on Living room TV with the poster, seek bar, transport controls, audio, subtitle and chapter buttons and volume"><br><sub>The phone becomes the remote</sub></td>
+    <td width="33%" align="center"><img src="images/screenshots/cast-mini.webp" alt="Home with the Cast button lit and a mini player for Sahara above the bottom bar"><br><sub>A mini player while you browse</sub></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><img src="images/screenshots/tablet-cast.webp" alt="Big Buck Bunny's page on a tablet with the Cast player beside it: connected to Living room TV, with the seek bar, transport controls, track buttons and volume"><br><sub>On a tablet the Cast player sits beside the page</sub></td>
+  </tr>
+</table>
 
 **Library**
 

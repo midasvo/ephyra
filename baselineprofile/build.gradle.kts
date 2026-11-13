@@ -20,7 +20,8 @@ android {
 
     targetProjectPath = ":app:phone"
 
-    // Must match app/phone's only flavor.
+    // Profiles and benchmarks the libre flavor of app/phone. Its profile is shared with the
+    // proprietary flavor (app/phone/build.gradle.kts), whose code differs only in Cast.
     flavorDimensions += "variant"
     productFlavors { register("libre") { dimension = "variant" } }
 

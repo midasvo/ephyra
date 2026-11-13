@@ -22,7 +22,7 @@ from Findroid; that happens beforehand, in its own PR (see the `upstream-sync` s
   `CODE` is a literal because F-Droid's update check reads it with a regex. Upstream's
   `Versions.APP_NAME` / `APP_CODE` are not used; ignore them.
 - **Tags:** releases are `vX.Y.Z` and trigger `.github/workflows/release.yml`, which builds the
-  signed APKs and attaches them to the release. Betas are `v<next patch>-beta.<run>` and come
+  signed APKs (phone `libre` and `proprietary`, TV `libre`) and attaches them to the release. Betas are `v<next patch>-beta.<run>` and come
   from `beta.yml` on every push to `main`, except the merge of a release PR. Tags below `v2`
   (`v0.x`, `v1.x`) are Findroid's and `v1.2.0-ce.N` are the old Findroid CE releases; never reuse
   or move them.
@@ -116,8 +116,8 @@ gh release create "v$next" --repo midasvo/ephyra --verify-tag \
 gh run watch --repo midasvo/ephyra $(gh run list --repo midasvo/ephyra --workflow release.yml --limit 1 --json databaseId --jq '.[0].databaseId')
 ```
 
-Check that the release has eight APKs (`ephyra-v$next-libre-<abi>.apk` and
-`ephyra-v$next-libre-tv-<abi>.apk`). If the workflow failed for a flaky reason, rerun it with
+Check that the release has twelve APKs, four ABIs each of `ephyra-v$next-libre-<abi>.apk`,
+`ephyra-v$next-proprietary-<abi>.apk` and `ephyra-v$next-libre-tv-<abi>.apk`. If the workflow failed for a flaky reason, rerun it with
 `gh run rerun <run id> --failed`. If the code has to change, fix it on `main` and release the
 next patch version; the tag stays where it is.
 

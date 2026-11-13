@@ -113,5 +113,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Inget nedladdat än</string>
     <string name="ce_home_offline_empty_body">Du är offline. Filmer och avsnitt som du laddar ned visas här och under Nedladdningar.</string>
+    <string name="ce_cast_sheet_title">Casta till en enhet</string>
+    <string name="ce_cast_searching">Söker efter enheter…</string>
+    <string name="ce_cast_wifi_hint">Kontrollera att tv:n är på och ansluten till samma Wi-Fi-nätverk som den här enheten.</string>
+    <string name="ce_cast_none_found">Inga enheter hittades</string>
+    <string name="ce_cast_search_again">Sök igen</string>
+    <string name="ce_cast_connecting">Ansluter…</string>
+    <string name="ce_cast_connecting_to">Ansluter till %1$s</string>
+    <string name="ce_cast_connect_failed">Det gick inte att ansluta till %1$s</string>
+    <string name="ce_cast_connected">Ansluten</string>
+    <string name="ce_cast_connected_to">Ansluten till %1$s</string>
+    <string name="ce_cast_reconnecting">Återansluter…</string>
+    <string name="ce_cast_reconnecting_to">Återansluter till %1$s…</string>
+    <string name="ce_cast_disconnect">Koppla från</string>
+    <string name="ce_cast_disconnected_from">Frånkopplad från %1$s</string>
+    <string name="ce_cast_starting_on">Startar på %1$s…</string>
+    <string name="ce_cast_pick_something">Välj något att spela upp</string>
+    <string name="ce_cast_nothing_playing_hint">Inget spelas upp. Tryck på Spela upp på en film eller ett avsnitt för att titta på %1$s.</string>
+    <string name="ce_cast_playback_failed">Det gick inte att spela upp detta på %1$s</string>
+    <string name="ce_cast_finished">Klart</string>
+    <string name="ce_cast_play_again">Spela upp igen</string>
+    <string name="ce_cast_pause">Pausa</string>
+    <string name="ce_cast_volume">Volym</string>
+    <string name="ce_cast_unavailable_title">Castning är inte tillgängligt</string>
+    <string name="ce_cast_unavailable_play_services">Castning kräver Google Play-tjänster, som saknas på den här enheten eller är för gamla.</string>
+    <string name="ce_cast_unavailable_offline">Castning kräver en anslutning till servern.</string>
+    <string name="ce_track_default">Standard</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Spår %1$d</string>
     <string name="ce_server_unreachable_downloads">Dina nedladdningar går fortfarande att spela upp.</string>
 </resources>

@@ -196,5 +196,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Esita videoid rõhtpaigutuses ka siis, kui pöörad tahvelarvuti püsti</string>
     <string name="ce_pref_home_episode_images">Kasuta episoodide pilte</string>
     <string name="ce_pref_home_episode_images_summary">Kuva ridades Jätka vaatamist ja Järgmisena sarja pildi asemel episoodi pilti</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Kanna üle telerisse</string>
+    <string name="ce_pref_cast_enabled_summary">Näita ülekandmise nuppu ja otsi oma võrgust Chromecasti seadmeid</string>
+    <string name="ce_pref_cast_max_bitrate">Maksimaalne bitikiirus</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Ülekandmise ajal vähendab server kõige seda ületava kvaliteeti</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_cast_hevc">Teler esitab HEVC-d</string>
+    <string name="ce_pref_cast_hevc_summary">Saada HEVC (H.265) video muutmata kujul, selle asemel et teisendada see H.264-ks. 4K Chromecast saab selle automaatselt; lülita sisse muu teleri või digiboksi jaoks, mis esitab HEVC-d</string>
     <string name="ce_pref_home_episode_images_summary_phone">Kuva ridades Jätka vaatamist ja Järgmisena ning episoodi lehe ülaosas sarja pildi asemel episoodi pilti</string>
 </resources>

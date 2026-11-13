@@ -2,6 +2,8 @@ name: Format
 
 on:
   push:
+    branches:
+      - main
     paths:
       - '**.kt'
       - '**.kts'
@@ -10,6 +12,13 @@ on:
       - '**.kt'
       - '**.kts'
 
+# actions: write is for the "Cancel superseded runs" step, which stops the runs of older commits
+# of the same PR. It compares commits, which a concurrency group does not do.
+permissions:
+  contents: read
+  pull-requests: read
+  actions: write
+
 jobs:
   format:
     name: Format
@@ -17,6 +26,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+
+      - name: Cancel superseded runs
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: bash .github/scripts/cancel-superseded-runs.sh
       - name: Set up JDK
         uses: actions/setup-java@v6
         with:

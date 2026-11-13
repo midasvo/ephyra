@@ -133,5 +133,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">لم يتم تنزيل أي شيء بعد</string>
     <string name="ce_home_offline_empty_body">أنت غير متصل. الأفلام والحلقات التي تنزّلها تظهر هنا وفي التنزيلات.</string>
+    <string name="ce_cast_sheet_title">البث إلى جهاز</string>
+    <string name="ce_cast_searching">جارٍ البحث عن أجهزة…</string>
+    <string name="ce_cast_wifi_hint">تأكد من أن التلفزيون يعمل ومتصل بشبكة Wi-Fi نفسها التي يتصل بها هذا الجهاز.</string>
+    <string name="ce_cast_none_found">لم يُعثر على أجهزة</string>
+    <string name="ce_cast_search_again">البحث مجددًا</string>
+    <string name="ce_cast_connecting">جارٍ الاتصال…</string>
+    <string name="ce_cast_connecting_to">جارٍ الاتصال بـ %1$s</string>
+    <string name="ce_cast_connect_failed">تعذّر الاتصال بـ %1$s</string>
+    <string name="ce_cast_connected">متصل</string>
+    <string name="ce_cast_connected_to">متصل بـ %1$s</string>
+    <string name="ce_cast_reconnecting">جارٍ إعادة الاتصال…</string>
+    <string name="ce_cast_reconnecting_to">جارٍ إعادة الاتصال بـ %1$s…</string>
+    <string name="ce_cast_disconnect">قطع الاتصال</string>
+    <string name="ce_cast_disconnected_from">تم قطع الاتصال بـ %1$s</string>
+    <string name="ce_cast_starting_on">جارٍ البدء على %1$s…</string>
+    <string name="ce_cast_pick_something">اختر شيئًا لتشغيله</string>
+    <string name="ce_cast_nothing_playing_hint">لا شيء قيد التشغيل. اضغط على «تشغيل» في فيلم أو حلقة لمشاهدته على %1$s.</string>
+    <string name="ce_cast_playback_failed">تعذّر تشغيل هذا على %1$s</string>
+    <string name="ce_cast_finished">انتهى</string>
+    <string name="ce_cast_play_again">التشغيل مجددًا</string>
+    <string name="ce_cast_pause">إيقاف مؤقت</string>
+    <string name="ce_cast_volume">مستوى الصوت</string>
+    <string name="ce_cast_unavailable_title">البث غير متاح</string>
+    <string name="ce_cast_unavailable_play_services">يتطلب البث خدمات Google Play، وهي غير موجودة على هذا الجهاز أو قديمة.</string>
+    <string name="ce_cast_unavailable_offline">يتطلب البث اتصالًا بالخادم.</string>
+    <string name="ce_track_default">افتراضي</string>
+    <string name="ce_track_original">أصلي</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">المسار %1$d</string>
     <string name="ce_server_unreachable_downloads">ما زال بإمكانك تشغيل تنزيلاتك.</string>
 </resources>

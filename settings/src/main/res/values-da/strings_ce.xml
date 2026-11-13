@@ -196,5 +196,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Afspil videoer i liggende format, også når du vender tabletten på højkant</string>
     <string name="ce_pref_home_episode_images">Brug episodebilleder</string>
     <string name="ce_pref_home_episode_images_summary">Vis episodens billede i stedet for seriens billede i Fortsæt med at se og Næste</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Cast til et tv</string>
+    <string name="ce_pref_cast_enabled_summary">Vis Cast-knappen, og søg efter Chromecast-enheder på dit netværk</string>
+    <string name="ce_pref_cast_max_bitrate">Maksimal bitrate</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Serveren sænker kvaliteten af alt, der ligger over, mens du caster</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_cast_hevc">Tv\'et afspiller HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Send HEVC-video (H.265), som den er, i stedet for at konvertere den til H.264. En 4K-Chromecast får det af sig selv; slå det til for et andet tv eller en boks, der afspiller HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Vis episodens billede i stedet for seriens billede i Fortsæt med at se, i Næste og øverst på episodens side</string>
 </resources>

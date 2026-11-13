@@ -108,5 +108,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Henüz hiçbir şey indirilmedi</string>
     <string name="ce_home_offline_empty_body">Çevrimdışısınız. İndirdiğiniz filmler ve bölümler burada ve İndirilenler\'de görünür.</string>
+    <string name="ce_cast_sheet_title">Cihaza yayınla</string>
+    <string name="ce_cast_searching">Cihazlar aranıyor…</string>
+    <string name="ce_cast_wifi_hint">TV\'nin açık ve bu cihazla aynı Wi-Fi ağında olduğundan emin olun.</string>
+    <string name="ce_cast_none_found">Cihaz bulunamadı</string>
+    <string name="ce_cast_search_again">Tekrar ara</string>
+    <string name="ce_cast_connecting">Bağlanılıyor…</string>
+    <string name="ce_cast_connecting_to">%1$s cihazına bağlanılıyor</string>
+    <string name="ce_cast_connect_failed">%1$s cihazına bağlanılamadı</string>
+    <string name="ce_cast_connected">Bağlandı</string>
+    <string name="ce_cast_connected_to">%1$s cihazına bağlı</string>
+    <string name="ce_cast_reconnecting">Yeniden bağlanılıyor…</string>
+    <string name="ce_cast_reconnecting_to">%1$s cihazına yeniden bağlanılıyor…</string>
+    <string name="ce_cast_disconnect">Bağlantıyı kes</string>
+    <string name="ce_cast_disconnected_from">%1$s bağlantısı kesildi</string>
+    <string name="ce_cast_starting_on">%1$s cihazında başlatılıyor…</string>
+    <string name="ce_cast_pick_something">Oynatılacak bir şey seçin</string>
+    <string name="ce_cast_nothing_playing_hint">Hiçbir şey oynatılmıyor. %1$s cihazında izlemek için bir filmde veya bölümde Oynat\'a basın.</string>
+    <string name="ce_cast_playback_failed">Bu, %1$s cihazında oynatılamadı</string>
+    <string name="ce_cast_finished">Bitti</string>
+    <string name="ce_cast_play_again">Tekrar oynat</string>
+    <string name="ce_cast_pause">Duraklat</string>
+    <string name="ce_cast_volume">Ses düzeyi</string>
+    <string name="ce_cast_unavailable_title">Yayın kullanılamıyor</string>
+    <string name="ce_cast_unavailable_play_services">Yayın için Google Play Hizmetleri gerekir; bu cihazda yok veya güncel değil.</string>
+    <string name="ce_cast_unavailable_offline">Yayın için sunucuyla bağlantı gerekir.</string>
+    <string name="ce_track_default">Varsayılan</string>
+    <string name="ce_track_original">Orijinal</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Parça %1$d</string>
     <string name="ce_server_unreachable_downloads">İndirdikleriniz hâlâ oynatılabilir.</string>
 </resources>

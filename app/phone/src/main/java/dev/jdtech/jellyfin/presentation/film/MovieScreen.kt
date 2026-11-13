@@ -36,6 +36,7 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
+import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderAction
@@ -94,6 +95,7 @@ fun MovieScreen(
     downloaderViewModel: DownloaderViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val castPlayback = LocalCastPlayback.current
     val uriHandler = LocalUriHandler.current
     // CE (#281): with the server away the page of a deleted download cannot load again either.
     val serverAway = LocalOfflineMode.current || LocalServerStatus.current.unreachable
@@ -137,12 +139,15 @@ fun MovieScreen(
         onAction = { action ->
             when (action) {
                 is MovieAction.Play -> {
-                    val intent = Intent(context, PlayerActivity::class.java)
-                    intent.putExtra("itemId", movieId.toString())
-                    intent.putExtra("itemKind", BaseItemKind.MOVIE.serialName)
-                    intent.putExtra("startFromBeginning", action.startFromBeginning)
-                    intent.putExtra("mediaSourceId", action.mediaSourceId)
-                    context.startActivity(intent)
+                    // CE (#626): on the Cast receiver when one is connected.
+                    if (!castPlayback.play(movieId, BaseItemKind.MOVIE, action.startFromBeginning, action.mediaSourceId)) {
+                        val intent = Intent(context, PlayerActivity::class.java)
+                        intent.putExtra("itemId", movieId.toString())
+                        intent.putExtra("itemKind", BaseItemKind.MOVIE.serialName)
+                        intent.putExtra("startFromBeginning", action.startFromBeginning)
+                        intent.putExtra("mediaSourceId", action.mediaSourceId)
+                        context.startActivity(intent)
+                    }
                 }
                 is MovieAction.PlayTrailer -> {
                     try {

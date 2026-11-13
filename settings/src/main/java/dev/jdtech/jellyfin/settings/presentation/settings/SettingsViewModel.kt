@@ -88,6 +88,14 @@ class SettingsViewModel @Inject constructor(
             emptyList()
         }
 
+    /** CE (#626): only in a build that has Cast, see [CastBuild]. */
+    private val castDeviceTypes =
+        if (appVariant == AppVariant.PHONE && CastBuild.isIncluded(context)) {
+            listOf(DeviceType.PHONE)
+        } else {
+            emptyList()
+        }
+
     private val topLevelPreferences =
         listOf(
             PreferenceGroup(
@@ -966,6 +974,47 @@ class SettingsViewModel @Inject constructor(
                                                     backendPreference =
                                                         appPreferences.playerPipGesture,
                                                 )
+                                            ),
+                                    ),
+                                    // CE (#626)
+                                    PreferenceGroup(
+                                        nameStringResource = R.string.ce_pref_cast_group,
+                                        preferences =
+                                            listOf(
+                                                PreferenceSwitch(
+                                                    nameStringResource =
+                                                        R.string.ce_pref_cast_enabled,
+                                                    descriptionStringRes =
+                                                        R.string.ce_pref_cast_enabled_summary,
+                                                    supportedDeviceTypes = castDeviceTypes,
+                                                    backendPreference =
+                                                        appPreferences.castEnabled,
+                                                ),
+                                                PreferenceIntInput(
+                                                    nameStringResource =
+                                                        R.string.ce_pref_cast_max_bitrate,
+                                                    descriptionStringRes =
+                                                        R.string.ce_pref_cast_max_bitrate_summary,
+                                                    dependencies =
+                                                        listOf(appPreferences.castEnabled),
+                                                    supportedDeviceTypes = castDeviceTypes,
+                                                    backendPreference =
+                                                        appPreferences.castMaxBitrateMbps,
+                                                    suffixRes =
+                                                        R.string.ce_pref_cast_max_bitrate_suffix,
+                                                    zeroLabelRes = R.string.ce_number_no_limit,
+                                                ),
+                                                PreferenceSwitch(
+                                                    nameStringResource =
+                                                        R.string.ce_pref_cast_hevc,
+                                                    descriptionStringRes =
+                                                        R.string.ce_pref_cast_hevc_summary,
+                                                    dependencies =
+                                                        listOf(appPreferences.castEnabled),
+                                                    supportedDeviceTypes = castDeviceTypes,
+                                                    backendPreference =
+                                                        appPreferences.castReceiverHevc,
+                                                ),
                                             ),
                                     ),
                                     PreferenceGroup(

@@ -1,0 +1,50 @@
+package dev.jdtech.jellyfin.player.cast
+
+import dev.jdtech.jellyfin.player.cast.models.CastMediaItem
+import dev.jdtech.jellyfin.player.cast.models.CastPlayerState
+import dev.jdtech.jellyfin.player.core.domain.models.Track
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
+import dev.jdtech.jellyfin.player.cast.models.CastError
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+@Singleton
+class CastPlayerControllerImpl @Inject constructor() : CastPlayerController {
+    private val _currentItem = MutableStateFlow<CastMediaItem?>(null)
+    override val currentItem: StateFlow<CastMediaItem?> = _currentItem.asStateFlow()
+
+    private val _playerState = MutableStateFlow(CastPlayerState())
+    override val playerState: StateFlow<CastPlayerState> = _playerState.asStateFlow()
+
+    override val errors: Flow<CastError> = emptyFlow()
+
+    override fun playItem(
+        itemId: UUID,
+        itemKind: String,
+        startFromBeginning: Boolean,
+        mediaSourceId: String?,
+    ) {}
+
+    override fun play() {}
+
+    override fun pause() {}
+
+    override fun seekTo(position: Long) {}
+
+    override fun seekToNext() {}
+
+    override fun seekToPrevious() {}
+
+    override fun setVolume(volume: Float) {}
+
+    override fun setAudioTrack(track: Track?, itemId: UUID?) {}
+
+    override fun setSubtitleTrack(track: Track?) {}
+
+    override fun stop() {}
+}

@@ -196,5 +196,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Videos im Querformat abspielen, auch wenn du das Tablet hochkant drehst</string>
     <string name="ce_pref_home_episode_images">Episodenbilder verwenden</string>
     <string name="ce_pref_home_episode_images_summary">In „Weiterschauen“ und „Als Nächstes“ das Bild der Episode statt des Serienbilds anzeigen</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Auf Fernseher streamen</string>
+    <string name="ce_pref_cast_enabled_summary">Die Streamen-Schaltfläche anzeigen und im Netzwerk nach Chromecast-Geräten suchen</string>
+    <string name="ce_pref_cast_max_bitrate">Maximale Bitrate</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Beim Streamen verringert der Server die Qualität von allem, was darüber liegt</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_cast_hevc">Der Fernseher spielt HEVC ab</string>
+    <string name="ce_pref_cast_hevc_summary">HEVC-Videos (H.265) unverändert senden, statt sie in H.264 umzuwandeln. Ein 4K-Chromecast bekommt das automatisch; aktiviere es für einen anderen Fernseher oder eine Box, die HEVC abspielt</string>
     <string name="ce_pref_home_episode_images_summary_phone">In „Weiterschauen“, in „Als Nächstes“ und oben auf der Episodenseite das Bild der Episode statt des Serienbilds anzeigen</string>
 </resources>

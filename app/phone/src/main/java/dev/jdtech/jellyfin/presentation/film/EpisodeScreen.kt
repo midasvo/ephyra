@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
+import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderAction
@@ -92,6 +93,7 @@ fun EpisodeScreen(
     downloaderViewModel: DownloaderViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val castPlayback = LocalCastPlayback.current
     val uriHandler = LocalUriHandler.current
     // CE (#281): with the server away the page of a deleted download cannot load again either.
     val serverAway = LocalOfflineMode.current || LocalServerStatus.current.unreachable
@@ -152,12 +154,15 @@ fun EpisodeScreen(
         onAction = { action ->
             when (action) {
                 is EpisodeAction.Play -> {
-                    val intent = Intent(context, PlayerActivity::class.java)
-                    intent.putExtra("itemId", episodeId.toString())
-                    intent.putExtra("itemKind", BaseItemKind.EPISODE.serialName)
-                    intent.putExtra("startFromBeginning", action.startFromBeginning)
-                    intent.putExtra("mediaSourceId", action.mediaSourceId)
-                    context.startActivity(intent)
+                    // CE (#626): on the Cast receiver when one is connected.
+                    if (!castPlayback.play(episodeId, BaseItemKind.EPISODE, action.startFromBeginning, action.mediaSourceId)) {
+                        val intent = Intent(context, PlayerActivity::class.java)
+                        intent.putExtra("itemId", episodeId.toString())
+                        intent.putExtra("itemKind", BaseItemKind.EPISODE.serialName)
+                        intent.putExtra("startFromBeginning", action.startFromBeginning)
+                        intent.putExtra("mediaSourceId", action.mediaSourceId)
+                        context.startActivity(intent)
+                    }
                 }
                 is EpisodeAction.OpenExternalLink -> openExternalLink(context, uriHandler, action.url)
                 is EpisodeAction.OnBackClick -> navigateBack()

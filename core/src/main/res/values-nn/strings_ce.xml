@@ -113,5 +113,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Ingenting lasta ned enno</string>
     <string name="ce_home_offline_empty_body">Du er fråkopla. Filmar og episodar du lastar ned, viser seg her og under Nedlastingar.</string>
+    <string name="ce_cast_sheet_title">Cast til ei eining</string>
+    <string name="ce_cast_searching">Ser etter einingar…</string>
+    <string name="ce_cast_wifi_hint">Sjå til at TV-en er på og på same Wi-Fi-nettverk som denne eininga.</string>
+    <string name="ce_cast_none_found">Fann ingen einingar</string>
+    <string name="ce_cast_search_again">Søk på nytt</string>
+    <string name="ce_cast_connecting">Koplar til…</string>
+    <string name="ce_cast_connecting_to">Koplar til %1$s</string>
+    <string name="ce_cast_connect_failed">Kunne ikkje kople til %1$s</string>
+    <string name="ce_cast_connected">Tilkopla</string>
+    <string name="ce_cast_connected_to">Kopla til %1$s</string>
+    <string name="ce_cast_reconnecting">Koplar til på nytt…</string>
+    <string name="ce_cast_reconnecting_to">Koplar til %1$s på nytt…</string>
+    <string name="ce_cast_disconnect">Kople frå</string>
+    <string name="ce_cast_disconnected_from">Kopla frå %1$s</string>
+    <string name="ce_cast_starting_on">Startar på %1$s…</string>
+    <string name="ce_cast_pick_something">Vel noko å spele av</string>
+    <string name="ce_cast_nothing_playing_hint">Ingenting blir spelt av. Trykk på Spel av på ein film eller ein episode for å sjå han på %1$s.</string>
+    <string name="ce_cast_playback_failed">Kunne ikkje spele av dette på %1$s</string>
+    <string name="ce_cast_finished">Ferdig</string>
+    <string name="ce_cast_play_again">Spel av på nytt</string>
+    <string name="ce_cast_pause">Pause</string>
+    <string name="ce_cast_volume">Volum</string>
+    <string name="ce_cast_unavailable_title">Casting er ikkje tilgjengeleg</string>
+    <string name="ce_cast_unavailable_play_services">Casting krev Google Play-tenester, som denne eininga manglar eller som er utdaterte.</string>
+    <string name="ce_cast_unavailable_offline">Casting krev tilkopling til tenaren.</string>
+    <string name="ce_track_default">Standard</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Spor %1$d</string>
     <string name="ce_server_unreachable_downloads">Nedlastingane dine kan framleis spelast av.</string>
 </resources>
