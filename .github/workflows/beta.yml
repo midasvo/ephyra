@@ -127,8 +127,8 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$GITHUB_WORKSPACE/findroid-ce.jks"
 
-      - name: Assemble staging APKs (phone and TV)
-        run: ./gradlew :app:phone:assembleLibreStaging :app:tv:assembleLibreStaging
+      - name: Assemble staging APKs (phone in both flavors, TV)
+        run: ./gradlew :app:phone:assembleLibreStaging :app:phone:assembleProprietaryStaging :app:tv:assembleLibreStaging
         env:
           BETA_BUILD: ${{ github.run_number }}
           KEYSTORE_FILE: ${{ github.workspace }}/findroid-ce.jks
@@ -141,6 +141,7 @@ jobs:
           mkdir mapping
           cp app/phone/build/outputs/mapping/libreStaging/mapping.txt "mapping/ephyra-${{ steps.version.outputs.tag }}-mapping.txt"
           cp app/tv/build/outputs/mapping/libreStaging/mapping.txt "mapping/ephyra-${{ steps.version.outputs.tag }}-tv-mapping.txt"
+          cp app/phone/build/outputs/mapping/proprietaryStaging/mapping.txt "mapping/ephyra-${{ steps.version.outputs.tag }}-proprietary-mapping.txt"
 
       - name: Create GitHub prerelease
         uses: softprops/action-gh-release@v3
@@ -156,11 +157,16 @@ jobs:
             This is the "Ephyra Beta" app (`nl.midasvo.findroid.ce.staging`). It installs next to the
             stable Ephyra app and keeps its own data. Betas are untested; expect bugs.
 
+            For a phone or tablet, `-libre-<abi>.apk` has no Google code and `-proprietary-<abi>.apk`
+            adds Google Cast (Chromecast), which needs Google Play services to cast. The two install
+            over each other and keep the login.
+
             For Android TV, take a `-libre-tv-<abi>.apk`: `armeabi-v7a` for 32-bit boxes such as the Xiaomi
             Mi Box, `arm64-v8a` for 64-bit ones. Phone and TV share one app ID, so the TV APK replaces
             the phone beta on a device and keeps its login.
           files: |
             app/phone/build/outputs/apk/libre/staging/*.apk
+            app/phone/build/outputs/apk/proprietary/staging/*.apk
             app/tv/build/outputs/apk/libre/staging/*.apk
             mapping/*.txt
           fail_on_unmatched_files: true

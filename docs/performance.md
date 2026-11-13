@@ -5,7 +5,8 @@ and commands: `baselineprofile/README.md`.
 
 ## Baseline profile
 
-The profile lives in `app/phone/src/libreRelease/generated/baselineProfiles/`. Regenerate it
+The profile lives in `app/phone/src/libreRelease/generated/baselineProfiles/`. The proprietary
+flavor and the staging builds ship the same profile (`onVariants` in `app/phone/build.gradle.kts`). Regenerate it
 on a logged-in phone when screens or the startup path change a lot, and commit the result:
 
 ```

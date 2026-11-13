@@ -140,6 +140,14 @@ android {
 androidComponents {
     onVariants { variant ->
         if (variant.buildType != "release" && variant.buildType != "staging") return@onVariants
+        // CE-owned (#641): one committed baseline profile for every release-like variant. The
+        // plugin only reads src/<variant>/generated/baselineProfiles, which exists for
+        // libreRelease alone, so the proprietary flavor and staging would ship without it.
+        if (variant.name != "libreRelease") {
+            variant.sources.baselineProfiles?.addStaticSourceDirectory(
+                "src/libreRelease/generated/baselineProfiles"
+            )
+        }
         variant.outputs.forEach { output ->
             // Betas from different branches may carry an older version, so derive the code from
             // the run number instead. The beta is its own app, so only its own codes matter.
@@ -161,6 +169,7 @@ androidComponents {
 
 // CE-owned (#249): the profile is generated on demand (see baselineprofile/README.md) and
 // committed under src/libreRelease/generated/baselineProfiles; it never runs as part of a build.
+// The proprietary flavor and the staging builds use the same profile (onVariants above).
 baselineProfile { automaticGenerationDuringBuild = false }
 
 dependencies {
