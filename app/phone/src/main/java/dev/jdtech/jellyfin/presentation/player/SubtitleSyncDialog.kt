@@ -232,7 +232,13 @@ private fun SubtitleSyncSheetContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        Text(stringResource(PlayerR.string.ce_subtitle_sync))
+                        // The label gives way to the badge: the chip is half the sheet wide.
+                        Text(
+                            text = stringResource(PlayerR.string.ce_subtitle_sync),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
                         if (subtitleDelayMs != 0) {
                             Surface(
                                 shape = CircleShape,
@@ -242,6 +248,9 @@ private fun SubtitleSyncSheetContent(
                                     text = formatSubtitleDelay(subtitleDelayMs),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    // One line: in the narrow chip "+2.7s" broke over three.
+                                    maxLines = 1,
+                                    softWrap = false,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 )
                             }
