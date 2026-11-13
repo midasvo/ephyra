@@ -31,6 +31,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Timeline
 import androidx.media3.common.Tracks
 import androidx.media3.common.text.CueGroup
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -431,6 +432,18 @@ constructor(
         }
 
     val subtitleOffsetUs = AtomicLong(0L)
+
+    /**
+     * CE (#619): the playing item's duration for [SubtitleOffsetRenderer], which runs on the
+     * playback thread and must not ask the player itself.
+     */
+    private val itemDurationUs = AtomicLong(C.TIME_UNSET)
+
+    private fun updateItemDuration() {
+        val durationMs = player.duration
+        itemDurationUs.set(if (durationMs == C.TIME_UNSET) C.TIME_UNSET else durationMs * 1000)
+    }
+
     var subtitleDelayMs: Int = 0
         private set
 
@@ -455,6 +468,9 @@ constructor(
     /** CE (#619): adjusts subtitle delay for the active item. */
     fun setSubtitleDelay(delayMs: Int) {
         val clamped = delayMs.coerceIn(-180_000, 180_000)
+        // Every item transition resets the delay: without a change there is nothing to
+        // refresh, and the paused ExoPlayer would seek for nothing.
+        if (clamped == subtitleDelayMs) return
         subtitleDelayMs = clamped
         subtitleOffsetUs.set(clamped * 1000L)
         if (player is MPVPlayer) {
@@ -706,6 +722,7 @@ constructor(
                                     SubtitleOffsetRenderer(
                                         baseRenderer = out[index],
                                         subtitleDelayUsProvider = subtitleOffsetUs::get,
+                                        itemDurationUsProvider = itemDurationUs::get,
                                     )
                             }
                         }
@@ -1218,6 +1235,7 @@ constructor(
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         Timber.d("Playing MediaItem: ${mediaItem?.mediaId}")
+        updateItemDuration()
         cueLoadingJob?.cancel()
         loadedTrackIndex = null
         setSubtitleDelay(0)
@@ -1824,7 +1842,12 @@ constructor(
         }
     }
 
+    override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+        updateItemDuration()
+    }
+
     override fun onPlaybackStateChanged(state: Int) {
+        updateItemDuration()
         var stateString = "UNKNOWN_STATE             -"
         when (state) {
             ExoPlayer.STATE_IDLE -> {
