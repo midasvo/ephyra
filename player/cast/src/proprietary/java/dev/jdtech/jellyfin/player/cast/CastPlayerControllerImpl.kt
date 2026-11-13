@@ -127,7 +127,17 @@ constructor(
      * A load of ours is on its way to the receiver. Until the receiver answers, it still shows
      * what it played before, and that must not be taken for the current item again.
      */
-    private var loadPending = false
+    private val loadPending: Boolean
+        get() = pendingLoad != null
+
+    /**
+     * Which load that is. Each one gets a number, and only the answer to the last one counts: an
+     * answer to a load that another one has replaced since changes nothing.
+     */
+    private var pendingLoad: Int? = null
+    private var loadCount = 0
+
+    private fun beginLoad(): Int = (++loadCount).also { pendingLoad = it }
 
     /** Decides which reports the server gets; [send] sends them. */
     private val reporter = CastPlaybackReporter(clock = { SystemClock.elapsedRealtime() })
@@ -296,7 +306,7 @@ constructor(
     }
 
     private fun cancelJobs() {
-        loadPending = false
+        pendingLoad = null
         playJob?.cancel()
         audioTrackJob?.cancel()
         queueJob?.cancel()
@@ -724,7 +734,7 @@ constructor(
         )
 
     private fun fail(e: Exception? = null, message: String) {
-        loadPending = false
+        pendingLoad = null
         Timber.e(e, message)
         _errors.tryEmit(CastError.PLAYBACK_FAILED)
     }
@@ -741,7 +751,7 @@ constructor(
         forgetPlaylist()
         val manager = playlistManagers.get()
         playlistManager = manager
-        loadPending = true
+        val load = beginLoad()
 
         playJob =
             scope.launch {
@@ -786,13 +796,15 @@ constructor(
                         .build()
 
                 client.load(loadRequest).setResultCallback { result ->
-                    if (_currentItem.value === built.castItem) loadPending = false
+                    if (pendingLoad != load) return@setResultCallback
+                    pendingLoad = null
+                    val stillCurrent = _currentItem.value?.item?.itemId == item.itemId
                     if (result.status.isSuccess) {
                         // onMetadataUpdated skips an item that is current already, as this one
                         // is, so the queue is filled from here.
-                        if (_currentItem.value === built.castItem) onCurrentItemSet(item.itemId)
+                        if (stillCurrent) onCurrentItemSet(item.itemId)
                     } else {
-                        if (_currentItem.value === built.castItem) _currentItem.value = null
+                        if (stillCurrent) _currentItem.value = null
                         fail(message = "Error loading media: ${result.status.statusMessage}")
                     }
                 }
@@ -977,11 +989,11 @@ constructor(
         _currentItem.value = current.withAudio(track.id)
 
         audioTrackJob?.cancel()
-        loadPending = true
+        val load = beginLoad()
         audioTrackJob =
             scope.launch {
                 fun revert() {
-                    loadPending = false
+                    if (pendingLoad == load) pendingLoad = null
                     if (_currentItem.value?.item?.itemId == currentItemId) {
                         _currentItem.value = current
                     }
@@ -1025,7 +1037,8 @@ constructor(
                         .build()
 
                 client.load(loadRequest).setResultCallback { result ->
-                    if (_currentItem.value === built.castItem) loadPending = false
+                    if (pendingLoad != load) return@setResultCallback
+                    pendingLoad = null
                     if (result.status.isSuccess) {
                         onCurrentItemSet(currentItemId)
                     } else {
