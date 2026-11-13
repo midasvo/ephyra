@@ -1,6 +1,6 @@
 # Upstream sync and releases
 
-Two separate flows, each a Claude Code skill:
+Three separate flows, each a Claude Code skill:
 
 - **Syncing with Findroid** merges Findroid's changes (mostly translations and fixes) into
   Ephyra in a pull request, when it's worth it. It never releases anything.
@@ -9,7 +9,13 @@ Two separate flows, each a Claude Code skill:
   commits since the last release.
   See [`.claude/skills/release/SKILL.md`](../.claude/skills/release/SKILL.md).
 
-In Claude Code, say "sync with Findroid" or "do a release" and the right skill triggers.
+- **Releasing libmpv** publishes a new `io.github.midasvo:libmpv` from our fork
+  [midasvo/libmpv-android](https://github.com/midasvo/libmpv-android) and bumps Ephyra to it,
+  tested on devices. See [`.claude/skills/libmpv-release/SKILL.md`](../.claude/skills/libmpv-release/SKILL.md)
+  and the fork's `RELEASING.md`.
+
+In Claude Code, say "sync with Findroid", "do a release" or "release libmpv" and the right skill
+triggers.
 
 ## Publishing a beta
 

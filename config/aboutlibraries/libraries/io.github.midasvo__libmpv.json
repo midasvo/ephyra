@@ -1,0 +1,9 @@
+{
+  "uniqueId": "io.github.midasvo:libmpv",
+  "name": "libmpv (mpv, FFmpeg, libplacebo and others)",
+  "description": "The mpv player library with FFmpeg, libplacebo, dav1d, libass, FreeType, HarfBuzz, FriBidi, fontconfig, libunibreak, libxml2, Lua, mbedtls and curl, built for Android by midasvo/libmpv-android. Together they are distributed under the GPL-3.0-or-later; each component's own licence is listed in the project README. The complete corresponding source of every build is attached to its release: https://github.com/midasvo/libmpv-android/releases",
+  "website": "https://github.com/midasvo/libmpv-android",
+  "licenses": [
+    "GPL-3.0-or-later"
+  ]
+}
