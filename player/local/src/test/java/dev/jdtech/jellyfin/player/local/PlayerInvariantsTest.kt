@@ -238,4 +238,28 @@ class PlayerInvariantsTest {
             screen.contains("TvResumeOnReturn.Action.PLAY -> player.play()"),
         )
     }
+
+    @Test
+    fun `mpv adds external subtitles without blocking the main thread`() {
+        // #617: START_FILE runs on the main thread, and a plain sub-add waits there until the
+        // subtitle is downloaded. With the async prefix mpv downloads it on its own thread, cancels
+        // it when the file ends and waits for it in destroy(), so no thread of ours can race
+        // destroy(). The list stays after running, so a reload after an error (#474) adds them.
+        val mpvPlayer = source("mpv/MPVPlayer.kt")
+        assertTrue(
+            "the sub-add commands must carry mpv's async prefix (#617)",
+            Regex(""""async",\s*(/\* command= \*/\s*)?"sub-add"""").containsMatchIn(mpvPlayer),
+        )
+        assertFalse(
+            "MPVPlayer must not call mpv from a thread of its own (#617)",
+            mpvPlayer.contains("Executors.") || mpvPlayer.contains("Thread("),
+        )
+        val startFile =
+            Regex("""MpvEvent\.MPV_EVENT_START_FILE -> \{[\s\S]*?\n {16}\}""").find(mpvPlayer)
+        assertTrue("MPVPlayer's START_FILE branch not found", startFile != null)
+        assertFalse(
+            "START_FILE must not clear initialCommands, or a reload after an error loses them (#474)",
+            startFile!!.value.contains("initialCommands.clear()"),
+        )
+    }
 }
