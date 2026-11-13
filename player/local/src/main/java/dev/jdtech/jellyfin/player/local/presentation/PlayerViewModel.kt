@@ -454,6 +454,9 @@ constructor(
     val subtitleDelayMs: Int
         get() = _subtitleDelay.value
 
+    /** The item [subtitleDelay] belongs to. */
+    private var subtitleDelayItemId: String? = null
+
     private val _currentTrackCues = MutableStateFlow<List<SubtitleSyncCue>>(emptyList())
 
     private val _isLoadingCues = MutableStateFlow(false)
@@ -527,8 +530,13 @@ constructor(
         if (format == null || item == null) return
         loadedCueKey = key
 
+        // The player prefixes the id it was given with its source's index ("1:<uri>").
+        val formatId = format.id
         val extSub =
-            item.externalSubtitles.firstOrNull { it.uri.toString() == format.id }
+            item.externalSubtitles.firstOrNull {
+                val uri = it.uri.toString()
+                formatId == uri || formatId?.substringAfter(':') == uri
+            }
                 ?: item.externalSubtitles.firstOrNull {
                     it.language.equals(format.language, ignoreCase = true) &&
                         it.title.equals(format.label, ignoreCase = true)
@@ -1242,7 +1250,12 @@ constructor(
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         Timber.d("Playing MediaItem: ${mediaItem?.mediaId}")
         updateItemDuration()
-        setSubtitleDelay(0)
+        // CE (#619): the delay is the item's. A reload of the same item (quality or transcode
+        // audio switch, reconnect) also lands here and keeps it.
+        if (mediaItem?.mediaId != subtitleDelayItemId) {
+            subtitleDelayItemId = mediaItem?.mediaId
+            setSubtitleDelay(0)
+        }
         clearSubtitleCues()
         displayRefreshRateManager.onMediaItemTransition()
         loggedDisplayFrameRate = null
@@ -1861,6 +1874,11 @@ constructor(
                 stateString = "ExoPlayer.STATE_READY     -"
                 // CE (#450): loaded again after the connection was lost.
                 if (networkRecovery.isWaiting) endNetworkWait()
+                // CE (#619): mpv sets sub-delay back to 0 whenever it loads a file, also a reload
+                // of the same item that keeps the delay.
+                if (player is MPVPlayer && subtitleDelayMs != 0) {
+                    player.setSubtitleDelayMs(subtitleDelayMs)
+                }
                 _uiState.update { it.copy(fileLoaded = true) }
                 // CE (#601): the item loaded, so its start report is due.
                 startGate.onReady()?.let { item ->
