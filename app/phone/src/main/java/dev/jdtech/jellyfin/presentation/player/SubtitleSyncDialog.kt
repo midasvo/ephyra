@@ -236,12 +236,12 @@ private fun SubtitleSyncSheetContent(
                         if (subtitleDelayMs != 0) {
                             Surface(
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                             ) {
                                 Text(
                                     text = formatSubtitleDelay(subtitleDelayMs),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 )
                             }
@@ -330,7 +330,7 @@ private fun TrackRow(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
         color =
-            if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+            if (isSelected) MaterialTheme.colorScheme.secondaryContainer
             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -350,7 +350,7 @@ private fun TrackRow(
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color =
-                        if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                        if (isSelected) MaterialTheme.colorScheme.onSecondaryContainer
                         else MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -360,7 +360,7 @@ private fun TrackRow(
                 Icon(
                     painter = painterResource(CoreR.drawable.ic_check),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -608,14 +608,14 @@ private fun CueRow(
             Box(
                 modifier =
                     Modifier.clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .padding(horizontal = 8.dp, vertical = 3.dp),
             ) {
                 Text(
                     text = formatSubtitleDelay(offsetMs),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
