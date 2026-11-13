@@ -196,5 +196,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Reprodueix els vídeos en horitzontal, encara que posis la tauleta en vertical</string>
     <string name="ce_pref_home_episode_images">Utilitza imatges dels episodis</string>
     <string name="ce_pref_home_episode_images_summary">Mostra la imatge de l\'episodi en lloc de la imatge de la sèrie a Continua mirant i Següent</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Emet a un televisor</string>
+    <string name="ce_pref_cast_enabled_summary">Mostra el botó d\'emissió i cerca dispositius Chromecast a la xarxa</string>
+    <string name="ce_pref_cast_max_bitrate">Taxa de bits màxima</string>
+    <string name="ce_pref_cast_max_bitrate_summary">El servidor redueix la qualitat de tot el que la superi mentre emets</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">El televisor reprodueix HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Envia el vídeo HEVC (H.265) tal com és en lloc de convertir-lo a H.264. Un Chromecast 4K el rep així automàticament; activa-ho per a un altre televisor o descodificador que reprodueixi HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Mostra la imatge de l\'episodi en lloc de la imatge de la sèrie a Continua mirant, a Següent i a la part superior de la pàgina de l\'episodi</string>
 </resources>

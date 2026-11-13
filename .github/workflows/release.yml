@@ -29,7 +29,8 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$GITHUB_WORKSPACE/findroid-ce.jks"
 
       - name: Assemble release APKs
-        run: ./gradlew assembleRelease
+        # Libre only: the proprietary flavor (Google Cast, #626) is not published here.
+        run: ./gradlew :app:phone:assembleLibreRelease :app:tv:assembleLibreRelease
         env:
           KEYSTORE_FILE: ${{ github.workspace }}/findroid-ce.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}

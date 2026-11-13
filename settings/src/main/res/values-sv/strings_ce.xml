@@ -196,5 +196,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Spela upp videor i liggande läge, även när du vänder surfplattan stående</string>
     <string name="ce_pref_home_episode_images">Använd avsnittsbilder</string>
     <string name="ce_pref_home_episode_images_summary">Visa avsnittets bild i stället för seriens bild i Fortsätt titta och Nästa</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Casta till en tv</string>
+    <string name="ce_pref_cast_enabled_summary">Visa Cast-knappen och sök efter Chromecast-enheter i ditt nätverk</string>
+    <string name="ce_pref_cast_max_bitrate">Maximal bithastighet</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Servern sänker kvaliteten på allt som ligger över den medan du castar</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_cast_hevc">Tv:n spelar upp HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Skicka HEVC-video (H.265) som den är i stället för att konvertera den till H.264. En 4K-Chromecast får detta automatiskt; slå på det för en annan tv eller box som spelar upp HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Visa avsnittets bild i stället för seriens bild i Fortsätt titta, i Nästa och överst på avsnittets sida</string>
 </resources>

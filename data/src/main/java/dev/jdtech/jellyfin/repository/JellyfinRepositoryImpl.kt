@@ -744,6 +744,12 @@ class JellyfinRepositoryImpl(
         }
     }
 
+    override fun onExternalPlaybackInfo(
+        itemId: UUID,
+        playSessionId: String?,
+        transcodes: Boolean,
+    ) = playSessions.onPlaybackInfo(itemId, playSessionId, transcodes)
+
     override suspend fun postPlaybackStart(itemId: UUID, transcoded: Boolean) {
         // CE (#599): Transcode with the transcode's play session, see PlaySessions.playReport.
         val report = playSessions.playReport(itemId, transcoded)

@@ -113,5 +113,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Още няма изтеглени</string>
     <string name="ce_home_offline_empty_body">Нямате връзка. Филмите и епизодите, които изтеглите, се показват тук и в Изтегляния.</string>
+    <string name="ce_cast_sheet_title">Предаване към устройство</string>
+    <string name="ce_cast_searching">Търсят се устройства…</string>
+    <string name="ce_cast_wifi_hint">Уверете се, че телевизорът е включен и е в същата Wi-Fi мрежа като това устройство.</string>
+    <string name="ce_cast_none_found">Няма намерени устройства</string>
+    <string name="ce_cast_search_again">Търсене отново</string>
+    <string name="ce_cast_connecting">Свързване…</string>
+    <string name="ce_cast_connecting_to">Свързване с %1$s</string>
+    <string name="ce_cast_connect_failed">Неуспешно свързване с %1$s</string>
+    <string name="ce_cast_connected">Свързано</string>
+    <string name="ce_cast_connected_to">Свързано с %1$s</string>
+    <string name="ce_cast_reconnecting">Повторно свързване…</string>
+    <string name="ce_cast_reconnecting_to">Повторно свързване с %1$s…</string>
+    <string name="ce_cast_disconnect">Прекъсване на връзката</string>
+    <string name="ce_cast_disconnected_from">Връзката с %1$s е прекъсната</string>
+    <string name="ce_cast_starting_on">Стартиране на %1$s…</string>
+    <string name="ce_cast_pick_something">Изберете какво да пуснете</string>
+    <string name="ce_cast_nothing_playing_hint">Нищо не се възпроизвежда. Натиснете „Пускане“ на филм или епизод, за да го гледате на %1$s.</string>
+    <string name="ce_cast_playback_failed">Неуспешно възпроизвеждане на %1$s</string>
+    <string name="ce_cast_finished">Край</string>
+    <string name="ce_cast_play_again">Пускане отново</string>
+    <string name="ce_cast_pause">Пауза</string>
+    <string name="ce_cast_volume">Сила на звука</string>
+    <string name="ce_cast_unavailable_title">Предаването не е налично</string>
+    <string name="ce_cast_unavailable_play_services">За предаване са нужни Услуги за Google Play, които липсват на това устройство или са остарели.</string>
+    <string name="ce_cast_unavailable_offline">За предаване е нужна връзка със сървъра.</string>
+    <string name="ce_track_default">По подразбиране</string>
+    <string name="ce_track_original">Оригинал</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Писта %1$d</string>
     <string name="ce_server_unreachable_downloads">Изтеглянията ви все още могат да се възпроизвеждат.</string>
 </resources>

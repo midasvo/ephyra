@@ -99,6 +99,10 @@ android {
             dimension = "variant"
             isDefault = true
         }
+        register("proprietary") {
+            dimension = "variant"
+            matchingFallbacks += listOf("libre")
+        }
     }
 
     splits {
@@ -165,6 +169,7 @@ dependencies {
     implementation(projects.core)
     implementation(projects.data)
     implementation(projects.player.core)
+    implementation(projects.player.cast)
     implementation(projects.player.local)
     implementation(projects.setup)
     implementation(projects.modes.film)

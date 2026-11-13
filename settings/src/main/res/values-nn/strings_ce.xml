@@ -196,5 +196,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Spel av videoar liggjande, òg når du snur nettbrettet på høgkant</string>
     <string name="ce_pref_home_episode_images">Bruk episodebilete</string>
     <string name="ce_pref_home_episode_images_summary">Vis biletet til episoden i staden for biletet til serien i Hald fram å sjå og Neste</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Cast til ein TV</string>
+    <string name="ce_pref_cast_enabled_summary">Vis Cast-knappen og sjå etter Chromecast-einingar på nettverket ditt</string>
+    <string name="ce_pref_cast_max_bitrate">Maksimal bitrate</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Tenaren senkar kvaliteten på alt som ligg over, medan du castar</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_cast_hevc">TV-en spelar av HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Send HEVC-video (H.265) som han er i staden for å konvertere han til H.264. Ein 4K-Chromecast får dette av seg sjølv; slå det på for ein annan TV eller boks som spelar av HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Vis biletet til episoden i staden for biletet til serien i Hald fram å sjå, i Neste og øvst på sida til episoden</string>
 </resources>

@@ -194,5 +194,13 @@
     <string name="ce_pref_player_keep_landscape_summary">即使將平板電腦轉為直向，影片仍以橫向播放</string>
     <string name="ce_pref_home_episode_images">使用單集圖片</string>
     <string name="ce_pref_home_episode_images_summary">在「繼續觀看」和「接下來播放」中顯示單集的圖片，而不是影集的圖片</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">投放到電視</string>
+    <string name="ce_pref_cast_enabled_summary">顯示投放按鈕，並在你的網路中尋找 Chromecast 裝置</string>
+    <string name="ce_pref_cast_max_bitrate">最高位元率</string>
+    <string name="ce_pref_cast_max_bitrate_summary">投放時，伺服器會降低超過此數值內容的畫質</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">電視可播放 HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">直接傳送 HEVC (H.265) 影片，不轉換為 H.264。4K Chromecast 會自動這麼做；如果其他電視或電視盒可播放 HEVC，請開啟此選項</string>
     <string name="ce_pref_home_episode_images_summary_phone">在「繼續觀看」、「接下來播放」和單集頁面頂部顯示單集的圖片，而不是影集的圖片</string>
 </resources>

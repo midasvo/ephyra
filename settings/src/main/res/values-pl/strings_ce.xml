@@ -200,5 +200,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Odtwarzaj filmy w poziomie, nawet gdy obrócisz tablet pionowo</string>
     <string name="ce_pref_home_episode_images">Używaj obrazów odcinków</string>
     <string name="ce_pref_home_episode_images_summary">Pokazuj obraz odcinka zamiast obrazu serialu w sekcjach Kontynuuj oglądanie i Następne</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Przesyłaj na telewizor</string>
+    <string name="ce_pref_cast_enabled_summary">Pokaż przycisk Przesyłaj i szukaj urządzeń Chromecast w swojej sieci</string>
+    <string name="ce_pref_cast_max_bitrate">Maksymalny bitrate</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Podczas przesyłania serwer obniża jakość wszystkiego, co go przekracza</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mb/s</string>
+    <string name="ce_pref_cast_hevc">Telewizor odtwarza HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Wysyłaj wideo HEVC (H.265) bez zmian, zamiast konwertować je do H.264. Chromecast 4K dostaje je tak automatycznie; włącz dla innego telewizora lub przystawki, które odtwarzają HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Pokazuj obraz odcinka zamiast obrazu serialu w sekcjach Kontynuuj oglądanie i Następne oraz u góry strony odcinka</string>
 </resources>

@@ -113,5 +113,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Midagi pole veel alla laaditud</string>
     <string name="ce_home_offline_empty_body">Oled võrguühenduseta. Allalaaditud filmid ja osad kuvatakse siin ja jaotises Allalaadimised.</string>
+    <string name="ce_cast_sheet_title">Kanna üle seadmesse</string>
+    <string name="ce_cast_searching">Seadmete otsimine…</string>
+    <string name="ce_cast_wifi_hint">Veendu, et teler on sisse lülitatud ja selle seadmega samas Wi-Fi-võrgus.</string>
+    <string name="ce_cast_none_found">Seadmeid ei leitud</string>
+    <string name="ce_cast_search_again">Otsi uuesti</string>
+    <string name="ce_cast_connecting">Ühendamine…</string>
+    <string name="ce_cast_connecting_to">Ühendamine seadmega %1$s</string>
+    <string name="ce_cast_connect_failed">Seadmega %1$s ei saanud ühendust</string>
+    <string name="ce_cast_connected">Ühendatud</string>
+    <string name="ce_cast_connected_to">Ühendatud seadmega %1$s</string>
+    <string name="ce_cast_reconnecting">Uuesti ühendamine…</string>
+    <string name="ce_cast_reconnecting_to">Uuesti ühendamine seadmega %1$s…</string>
+    <string name="ce_cast_disconnect">Katkesta ühendus</string>
+    <string name="ce_cast_disconnected_from">Ühendus seadmega %1$s katkestatud</string>
+    <string name="ce_cast_starting_on">Käivitamine seadmes %1$s…</string>
+    <string name="ce_cast_pick_something">Vali, mida esitada</string>
+    <string name="ce_cast_nothing_playing_hint">Midagi ei esitata. Vajuta filmi või episoodi juures nuppu Esita, et vaadata seda seadmes %1$s.</string>
+    <string name="ce_cast_playback_failed">Seda ei saanud seadmes %1$s esitada</string>
+    <string name="ce_cast_finished">Lõppenud</string>
+    <string name="ce_cast_play_again">Esita uuesti</string>
+    <string name="ce_cast_pause">Paus</string>
+    <string name="ce_cast_volume">Helitugevus</string>
+    <string name="ce_cast_unavailable_title">Ülekandmine pole saadaval</string>
+    <string name="ce_cast_unavailable_play_services">Ülekandmiseks on vaja Google Play teenuseid, mis selles seadmes puuduvad või on aegunud.</string>
+    <string name="ce_cast_unavailable_offline">Ülekandmiseks on vaja ühendust serveriga.</string>
+    <string name="ce_track_default">Vaikimisi</string>
+    <string name="ce_track_original">Originaal</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Rada %1$d</string>
     <string name="ce_server_unreachable_downloads">Allalaaditud sisu saab endiselt esitada.</string>
 </resources>

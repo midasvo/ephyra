@@ -113,5 +113,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Még nincs semmi letöltve</string>
     <string name="ce_home_offline_empty_body">Nincs kapcsolat. A letöltött filmek és epizódok itt és a Letöltések között jelennek meg.</string>
+    <string name="ce_cast_sheet_title">Átküldés eszközre</string>
+    <string name="ce_cast_searching">Eszközök keresése…</string>
+    <string name="ce_cast_wifi_hint">Ellenőrizd, hogy a tévé be van kapcsolva, és ugyanazon a Wi-Fi-hálózaton van, mint ez az eszköz.</string>
+    <string name="ce_cast_none_found">Nem található eszköz</string>
+    <string name="ce_cast_search_again">Keresés újra</string>
+    <string name="ce_cast_connecting">Csatlakozás…</string>
+    <string name="ce_cast_connecting_to">Csatlakozás: %1$s</string>
+    <string name="ce_cast_connect_failed">Nem sikerült csatlakozni: %1$s</string>
+    <string name="ce_cast_connected">Csatlakoztatva</string>
+    <string name="ce_cast_connected_to">Csatlakoztatva: %1$s</string>
+    <string name="ce_cast_reconnecting">Újracsatlakozás…</string>
+    <string name="ce_cast_reconnecting_to">Újracsatlakozás: %1$s…</string>
+    <string name="ce_cast_disconnect">Leválasztás</string>
+    <string name="ce_cast_disconnected_from">Leválasztva: %1$s</string>
+    <string name="ce_cast_starting_on">Indítás itt: %1$s…</string>
+    <string name="ce_cast_pick_something">Válassz valamit lejátszásra</string>
+    <string name="ce_cast_nothing_playing_hint">Semmi sem megy. Nyomd meg a Lejátszás gombot egy filmnél vagy epizódnál, hogy itt nézd: %1$s.</string>
+    <string name="ce_cast_playback_failed">Nem sikerült lejátszani itt: %1$s</string>
+    <string name="ce_cast_finished">Vége</string>
+    <string name="ce_cast_play_again">Lejátszás újra</string>
+    <string name="ce_cast_pause">Szünet</string>
+    <string name="ce_cast_volume">Hangerő</string>
+    <string name="ce_cast_unavailable_title">Az átküldés nem érhető el</string>
+    <string name="ce_cast_unavailable_play_services">Az átküldéshez Google Play-szolgáltatások szükségesek, amelyek ezen az eszközön hiányoznak vagy elavultak.</string>
+    <string name="ce_cast_unavailable_offline">Az átküldéshez kapcsolat szükséges a szerverrel.</string>
+    <string name="ce_track_default">Alapértelmezett</string>
+    <string name="ce_track_original">Eredeti</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">%1$d. sáv</string>
     <string name="ce_server_unreachable_downloads">A letöltéseid továbbra is lejátszhatók.</string>
 </resources>

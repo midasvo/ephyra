@@ -113,5 +113,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Ancora nessun download</string>
     <string name="ce_home_offline_empty_body">Sei offline. I film e gli episodi che scarichi compaiono qui e in Download.</string>
+    <string name="ce_cast_sheet_title">Trasmetti a un dispositivo</string>
+    <string name="ce_cast_searching">Ricerca di dispositivi…</string>
+    <string name="ce_cast_wifi_hint">Assicurati che la TV sia accesa e sulla stessa rete Wi-Fi di questo dispositivo.</string>
+    <string name="ce_cast_none_found">Nessun dispositivo trovato</string>
+    <string name="ce_cast_search_again">Cerca di nuovo</string>
+    <string name="ce_cast_connecting">Connessione…</string>
+    <string name="ce_cast_connecting_to">Connessione a %1$s</string>
+    <string name="ce_cast_connect_failed">Impossibile connettersi a %1$s</string>
+    <string name="ce_cast_connected">Connesso</string>
+    <string name="ce_cast_connected_to">Connesso a %1$s</string>
+    <string name="ce_cast_reconnecting">Riconnessione…</string>
+    <string name="ce_cast_reconnecting_to">Riconnessione a %1$s…</string>
+    <string name="ce_cast_disconnect">Disconnetti</string>
+    <string name="ce_cast_disconnected_from">Disconnesso da %1$s</string>
+    <string name="ce_cast_starting_on">Avvio su %1$s…</string>
+    <string name="ce_cast_pick_something">Scegli qualcosa da riprodurre</string>
+    <string name="ce_cast_nothing_playing_hint">Nessuna riproduzione in corso. Premi Riproduci su un film o un episodio per guardarlo su %1$s.</string>
+    <string name="ce_cast_playback_failed">Impossibile riprodurre su %1$s</string>
+    <string name="ce_cast_finished">Terminato</string>
+    <string name="ce_cast_play_again">Riproduci di nuovo</string>
+    <string name="ce_cast_pause">Pausa</string>
+    <string name="ce_cast_volume">Volume</string>
+    <string name="ce_cast_unavailable_title">La trasmissione non è disponibile</string>
+    <string name="ce_cast_unavailable_play_services">La trasmissione richiede Google Play Services, che su questo dispositivo manca o non è aggiornato.</string>
+    <string name="ce_cast_unavailable_offline">La trasmissione richiede una connessione al server.</string>
+    <string name="ce_track_default">Predefinita</string>
+    <string name="ce_track_original">Originale</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Traccia %1$d</string>
     <string name="ce_server_unreachable_downloads">I tuoi download si possono ancora riprodurre.</string>
 </resources>

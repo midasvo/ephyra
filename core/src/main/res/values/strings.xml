@@ -229,6 +229,38 @@
     <!-- CE: Home while offline, with nothing downloaded from this server -->
     <string name="ce_home_offline_empty_title">Nothing downloaded yet</string>
     <string name="ce_home_offline_empty_body">You\'re offline. Movies and episodes you download show up here and in Downloads.</string>
+
+    <!-- CE: Google Cast (proprietary variant) -->
+    <string name="ce_cast_sheet_title">Cast to a device</string>
+    <string name="ce_cast_searching">Looking for devices…</string>
+    <string name="ce_cast_wifi_hint">Make sure the TV is on and on the same Wi-Fi network as this device.</string>
+    <string name="ce_cast_none_found">No devices found</string>
+    <string name="ce_cast_search_again">Search again</string>
+    <string name="ce_cast_connecting">Connecting…</string>
+    <string name="ce_cast_connecting_to">Connecting to %1$s</string>
+    <string name="ce_cast_connect_failed">Couldn\'t connect to %1$s</string>
+    <string name="ce_cast_connected">Connected</string>
+    <string name="ce_cast_connected_to">Connected to %1$s</string>
+    <string name="ce_cast_reconnecting">Reconnecting…</string>
+    <string name="ce_cast_reconnecting_to">Reconnecting to %1$s…</string>
+    <string name="ce_cast_disconnect">Disconnect</string>
+    <string name="ce_cast_disconnected_from">Disconnected from %1$s</string>
+    <string name="ce_cast_starting_on">Starting on %1$s…</string>
+    <string name="ce_cast_pick_something">Pick something to play</string>
+    <string name="ce_cast_nothing_playing_hint">Nothing is playing. Press Play on a movie or an episode to watch it on %1$s.</string>
+    <string name="ce_cast_playback_failed">Couldn\'t play this on %1$s</string>
+    <string name="ce_cast_finished">Finished</string>
+    <string name="ce_cast_play_again">Play again</string>
+    <string name="ce_cast_pause">Pause</string>
+    <string name="ce_cast_volume">Volume</string>
+    <string name="ce_cast_unavailable_title">Casting isn\'t available</string>
+    <string name="ce_cast_unavailable_play_services">Casting needs Google Play services, which this device doesn\'t have or which is out of date.</string>
+    <string name="ce_cast_unavailable_offline">Casting needs a connection to the server.</string>
+    <!-- CE: Google Cast, labels of a track in the audio and subtitle lists -->
+    <string name="ce_track_default">Default</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Track %1$d</string>
     <!-- CE (#281): under "Can't reach the Jellyfin server", when something is downloaded -->
     <string name="ce_server_unreachable_downloads">Your downloads still play.</string>
 </resources>

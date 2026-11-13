@@ -196,5 +196,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Tableti dik çevirseniz bile videoları yatay oynat</string>
     <string name="ce_pref_home_episode_images">Bölüm görsellerini kullan</string>
     <string name="ce_pref_home_episode_images_summary">İzlemeye devam et ve Sıradaki satırlarında dizinin görseli yerine bölümün görselini göster</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">TV\'ye yayınla</string>
+    <string name="ce_pref_cast_enabled_summary">Yayınla düğmesini göster ve ağınızdaki Chromecast cihazlarını ara</string>
+    <string name="ce_pref_cast_max_bitrate">Maksimum bit hızı</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Yayın sırasında sunucu, bunun üzerindeki her şeyin kalitesini düşürür</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">TV, HEVC oynatıyor</string>
+    <string name="ce_pref_cast_hevc_summary">HEVC (H.265) videoyu H.264\'e dönüştürmek yerine olduğu gibi gönder. 4K Chromecast bunu kendiliğinden alır; HEVC oynatan başka bir TV veya kutu için açın</string>
     <string name="ce_pref_home_episode_images_summary_phone">İzlemeye devam et ve Sıradaki satırlarında ve bölüm sayfasının üst kısmında dizinin görseli yerine bölümün görselini göster</string>
 </resources>

@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
+import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadStatus
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
@@ -98,6 +99,7 @@ fun SeasonScreen(
     viewModel: SeasonViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val castPlayback = LocalCastPlayback.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     // CE: the episode selected in the expanded list-detail. Kept here, above the width branch, so
     // a rotation to the single-column page and back keeps it (docs/tablet/4-design.md §7).
@@ -142,10 +144,13 @@ fun SeasonScreen(
     val onAction: (SeasonAction) -> Unit = { action ->
             when (action) {
                 is SeasonAction.Play -> {
-                    val intent = Intent(context, PlayerActivity::class.java)
-                    intent.putExtra("itemId", seasonId.toString())
-                    intent.putExtra("itemKind", BaseItemKind.SEASON.serialName)
-                    context.startActivity(intent)
+                    // CE (#626): on the Cast receiver when one is connected.
+                    if (!castPlayback.play(seasonId, BaseItemKind.SEASON, false, null)) {
+                        val intent = Intent(context, PlayerActivity::class.java)
+                        intent.putExtra("itemId", seasonId.toString())
+                        intent.putExtra("itemKind", BaseItemKind.SEASON.serialName)
+                        context.startActivity(intent)
+                    }
                 }
                 is SeasonAction.OnBackClick -> navigateBack()
                 is SeasonAction.OnHomeClick -> navigateHome()

@@ -316,5 +316,14 @@
     <string name="ce_pref_player_keep_landscape_summary">Play videos in landscape, even when you turn the tablet upright</string>
     <string name="ce_pref_home_episode_images">Use episode images</string>
     <string name="ce_pref_home_episode_images_summary">Show the episode\'s image instead of the show\'s artwork in Continue Watching and Next Up</string>
+
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Cast to a TV</string>
+    <string name="ce_pref_cast_enabled_summary">Show the Cast button and look for Chromecast devices on your network</string>
+    <string name="ce_pref_cast_max_bitrate">Maximum bitrate</string>
+    <string name="ce_pref_cast_max_bitrate_summary">The server lowers the quality of anything above it while casting</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">The TV plays HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Send HEVC (H.265) video as it is instead of converting it to H.264. A 4K Chromecast gets this by itself; turn it on for another TV or box that plays HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Show the episode\'s image instead of the show\'s artwork in Continue Watching, in Next Up and at the top of an episode\'s page</string>
 </resources>

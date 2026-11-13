@@ -113,5 +113,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Ainda não transferiu nada</string>
     <string name="ce_home_offline_empty_body">Está offline. Os filmes e episódios que transferir aparecem aqui e em Downloads.</string>
+    <string name="ce_cast_sheet_title">Transmitir para um dispositivo</string>
+    <string name="ce_cast_searching">A procurar dispositivos…</string>
+    <string name="ce_cast_wifi_hint">Certifique-se de que a TV está ligada e na mesma rede Wi-Fi que este dispositivo.</string>
+    <string name="ce_cast_none_found">Nenhum dispositivo encontrado</string>
+    <string name="ce_cast_search_again">Procurar novamente</string>
+    <string name="ce_cast_connecting">A ligar…</string>
+    <string name="ce_cast_connecting_to">A ligar a %1$s</string>
+    <string name="ce_cast_connect_failed">Não foi possível ligar a %1$s</string>
+    <string name="ce_cast_connected">Ligado</string>
+    <string name="ce_cast_connected_to">Ligado a %1$s</string>
+    <string name="ce_cast_reconnecting">A ligar novamente…</string>
+    <string name="ce_cast_reconnecting_to">A ligar novamente a %1$s…</string>
+    <string name="ce_cast_disconnect">Desligar</string>
+    <string name="ce_cast_disconnected_from">Desligado de %1$s</string>
+    <string name="ce_cast_starting_on">A iniciar em %1$s…</string>
+    <string name="ce_cast_pick_something">Escolha algo para reproduzir</string>
+    <string name="ce_cast_nothing_playing_hint">Não está nada em reprodução. Prima Reproduzir num filme ou num episódio para o ver em %1$s.</string>
+    <string name="ce_cast_playback_failed">Não foi possível reproduzir em %1$s</string>
+    <string name="ce_cast_finished">Terminado</string>
+    <string name="ce_cast_play_again">Reproduzir novamente</string>
+    <string name="ce_cast_pause">Pausa</string>
+    <string name="ce_cast_volume">Volume</string>
+    <string name="ce_cast_unavailable_title">A transmissão não está disponível</string>
+    <string name="ce_cast_unavailable_play_services">A transmissão requer os Serviços do Google Play, que este dispositivo não tem ou que estão desatualizados.</string>
+    <string name="ce_cast_unavailable_offline">A transmissão requer uma ligação ao servidor.</string>
+    <string name="ce_track_default">Predefinida</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Faixa %1$d</string>
     <string name="ce_server_unreachable_downloads">Os seus downloads ainda podem ser reproduzidos.</string>
 </resources>

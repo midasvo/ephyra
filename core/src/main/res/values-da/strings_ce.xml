@@ -113,5 +113,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Intet downloadet endnu</string>
     <string name="ce_home_offline_empty_body">Du er offline. Film og afsnit, du downloader, vises her og under Downloads.</string>
+    <string name="ce_cast_sheet_title">Cast til en enhed</string>
+    <string name="ce_cast_searching">Søger efter enheder…</string>
+    <string name="ce_cast_wifi_hint">Sørg for, at tv\'et er tændt og på samme Wi-Fi-netværk som denne enhed.</string>
+    <string name="ce_cast_none_found">Ingen enheder fundet</string>
+    <string name="ce_cast_search_again">Søg igen</string>
+    <string name="ce_cast_connecting">Opretter forbindelse…</string>
+    <string name="ce_cast_connecting_to">Opretter forbindelse til %1$s</string>
+    <string name="ce_cast_connect_failed">Kunne ikke oprette forbindelse til %1$s</string>
+    <string name="ce_cast_connected">Forbundet</string>
+    <string name="ce_cast_connected_to">Forbundet til %1$s</string>
+    <string name="ce_cast_reconnecting">Genopretter forbindelse…</string>
+    <string name="ce_cast_reconnecting_to">Genopretter forbindelse til %1$s…</string>
+    <string name="ce_cast_disconnect">Afbryd forbindelsen</string>
+    <string name="ce_cast_disconnected_from">Forbindelsen til %1$s er afbrudt</string>
+    <string name="ce_cast_starting_on">Starter på %1$s…</string>
+    <string name="ce_cast_pick_something">Vælg noget at afspille</string>
+    <string name="ce_cast_nothing_playing_hint">Der afspilles ikke noget. Tryk på Afspil på en film eller et afsnit for at se det på %1$s.</string>
+    <string name="ce_cast_playback_failed">Kunne ikke afspille dette på %1$s</string>
+    <string name="ce_cast_finished">Færdig</string>
+    <string name="ce_cast_play_again">Afspil igen</string>
+    <string name="ce_cast_pause">Pause</string>
+    <string name="ce_cast_volume">Lydstyrke</string>
+    <string name="ce_cast_unavailable_title">Casting er ikke tilgængelig</string>
+    <string name="ce_cast_unavailable_play_services">Casting kræver Google Play-tjenester, som denne enhed ikke har, eller som er forældede.</string>
+    <string name="ce_cast_unavailable_offline">Casting kræver forbindelse til serveren.</string>
+    <string name="ce_track_default">Standard</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Spor %1$d</string>
     <string name="ce_server_unreachable_downloads">Dine downloads kan stadig afspilles.</string>
 </resources>

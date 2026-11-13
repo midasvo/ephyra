@@ -113,5 +113,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Encara no hi ha res baixat</string>
     <string name="ce_home_offline_empty_body">No tens connexió. Les pel·lícules i els episodis que baixis apareixen aquí i a Baixades.</string>
+    <string name="ce_cast_sheet_title">Emet a un dispositiu</string>
+    <string name="ce_cast_searching">S\'estan cercant dispositius…</string>
+    <string name="ce_cast_wifi_hint">Assegura\'t que el televisor està encès i a la mateixa xarxa Wi-Fi que aquest dispositiu.</string>
+    <string name="ce_cast_none_found">No s\'ha trobat cap dispositiu</string>
+    <string name="ce_cast_search_again">Torna a cercar</string>
+    <string name="ce_cast_connecting">S\'està connectant…</string>
+    <string name="ce_cast_connecting_to">S\'està connectant a %1$s</string>
+    <string name="ce_cast_connect_failed">No s\'ha pogut connectar a %1$s</string>
+    <string name="ce_cast_connected">Connectat</string>
+    <string name="ce_cast_connected_to">Connectat a %1$s</string>
+    <string name="ce_cast_reconnecting">S\'està tornant a connectar…</string>
+    <string name="ce_cast_reconnecting_to">S\'està tornant a connectar a %1$s…</string>
+    <string name="ce_cast_disconnect">Desconnecta</string>
+    <string name="ce_cast_disconnected_from">Desconnectat de %1$s</string>
+    <string name="ce_cast_starting_on">S\'està iniciant a %1$s…</string>
+    <string name="ce_cast_pick_something">Tria alguna cosa per reproduir</string>
+    <string name="ce_cast_nothing_playing_hint">No s\'està reproduint res. Prem Reprodueix en una pel·lícula o un episodi per veure\'l a %1$s.</string>
+    <string name="ce_cast_playback_failed">No s\'ha pogut reproduir a %1$s</string>
+    <string name="ce_cast_finished">Ha acabat</string>
+    <string name="ce_cast_play_again">Torna a reproduir</string>
+    <string name="ce_cast_pause">Pausa</string>
+    <string name="ce_cast_volume">Volum</string>
+    <string name="ce_cast_unavailable_title">L\'emissió no està disponible</string>
+    <string name="ce_cast_unavailable_play_services">Per emetre calen els Serveis de Google Play, que aquest dispositiu no té o que estan desactualitzats.</string>
+    <string name="ce_cast_unavailable_offline">Per emetre cal una connexió amb el servidor.</string>
+    <string name="ce_track_default">Per defecte</string>
+    <string name="ce_track_original">Original</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Pista %1$d</string>
     <string name="ce_server_unreachable_downloads">Les teves baixades encara es poden reproduir.</string>
 </resources>

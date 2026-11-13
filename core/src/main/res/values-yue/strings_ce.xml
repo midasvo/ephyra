@@ -108,5 +108,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">仲未下載任何嘢</string>
     <string name="ce_home_offline_empty_body">你而家離線。你下載嘅電影同集數會喺呢度同「下載」度顯示。</string>
+    <string name="ce_cast_sheet_title">投放去裝置</string>
+    <string name="ce_cast_searching">搵緊裝置…</string>
+    <string name="ce_cast_wifi_hint">請確保電視已經開咗，而且同呢部裝置用緊同一個 Wi-Fi 網絡。</string>
+    <string name="ce_cast_none_found">搵唔到裝置</string>
+    <string name="ce_cast_search_again">再搵過</string>
+    <string name="ce_cast_connecting">連接緊…</string>
+    <string name="ce_cast_connecting_to">連接緊 %1$s</string>
+    <string name="ce_cast_connect_failed">連接唔到 %1$s</string>
+    <string name="ce_cast_connected">已連接</string>
+    <string name="ce_cast_connected_to">已連接 %1$s</string>
+    <string name="ce_cast_reconnecting">重新連接緊…</string>
+    <string name="ce_cast_reconnecting_to">重新連接緊 %1$s…</string>
+    <string name="ce_cast_disconnect">中斷連接</string>
+    <string name="ce_cast_disconnected_from">已中斷同 %1$s 嘅連接</string>
+    <string name="ce_cast_starting_on">喺 %1$s 開始緊…</string>
+    <string name="ce_cast_pick_something">揀啲嘢嚟播</string>
+    <string name="ce_cast_nothing_playing_hint">而家冇嘢播緊。喺電影或者劇集撳「播放」，就可以喺 %1$s 睇。</string>
+    <string name="ce_cast_playback_failed">喺 %1$s 播放唔到</string>
+    <string name="ce_cast_finished">播完</string>
+    <string name="ce_cast_play_again">再播過</string>
+    <string name="ce_cast_pause">暫停</string>
+    <string name="ce_cast_volume">音量</string>
+    <string name="ce_cast_unavailable_title">用唔到投放</string>
+    <string name="ce_cast_unavailable_play_services">投放需要 Google Play 服務，但呢部裝置冇或者版本太舊。</string>
+    <string name="ce_cast_unavailable_offline">投放需要連接伺服器。</string>
+    <string name="ce_track_default">預設</string>
+    <string name="ce_track_original">原版</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">軌道 %1$d</string>
     <string name="ce_server_unreachable_downloads">你下載咗嘅內容仍然可以播放。</string>
 </resources>

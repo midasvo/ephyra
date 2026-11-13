@@ -123,5 +123,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Prenesenega še ni nič</string>
     <string name="ce_home_offline_empty_body">Brez povezave ste. Filmi in epizode, ki jih prenesete, so prikazani tukaj in v Prenosih.</string>
+    <string name="ce_cast_sheet_title">Predvajaj v napravi</string>
+    <string name="ce_cast_searching">Iskanje naprav…</string>
+    <string name="ce_cast_wifi_hint">Preveri, ali je televizor vklopljen in v istem omrežju Wi-Fi kot ta naprava.</string>
+    <string name="ce_cast_none_found">Ni najdenih naprav</string>
+    <string name="ce_cast_search_again">Išči znova</string>
+    <string name="ce_cast_connecting">Povezovanje…</string>
+    <string name="ce_cast_connecting_to">Povezovanje z napravo %1$s</string>
+    <string name="ce_cast_connect_failed">Povezava z napravo %1$s ni uspela</string>
+    <string name="ce_cast_connected">Povezano</string>
+    <string name="ce_cast_connected_to">Povezano z napravo %1$s</string>
+    <string name="ce_cast_reconnecting">Ponovno povezovanje…</string>
+    <string name="ce_cast_reconnecting_to">Ponovno povezovanje z napravo %1$s…</string>
+    <string name="ce_cast_disconnect">Prekini povezavo</string>
+    <string name="ce_cast_disconnected_from">Povezava z napravo %1$s je prekinjena</string>
+    <string name="ce_cast_starting_on">Začenjanje v napravi %1$s…</string>
+    <string name="ce_cast_pick_something">Izberi, kaj želiš predvajati</string>
+    <string name="ce_cast_nothing_playing_hint">Nič se ne predvaja. Pritisni Predvajaj pri filmu ali epizodi, da si ga ogledaš v napravi %1$s.</string>
+    <string name="ce_cast_playback_failed">Tega ni bilo mogoče predvajati v napravi %1$s</string>
+    <string name="ce_cast_finished">Končano</string>
+    <string name="ce_cast_play_again">Predvajaj znova</string>
+    <string name="ce_cast_pause">Premor</string>
+    <string name="ce_cast_volume">Glasnost</string>
+    <string name="ce_cast_unavailable_title">Predvajanje na televizorju ni na voljo</string>
+    <string name="ce_cast_unavailable_play_services">Za predvajanje na televizorju so potrebne Storitve Google Play, ki jih ta naprava nima ali pa so zastarele.</string>
+    <string name="ce_cast_unavailable_offline">Za predvajanje na televizorju je potrebna povezava s strežnikom.</string>
+    <string name="ce_track_default">Privzeto</string>
+    <string name="ce_track_original">Izvirnik</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Steza %1$d</string>
     <string name="ce_server_unreachable_downloads">Prenose lahko še vedno predvajate.</string>
 </resources>

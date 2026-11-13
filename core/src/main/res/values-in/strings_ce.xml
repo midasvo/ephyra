@@ -108,5 +108,34 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Belum ada yang diunduh</string>
     <string name="ce_home_offline_empty_body">Anda sedang offline. Film dan episode yang Anda unduh muncul di sini dan di Unduhan.</string>
+    <string name="ce_cast_sheet_title">Transmisikan ke perangkat</string>
+    <string name="ce_cast_searching">Mencari perangkat…</string>
+    <string name="ce_cast_wifi_hint">Pastikan TV menyala dan berada di jaringan Wi-Fi yang sama dengan perangkat ini.</string>
+    <string name="ce_cast_none_found">Tidak ada perangkat ditemukan</string>
+    <string name="ce_cast_search_again">Cari lagi</string>
+    <string name="ce_cast_connecting">Menghubungkan…</string>
+    <string name="ce_cast_connecting_to">Menghubungkan ke %1$s</string>
+    <string name="ce_cast_connect_failed">Tidak dapat terhubung ke %1$s</string>
+    <string name="ce_cast_connected">Terhubung</string>
+    <string name="ce_cast_connected_to">Terhubung ke %1$s</string>
+    <string name="ce_cast_reconnecting">Menghubungkan kembali…</string>
+    <string name="ce_cast_reconnecting_to">Menghubungkan kembali ke %1$s…</string>
+    <string name="ce_cast_disconnect">Putuskan sambungan</string>
+    <string name="ce_cast_disconnected_from">Terputus dari %1$s</string>
+    <string name="ce_cast_starting_on">Memulai di %1$s…</string>
+    <string name="ce_cast_pick_something">Pilih sesuatu untuk diputar</string>
+    <string name="ce_cast_nothing_playing_hint">Tidak ada yang diputar. Tekan Putar pada film atau episode untuk menontonnya di %1$s.</string>
+    <string name="ce_cast_playback_failed">Tidak dapat memutar ini di %1$s</string>
+    <string name="ce_cast_finished">Selesai</string>
+    <string name="ce_cast_play_again">Putar lagi</string>
+    <string name="ce_cast_pause">Jeda</string>
+    <string name="ce_cast_volume">Volume</string>
+    <string name="ce_cast_unavailable_title">Transmisi tidak tersedia</string>
+    <string name="ce_cast_unavailable_play_services">Transmisi memerlukan Layanan Google Play, yang tidak ada di perangkat ini atau sudah usang.</string>
+    <string name="ce_cast_unavailable_offline">Transmisi memerlukan koneksi ke server.</string>
+    <string name="ce_track_default">Default</string>
+    <string name="ce_track_original">Asli</string>
+    <string name="ce_track_sdh">SDH</string>
+    <string name="ce_track_number">Trek %1$d</string>
     <string name="ce_server_unreachable_downloads">Unduhan Anda masih bisa diputar.</string>
 </resources>

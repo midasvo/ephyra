@@ -53,6 +53,7 @@ import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.navigation.navigateOrReuse
 import dev.jdtech.jellyfin.navigation.resumedAction
+import dev.jdtech.jellyfin.presentation.cast.CastHost
 import dev.jdtech.jellyfin.presentation.film.CollectionScreen
 import dev.jdtech.jellyfin.presentation.film.DownloadedShowScreen
 import dev.jdtech.jellyfin.presentation.film.DownloadsScreen
@@ -503,13 +504,21 @@ private fun MainNavigation(
         CompositionLocalProvider(
             LocalServerStatus provides serverStatus.copy(openDownloads = openDownloads)
         ) {
-            NavDisplay(
-                entries = navigationState.toDecoratedEntries(entryDecorators, entryProvider),
-                onBack = { navigator.goBack() },
-                transitionSpec = { GLOBAL_TRANSITION_SPEC },
-                popTransitionSpec = { GLOBAL_TRANSITION_SPEC },
-                predictivePopTransitionSpec = { _ -> GLOBAL_TRANSITION_SPEC },
-            )
+            // CE (#626): the Cast mini player and player sit around the screens; without Cast in
+            // the build this is the display alone.
+            CastHost(
+                route = navigationState.currentBackStack().lastOrNull(),
+                showBottomBar = showBottomBar,
+                isOfflineMode = isOfflineMode || serverStatus.unreachable,
+            ) {
+                NavDisplay(
+                    entries = navigationState.toDecoratedEntries(entryDecorators, entryProvider),
+                    onBack = { navigator.goBack() },
+                    transitionSpec = { GLOBAL_TRANSITION_SPEC },
+                    popTransitionSpec = { GLOBAL_TRANSITION_SPEC },
+                    predictivePopTransitionSpec = { _ -> GLOBAL_TRANSITION_SPEC },
+                )
+            }
         }
     }
 }

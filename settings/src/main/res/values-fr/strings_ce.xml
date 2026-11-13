@@ -196,5 +196,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Lire les vidéos en mode paysage, même quand vous tournez la tablette à la verticale</string>
     <string name="ce_pref_home_episode_images">Utiliser les images des épisodes</string>
     <string name="ce_pref_home_episode_images_summary">Afficher l\'image de l\'épisode au lieu de celle de la série dans Reprendre la lecture et À suivre</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Caster sur un téléviseur</string>
+    <string name="ce_pref_cast_enabled_summary">Afficher le bouton Caster et rechercher les appareils Chromecast sur votre réseau</string>
+    <string name="ce_pref_cast_max_bitrate">Débit maximal</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Pendant la diffusion, le serveur réduit la qualité de tout ce qui le dépasse</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Mb/s</string>
+    <string name="ce_pref_cast_hevc">Le téléviseur lit le HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Envoyer la vidéo HEVC (H.265) telle quelle au lieu de la convertir en H.264. Un Chromecast 4K la reçoit ainsi automatiquement ; activez l\'option pour un autre téléviseur ou boîtier qui lit le HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Afficher l\'image de l\'épisode au lieu de celle de la série dans Reprendre la lecture, dans À suivre et en haut de la page de l\'épisode</string>
 </resources>

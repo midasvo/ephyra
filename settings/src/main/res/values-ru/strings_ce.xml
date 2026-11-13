@@ -200,5 +200,13 @@
     <string name="ce_pref_player_keep_landscape_summary">Воспроизводить видео в альбомной ориентации, даже если повернуть планшет вертикально</string>
     <string name="ce_pref_home_episode_images">Использовать изображения серий</string>
     <string name="ce_pref_home_episode_images_summary">Показывать изображение серии вместо изображения сериала в «Продолжить просмотр» и «Далее»</string>
+    <string name="ce_pref_cast_group">Chromecast</string>
+    <string name="ce_pref_cast_enabled">Трансляция на телевизор</string>
+    <string name="ce_pref_cast_enabled_summary">Показывать кнопку трансляции и искать устройства Chromecast в вашей сети</string>
+    <string name="ce_pref_cast_max_bitrate">Максимальный битрейт</string>
+    <string name="ce_pref_cast_max_bitrate_summary">Во время трансляции сервер снижает качество всего, что его превышает</string>
+    <string name="ce_pref_cast_max_bitrate_suffix">Мбит/с</string>
+    <string name="ce_pref_cast_hevc">Телевизор воспроизводит HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Отправлять видео HEVC (H.265) как есть, не преобразуя в H.264. Chromecast 4K получает его так автоматически; включите для другого телевизора или приставки с поддержкой HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Показывать изображение серии вместо изображения сериала в «Продолжить просмотр», в «Далее» и вверху страницы серии</string>
 </resources>

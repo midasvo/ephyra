@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
+import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadProgress
@@ -729,6 +730,7 @@ private fun SeasonEpisodeDetailPane(
     onDownloadChanged: () -> Unit,
 ) {
     val context = LocalContext.current
+    val castPlayback = LocalCastPlayback.current
     val isOfflineMode = LocalOfflineMode.current || LocalServerStatus.current.unreachable
     val viewModel: EpisodeViewModel = hiltViewModel(key = "season-detail-episode-$episodeId")
     val downloaderViewModel: DownloaderViewModel =
@@ -803,12 +805,15 @@ private fun SeasonEpisodeDetailPane(
         onAction = { action ->
             when (action) {
                 is EpisodeAction.Play -> {
-                    val intent = Intent(context, PlayerActivity::class.java)
-                    intent.putExtra("itemId", episodeId.toString())
-                    intent.putExtra("itemKind", BaseItemKind.EPISODE.serialName)
-                    intent.putExtra("startFromBeginning", action.startFromBeginning)
-                    intent.putExtra("mediaSourceId", action.mediaSourceId)
-                    context.startActivity(intent)
+                    // CE (#626): on the Cast receiver when one is connected.
+                    if (!castPlayback.play(episodeId, BaseItemKind.EPISODE, action.startFromBeginning, action.mediaSourceId)) {
+                        val intent = Intent(context, PlayerActivity::class.java)
+                        intent.putExtra("itemId", episodeId.toString())
+                        intent.putExtra("itemKind", BaseItemKind.EPISODE.serialName)
+                        intent.putExtra("startFromBeginning", action.startFromBeginning)
+                        intent.putExtra("mediaSourceId", action.mediaSourceId)
+                        context.startActivity(intent)
+                    }
                 }
                 is EpisodeAction.NavigateToPerson -> navigateToPerson(action.personId)
                 else -> Unit
