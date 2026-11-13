@@ -1,15 +1,48 @@
 name: Release
 
+# Jobs: `build` assembles each published app in parallel and uploads its signed APKs and R8
+# mapping, and `publish` attaches them to the release once every build succeeded.
+
 on:
   push:
     tags:
       # Releases only: vX.Y.Z. Betas (vX.Y.Z-beta.N) don't match, filter patterns match the whole tag.
       - "v[0-9]+.[0-9]+.[0-9]+"
 
+permissions:
+  contents: read
+
 jobs:
-  release:
-    name: Build and publish signed APK
+  build:
+    name: Build ${{ matrix.name }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      # One failed app fails the run and nothing is published, but let the others finish so a
+      # rerun of the failed job is enough.
+      fail-fast: false
+      matrix:
+        # Phone in both flavors (proprietary adds Google Cast, #626, #641), TV in libre only.
+        include:
+          - name: phone (libre)
+            id: phone-libre
+            task: ":app:phone:assembleLibreRelease"
+            apks: app/phone/build/outputs/apk/libre/release
+            mapping: app/phone/build/outputs/mapping/libreRelease/mapping.txt
+            mapping_suffix: mapping
+          - name: phone (proprietary)
+            id: phone-proprietary
+            task: ":app:phone:assembleProprietaryRelease"
+            apks: app/phone/build/outputs/apk/proprietary/release
+            mapping: app/phone/build/outputs/mapping/proprietaryRelease/mapping.txt
+            mapping_suffix: proprietary-mapping
+          - name: TV (libre)
+            id: tv-libre
+            task: ":app:tv:assembleLibreRelease"
+            apks: app/tv/build/outputs/apk/libre/release
+            mapping: app/tv/build/outputs/mapping/libreRelease/mapping.txt
+            mapping_suffix: tv-mapping
 
     steps:
       - name: Checkout repository
@@ -29,20 +62,58 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$GITHUB_WORKSPACE/findroid-ce.jks"
 
       - name: Assemble release APKs
-        # Phone in both flavors (proprietary adds Google Cast, #626, #641), TV in libre only.
-        run: ./gradlew :app:phone:assembleLibreRelease :app:phone:assembleProprietaryRelease :app:tv:assembleLibreRelease
+        run: ./gradlew ${{ matrix.task }}
         env:
           KEYSTORE_FILE: ${{ github.workspace }}/findroid-ce.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Collect R8 mappings
+      - name: Collect APKs and R8 mapping
+        env:
+          APKS: ${{ matrix.apks }}
+          MAPPING: ${{ matrix.mapping }}
+          MAPPING_SUFFIX: ${{ matrix.mapping_suffix }}
         run: |
-          mkdir mapping
-          cp app/phone/build/outputs/mapping/libreRelease/mapping.txt "mapping/ephyra-${GITHUB_REF_NAME}-mapping.txt"
-          cp app/tv/build/outputs/mapping/libreRelease/mapping.txt "mapping/ephyra-${GITHUB_REF_NAME}-tv-mapping.txt"
-          cp app/phone/build/outputs/mapping/proprietaryRelease/mapping.txt "mapping/ephyra-${GITHUB_REF_NAME}-proprietary-mapping.txt"
+          mkdir -p dist/apk dist/mapping
+          cp "$APKS"/*.apk dist/apk/
+          cp "$MAPPING" "dist/mapping/ephyra-${GITHUB_REF_NAME}-${MAPPING_SUFFIX}.txt"
+          ls -l dist/apk dist/mapping
+
+      - name: Upload APKs and R8 mapping
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.id }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download APKs and R8 mappings
+        uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: dist
+
+      # Artifacts are kept for a day. A failed build that is rerun after that would leave this
+      # job with only the artifacts that still exist, so check that every app is there.
+      - name: Check that every app is present
+        run: |
+          for id in phone-libre phone-proprietary tv-libre; do
+            dir="dist/release-$id"
+            if ! ls "$dir"/apk/*.apk >/dev/null 2>&1 || ! ls "$dir"/mapping/*.txt >/dev/null 2>&1; then
+              echo "::error::The APKs or the R8 mapping of $id are missing; rerun all jobs."
+              exit 1
+            fi
+          done
+          ls -l dist/*/apk dist/*/mapping
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -63,5 +134,6 @@ jobs:
             Obtainium, filter the phone APK with `-libre-arm64-v8a\.apk$` or
             `-proprietary-arm64-v8a\.apk$`, the TV APK with `.*-tv-armeabi-v7a\.apk`.
           files: |
-            app/**/build/outputs/apk/**/release/*.apk
-            mapping/*.txt
+            dist/*/apk/*.apk
+            dist/*/mapping/*.txt
+          fail_on_unmatched_files: true
