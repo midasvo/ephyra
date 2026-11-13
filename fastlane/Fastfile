@@ -6,6 +6,10 @@ default_platform(:android)
 # phone bundle goes to `track`, the TV bundle to the Android TV form factor track `tv:<track>`. The
 # TV bundle's versionCode is one higher (EphyraVersion.TV_CODE), so both fit in one app.
 #
+# Flavors (#641): the phone bundle is `proprietary`, with Google Cast; Play users have Google Play
+# services anyway. The TV bundle is `libre` (app/tv has no other flavor). F-Droid and Amazon stay
+# `libre`; GitHub releases and betas carry both phone flavors (release.yml, beta.yml).
+#
 # Signing: the bundles are signed with the Play *upload* key, through the same KEYSTORE_* variables
 # that release.yml uses for the release key. Play re-signs them with the app signing key.
 #
@@ -27,14 +31,14 @@ platform :android do
 
     gradle(task: "clean")
     gradle(
-      tasks: ["app:phone:bundleLibreRelease"] + (tv ? ["app:tv:bundleLibreRelease"] : []),
+      tasks: ["app:phone:bundleProprietaryRelease"] + (tv ? ["app:tv:bundleLibreRelease"] : []),
       print_command: false,
     )
 
     upload_to_play_store(
       track: track,
       release_status: release_status,
-      aab: "app/phone/build/outputs/bundle/libreRelease/phone-libre-release.aab",
+      aab: "app/phone/build/outputs/bundle/proprietaryRelease/phone-proprietary-release.aab",
       json_key: ENV["PLAY_API_CREDENTIALS"],
       sync_image_upload: true,
     )

@@ -130,12 +130,17 @@
             <li>Plays on into the next season. Chapter list. Skip, ask or ignore per media segment type. "Still watching?" after a run of autoplayed episodes.</li>
             <li><strong>"Up next"</strong> card with a countdown at the end of an episode. Sleep timer.</li>
             <li>Background audio with lock screen controls (opt-in).</li>
+            <li><strong>Google Cast</strong> (Chromecast): pick a device from the top bar and cast from any item. A mini player and a remote control player take over, with seek, previous and next, volume, audio and subtitle tracks. Phone and tablet only, in the proprietary variant (see <a href="#install">Install</a>).</li>
           </ul>
         </div>
         <div class="shots two">
           <figure><img src="images/screenshots/subtitle-style.webp" alt="Subtitle style screen with a live preview of yellow subtitles" width="540" height="1095" loading="lazy"><figcaption>Subtitle styling, with a live preview</figcaption></figure>
+          <figure><img src="images/screenshots/cast-player.webp" alt="The Cast player for Sahara on Living room TV with the poster, seek bar, transport controls, audio, subtitle and chapter buttons and volume" width="540" height="1095" loading="lazy"><figcaption>The phone becomes the remote</figcaption></figure>
           <figure class="landscape wide"><img src="images/screenshots/player-quality.webp" alt="Video quality dialog open over the player" width="1080" height="486" loading="lazy"><figcaption>Change the video quality during playback</figcaption></figure>
           <figure class="landscape wide"><img src="images/screenshots/up-next.webp" alt="Up next card in the corner of the player with the next episode, a countdown, Cancel and Play now" width="1080" height="486" loading="lazy"><figcaption>"Up next", with a countdown, as an episode ends</figcaption></figure>
+          <figure><img src="images/screenshots/cast-devices.webp" alt="The Cast to a device sheet over Home, listing Living room TV and Bedroom" width="540" height="1095" loading="lazy"><figcaption>Pick a device from the top bar</figcaption></figure>
+          <figure><img src="images/screenshots/cast-mini.webp" alt="Home with the Cast button lit and a mini player for Sahara above the bottom bar" width="540" height="1095" loading="lazy"><figcaption>A mini player while you browse</figcaption></figure>
+          <figure class="landscape wide"><img src="images/screenshots/tablet-cast.webp" alt="Big Buck Bunny's page on a tablet with the Cast player beside it: connected to Living room TV, with the seek bar, transport controls, track buttons and volume" width="832" height="476" loading="lazy"><figcaption>On a tablet the Cast player sits beside the page</figcaption></figure>
         </div>
       </div>
 
@@ -236,15 +241,17 @@
     <div class="wrap">
       <div class="section-head reveal">
         <h2 id="install-title">Install</h2>
-        <p>Phones and tablets use the <code>-libre-&lt;abi&gt;.apk</code> files, Android TV the <code>-libre-tv-&lt;abi&gt;.apk</code> files. Nearly everything is <code>arm64-v8a</code>; 32-bit TV boxes such as the Xiaomi Mi Box need <code>armeabi-v7a</code>.</p>
+        <p>Phones and tablets use the <code>-libre-&lt;abi&gt;.apk</code> or <code>-proprietary-&lt;abi&gt;.apk</code> files, Android TV the <code>-libre-tv-&lt;abi&gt;.apk</code> files. Nearly everything is <code>arm64-v8a</code>; 32-bit TV boxes such as the Xiaomi Mi Box need <code>armeabi-v7a</code>.</p>
+        <p>The phone app comes in two variants. <strong>libre</strong> has no Google code. <strong>proprietary</strong> adds Google Cast (Chromecast) and needs Google Play services to cast. Every release has both, with the same application ID and signing key, so one installs over the other and keeps your login, settings and downloads. The Android TV app is libre only. Coming soon: F-Droid and the Amazon Appstore with libre, Google Play with proprietary on phones.</p>
       </div>
 
       <div class="cards reveal">
         <div class="card">
           <h3>Obtainium</h3>
-          <p>Add <code>https://github.com/midasvo/ephyra</code> in <a href="https://github.com/ImranR98/Obtainium">Obtainium</a>. Leave <strong>Include prereleases</strong> off and set <strong>Filter APKs by regular expression</strong>:</p>
+          <p>Add <code>https://github.com/midasvo/ephyra</code> in <a href="https://github.com/ImranR98/Obtainium">Obtainium</a>. Leave <strong>Include prereleases</strong> off and set <strong>Filter APKs by regular expression</strong>. A release has more than one APK, so without a filter Obtainium asks which one to install.</p>
           <table>
-            <tr><th>Phone or tablet</th><td><code>-libre-arm64-v8a\.apk$</code></td></tr>
+            <tr><th>Phone or tablet, libre</th><td><code>-libre-arm64-v8a\.apk$</code></td></tr>
+            <tr><th>Phone or tablet, proprietary (Cast)</th><td><code>-proprietary-arm64-v8a\.apk$</code></td></tr>
             <tr><th>Android TV, 64-bit</th><td><code>.*-tv-arm64-v8a\.apk</code></td></tr>
             <tr><th>Android TV, 32-bit</th><td><code>.*-tv-armeabi-v7a\.apk</code></td></tr>
           </table>
@@ -261,7 +268,7 @@
         <div class="card">
           <h3>Beta</h3>
           <p>Every push to <code>main</code> publishes a prerelease. It installs as a separate app, <strong>Ephyra Beta</strong>, with its own data. Untested; expect bugs.</p>
-          <p>In Obtainium, add the repository again with <strong>Include prereleases</strong> on, filter release titles by <code>^Beta</code> and APKs by <code>-beta\.\d+-libre-arm64-v8a\.apk$</code>.</p>
+          <p>In Obtainium, add the repository again with <strong>Include prereleases</strong> on, filter release titles by <code>^Beta</code> and APKs by <code>-beta\.\d+-libre-arm64-v8a\.apk$</code>, or <code>-beta\.\d+-proprietary-arm64-v8a\.apk$</code> for Cast.</p>
         </div>
       </div>
     </div>

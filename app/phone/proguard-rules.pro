@@ -39,3 +39,9 @@
 -dontwarn org.openjsse.javax.net.ssl.SSLParameters
 -dontwarn org.openjsse.javax.net.ssl.SSLSocket
 -dontwarn org.openjsse.net.ssl.OpenJSSE
+
+# Cast (#641): the Cast SDK finds CastOptionsProvider by the name in the manifest and uses it as an
+# OptionsProvider. Without these, R8 merges the interface into the class. Only the proprietary
+# flavor has these classes.
+-keep interface com.google.android.gms.cast.framework.OptionsProvider { *; }
+-keep class dev.jdtech.jellyfin.player.cast.CastOptionsProvider { *; }
