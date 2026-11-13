@@ -98,6 +98,9 @@ const val CAST_PLAYER_TAG = "cast_player"
 /** Width of the player as a side panel at expanded width (4-design.md §9, the supporting pane). */
 val CastPanelWidth = 360.dp
 
+/** What the panel needs in height for everything but the picture. */
+private val PanelControlsHeight = 420.dp
+
 /** The steps of the rewind and forward buttons: the local player's. */
 private const val REWIND_MILLIS = -10_000L
 private const val FORWARD_MILLIS = 30_000L
@@ -159,20 +162,23 @@ fun CastPlayerPanel(state: CastUiState, actions: CastPlayerActions, modifier: Mo
             ),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        // The panel runs under the system bars; what is in it stays clear of them.
-        CastPlayerContent(
-            state = state,
-            actions = actions,
-            sideBySide = false,
-            closeButton = true,
+        // The panel runs under the system bars; what is in it stays clear of them. The picture
+        // gives way first on a short window (an 8 inch tablet), so the controls stay in view.
+        BoxWithConstraints(
             modifier =
                 Modifier.windowInsetsPadding(
-                        WindowInsets.safeDrawing.only(
-                            WindowInsetsSides.Vertical + WindowInsetsSides.End
-                        )
-                    )
-                    .testTag(CAST_PLAYER_TAG),
-        )
+                    WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                )
+        ) {
+            CastPlayerContent(
+                state = state,
+                actions = actions,
+                sideBySide = false,
+                closeButton = true,
+                artworkMaxHeight = (maxHeight - PanelControlsHeight).coerceIn(72.dp, 240.dp),
+                modifier = Modifier.testTag(CAST_PLAYER_TAG),
+            )
+        }
     }
 }
 
@@ -183,6 +189,7 @@ internal fun CastPlayerContent(
     sideBySide: Boolean,
     closeButton: Boolean,
     modifier: Modifier = Modifier,
+    artworkMaxHeight: Dp = 320.dp,
 ) {
     var dialog by rememberSaveable { mutableStateOf(CastDialog.NONE) }
     val shown = state.nowPlaying ?: state.startingItem ?: state.failedItem ?: state.finished
@@ -217,7 +224,7 @@ internal fun CastPlayerContent(
             if (closeButton) Spacer(Modifier.height(MaterialTheme.spacings.medium))
             Header(state, actions, closeButton)
             Spacer(Modifier.height(MaterialTheme.spacings.medium))
-            Artwork(state, actions, shown, maxHeight = if (closeButton) 240.dp else 320.dp)
+            Artwork(state, actions, shown, maxHeight = artworkMaxHeight)
             Spacer(Modifier.height(MaterialTheme.spacings.default))
             Titles(shown)
             Controls(state, actions, onDialog = { dialog = it })
