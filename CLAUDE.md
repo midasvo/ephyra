@@ -39,7 +39,7 @@ The app is **Ephyra**, a fork of [Findroid](https://github.com/jarnedemeulemeest
 ./gradlew testDebugUnitTest
 ```
 
-CI on a pull request runs `ktfmtCheck`, the CE translation check and `assembleDebug`. The build needs JDK 21.
+CI on a pull request runs `ktfmtCheck` (when Kotlin files change) and, unless the change touches only docs-like paths (see `build.yaml`), the CE translation check and a debug build of every app variant. The build needs JDK 21.
 
 ## Module Structure
 

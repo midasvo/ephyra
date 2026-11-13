@@ -10,6 +10,9 @@ name: Beta
 #
 # Beta tags look like v<next patch>-beta.<run_number> (v2.0.1-beta.12 after the 2.0.0 release), so
 # they sort after the last release. They must never match release.yml's `v[0-9]+.[0-9]+.[0-9]+`.
+#
+# Jobs: `prepare` resolves the source and the version, `build` assembles each app in parallel and
+# uploads its APKs and R8 mapping, and `publish` creates the prerelease once every build succeeded.
 
 on:
   workflow_dispatch:
@@ -21,10 +24,23 @@ on:
   push:
     branches:
       - main
+    # A push that touches only docs, the site, Markdown, store metadata, branding sources or the
+    # Claude skills changes nothing in the APKs. The same list as build.yaml, which also runs for
+    # the translate-strings skill because it runs its check.
+    paths:
+      - "**"
+      - "!docs/**"
+      - "!site/**"
+      - "!**.md"
+      - "!images/**"
+      - "!fastlane/**"
+      - "!.claude/**"
+      - "!.github/ISSUE_TEMPLATE/**"
+      - "!.github/FUNDING.yml"
+      - "!LICENSE"
 
 permissions:
-  contents: write
-  pull-requests: read
+  contents: read
 
 concurrency:
   group: beta-release
@@ -35,13 +51,25 @@ env:
   KEEP_BETAS: 3
 
 jobs:
-  beta:
-    name: Build and publish beta APK
+  prepare:
+    name: Prepare beta
     # Merging a release PR is a push to main too, but that code is the stable release and the
     # previous beta already has all of it. The merge commit reads
-    # "Merge pull request #N from midasvo/release/vX.Y.Z".
+    # "Merge pull request #N from midasvo/release/vX.Y.Z". The other jobs need this one, so they
+    # are skipped with it.
     if: github.event_name != 'push' || !contains(github.event.head_commit.message, '/release/v')
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      ref: ${{ steps.source.outputs.ref }}
+      label: ${{ steps.source.outputs.label }}
+      link: ${{ steps.source.outputs.link }}
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      sha: ${{ steps.version.outputs.sha }}
+      short_sha: ${{ steps.version.outputs.short_sha }}
 
     steps:
       - name: Resolve source
@@ -63,7 +91,8 @@ jobs:
               ;;
           esac
 
-          # The release keystore is available to this job, so never build code from forks.
+          # The release keystore is available to the build jobs, so never build code from forks.
+          # They need this job, so this check runs before any job that sees the keystore secrets.
           # mergeable is null while GitHub is still computing the test merge; poll briefly.
           for _ in $(seq 1 10); do
             info=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR}" \
@@ -88,19 +117,11 @@ jobs:
           echo "label=PR #${PR} (${head_ref})" >> "$GITHUB_OUTPUT"
           echo "link=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/${PR}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout repository
+      - name: Checkout version file
         uses: actions/checkout@v7
         with:
           ref: ${{ steps.source.outputs.ref }}
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v6
-        with:
-          java-version: 21
-          distribution: temurin
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+          sparse-checkout: buildSrc
 
       - name: Compute beta version
         id: version
@@ -123,12 +144,58 @@ jobs:
           echo "sha=${sha}" >> "$GITHUB_OUTPUT"
           echo "short_sha=${sha::7}" >> "$GITHUB_OUTPUT"
 
+  build:
+    name: Build ${{ matrix.name }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      # One failed app fails the run and nothing is published, but let the others finish so a
+      # rerun of the failed job is enough.
+      fail-fast: false
+      matrix:
+        include:
+          - name: phone (libre)
+            id: phone-libre
+            task: ":app:phone:assembleLibreStaging"
+            apks: app/phone/build/outputs/apk/libre/staging
+            mapping: app/phone/build/outputs/mapping/libreStaging/mapping.txt
+            mapping_suffix: mapping
+          - name: phone (proprietary)
+            id: phone-proprietary
+            task: ":app:phone:assembleProprietaryStaging"
+            apks: app/phone/build/outputs/apk/proprietary/staging
+            mapping: app/phone/build/outputs/mapping/proprietaryStaging/mapping.txt
+            mapping_suffix: proprietary-mapping
+          - name: TV (libre)
+            id: tv-libre
+            task: ":app:tv:assembleLibreStaging"
+            apks: app/tv/build/outputs/apk/libre/staging
+            mapping: app/tv/build/outputs/mapping/libreStaging/mapping.txt
+            mapping_suffix: tv-mapping
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.ref }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > "$GITHUB_WORKSPACE/findroid-ce.jks"
 
-      - name: Assemble staging APKs (phone in both flavors, TV)
-        run: ./gradlew :app:phone:assembleLibreStaging :app:phone:assembleProprietaryStaging :app:tv:assembleLibreStaging
+      - name: Assemble staging APKs
+        run: ./gradlew ${{ matrix.task }}
         env:
           BETA_BUILD: ${{ github.run_number }}
           KEYSTORE_FILE: ${{ github.workspace }}/findroid-ce.jks
@@ -136,23 +203,50 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Collect R8 mappings
+      - name: Collect APKs and R8 mapping
+        env:
+          APKS: ${{ matrix.apks }}
+          MAPPING: ${{ matrix.mapping }}
+          MAPPING_NAME: ephyra-${{ needs.prepare.outputs.tag }}-${{ matrix.mapping_suffix }}.txt
         run: |
-          mkdir mapping
-          cp app/phone/build/outputs/mapping/libreStaging/mapping.txt "mapping/ephyra-${{ steps.version.outputs.tag }}-mapping.txt"
-          cp app/tv/build/outputs/mapping/libreStaging/mapping.txt "mapping/ephyra-${{ steps.version.outputs.tag }}-tv-mapping.txt"
-          cp app/phone/build/outputs/mapping/proprietaryStaging/mapping.txt "mapping/ephyra-${{ steps.version.outputs.tag }}-proprietary-mapping.txt"
+          mkdir -p dist/apk dist/mapping
+          cp "$APKS"/*.apk dist/apk/
+          cp "$MAPPING" "dist/mapping/$MAPPING_NAME"
+          ls -l dist/apk dist/mapping
+
+      - name: Upload APKs and R8 mapping
+        uses: actions/upload-artifact@v7
+        with:
+          name: beta-${{ matrix.id }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish beta
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download APKs and R8 mappings
+        uses: actions/download-artifact@v8
+        with:
+          pattern: beta-*
+          path: dist
+          merge-multiple: true
 
       - name: Create GitHub prerelease
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          target_commitish: ${{ steps.version.outputs.sha }}
-          name: Beta ${{ steps.version.outputs.version }} (${{ steps.source.outputs.label }} @ ${{ steps.version.outputs.short_sha }})
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          target_commitish: ${{ needs.prepare.outputs.sha }}
+          name: Beta ${{ needs.prepare.outputs.version }} (${{ needs.prepare.outputs.label }} @ ${{ needs.prepare.outputs.short_sha }})
           prerelease: true
           make_latest: false
           body: |
-            Beta build of **${{ steps.source.outputs.label }}** (${{ steps.source.outputs.link }}) at commit ${{ steps.version.outputs.sha }}.
+            Beta build of **${{ needs.prepare.outputs.label }}** (${{ needs.prepare.outputs.link }}) at commit ${{ needs.prepare.outputs.sha }}.
 
             This is the "Ephyra Beta" app (`nl.midasvo.findroid.ce.staging`). It installs next to the
             stable Ephyra app and keeps its own data. Betas are untested; expect bugs.
@@ -167,10 +261,8 @@ jobs:
             Mi Box, `arm64-v8a` for 64-bit ones. Phone and TV share one app ID, so the TV APK replaces
             the phone beta on a device and keeps its login.
           files: |
-            app/phone/build/outputs/apk/libre/staging/*.apk
-            app/phone/build/outputs/apk/proprietary/staging/*.apk
-            app/tv/build/outputs/apk/libre/staging/*.apk
-            mapping/*.txt
+            dist/apk/*.apk
+            dist/mapping/*.txt
           fail_on_unmatched_files: true
 
       - name: Delete old beta prereleases
