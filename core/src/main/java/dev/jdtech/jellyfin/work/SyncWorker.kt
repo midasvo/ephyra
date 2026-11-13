@@ -10,6 +10,7 @@ import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.core.presentation.downloader.SmartDownloads
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.FindroidUserDataDto
+import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.PlaybackEvents
 import java.time.Instant
 import java.time.LocalDateTime
@@ -38,12 +39,14 @@ constructor(
     private val jellyfinApi: JellyfinApi,
     private val smartDownloads: SmartDownloads,
     private val playbackEvents: PlaybackEvents,
+    private val dataChanges: DataChangeEvents,
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
         return withContext(Dispatchers.IO) {
             val servers = database.getServers()
             var hadFailures = false
+            var reachedServer = false
 
             for (server in servers) {
                 val serverWithAddressesAndUsers =
@@ -63,11 +66,18 @@ constructor(
                     // A write that failed while this run was sending keeps its row marked, and
                     // asking for a sync during a run does nothing: run again for those rows.
                     val stillMarked = database.getAllUserDataToBeSynced(server.id, user.id)
+                    if (anyReachedServer(sent = pending, stillMarked = stillMarked)) {
+                        reachedServer = true
+                    }
                     if (needsAnotherRun(sent = pending, stillMarked = stillMarked)) {
                         hadFailures = true
                     }
                 }
             }
+
+            // CE (#633): what the server shows changed (Continue Watching, positions), so the screen
+            // on display reloads, as after a playback stop. Also after a partly failed run.
+            if (reachedServer) dataChanges.onSynced()
 
             if (hadFailures) {
                 Result.retry()
@@ -321,6 +331,15 @@ internal fun afterStatus(status: Int): AfterStatus =
  * not in their current state. A row that is still marked exactly as it was sent failed in this
  * run, and that failure decides for itself.
  */
+/**
+ * CE (#633): whether at least one of the rows in [sent] reached the server: it is no longer marked
+ * as it was sent ([stillMarked] holds the rows marked after the run).
+ */
+internal fun anyReachedServer(
+    sent: List<FindroidUserDataDto>,
+    stillMarked: List<FindroidUserDataDto>,
+): Boolean = sent.any { it !in stillMarked }
+
 internal fun needsAnotherRun(
     sent: List<FindroidUserDataDto>,
     stillMarked: List<FindroidUserDataDto>,
