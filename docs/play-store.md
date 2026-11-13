@@ -4,6 +4,12 @@ How Ephyra gets onto Google Play (issue #177). Phone and TV share one applicatio
 (`nl.midasvo.findroid.ce`, ADR 0005). The TV bundle has a versionCode one higher than the phone
 bundle (`EphyraVersion.TV_CODE`) and goes to the Android TV form factor track.
 
+The phone bundle is the `proprietary` flavor and the TV bundle is `libre` (#641). Cast needs Google
+Play services, which Play devices have, and the TV app has no `proprietary` flavor. Every other
+channel (F-Droid, Amazon Appstore) ships `libre`. All flavors share the application ID and the
+signing key, so a user can switch between a Play install and a GitHub or F-Droid APK in either
+direction.
+
 ## Signing
 
 Use Play App Signing with our **existing** release key, the one in the `KEYSTORE_BASE64` secret. If
@@ -40,10 +46,11 @@ fastlane android deploy tv:false release_status:draft
 By hand, without fastlane:
 
 ```bash
-./gradlew :app:phone:bundleLibreRelease :app:tv:bundleLibreRelease
+./gradlew :app:phone:bundleProprietaryRelease :app:tv:bundleLibreRelease
 ```
 
-The bundles are in `app/{phone,tv}/build/outputs/bundle/libreRelease/`.
+The bundles are in `app/phone/build/outputs/bundle/proprietaryRelease/` and
+`app/tv/build/outputs/bundle/libreRelease/`.
 
 ## Store listing
 
@@ -78,7 +85,7 @@ has the AVD script, the demo-mode commands and the crop.
 | Ads | No ads |
 | Content rating | Media player; no user-generated content shared by the app |
 | Target audience | 18 and over only, so the Families policy doesn't apply |
-| Data safety | No data collected or shared; data goes only to the user's own server |
+| Data safety | No data collected or shared; data goes only to the user's own server. **Review before the first proprietary upload:** the phone bundle now contains the Google Play services Cast SDK, so check the Data safety form and the Play Console's SDK and declaration pages against what that SDK does, and update the answer if needed |
 | Foreground services | `dataSync` for downloads, `mediaPlayback` for playback, each with a short video |
 
 ## Closed test

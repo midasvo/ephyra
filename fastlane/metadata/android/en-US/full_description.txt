@@ -11,6 +11,7 @@ What Ephyra adds:
 - Per-series audio and subtitle track memory
 - Chapter list and media segment skipping (intro/outro)
 - Background audio playback
+- Google Cast (Chromecast) on phones and tablets, with a remote control player
 - Library enhancements including hide-watched filter and auto offline mode
 
 Based on Findroid by Jarne Demeulemeester.
