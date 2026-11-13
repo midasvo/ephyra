@@ -1,0 +1,6 @@
+Ephyra can cast: a new variant of the phone app adds Google Cast.
+
+- Cast to a Chromecast or Google TV from the top bar; the phone becomes the remote, with a mini player while you browse.
+- Both variants install over each other and keep your login and downloads.
+- When the server doesn't answer, Home says so and leads to your downloads.
+- An episode's page shows the show's backdrop again.

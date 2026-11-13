@@ -13,6 +13,32 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v2.5.0] — 2026-11-13
+
+Ephyra can cast. The new proprietary variant of the phone app adds Google Cast: pick a
+Chromecast or Google TV from the top bar and the phone becomes the remote. The libre variant
+stays free of Google code, and the two install over each other. When the server doesn't answer,
+Home now says so and takes you to your downloads.
+
+### Added
+- Cast: a proprietary variant of the phone app with Google Cast. Pick a device from the Cast
+  button in the top bar and cast from any item; a mini player follows you while you browse and
+  the Cast player has seek, previous and next, volume, audio and subtitle tracks, chapters with
+  thumbnails and skip segments. On a tablet the Cast player sits beside the page. Servers on
+  plain HTTP can cast too (#626).
+- Releases and betas carry both phone variants: `-libre-` without Google code and
+  `-proprietary-` with Cast. They share the application ID and signing key, so switching keeps
+  your login, settings and downloads (#641).
+- Home: while the server doesn't answer, a banner says so and leads to Downloads, which open and
+  play without it. It goes by itself when the server is back, and stays away in Offline Mode
+  (#281).
+
+### Fixed
+- Phone: an episode's page shows the show's backdrop again (#630).
+
+### Maintenance
+- Gradle 9.9.1 and kotlinx-serialization 1.13.0.
+
 ## [v2.4.5] — 2026-11-12
 
 Mostly player fixes, and many of them are about files the server has to convert: you can now
@@ -973,6 +999,7 @@ Initial CE fork off findroid `1.0.2`. These rapid early iterations established t
 `nl.midasvo.findroid.ce` application ID, downloads and SD-card storage improvements, and ongoing
 tracking of upstream. See the git history between the corresponding tags for commit-level detail.
 
+[v2.5.0]: https://github.com/midasvo/ephyra/releases/tag/v2.5.0
 [v2.4.5]: https://github.com/midasvo/ephyra/releases/tag/v2.4.5
 [v2.4.4]: https://github.com/midasvo/ephyra/releases/tag/v2.4.4
 [v2.4.3]: https://github.com/midasvo/ephyra/releases/tag/v2.4.3
