@@ -2,6 +2,8 @@ name: Format
 
 on:
   push:
+    branches:
+      - main
     paths:
       - '**.kt'
       - '**.kts'
@@ -9,6 +11,11 @@ on:
     paths:
       - '**.kt'
       - '**.kts'
+
+# A newer push to the same PR cancels the older run; on main the group is the sha, so nothing is cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
 
 jobs:
   format:
