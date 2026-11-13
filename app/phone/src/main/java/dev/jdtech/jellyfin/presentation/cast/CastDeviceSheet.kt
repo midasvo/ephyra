@@ -138,8 +138,6 @@ private fun Unavailable(availability: CastAvailability, isOfflineMode: Boolean) 
     SheetBody(
         stringResource(
             when {
-                availability == CastAvailability.INSECURE_SERVER ->
-                    CoreR.string.ce_cast_unavailable_http
                 availability == CastAvailability.NO_PLAY_SERVICES ->
                     CoreR.string.ce_cast_unavailable_play_services
                 isOfflineMode -> CoreR.string.ce_cast_unavailable_offline

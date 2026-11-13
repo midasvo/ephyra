@@ -22,9 +22,6 @@ enum class CastAvailability {
 
     /** Google Play services is missing or too old for the Cast SDK. */
     NO_PLAY_SERVICES,
-
-    /** The receiver cannot load from this server's address. */
-    INSECURE_SERVER,
 }
 
 enum class CastError {

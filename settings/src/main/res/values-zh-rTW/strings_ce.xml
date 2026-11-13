@@ -196,7 +196,7 @@
     <string name="ce_pref_home_episode_images_summary">在「繼續觀看」和「接下來播放」中顯示單集的圖片，而不是影集的圖片</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">投放到電視</string>
-    <string name="ce_pref_cast_enabled_summary">顯示投放按鈕，並在你的網路中尋找 Chromecast 裝置。投放需要透過 HTTPS 連線的伺服器</string>
+    <string name="ce_pref_cast_enabled_summary">顯示投放按鈕，並在你的網路中尋找 Chromecast 裝置</string>
     <string name="ce_pref_cast_max_bitrate">最高位元率</string>
     <string name="ce_pref_cast_max_bitrate_summary">投放時，伺服器會降低超過此數值內容的畫質</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>

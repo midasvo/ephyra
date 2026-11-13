@@ -74,8 +74,6 @@ constructor(
             when {
                 !appPreferences.getValue(appPreferences.castEnabled) -> CastAvailability.DISABLED
                 castContext == null -> CastAvailability.NO_PLAY_SERVICES
-                jellyfinApi.api.baseUrl?.startsWith("https://", ignoreCase = true) != true ->
-                    CastAvailability.INSECURE_SERVER
                 else -> CastAvailability.AVAILABLE
             }
 

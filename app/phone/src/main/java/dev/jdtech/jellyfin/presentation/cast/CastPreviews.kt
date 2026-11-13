@@ -80,7 +80,7 @@ internal object CastPreviews {
             available.copy(discovery = CastDiscovery.DONE),
             connected,
             playing,
-            CastUiState(availability = CastAvailability.INSECURE_SERVER),
+            CastUiState(availability = CastAvailability.NO_PLAY_SERVICES),
         )
 
     val miniStates =

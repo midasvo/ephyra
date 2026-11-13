@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Pausa</string>
     <string name="ce_cast_volume">Volum</string>
     <string name="ce_cast_unavailable_title">L\'emissió no està disponible</string>
-    <string name="ce_cast_unavailable_http">El televisor només pot carregar vídeo des d\'una adreça de servidor que comenci per https://. A aquest servidor s\'hi accedeix per http://.</string>
     <string name="ce_cast_unavailable_play_services">Per emetre calen els Serveis de Google Play, que aquest dispositiu no té o que estan desactualitzats.</string>
     <string name="ce_cast_unavailable_offline">Per emetre cal una connexió amb el servidor.</string>
     <string name="ce_track_default">Per defecte</string>

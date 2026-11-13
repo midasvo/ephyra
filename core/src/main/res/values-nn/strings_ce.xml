@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Pause</string>
     <string name="ce_cast_volume">Volum</string>
     <string name="ce_cast_unavailable_title">Casting er ikkje tilgjengeleg</string>
-    <string name="ce_cast_unavailable_http">TV-en kan berre laste video frå ei tenaradresse som startar med https://. Denne tenaren blir nådd over http://.</string>
     <string name="ce_cast_unavailable_play_services">Casting krev Google Play-tenester, som denne eininga manglar eller som er utdaterte.</string>
     <string name="ce_cast_unavailable_offline">Casting krev tilkopling til tenaren.</string>
     <string name="ce_track_default">Standard</string>

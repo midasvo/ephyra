@@ -141,7 +141,6 @@
     <string name="ce_cast_pause">Pozastavit</string>
     <string name="ce_cast_volume">Hlasitost</string>
     <string name="ce_cast_unavailable_title">Odesílání není dostupné</string>
-    <string name="ce_cast_unavailable_http">Televize umí načíst video jen z adresy serveru, která začíná https://. K tomuto serveru se přistupuje přes http://.</string>
     <string name="ce_cast_unavailable_play_services">Odesílání vyžaduje Služby Google Play, které v tomto zařízení chybí nebo jsou zastaralé.</string>
     <string name="ce_cast_unavailable_offline">Odesílání vyžaduje připojení k serveru.</string>
     <string name="ce_track_default">Výchozí</string>

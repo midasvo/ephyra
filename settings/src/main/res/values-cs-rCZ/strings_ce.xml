@@ -202,7 +202,7 @@
     <string name="ce_pref_home_episode_images_summary">Zobrazit obrázek epizody místo obrázku seriálu v řadách Pokračovat ve sledování a Další</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Odesílat do televize</string>
-    <string name="ce_pref_cast_enabled_summary">Zobrazit tlačítko Odeslat a hledat zařízení Chromecast ve vaší síti. Odesílání vyžaduje server dostupný přes HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Zobrazit tlačítko Odeslat a hledat zařízení Chromecast ve vaší síti</string>
     <string name="ce_pref_cast_max_bitrate">Maximální datový tok</string>
     <string name="ce_pref_cast_max_bitrate_summary">Při odesílání server sníží kvalitu všeho, co ho překračuje</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mb/s</string>

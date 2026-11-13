@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Szünet</string>
     <string name="ce_cast_volume">Hangerő</string>
     <string name="ce_cast_unavailable_title">Az átküldés nem érhető el</string>
-    <string name="ce_cast_unavailable_http">A tévé csak https:// kezdetű szervercímről tud videót betölteni. Ez a szerver http:// címen érhető el.</string>
     <string name="ce_cast_unavailable_play_services">Az átküldéshez Google Play-szolgáltatások szükségesek, amelyek ezen az eszközön hiányoznak vagy elavultak.</string>
     <string name="ce_cast_unavailable_offline">Az átküldéshez kapcsolat szükséges a szerverrel.</string>
     <string name="ce_track_default">Alapértelmezett</string>

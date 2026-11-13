@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Pausar</string>
     <string name="ce_cast_volume">Volume</string>
     <string name="ce_cast_unavailable_title">A transmissão não está disponível</string>
-    <string name="ce_cast_unavailable_http">A TV só consegue carregar vídeo de um endereço de servidor que comece com https://. Este servidor é acessado por http://.</string>
     <string name="ce_cast_unavailable_play_services">A transmissão requer o Google Play Services, que este dispositivo não tem ou que está desatualizado.</string>
     <string name="ce_cast_unavailable_offline">A transmissão requer uma conexão com o servidor.</string>
     <string name="ce_track_default">Padrão</string>

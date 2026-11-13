@@ -141,7 +141,6 @@
     <string name="ce_cast_pause">Pozastaviť</string>
     <string name="ce_cast_volume">Hlasitosť</string>
     <string name="ce_cast_unavailable_title">Prenášanie nie je dostupné</string>
-    <string name="ce_cast_unavailable_http">Televízor dokáže načítať video len z adresy servera, ktorá sa začína na https://. K tomuto serveru sa pristupuje cez http://.</string>
     <string name="ce_cast_unavailable_play_services">Prenášanie vyžaduje Služby Google Play, ktoré v tomto zariadení chýbajú alebo sú zastarané.</string>
     <string name="ce_cast_unavailable_offline">Prenášanie vyžaduje pripojenie k serveru.</string>
     <string name="ce_track_default">Predvolená</string>

@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Пауза</string>
     <string name="ce_cast_volume">Сила на звука</string>
     <string name="ce_cast_unavailable_title">Предаването не е налично</string>
-    <string name="ce_cast_unavailable_http">Телевизорът може да зарежда видео само от адрес на сървър, който започва с https://. Този сървър се достъпва през http://.</string>
     <string name="ce_cast_unavailable_play_services">За предаване са нужни Услуги за Google Play, които липсват на това устройство или са остарели.</string>
     <string name="ce_cast_unavailable_offline">За предаване е нужна връзка със сървъра.</string>
     <string name="ce_track_default">По подразбиране</string>

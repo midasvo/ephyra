@@ -254,7 +254,6 @@
     <string name="ce_cast_pause">Pause</string>
     <string name="ce_cast_volume">Volume</string>
     <string name="ce_cast_unavailable_title">Casting isn\'t available</string>
-    <string name="ce_cast_unavailable_http">The TV can only load video from a server address that starts with https://. This server is reached over http://.</string>
     <string name="ce_cast_unavailable_play_services">Casting needs Google Play services, which this device doesn\'t have or which is out of date.</string>
     <string name="ce_cast_unavailable_offline">Casting needs a connection to the server.</string>
     <!-- CE: Google Cast, labels of a track in the audio and subtitle lists -->

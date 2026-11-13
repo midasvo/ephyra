@@ -497,4 +497,17 @@ class CastPlaybackReporterTest {
 
         assertEquals(listOf(CastReport.Progress(a, 0L, isPaused = true)), status(PAUSED, -1L))
     }
+
+    @Test
+    fun `an item that runs out stops at its end, not at the 0 the receiver shows on the way`() {
+        // Seen on a receiver: at the end of an episode a status update carries position 0 for
+        // the old item, and then the queue moves on.
+        startA()
+        reporter.durationChanged(a, 438_000L)
+        now = 438_000L
+        reporter.positionChanged(a, 438_000L, 438_000L)
+
+        assertEquals(none, status(PLAYING, 0L))
+        assertEquals(listOf(CastReport.Stop(a, 438_000L, 100)), reporter.queueChanged(b))
+    }
 }

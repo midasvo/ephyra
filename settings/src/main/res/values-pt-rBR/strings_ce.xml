@@ -198,7 +198,7 @@
     <string name="ce_pref_home_episode_images_summary">Mostrar a imagem do episódio em vez da imagem da série em Continuar assistindo e A seguir</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Transmitir para uma TV</string>
-    <string name="ce_pref_cast_enabled_summary">Mostrar o botão Transmitir e procurar dispositivos Chromecast na sua rede. A transmissão requer um servidor acessado por HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Mostrar o botão Transmitir e procurar dispositivos Chromecast na sua rede</string>
     <string name="ce_pref_cast_max_bitrate">Taxa de bits máxima</string>
     <string name="ce_pref_cast_max_bitrate_summary">Durante a transmissão, o servidor reduz a qualidade de tudo o que a ultrapassar</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>

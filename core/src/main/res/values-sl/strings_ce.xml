@@ -146,7 +146,6 @@
     <string name="ce_cast_pause">Premor</string>
     <string name="ce_cast_volume">Glasnost</string>
     <string name="ce_cast_unavailable_title">Predvajanje na televizorju ni na voljo</string>
-    <string name="ce_cast_unavailable_http">Televizor lahko naloži video samo z naslova strežnika, ki se začne s https://. Ta strežnik je dosegljiv prek http://.</string>
     <string name="ce_cast_unavailable_play_services">Za predvajanje na televizorju so potrebne Storitve Google Play, ki jih ta naprava nima ali pa so zastarele.</string>
     <string name="ce_cast_unavailable_offline">Za predvajanje na televizorju je potrebna povezava s strežnikom.</string>
     <string name="ce_track_default">Privzeto</string>

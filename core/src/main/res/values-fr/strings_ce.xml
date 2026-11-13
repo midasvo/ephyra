@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Pause</string>
     <string name="ce_cast_volume">Volume</string>
     <string name="ce_cast_unavailable_title">La diffusion n\'est pas disponible</string>
-    <string name="ce_cast_unavailable_http">Le téléviseur ne peut charger la vidéo que depuis une adresse de serveur commençant par https://. Ce serveur est accessible en http://.</string>
     <string name="ce_cast_unavailable_play_services">La diffusion nécessite les services Google Play, absents de cet appareil ou obsolètes.</string>
     <string name="ce_cast_unavailable_offline">La diffusion nécessite une connexion au serveur.</string>
     <string name="ce_track_default">Par défaut</string>

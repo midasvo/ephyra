@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Pausa</string>
     <string name="ce_cast_volume">Volym</string>
     <string name="ce_cast_unavailable_title">Castning är inte tillgängligt</string>
-    <string name="ce_cast_unavailable_http">Tv:n kan bara läsa in video från en serveradress som börjar med https://. Den här servern nås via http://.</string>
     <string name="ce_cast_unavailable_play_services">Castning kräver Google Play-tjänster, som saknas på den här enheten eller är för gamla.</string>
     <string name="ce_cast_unavailable_offline">Castning kräver en anslutning till servern.</string>
     <string name="ce_track_default">Standard</string>

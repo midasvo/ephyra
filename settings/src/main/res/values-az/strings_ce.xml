@@ -198,7 +198,7 @@
     <string name="ce_pref_home_episode_images_summary">\"İzləməyə davam et\" və \"Növbəti\" sıralarında serialın şəkli əvəzinə bölümün şəklini göstər</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Televizora yayımla</string>
-    <string name="ce_pref_cast_enabled_summary">Yayım düyməsini göstər və şəbəkənizdə Chromecast cihazlarını axtar. Yayım üçün HTTPS ilə əlçatan olan server lazımdır</string>
+    <string name="ce_pref_cast_enabled_summary">Yayım düyməsini göstər və şəbəkənizdə Chromecast cihazlarını axtar</string>
     <string name="ce_pref_cast_max_bitrate">Maksimum bitreyt</string>
     <string name="ce_pref_cast_max_bitrate_summary">Yayım zamanı server bundan yuxarı olan hər şeyin keyfiyyətini aşağı salır</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>

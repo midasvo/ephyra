@@ -196,7 +196,7 @@
     <string name="ce_pref_home_episode_images_summary">Tampilkan gambar episode, bukan gambar serial, di Lanjutkan menonton dan Berikutnya</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Transmisikan ke TV</string>
-    <string name="ce_pref_cast_enabled_summary">Tampilkan tombol Transmisi dan cari perangkat Chromecast di jaringan Anda. Transmisi memerlukan server yang diakses melalui HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Tampilkan tombol Transmisi dan cari perangkat Chromecast di jaringan Anda</string>
     <string name="ce_pref_cast_max_bitrate">Bitrate maksimum</string>
     <string name="ce_pref_cast_max_bitrate_summary">Server menurunkan kualitas apa pun yang melebihinya saat mentransmisikan</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>

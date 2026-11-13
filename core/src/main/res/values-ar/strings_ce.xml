@@ -156,7 +156,6 @@
     <string name="ce_cast_pause">إيقاف مؤقت</string>
     <string name="ce_cast_volume">مستوى الصوت</string>
     <string name="ce_cast_unavailable_title">البث غير متاح</string>
-    <string name="ce_cast_unavailable_http">لا يستطيع التلفزيون تحميل الفيديو إلا من عنوان خادم يبدأ بـ https://. يتم الوصول إلى هذا الخادم عبر http://.</string>
     <string name="ce_cast_unavailable_play_services">يتطلب البث خدمات Google Play، وهي غير موجودة على هذا الجهاز أو قديمة.</string>
     <string name="ce_cast_unavailable_offline">يتطلب البث اتصالًا بالخادم.</string>
     <string name="ce_track_default">افتراضي</string>

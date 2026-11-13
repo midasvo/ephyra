@@ -131,7 +131,6 @@
     <string name="ce_cast_pause">一時停止</string>
     <string name="ce_cast_volume">音量</string>
     <string name="ce_cast_unavailable_title">キャストは利用できません</string>
-    <string name="ce_cast_unavailable_http">テレビは https:// で始まるサーバーアドレスからしか動画を読み込めません。このサーバーには http:// で接続しています。</string>
     <string name="ce_cast_unavailable_play_services">キャストには Google Play 開発者サービスが必要ですが、このデバイスにはないか、バージョンが古くなっています。</string>
     <string name="ce_cast_unavailable_offline">キャストにはサーバーへの接続が必要です。</string>
     <string name="ce_track_default">デフォルト</string>

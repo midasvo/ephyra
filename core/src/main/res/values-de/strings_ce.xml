@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Pause</string>
     <string name="ce_cast_volume">Lautstärke</string>
     <string name="ce_cast_unavailable_title">Streamen nicht verfügbar</string>
-    <string name="ce_cast_unavailable_http">Der Fernseher kann Videos nur von einer Serveradresse laden, die mit https:// beginnt. Dieser Server wird über http:// erreicht.</string>
     <string name="ce_cast_unavailable_play_services">Zum Streamen werden die Google Play-Dienste benötigt, die auf diesem Gerät fehlen oder veraltet sind.</string>
     <string name="ce_cast_unavailable_offline">Zum Streamen wird eine Verbindung zum Server benötigt.</string>
     <string name="ce_track_default">Standard</string>

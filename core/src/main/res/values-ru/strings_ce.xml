@@ -146,7 +146,6 @@
     <string name="ce_cast_pause">Пауза</string>
     <string name="ce_cast_volume">Громкость</string>
     <string name="ce_cast_unavailable_title">Трансляция недоступна</string>
-    <string name="ce_cast_unavailable_http">Телевизор может загружать видео только с адреса сервера, который начинается с https://. Этот сервер доступен по http://.</string>
     <string name="ce_cast_unavailable_play_services">Для трансляции нужны сервисы Google Play, которых на этом устройстве нет или которые устарели.</string>
     <string name="ce_cast_unavailable_offline">Для трансляции нужно подключение к серверу.</string>
     <string name="ce_track_default">По умолчанию</string>

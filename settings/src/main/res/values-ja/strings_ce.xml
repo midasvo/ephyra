@@ -196,7 +196,7 @@
     <string name="ce_pref_home_episode_images_summary">「続きを見る」と「次のエピソード」で、シリーズの画像の代わりにエピソードの画像を表示</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">テレビにキャスト</string>
-    <string name="ce_pref_cast_enabled_summary">キャストボタンを表示し、ネットワーク上の Chromecast デバイスを探します。キャストには HTTPS で接続するサーバーが必要です</string>
+    <string name="ce_pref_cast_enabled_summary">キャストボタンを表示し、ネットワーク上の Chromecast デバイスを探します</string>
     <string name="ce_pref_cast_max_bitrate">最大ビットレート</string>
     <string name="ce_pref_cast_max_bitrate_summary">キャスト中、これを超えるものはサーバーが画質を下げます</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>

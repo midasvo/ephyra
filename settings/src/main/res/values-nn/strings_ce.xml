@@ -198,7 +198,7 @@
     <string name="ce_pref_home_episode_images_summary">Vis biletet til episoden i staden for biletet til serien i Hald fram å sjå og Neste</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Cast til ein TV</string>
-    <string name="ce_pref_cast_enabled_summary">Vis Cast-knappen og sjå etter Chromecast-einingar på nettverket ditt. Casting krev ein tenar som blir nådd over HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Vis Cast-knappen og sjå etter Chromecast-einingar på nettverket ditt</string>
     <string name="ce_pref_cast_max_bitrate">Maksimal bitrate</string>
     <string name="ce_pref_cast_max_bitrate_summary">Tenaren senkar kvaliteten på alt som ligg over, medan du castar</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>

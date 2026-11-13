@@ -45,8 +45,8 @@ import timber.log.Timber
  * The property is read again at each step, so a state can be asked for while the app runs:
  * `fake:none` finds no devices, `fake:connectfail` fails to connect, `fake:fail` fails the next
  * play, `fake:error` fails what plays now, `fake:drop` loses the receiver (set `fake` to get it
- * back), `fake:lost` ends the session, `fake:end` runs the item out, `fake:http` is a server the
- * receiver cannot load from. Nothing is reported to the server.
+ * back), `fake:lost` ends the session, `fake:end` runs the item out, `fake:unavailable` is a
+ * device without Google Play services. Nothing is reported to the server.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -99,7 +99,7 @@ internal class FakeCastSessionManager : CastSessionManager {
 
     override val availability: CastAvailability
         get() =
-            if (scenario() == "http") CastAvailability.INSECURE_SERVER
+            if (scenario() == "unavailable") CastAvailability.NO_PLAY_SERVICES
             else CastAvailability.AVAILABLE
 
     private val _connectionState = MutableStateFlow(CastConnectionState.DISCONNECTED)

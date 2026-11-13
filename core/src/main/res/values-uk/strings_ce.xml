@@ -146,7 +146,6 @@
     <string name="ce_cast_pause">Пауза</string>
     <string name="ce_cast_volume">Гучність</string>
     <string name="ce_cast_unavailable_title">Трансляція недоступна</string>
-    <string name="ce_cast_unavailable_http">Телевізор може завантажувати відео лише з адреси сервера, що починається з https://. Цей сервер доступний через http://.</string>
     <string name="ce_cast_unavailable_play_services">Для трансляції потрібні сервіси Google Play, яких на цьому пристрої немає або які застаріли.</string>
     <string name="ce_cast_unavailable_offline">Для трансляції потрібне з\'єднання із сервером.</string>
     <string name="ce_track_default">Типова</string>

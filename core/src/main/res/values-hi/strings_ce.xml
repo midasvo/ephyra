@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">रोकें</string>
     <string name="ce_cast_volume">वॉल्यूम</string>
     <string name="ce_cast_unavailable_title">कास्ट करना उपलब्ध नहीं है</string>
-    <string name="ce_cast_unavailable_http">टीवी सिर्फ़ https:// से शुरू होने वाले सर्वर पते से वीडियो लोड कर सकता है। इस सर्वर तक http:// से पहुंचा जाता है।</string>
     <string name="ce_cast_unavailable_play_services">कास्ट करने के लिए Google Play सेवाएं चाहिए, जो इस डिवाइस में नहीं हैं या पुरानी हो चुकी हैं।</string>
     <string name="ce_cast_unavailable_offline">कास्ट करने के लिए सर्वर से कनेक्शन चाहिए।</string>
     <string name="ce_track_default">डिफ़ॉल्ट</string>

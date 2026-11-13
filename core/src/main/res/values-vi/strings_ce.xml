@@ -131,7 +131,6 @@
     <string name="ce_cast_pause">Tạm dừng</string>
     <string name="ce_cast_volume">Âm lượng</string>
     <string name="ce_cast_unavailable_title">Không truyền được</string>
-    <string name="ce_cast_unavailable_http">TV chỉ tải được video từ địa chỉ máy chủ bắt đầu bằng https://. Máy chủ này được truy cập qua http://.</string>
     <string name="ce_cast_unavailable_play_services">Để truyền cần có Dịch vụ Google Play, nhưng thiết bị này không có hoặc phiên bản đã cũ.</string>
     <string name="ce_cast_unavailable_offline">Để truyền cần có kết nối tới máy chủ.</string>
     <string name="ce_track_default">Mặc định</string>

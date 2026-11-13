@@ -141,7 +141,6 @@
     <string name="ce_cast_pause">Pauză</string>
     <string name="ce_cast_volume">Volum</string>
     <string name="ce_cast_unavailable_title">Proiectarea nu este disponibilă</string>
-    <string name="ce_cast_unavailable_http">Televizorul poate încărca video doar de la o adresă de server care începe cu https://. Acest server este accesat prin http://.</string>
     <string name="ce_cast_unavailable_play_services">Proiectarea necesită Serviciile Google Play, care lipsesc de pe acest dispozitiv sau sunt învechite.</string>
     <string name="ce_cast_unavailable_offline">Proiectarea necesită o conexiune la server.</string>
     <string name="ce_track_default">Implicit</string>

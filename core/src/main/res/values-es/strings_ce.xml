@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Pausar</string>
     <string name="ce_cast_volume">Volumen</string>
     <string name="ce_cast_unavailable_title">El envío de contenido no está disponible</string>
-    <string name="ce_cast_unavailable_http">El televisor solo puede cargar vídeo desde una dirección de servidor que empiece por https://. A este servidor se accede por http://.</string>
     <string name="ce_cast_unavailable_play_services">Para enviar contenido se necesitan los Servicios de Google Play, que este dispositivo no tiene o están desactualizados.</string>
     <string name="ce_cast_unavailable_offline">Para enviar contenido se necesita conexión con el servidor.</string>
     <string name="ce_track_default">Predeterminada</string>

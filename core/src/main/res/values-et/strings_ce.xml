@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Paus</string>
     <string name="ce_cast_volume">Helitugevus</string>
     <string name="ce_cast_unavailable_title">Ülekandmine pole saadaval</string>
-    <string name="ce_cast_unavailable_http">Teler saab videot laadida ainult serveri aadressilt, mis algab https://-ga. Selle serveriga ühendutakse http:// kaudu.</string>
     <string name="ce_cast_unavailable_play_services">Ülekandmiseks on vaja Google Play teenuseid, mis selles seadmes puuduvad või on aegunud.</string>
     <string name="ce_cast_unavailable_offline">Ülekandmiseks on vaja ühendust serveriga.</string>
     <string name="ce_track_default">Vaikimisi</string>

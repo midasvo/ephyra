@@ -198,7 +198,7 @@
     <string name="ce_pref_home_episode_images_summary">Vis episodens billede i stedet for seriens billede i Fortsæt med at se og Næste</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Cast til et tv</string>
-    <string name="ce_pref_cast_enabled_summary">Vis Cast-knappen, og søg efter Chromecast-enheder på dit netværk. Casting kræver en server, der nås via HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Vis Cast-knappen, og søg efter Chromecast-enheder på dit netværk</string>
     <string name="ce_pref_cast_max_bitrate">Maksimal bitrate</string>
     <string name="ce_pref_cast_max_bitrate_summary">Serveren sænker kvaliteten af alt, der ligger over, mens du caster</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>

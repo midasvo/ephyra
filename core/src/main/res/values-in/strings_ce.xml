@@ -131,7 +131,6 @@
     <string name="ce_cast_pause">Jeda</string>
     <string name="ce_cast_volume">Volume</string>
     <string name="ce_cast_unavailable_title">Transmisi tidak tersedia</string>
-    <string name="ce_cast_unavailable_http">TV hanya dapat memuat video dari alamat server yang diawali https://. Server ini diakses melalui http://.</string>
     <string name="ce_cast_unavailable_play_services">Transmisi memerlukan Layanan Google Play, yang tidak ada di perangkat ini atau sudah usang.</string>
     <string name="ce_cast_unavailable_offline">Transmisi memerlukan koneksi ke server.</string>
     <string name="ce_track_default">Default</string>

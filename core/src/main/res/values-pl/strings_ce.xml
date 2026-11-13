@@ -146,7 +146,6 @@
     <string name="ce_cast_pause">Wstrzymaj</string>
     <string name="ce_cast_volume">Głośność</string>
     <string name="ce_cast_unavailable_title">Przesyłanie jest niedostępne</string>
-    <string name="ce_cast_unavailable_http">Telewizor może wczytać wideo tylko z adresu serwera zaczynającego się od https://. Z tym serwerem łączysz się przez http://.</string>
     <string name="ce_cast_unavailable_play_services">Przesyłanie wymaga Usług Google Play, których to urządzenie nie ma lub które są nieaktualne.</string>
     <string name="ce_cast_unavailable_offline">Przesyłanie wymaga połączenia z serwerem.</string>
     <string name="ce_track_default">Domyślna</string>

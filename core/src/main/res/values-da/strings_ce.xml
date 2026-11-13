@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Pause</string>
     <string name="ce_cast_volume">Lydstyrke</string>
     <string name="ce_cast_unavailable_title">Casting er ikke tilgængelig</string>
-    <string name="ce_cast_unavailable_http">Tv\'et kan kun indlæse video fra en serveradresse, der starter med https://. Denne server nås via http://.</string>
     <string name="ce_cast_unavailable_play_services">Casting kræver Google Play-tjenester, som denne enhed ikke har, eller som er forældede.</string>
     <string name="ce_cast_unavailable_offline">Casting kræver forbindelse til serveren.</string>
     <string name="ce_track_default">Standard</string>

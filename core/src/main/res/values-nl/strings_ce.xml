@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Pauzeren</string>
     <string name="ce_cast_volume">Volume</string>
     <string name="ce_cast_unavailable_title">Casten is niet beschikbaar</string>
-    <string name="ce_cast_unavailable_http">De tv kan alleen video laden van een serveradres dat met https:// begint. Deze server wordt via http:// bereikt.</string>
     <string name="ce_cast_unavailable_play_services">Voor casten zijn Google Play-services nodig, die op dit apparaat ontbreken of verouderd zijn.</string>
     <string name="ce_cast_unavailable_offline">Voor casten is een verbinding met de server nodig.</string>
     <string name="ce_track_default">Standaard</string>

@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">השהיה</string>
     <string name="ce_cast_volume">עוצמת קול</string>
     <string name="ce_cast_unavailable_title">העברה לטלוויזיה אינה זמינה</string>
-    <string name="ce_cast_unavailable_http">הטלוויזיה יכולה לטעון וידאו רק מכתובת שרת שמתחילה ב-https://. הגישה לשרת הזה היא דרך http://.</string>
     <string name="ce_cast_unavailable_play_services">כדי להעביר לטלוויזיה נדרשים שירותי Google Play, שחסרים במכשיר הזה או שאינם מעודכנים.</string>
     <string name="ce_cast_unavailable_offline">כדי להעביר לטלוויזיה נדרש חיבור לשרת.</string>
     <string name="ce_track_default">ברירת מחדל</string>

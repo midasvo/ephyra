@@ -202,7 +202,7 @@
     <string name="ce_pref_home_episode_images_summary">Показувати зображення серії замість зображення серіалу в «Продовжити перегляд» і «Далі»</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Трансляція на телевізор</string>
-    <string name="ce_pref_cast_enabled_summary">Показувати кнопку трансляції та шукати пристрої Chromecast у вашій мережі. Для трансляції потрібен сервер, доступний через HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Показувати кнопку трансляції та шукати пристрої Chromecast у вашій мережі</string>
     <string name="ce_pref_cast_max_bitrate">Максимальний бітрейт</string>
     <string name="ce_pref_cast_max_bitrate_summary">Під час трансляції сервер знижує якість усього, що його перевищує</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Мбіт/с</string>

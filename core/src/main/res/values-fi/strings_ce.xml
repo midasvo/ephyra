@@ -136,7 +136,6 @@
     <string name="ce_cast_pause">Tauko</string>
     <string name="ce_cast_volume">Äänenvoimakkuus</string>
     <string name="ce_cast_unavailable_title">Lähettäminen ei ole käytettävissä</string>
-    <string name="ce_cast_unavailable_http">Televisio voi ladata videota vain palvelinosoitteesta, joka alkaa https://. Tähän palvelimeen yhdistetään http://-osoitteella.</string>
     <string name="ce_cast_unavailable_play_services">Lähettäminen vaatii Google Play Palvelut, joita tässä laitteessa ei ole tai jotka ovat vanhentuneet.</string>
     <string name="ce_cast_unavailable_offline">Lähettäminen vaatii yhteyden palvelimeen.</string>
     <string name="ce_track_default">Oletus</string>

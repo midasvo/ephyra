@@ -131,7 +131,6 @@
     <string name="ce_cast_pause">Fasilə</string>
     <string name="ce_cast_volume">Səs səviyyəsi</string>
     <string name="ce_cast_unavailable_title">Yayım əlçatan deyil</string>
-    <string name="ce_cast_unavailable_http">Televizor videonu yalnız https:// ilə başlayan server ünvanından yükləyə bilir. Bu serverə http:// ilə qoşulunur.</string>
     <string name="ce_cast_unavailable_play_services">Yayım üçün Google Play xidmətləri lazımdır, bu cihazda isə onlar yoxdur və ya köhnəlib.</string>
     <string name="ce_cast_unavailable_offline">Yayım üçün serverlə bağlantı lazımdır.</string>
     <string name="ce_track_default">Standart</string>

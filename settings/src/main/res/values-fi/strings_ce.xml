@@ -198,7 +198,7 @@
     <string name="ce_pref_home_episode_images_summary">Näytä jakson kuva sarjan kuvan sijaan riveillä Jatka katsomista ja Seuraavaksi</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Lähetä televisioon</string>
-    <string name="ce_pref_cast_enabled_summary">Näytä lähetyspainike ja etsi Chromecast-laitteita verkostasi. Lähettäminen vaatii palvelimen, johon yhdistetään HTTPS:llä</string>
+    <string name="ce_pref_cast_enabled_summary">Näytä lähetyspainike ja etsi Chromecast-laitteita verkostasi</string>
     <string name="ce_pref_cast_max_bitrate">Enimmäisbittinopeus</string>
     <string name="ce_pref_cast_max_bitrate_summary">Palvelin laskee tätä suuremman sisällön laatua lähetyksen aikana</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>

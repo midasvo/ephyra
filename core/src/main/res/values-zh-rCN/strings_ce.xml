@@ -131,7 +131,6 @@
     <string name="ce_cast_pause">暂停</string>
     <string name="ce_cast_volume">音量</string>
     <string name="ce_cast_unavailable_title">无法使用投放</string>
-    <string name="ce_cast_unavailable_http">电视只能从以 https:// 开头的服务器地址加载视频。此服务器是通过 http:// 访问的。</string>
     <string name="ce_cast_unavailable_play_services">投放需要 Google Play 服务，但此设备没有该服务或版本已过期。</string>
     <string name="ce_cast_unavailable_offline">投放需要连接到服务器。</string>
     <string name="ce_track_default">默认</string>
