@@ -33,6 +33,7 @@ import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import java.io.File
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -75,6 +76,27 @@ class JellyfinRepositoryImpl(
     private val syncRequester: UserDataSyncRequester = UserDataSyncRequester.NONE,
 ) : JellyfinRepository {
     private val playSessions = PlaySessions()
+
+    private val resumeThresholds = ResumeThresholdsStore(appPreferences.sharedPreferences)
+
+    private fun currentServerId(): String? = appPreferences.getValue(appPreferences.currentServer)
+
+    /**
+     * CE (#637): reads the server's resume settings once per app run, so stops here and offline
+     * follow them. A failure keeps the last ones read, or Jellyfin's defaults.
+     */
+    private suspend fun readResumeThresholds() {
+        val serverId = currentServerId() ?: return
+        if (resumeThresholds.isFresh(serverId)) return
+        try {
+            val configuration = jellyfinApi.systemApi.getConfiguration().content
+            resumeThresholds.put(serverId, ResumeThresholds.of(configuration))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Could not read the server's resume settings")
+        }
+    }
 
     private val currentUserId: UUID
         get() =
@@ -778,6 +800,8 @@ class JellyfinRepositoryImpl(
         val report = playSessions.playReport(itemId, transcoded)
         Timber.d("Sending start $itemId, ${report.playMethod}")
         withContext(Dispatchers.IO) {
+            // CE (#637): before the stop of this item needs them.
+            readResumeThresholds()
             jellyfinApi.sessionApi.reportPlaybackStart(
                 PlaybackStartInfo(
                     itemId = itemId,
@@ -800,10 +824,18 @@ class JellyfinRepositoryImpl(
     ) {
         Timber.d("Sending stop $itemId")
         withContext(Dispatchers.IO) {
-            val userData = stopUserData(positionTicks, playedPercentage)
+            // CE (#637): the server applies its resume settings to this stop; the local copy
+            // follows them.
+            val userData =
+                stopUserData(
+                    positionTicks,
+                    playedPercentage,
+                    runtimeTicks = database.getRuntimeTicks(itemId),
+                    thresholds = resumeThresholds.get(currentServerId()),
+                )
             if (userData != null) {
                 database.setPlaybackPositionTicks(itemId, currentUserId, userData.positionTicks)
-                database.setPlayed(currentUserId, itemId, userData.played)
+                userData.played?.let { database.setPlayed(currentUserId, itemId, it) }
                 // CE (#633): sent along if this stop has to be synced later.
                 database.setLastPlayedDate(currentUserId, itemId, System.currentTimeMillis())
             }

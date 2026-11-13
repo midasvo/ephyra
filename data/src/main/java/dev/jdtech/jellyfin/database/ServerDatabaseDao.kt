@@ -227,6 +227,13 @@ interface ServerDatabaseDao {
     @Query("DELETE FROM mediastreams WHERE sourceId = :sourceId")
     suspend fun deleteMediaStreamsBySourceId(sourceId: String)
 
+    /** CE (#637): the server's runtime of a downloaded movie or episode; null when not stored. */
+    @Query(
+        "SELECT runtimeTicks FROM movies WHERE id = :itemId " +
+            "UNION ALL SELECT runtimeTicks FROM episodes WHERE id = :itemId LIMIT 1"
+    )
+    suspend fun getRuntimeTicks(itemId: UUID): Long?
+
     @Query("UPDATE userdata SET played = :played WHERE userId = :userId AND itemId = :itemId")
     suspend fun setPlayed(userId: UUID, itemId: UUID, played: Boolean)
 
