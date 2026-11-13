@@ -198,9 +198,11 @@
     <string name="ce_pref_home_episode_images_summary">Показване на изображението на епизода вместо това на сериала в „Продължете гледането“ и „Следващо“</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Предаване към телевизор</string>
-    <string name="ce_pref_cast_enabled_summary">Търсене на устройства с Chromecast във вашата мрежа. За предаване е нужен сървър, достъпен през HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Показване на бутона за предаване и търсене на устройства с Chromecast във вашата мрежа. За предаване е нужен сървър, достъпен през HTTPS</string>
     <string name="ce_pref_cast_max_bitrate">Максимален битрейт</string>
     <string name="ce_pref_cast_max_bitrate_summary">Докато предавате, сървърът намалява качеството на всичко над тази стойност</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">Телевизорът възпроизвежда HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Изпращане на HEVC (H.265) видео без промяна, вместо да се преобразува в H.264. 4K Chromecast го получава автоматично; включете за друг телевизор или приставка, които възпроизвеждат HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Показване на изображението на епизода вместо това на сериала в „Продължете гледането“, „Следващо“ и в горната част на страницата на епизода</string>
 </resources>

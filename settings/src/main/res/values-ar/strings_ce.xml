@@ -206,9 +206,11 @@
     <string name="ce_pref_home_episode_images_summary">عرض صورة الحلقة بدلًا من صورة المسلسل في «متابعة المشاهدة» و«التالي»</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">البث إلى تلفزيون</string>
-    <string name="ce_pref_cast_enabled_summary">البحث عن أجهزة Chromecast على شبكتك. يتطلب البث خادمًا يمكن الوصول إليه عبر HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">إظهار زر البث والبحث عن أجهزة Chromecast على شبكتك. يتطلب البث خادمًا يمكن الوصول إليه عبر HTTPS</string>
     <string name="ce_pref_cast_max_bitrate">أقصى معدل بت</string>
     <string name="ce_pref_cast_max_bitrate_summary">يخفّض الخادم جودة كل ما يتجاوزه أثناء البث</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">التلفزيون يشغّل HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">إرسال فيديو HEVC (H.265) كما هو بدلًا من تحويله إلى H.264. يحصل Chromecast 4K على ذلك تلقائيًا؛ فعّله لتلفزيون أو جهاز آخر يشغّل HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">عرض صورة الحلقة بدلًا من صورة المسلسل في «متابعة المشاهدة» و«التالي» وأعلى صفحة الحلقة</string>
 </resources>

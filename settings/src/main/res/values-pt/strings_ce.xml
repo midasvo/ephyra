@@ -198,9 +198,11 @@
     <string name="ce_pref_home_episode_images_summary">Mostrar a imagem do episódio em vez da imagem da série em Continuar a ver e A seguir</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Transmitir para uma TV</string>
-    <string name="ce_pref_cast_enabled_summary">Procurar dispositivos Chromecast na sua rede. A transmissão requer um servidor acedido por HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Mostrar o botão Transmitir e procurar dispositivos Chromecast na sua rede. A transmissão requer um servidor acedido por HTTPS</string>
     <string name="ce_pref_cast_max_bitrate">Taxa de bits máxima</string>
     <string name="ce_pref_cast_max_bitrate_summary">Durante a transmissão, o servidor reduz a qualidade de tudo o que a ultrapasse</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">A TV reproduz HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Enviar o vídeo HEVC (H.265) tal como está em vez de o converter para H.264. Um Chromecast 4K recebe-o assim automaticamente; ative para outra TV ou box que reproduza HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Mostrar a imagem do episódio em vez da imagem da série em Continuar a ver, em A seguir e no topo da página do episódio</string>
 </resources>

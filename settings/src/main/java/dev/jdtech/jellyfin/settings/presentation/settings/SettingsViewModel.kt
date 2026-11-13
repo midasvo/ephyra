@@ -1004,6 +1004,17 @@ class SettingsViewModel @Inject constructor(
                                                         R.string.ce_pref_cast_max_bitrate_suffix,
                                                     zeroLabelRes = R.string.ce_number_no_limit,
                                                 ),
+                                                PreferenceSwitch(
+                                                    nameStringResource =
+                                                        R.string.ce_pref_cast_hevc,
+                                                    descriptionStringRes =
+                                                        R.string.ce_pref_cast_hevc_summary,
+                                                    dependencies =
+                                                        listOf(appPreferences.castEnabled),
+                                                    supportedDeviceTypes = castDeviceTypes,
+                                                    backendPreference =
+                                                        appPreferences.castReceiverHevc,
+                                                ),
                                             ),
                                     ),
                                     PreferenceGroup(

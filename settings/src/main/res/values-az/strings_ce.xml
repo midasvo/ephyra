@@ -198,9 +198,11 @@
     <string name="ce_pref_home_episode_images_summary">\"İzləməyə davam et\" və \"Növbəti\" sıralarında serialın şəkli əvəzinə bölümün şəklini göstər</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Televizora yayımla</string>
-    <string name="ce_pref_cast_enabled_summary">Şəbəkənizdə Chromecast cihazlarını axtar. Yayım üçün HTTPS ilə əlçatan olan server lazımdır</string>
+    <string name="ce_pref_cast_enabled_summary">Yayım düyməsini göstər və şəbəkənizdə Chromecast cihazlarını axtar. Yayım üçün HTTPS ilə əlçatan olan server lazımdır</string>
     <string name="ce_pref_cast_max_bitrate">Maksimum bitreyt</string>
     <string name="ce_pref_cast_max_bitrate_summary">Yayım zamanı server bundan yuxarı olan hər şeyin keyfiyyətini aşağı salır</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">Televizor HEVC oynadır</string>
+    <string name="ce_pref_cast_hevc_summary">HEVC (H.265) videonu H.264 formatına çevirmək əvəzinə olduğu kimi göndər. 4K Chromecast bunu özü alır; HEVC oynadan başqa televizor və ya qurğu üçün yandırın</string>
     <string name="ce_pref_home_episode_images_summary_phone">\"İzləməyə davam et\" və \"Növbəti\" sıralarında və bölüm səhifəsinin yuxarısında serialın şəkli əvəzinə bölümün şəklini göstər</string>
 </resources>

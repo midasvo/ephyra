@@ -1,11 +1,17 @@
 package dev.jdtech.jellyfin.player.cast
 
+import dev.jdtech.jellyfin.player.cast.models.CastAvailability
 import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
 import dev.jdtech.jellyfin.player.cast.models.Device
 import kotlinx.coroutines.flow.StateFlow
 
 interface CastSessionManager {
+    /** Read again whenever it is shown: it follows the settings and the current server. */
+    val availability: CastAvailability
+
     val isSupported: Boolean
+        get() = availability == CastAvailability.AVAILABLE
+
     val connectionState: StateFlow<CastConnectionState>
     val availableDevices: StateFlow<List<Device>>
     val connectedDevice: StateFlow<Device?>

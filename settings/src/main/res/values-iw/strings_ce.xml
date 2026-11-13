@@ -200,9 +200,11 @@
     <string name="ce_pref_home_episode_images_summary">הצגת תמונת הפרק במקום תמונת הסדרה ב\"המשך צפייה\" וב\"הבא בתור\"</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">הפעלה בטלוויזיה (Cast)</string>
-    <string name="ce_pref_cast_enabled_summary">חיפוש מכשירי Chromecast ברשת שלך. כדי להעביר לטלוויזיה נדרש שרת שהגישה אליו היא דרך HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">הצגת לחצן ה-Cast וחיפוש מכשירי Chromecast ברשת שלך. כדי להעביר לטלוויזיה נדרש שרת שהגישה אליו היא דרך HTTPS</string>
     <string name="ce_pref_cast_max_bitrate">קצב סיביות מרבי</string>
     <string name="ce_pref_cast_max_bitrate_summary">בזמן ההעברה לטלוויזיה השרת מוריד את האיכות של כל מה שמעל הקצב הזה</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">הטלוויזיה מפעילה HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">שליחת וידאו HEVC (H.265) כמו שהוא במקום להמיר אותו ל-H.264. ‏Chromecast 4K מקבל זאת אוטומטית; יש להפעיל עבור טלוויזיה או ממיר אחרים שמפעילים HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">הצגת תמונת הפרק במקום תמונת הסדרה ב\"המשך צפייה\", ב\"הבא בתור\" ובראש דף הפרק</string>
 </resources>

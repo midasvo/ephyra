@@ -202,9 +202,11 @@
     <string name="ce_pref_home_episode_images_summary">Zobraziť obrázok epizódy namiesto obrázka seriálu v radoch Pokračovať v sledovaní a Ďalšie</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Prenášať do televízora</string>
-    <string name="ce_pref_cast_enabled_summary">Hľadať zariadenia Chromecast vo vašej sieti. Prenášanie vyžaduje server dostupný cez HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Zobraziť tlačidlo Prenášať a hľadať zariadenia Chromecast vo vašej sieti. Prenášanie vyžaduje server dostupný cez HTTPS</string>
     <string name="ce_pref_cast_max_bitrate">Maximálny dátový tok</string>
     <string name="ce_pref_cast_max_bitrate_summary">Pri prenášaní server zníži kvalitu všetkého, čo ho prekračuje</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mb/s</string>
+    <string name="ce_pref_cast_hevc">Televízor prehráva HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Posielať video HEVC (H.265) bez zmeny namiesto konverzie na H.264. Chromecast 4K ho tak dostáva automaticky; zapnite pre iný televízor alebo box, ktoré HEVC prehrajú</string>
     <string name="ce_pref_home_episode_images_summary_phone">Zobraziť obrázok epizódy namiesto obrázka seriálu v radoch Pokračovať v sledovaní a Ďalšie a v hornej časti stránky epizódy</string>
 </resources>

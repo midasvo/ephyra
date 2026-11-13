@@ -198,9 +198,11 @@
     <string name="ce_pref_home_episode_images_summary">देखना जारी रखें और आगे देखें में सीरीज़ की छवि की जगह एपिसोड की छवि दिखाएँ</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">टीवी पर कास्ट करें</string>
-    <string name="ce_pref_cast_enabled_summary">अपने नेटवर्क पर Chromecast डिवाइस खोजें। कास्ट करने के लिए ऐसा सर्वर चाहिए जिस तक HTTPS से पहुंचा जाता हो</string>
+    <string name="ce_pref_cast_enabled_summary">कास्ट बटन दिखाएं और अपने नेटवर्क पर Chromecast डिवाइस खोजें। कास्ट करने के लिए ऐसा सर्वर चाहिए जिस तक HTTPS से पहुंचा जाता हो</string>
     <string name="ce_pref_cast_max_bitrate">अधिकतम बिटरेट</string>
     <string name="ce_pref_cast_max_bitrate_summary">कास्ट करते समय सर्वर इससे ज़्यादा बिटरेट वाली हर चीज़ की क्वालिटी घटा देता है</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">टीवी HEVC चलाता है</string>
+    <string name="ce_pref_cast_hevc_summary">HEVC (H.265) वीडियो को H.264 में बदलने के बजाय जैसा है वैसा भेजें। 4K Chromecast को यह अपने आप मिलता है; HEVC चलाने वाले किसी दूसरे टीवी या बॉक्स के लिए इसे चालू करें</string>
     <string name="ce_pref_home_episode_images_summary_phone">देखना जारी रखें और आगे देखें में, और एपिसोड के पेज के ऊपर, सीरीज़ की छवि की जगह एपिसोड की छवि दिखाएँ</string>
 </resources>

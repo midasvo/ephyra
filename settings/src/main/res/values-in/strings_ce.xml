@@ -196,9 +196,11 @@
     <string name="ce_pref_home_episode_images_summary">Tampilkan gambar episode, bukan gambar serial, di Lanjutkan menonton dan Berikutnya</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Transmisikan ke TV</string>
-    <string name="ce_pref_cast_enabled_summary">Cari perangkat Chromecast di jaringan Anda. Transmisi memerlukan server yang diakses melalui HTTPS</string>
+    <string name="ce_pref_cast_enabled_summary">Tampilkan tombol Transmisi dan cari perangkat Chromecast di jaringan Anda. Transmisi memerlukan server yang diakses melalui HTTPS</string>
     <string name="ce_pref_cast_max_bitrate">Bitrate maksimum</string>
     <string name="ce_pref_cast_max_bitrate_summary">Server menurunkan kualitas apa pun yang melebihinya saat mentransmisikan</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">TV dapat memutar HEVC</string>
+    <string name="ce_pref_cast_hevc_summary">Kirim video HEVC (H.265) apa adanya, bukan mengonversinya ke H.264. Chromecast 4K mendapatkannya secara otomatis; aktifkan untuk TV atau box lain yang dapat memutar HEVC</string>
     <string name="ce_pref_home_episode_images_summary_phone">Tampilkan gambar episode, bukan gambar serial, di Lanjutkan menonton, di Berikutnya, dan di bagian atas halaman episode</string>
 </resources>

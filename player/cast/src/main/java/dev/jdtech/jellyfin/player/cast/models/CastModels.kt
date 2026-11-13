@@ -10,6 +10,23 @@ enum class CastConnectionState {
     CONNECTED,
 }
 
+/** Whether casting can be offered at all, and if not, why: the device sheet says so. */
+enum class CastAvailability {
+    AVAILABLE,
+
+    /** A build without the Cast SDK (the `libre` flavor): Cast is not shown anywhere. */
+    NOT_IN_BUILD,
+
+    /** Turned off in the settings: Cast is not shown anywhere. */
+    DISABLED,
+
+    /** Google Play services is missing or too old for the Cast SDK. */
+    NO_PLAY_SERVICES,
+
+    /** The receiver cannot load from this server's address. */
+    INSECURE_SERVER,
+}
+
 enum class CastError {
     PLAYBACK_FAILED
 }

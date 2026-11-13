@@ -1,5 +1,6 @@
 package dev.jdtech.jellyfin.player.cast
 
+import dev.jdtech.jellyfin.player.cast.models.CastAvailability
 import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
 import dev.jdtech.jellyfin.player.cast.models.Device
 import javax.inject.Inject
@@ -10,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 @Singleton
 class CastSessionManagerImpl @Inject constructor() : CastSessionManager {
-    override val isSupported = false
+    override val availability = CastAvailability.NOT_IN_BUILD
 
     private val _connectionState = MutableStateFlow(CastConnectionState.DISCONNECTED)
     override val connectionState: StateFlow<CastConnectionState> = _connectionState.asStateFlow()

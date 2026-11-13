@@ -196,9 +196,11 @@
     <string name="ce_pref_home_episode_images_summary">「続きを見る」と「次のエピソード」で、シリーズの画像の代わりにエピソードの画像を表示</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">テレビにキャスト</string>
-    <string name="ce_pref_cast_enabled_summary">ネットワーク上の Chromecast デバイスを探します。キャストには HTTPS で接続するサーバーが必要です</string>
+    <string name="ce_pref_cast_enabled_summary">キャストボタンを表示し、ネットワーク上の Chromecast デバイスを探します。キャストには HTTPS で接続するサーバーが必要です</string>
     <string name="ce_pref_cast_max_bitrate">最大ビットレート</string>
     <string name="ce_pref_cast_max_bitrate_summary">キャスト中、これを超えるものはサーバーが画質を下げます</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbps</string>
+    <string name="ce_pref_cast_hevc">テレビが HEVC を再生できる</string>
+    <string name="ce_pref_cast_hevc_summary">HEVC（H.265）動画を H.264 に変換せず、そのまま送信します。4K 対応の Chromecast では自動的にそうなります。HEVC を再生できる他のテレビやボックスではオンにしてください</string>
     <string name="ce_pref_home_episode_images_summary_phone">「続きを見る」と「次のエピソード」、およびエピソードページの上部で、シリーズの画像の代わりにエピソードの画像を表示</string>
 </resources>

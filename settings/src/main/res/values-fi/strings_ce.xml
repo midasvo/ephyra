@@ -198,9 +198,11 @@
     <string name="ce_pref_home_episode_images_summary">Näytä jakson kuva sarjan kuvan sijaan riveillä Jatka katsomista ja Seuraavaksi</string>
     <string name="ce_pref_cast_group">Chromecast</string>
     <string name="ce_pref_cast_enabled">Lähetä televisioon</string>
-    <string name="ce_pref_cast_enabled_summary">Etsi Chromecast-laitteita verkostasi. Lähettäminen vaatii palvelimen, johon yhdistetään HTTPS:llä</string>
+    <string name="ce_pref_cast_enabled_summary">Näytä lähetyspainike ja etsi Chromecast-laitteita verkostasi. Lähettäminen vaatii palvelimen, johon yhdistetään HTTPS:llä</string>
     <string name="ce_pref_cast_max_bitrate">Enimmäisbittinopeus</string>
     <string name="ce_pref_cast_max_bitrate_summary">Palvelin laskee tätä suuremman sisällön laatua lähetyksen aikana</string>
     <string name="ce_pref_cast_max_bitrate_suffix">Mbit/s</string>
+    <string name="ce_pref_cast_hevc">Televisio toistaa HEVC:tä</string>
+    <string name="ce_pref_cast_hevc_summary">Lähetä HEVC (H.265) -video sellaisenaan sen sijaan, että se muunnettaisiin H.264:ksi. 4K-Chromecast saa sen automaattisesti; ota käyttöön muulle televisiolle tai laitteelle, joka toistaa HEVC:tä</string>
     <string name="ce_pref_home_episode_images_summary_phone">Näytä jakson kuva sarjan kuvan sijaan riveillä Jatka katsomista ja Seuraavaksi sekä jakson sivun yläosassa</string>
 </resources>
