@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.recalculateWindowInsets
 import androidx.compose.foundation.layout.statusBars
@@ -54,7 +53,7 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.EmptyState
-import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
+import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.ItemCard
 import dev.jdtech.jellyfin.presentation.film.components.SortByDialog
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
@@ -152,7 +151,7 @@ private fun LibraryScreenLayout(
             ErrorGroup(
                 loadStates = items.loadState,
                 onRefresh = { items.refresh() },
-                modifier = Modifier.fillMaxWidth().padding(contentPadding + innerPadding),
+                modifier = Modifier.padding(contentPadding + innerPadding),
             )
             Box(modifier = Modifier.fillMaxSize()) {
                 LazyVerticalGrid(
@@ -253,13 +252,14 @@ private fun ErrorGroup(
             else -> null
         }
 
+    // CE (#281): the unreachable banner while the server does not answer, also with no failed load.
+    ServerOrErrorCard(
+        error = loadStateError?.error,
+        onShowStacktrace = { showErrorDialog = true },
+        onRetryClick = onRefresh,
+        modifier = modifier,
+    )
     loadStateError?.let {
-        ErrorCard(
-            onShowStacktrace = { showErrorDialog = true },
-            onRetryClick = onRefresh,
-            modifier = modifier,
-            error = it.error,
-        )
         if (showErrorDialog) {
             ErrorDialog(
                 exception = it.error,

@@ -143,4 +143,5 @@
     <string name="ce_track_original">Original</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Spor %1$d</string>
+    <string name="ce_server_unreachable_downloads">Dine downloads kan stadig afspilles.</string>
 </resources>

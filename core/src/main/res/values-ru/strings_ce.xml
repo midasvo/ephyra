@@ -153,4 +153,5 @@
     <string name="ce_track_original">Оригинал</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Дорожка %1$d</string>
+    <string name="ce_server_unreachable_downloads">Загруженное по-прежнему можно смотреть.</string>
 </resources>

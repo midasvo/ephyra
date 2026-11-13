@@ -153,4 +153,5 @@
     <string name="ce_track_original">Oryginalna</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Ścieżka %1$d</string>
+    <string name="ce_server_unreachable_downloads">Pobrane materiały nadal można odtwarzać.</string>
 </resources>

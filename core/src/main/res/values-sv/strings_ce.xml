@@ -143,4 +143,5 @@
     <string name="ce_track_original">Original</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Spår %1$d</string>
+    <string name="ce_server_unreachable_downloads">Dina nedladdningar går fortfarande att spela upp.</string>
 </resources>

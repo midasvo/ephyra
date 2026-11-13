@@ -138,4 +138,5 @@
     <string name="ce_track_original">原版</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">轨道 %1$d</string>
+    <string name="ce_server_unreachable_downloads">已下载的内容仍可播放。</string>
 </resources>

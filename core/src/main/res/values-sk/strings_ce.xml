@@ -148,4 +148,5 @@
     <string name="ce_track_original">Pôvodná</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Stopa %1$d</string>
+    <string name="ce_server_unreachable_downloads">Stiahnutý obsah sa dá stále prehrávať.</string>
 </resources>

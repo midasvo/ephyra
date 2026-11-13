@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -52,7 +51,6 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.HomeItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.film.components.EmptyState
-import dev.jdtech.jellyfin.presentation.film.components.ErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCardInitialHeight
 import dev.jdtech.jellyfin.presentation.film.components.ErrorState
 import dev.jdtech.jellyfin.presentation.film.components.HomeCarousel
@@ -60,7 +58,9 @@ import dev.jdtech.jellyfin.presentation.film.components.HomeHeader
 import dev.jdtech.jellyfin.presentation.film.components.HomeSection
 import dev.jdtech.jellyfin.presentation.film.components.HomeView
 import dev.jdtech.jellyfin.presentation.film.components.ProfileBottomSheet
+import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.ServerSelectionBottomSheet
+import dev.jdtech.jellyfin.presentation.film.components.showsServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.TopContentScrim
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -134,7 +134,12 @@ internal fun HomeScreenLayout(
     // #392: a failed load with rows on screen says so in a card under the header, as My media and
     // Library do, so the header keeps its width and the server name its room. With nothing on
     // screen the list shows ErrorState instead.
-    val showErrorCard = state.error != null && !state.isEmpty
+    // CE (#281): while the server does not answer, the card is the unreachable banner, also with
+    // no failed load at all. A Home with nothing on it and a failed load shows ErrorState, which
+    // says the same, so the banner leaves that to it.
+    val showErrorState = state.isEmpty && !state.isLoading && state.error != null
+    val cardError = state.error.takeIf { !state.isEmpty }
+    val showErrorCard = !showErrorState && showsServerOrErrorCard(cardError)
     // CE (#571): the rows start under the card at its real height, which is more than one row with
     // a large font or with the "Allow access" button.
     val density = LocalDensity.current
@@ -253,18 +258,17 @@ internal fun HomeScreenLayout(
         }
 
         if (showErrorCard) {
-            ErrorCard(
+            ServerOrErrorCard(
+                error = cardError,
                 onShowStacktrace = { showErrorDialog = true },
                 onRetryClick = { onAction(HomeAction.OnRetryClick) },
                 modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(
+                    Modifier.padding(
                             start = paddingStart,
                             top = safePadding.top + 80.dp,
                             end = paddingEnd,
                         )
                         .onSizeChanged { errorCardHeight = with(density) { it.height.toDp() } },
-                error = state.error,
             )
         }
 

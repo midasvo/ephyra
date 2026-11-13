@@ -143,4 +143,5 @@
     <string name="ce_track_original">Originale</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Traccia %1$d</string>
+    <string name="ce_server_unreachable_downloads">I tuoi download si possono ancora riprodurre.</string>
 </resources>

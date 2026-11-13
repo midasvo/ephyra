@@ -143,4 +143,5 @@
     <string name="ce_track_original">Alkuperäinen</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Raita %1$d</string>
+    <string name="ce_server_unreachable_downloads">Latauksesi ovat edelleen toistettavissa.</string>
 </resources>

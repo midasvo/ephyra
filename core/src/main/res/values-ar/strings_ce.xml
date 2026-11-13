@@ -163,4 +163,5 @@
     <string name="ce_track_original">أصلي</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">المسار %1$d</string>
+    <string name="ce_server_unreachable_downloads">ما زال بإمكانك تشغيل تنزيلاتك.</string>
 </resources>

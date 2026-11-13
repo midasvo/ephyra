@@ -138,4 +138,5 @@
     <string name="ce_track_original">Asli</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Trek %1$d</string>
+    <string name="ce_server_unreachable_downloads">Unduhan Anda masih bisa diputar.</string>
 </resources>

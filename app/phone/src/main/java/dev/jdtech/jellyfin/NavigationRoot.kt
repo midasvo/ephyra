@@ -10,6 +10,7 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.material3.adaptive.navigationsuite.rememberNavigationSuiteScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -81,6 +82,7 @@ import dev.jdtech.jellyfin.presentation.setup.servers.ServersScreen
 import dev.jdtech.jellyfin.presentation.setup.users.UsersScreen
 import dev.jdtech.jellyfin.presentation.setup.welcome.WelcomeScreen
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
+import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
 import dev.jdtech.jellyfin.presentation.utils.useDockedSearch
 import dev.jdtech.jellyfin.setup.presentation.permission.PermissionAction
 import dev.jdtech.jellyfin.setup.presentation.permission.PermissionViewModel
@@ -490,20 +492,33 @@ private fun MainNavigation(
         layoutType = customNavSuiteType,
         state = navigationSuiteScaffoldState,
     ) {
-        // CE (#626): the Cast mini player and player sit around the screens; without Cast in the
-        // build this is the display alone.
-        CastHost(
-            route = navigationState.currentBackStack().lastOrNull(),
-            showBottomBar = showBottomBar,
-            isOfflineMode = isOfflineMode,
+        // CE (#281): the unreachable banner and the error pages lead to the Downloads tab, except
+        // on that tab itself.
+        val serverStatus = LocalServerStatus.current
+        val openDownloads: (() -> Unit)? =
+            if (topLevelRoute == DownloadsRoute || DownloadsRoute !in tabRoutes) {
+                null
+            } else {
+                { navigator.navigate(DownloadsRoute) }
+            }
+        CompositionLocalProvider(
+            LocalServerStatus provides serverStatus.copy(openDownloads = openDownloads)
         ) {
-            NavDisplay(
-                entries = navigationState.toDecoratedEntries(entryDecorators, entryProvider),
-                onBack = { navigator.goBack() },
-                transitionSpec = { GLOBAL_TRANSITION_SPEC },
-                popTransitionSpec = { GLOBAL_TRANSITION_SPEC },
-                predictivePopTransitionSpec = { _ -> GLOBAL_TRANSITION_SPEC },
-            )
+            // CE (#626): the Cast mini player and player sit around the screens; without Cast in
+            // the build this is the display alone.
+            CastHost(
+                route = navigationState.currentBackStack().lastOrNull(),
+                showBottomBar = showBottomBar,
+                isOfflineMode = isOfflineMode || serverStatus.unreachable,
+            ) {
+                NavDisplay(
+                    entries = navigationState.toDecoratedEntries(entryDecorators, entryProvider),
+                    onBack = { navigator.goBack() },
+                    transitionSpec = { GLOBAL_TRANSITION_SPEC },
+                    popTransitionSpec = { GLOBAL_TRANSITION_SPEC },
+                    predictivePopTransitionSpec = { _ -> GLOBAL_TRANSITION_SPEC },
+                )
+            }
         }
     }
 }

@@ -143,4 +143,5 @@
     <string name="ce_track_original">Originaal</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Rada %1$d</string>
+    <string name="ce_server_unreachable_downloads">Allalaaditud sisu saab endiselt esitada.</string>
 </resources>

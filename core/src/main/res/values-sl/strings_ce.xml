@@ -153,4 +153,5 @@
     <string name="ce_track_original">Izvirnik</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Steza %1$d</string>
+    <string name="ce_server_unreachable_downloads">Prenose lahko še vedno predvajate.</string>
 </resources>

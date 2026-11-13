@@ -138,4 +138,5 @@
     <string name="ce_track_original">オリジナル</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">トラック %1$d</string>
+    <string name="ce_server_unreachable_downloads">ダウンロード済みの作品は引き続き再生できます。</string>
 </resources>

@@ -2,6 +2,8 @@ package dev.jdtech.jellyfin.presentation.film
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -37,7 +40,10 @@ import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.presentation.film.components.CollectionGrid
 import dev.jdtech.jellyfin.presentation.film.components.EmptyState
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
+import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.showsServerBanner
 import java.util.UUID
 
 @Composable
@@ -75,6 +81,8 @@ fun CollectionScreenLayout(
     emptyTitle: String = stringResource(CoreR.string.collection_no_media),
     emptyBody: String? = null,
     showNavigationIcon: Boolean = true,
+    /** CE (#281): a top-level screen (Favorites) shows the unreachable banner above its items. */
+    serverBanner: Boolean = false,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -102,29 +110,76 @@ fun CollectionScreenLayout(
         },
         contentWindowInsets = WindowInsets.statusBars.union(WindowInsets.displayCutout),
     ) { innerPadding ->
-        val contentModifier = Modifier.padding(innerPadding).fillMaxSize()
-        when {
-            state.sections.isNotEmpty() ->
-                CollectionGrid(
-                    sections = state.sections,
-                    innerPadding = innerPadding,
+        // CE (#281): what is on screen stays (the items, or "no favourites" from before the server
+        // went away), with the unreachable banner above it. A failed load with nothing to show
+        // is the error page, which says the same.
+        val failedEmpty = state.sections.isEmpty() && state.error != null
+        if (serverBanner && showsServerBanner() && !failedEmpty) {
+            Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+                ServerOrErrorCard(
+                    error = null,
+                    onShowStacktrace = {},
+                    onRetryClick = { onAction(CollectionAction.OnRetryClick) },
+                    modifier =
+                        Modifier.padding(
+                            start = MaterialTheme.spacings.default,
+                            top = MaterialTheme.spacings.default,
+                            end = MaterialTheme.spacings.default,
+                        ),
+                )
+                CollectionContent(
+                    state = state,
                     onAction = onAction,
+                    innerPadding = PaddingValues(),
+                    emptyIcon = emptyIcon,
+                    emptyTitle = emptyTitle,
+                    emptyBody = emptyBody,
                 )
-            state.isLoading || state.error != null ->
-                Box(modifier = contentModifier) {
-                    LoadingOrError(
-                        error = state.error,
-                        onRetryClick = { onAction(CollectionAction.OnRetryClick) },
-                    )
-                }
-            else ->
-                EmptyState(
-                    icon = emptyIcon,
-                    title = emptyTitle,
-                    body = emptyBody,
-                    modifier = contentModifier,
-                )
+            }
+        } else {
+            CollectionContent(
+                state = state,
+                onAction = onAction,
+                innerPadding = innerPadding,
+                emptyIcon = emptyIcon,
+                emptyTitle = emptyTitle,
+                emptyBody = emptyBody,
+            )
         }
+    }
+}
+
+@Composable
+private fun CollectionContent(
+    state: CollectionState,
+    onAction: (CollectionAction) -> Unit,
+    innerPadding: PaddingValues,
+    @DrawableRes emptyIcon: Int,
+    emptyTitle: String,
+    emptyBody: String?,
+) {
+    val contentModifier = Modifier.padding(innerPadding).fillMaxSize()
+    when {
+        state.sections.isNotEmpty() ->
+            CollectionGrid(
+                sections = state.sections,
+                innerPadding = innerPadding,
+                onAction = onAction,
+            )
+        state.isLoading || state.error != null ->
+            Box(modifier = contentModifier) {
+                LoadingOrError(
+                    error = state.error,
+                    onRetryClick = { onAction(CollectionAction.OnRetryClick) },
+                )
+            }
+        else ->
+            EmptyState(
+                icon = emptyIcon,
+                title = emptyTitle,
+                body = emptyBody,
+                modifier = contentModifier,
+            )
     }
 }
 

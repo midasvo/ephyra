@@ -143,4 +143,5 @@
     <string name="ce_track_original">Оригинал</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Писта %1$d</string>
+    <string name="ce_server_unreachable_downloads">Изтеглянията ви все още могат да се възпроизвеждат.</string>
 </resources>

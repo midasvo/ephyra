@@ -109,6 +109,7 @@ import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.LightStatusBarOverArtwork
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
+import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
 import dev.jdtech.jellyfin.presentation.utils.ReloadOnResume
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import dev.jdtech.jellyfin.utils.ObserveAsEvents
@@ -730,7 +731,7 @@ private fun SeasonEpisodeDetailPane(
 ) {
     val context = LocalContext.current
     val castPlayback = LocalCastPlayback.current
-    val isOfflineMode = LocalOfflineMode.current
+    val isOfflineMode = LocalOfflineMode.current || LocalServerStatus.current.unreachable
     val viewModel: EpisodeViewModel = hiltViewModel(key = "season-detail-episode-$episodeId")
     val downloaderViewModel: DownloaderViewModel =
         hiltViewModel(key = "season-detail-downloader-$episodeId")

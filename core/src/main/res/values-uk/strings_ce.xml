@@ -153,4 +153,5 @@
     <string name="ce_track_original">Оригінал</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Доріжка %1$d</string>
+    <string name="ce_server_unreachable_downloads">Завантажене, як і раніше, можна переглядати.</string>
 </resources>

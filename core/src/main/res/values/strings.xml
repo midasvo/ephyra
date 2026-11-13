@@ -262,4 +262,6 @@
     <string name="ce_track_original">Original</string>
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Track %1$d</string>
+    <!-- CE (#281): under "Can't reach the Jellyfin server", when something is downloaded -->
+    <string name="ce_server_unreachable_downloads">Your downloads still play.</string>
 </resources>

@@ -24,13 +24,17 @@ interface NetworkConnectivity {
 }
 
 /**
- * The effective offline mode: the user's manual offlineMode preference OR the absence of network
- * connectivity.
- *
- * Used by both the repository selection (RepositoryModule) and the UI (MainViewModel) so the data
- * source that gets used and what the UI shows always agree. The manual preference is never
- * written by connectivity detection -- it stays the user's explicit choice, so the app returns to
- * online automatically once the network is back.
+ * Which repository to use. CE (#281): the Offline Mode setting alone decides, as it alone decides
+ * what the UI shows (MainViewModel), so the two always agree. A lost connection, or a start
+ * without one, keeps the online repository: its errors reach the screen, and the reachability
+ * banner points at Downloads. Nothing swaps the repository under a running UI (#427).
+ */
+fun useOfflineRepository(appPreferences: AppPreferences): Boolean =
+    appPreferences.getValue(appPreferences.offlineMode)
+
+/**
+ * The Offline Mode setting, or no network at all. Since #281 only for work that should not start
+ * without a connection (Smart Downloads); the UI and the repository follow the setting alone.
  */
 fun isOfflineModeActive(
     appPreferences: AppPreferences,
