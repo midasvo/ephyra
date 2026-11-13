@@ -20,6 +20,9 @@ import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.localnetwork.localNetworkBlockFor
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
+import dev.jdtech.jellyfin.presentation.utils.RetryWhenServerReturns
+import dev.jdtech.jellyfin.presentation.utils.isServerUnreachable
 import dev.jdtech.jellyfin.presentation.utils.localNetworkDeniedText
 import dev.jdtech.jellyfin.setup.R as SetupR
 
@@ -30,6 +33,45 @@ fun ErrorState(error: Exception, onRetryClick: () -> Unit, modifier: Modifier = 
     // CE (#571): a server out of reach because local network access is denied says so, offers to
     // allow it, and loads again by itself once access is back.
     val block = localNetworkBlockFor(error = error, onUnblocked = onRetryClick)
+
+    // CE (#281): the server does not answer. The page says that instead of "Error loading data",
+    // leads to Downloads when there are any, and loads again by itself when the server is back.
+    RetryWhenServerReturns(error = error, onRetry = onRetryClick)
+    if (block == null && isServerUnreachable(error)) {
+        val status = LocalServerStatus.current
+        val openDownloads = status.openDownloads.takeIf { status.hasDownloads }
+        val retry = {
+            status.check()
+            onRetryClick()
+        }
+        EmptyState(
+            icon = CoreR.drawable.ic_server_off,
+            title = stringResource(CoreR.string.download_error_server_unreachable),
+            modifier = modifier,
+            body =
+                stringResource(
+                    if (openDownloads != null) {
+                        CoreR.string.ce_server_unreachable_downloads
+                    } else {
+                        CoreR.string.error_loading_data_body
+                    }
+                ),
+            iconContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            specks = false,
+            actions = {
+                if (openDownloads != null) {
+                    FilledTonalButton(onClick = openDownloads) {
+                        Text(stringResource(CoreR.string.title_download))
+                    }
+                    TextButton(onClick = retry) { Text(stringResource(CoreR.string.retry)) }
+                } else {
+                    FilledTonalButton(onClick = retry) { Text(stringResource(CoreR.string.retry)) }
+                }
+            },
+        )
+        return
+    }
 
     EmptyState(
         icon = CoreR.drawable.ic_alert_circle,

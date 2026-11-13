@@ -113,4 +113,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Még nincs semmi letöltve</string>
     <string name="ce_home_offline_empty_body">Nincs kapcsolat. A letöltött filmek és epizódok itt és a Letöltések között jelennek meg.</string>
+    <string name="ce_server_unreachable_downloads">A letöltéseid továbbra is lejátszhatók.</string>
 </resources>

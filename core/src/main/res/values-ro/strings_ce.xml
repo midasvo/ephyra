@@ -118,4 +118,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Nimic descărcat încă</string>
     <string name="ce_home_offline_empty_body">Ești offline. Filmele și episoadele pe care le descarci apar aici și în Descărcări.</string>
+    <string name="ce_server_unreachable_downloads">Descărcările tale pot fi redate în continuare.</string>
 </resources>

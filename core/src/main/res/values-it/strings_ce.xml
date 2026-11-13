@@ -113,4 +113,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Ancora nessun download</string>
     <string name="ce_home_offline_empty_body">Sei offline. I film e gli episodi che scarichi compaiono qui e in Download.</string>
+    <string name="ce_server_unreachable_downloads">I tuoi download si possono ancora riprodurre.</string>
 </resources>

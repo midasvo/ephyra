@@ -113,4 +113,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Nog niets gedownload</string>
     <string name="ce_home_offline_empty_body">Je bent offline. Films en afleveringen die je downloadt, verschijnen hier en bij Downloads.</string>
+    <string name="ce_server_unreachable_downloads">Je downloads kun je nog afspelen.</string>
 </resources>

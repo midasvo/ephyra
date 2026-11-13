@@ -123,4 +123,5 @@
     </plurals>
     <string name="ce_home_offline_empty_title">Ще нічого не завантажено</string>
     <string name="ce_home_offline_empty_body">Немає з\'єднання. Завантажені фільми й епізоди з\'являться тут і в розділі «Завантаження».</string>
+    <string name="ce_server_unreachable_downloads">Завантажене, як і раніше, можна переглядати.</string>
 </resources>

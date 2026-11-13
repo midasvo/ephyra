@@ -2,6 +2,8 @@ package dev.jdtech.jellyfin.presentation.film
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -37,7 +40,10 @@ import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.presentation.film.components.CollectionGrid
 import dev.jdtech.jellyfin.presentation.film.components.EmptyState
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
+import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.showsServerBanner
 import java.util.UUID
 
 @Composable
@@ -75,6 +81,8 @@ fun CollectionScreenLayout(
     emptyTitle: String = stringResource(CoreR.string.collection_no_media),
     emptyBody: String? = null,
     showNavigationIcon: Boolean = true,
+    /** CE (#281): a top-level screen (Favorites) shows the unreachable banner above its items. */
+    serverBanner: Boolean = false,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -105,11 +113,33 @@ fun CollectionScreenLayout(
         val contentModifier = Modifier.padding(innerPadding).fillMaxSize()
         when {
             state.sections.isNotEmpty() ->
-                CollectionGrid(
-                    sections = state.sections,
-                    innerPadding = innerPadding,
-                    onAction = onAction,
-                )
+                if (serverBanner && showsServerBanner()) {
+                    // CE (#281): the items on screen stay, with the unreachable banner above them.
+                    Column(modifier = contentModifier) {
+                        ServerOrErrorCard(
+                            error = null,
+                            onShowStacktrace = {},
+                            onRetryClick = { onAction(CollectionAction.OnRetryClick) },
+                            modifier =
+                                Modifier.padding(
+                                    start = MaterialTheme.spacings.default,
+                                    top = MaterialTheme.spacings.default,
+                                    end = MaterialTheme.spacings.default,
+                                ),
+                        )
+                        CollectionGrid(
+                            sections = state.sections,
+                            innerPadding = PaddingValues(),
+                            onAction = onAction,
+                        )
+                    }
+                } else {
+                    CollectionGrid(
+                        sections = state.sections,
+                        innerPadding = innerPadding,
+                        onAction = onAction,
+                    )
+                }
             state.isLoading || state.error != null ->
                 Box(modifier = contentModifier) {
                     LoadingOrError(

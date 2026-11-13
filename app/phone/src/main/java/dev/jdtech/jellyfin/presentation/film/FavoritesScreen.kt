@@ -40,6 +40,7 @@ fun FavoritesScreen(
         emptyTitle = stringResource(CoreR.string.no_favorites),
         emptyBody = stringResource(CoreR.string.favorites_empty_body),
         showNavigationIcon = false,
+        serverBanner = true,
     )
 }
 
