@@ -39,8 +39,15 @@ class SubtitleSyncDialogFragment : DialogFragment() {
                     // queue moves on while it is open.
                     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                     key(uiState.currentItemId) {
-                        val choices = remember { viewModel.trackChoices(C.TRACK_TYPE_TEXT, context) }
-                        var selectedTrackIndex by remember { mutableIntStateOf(choices.selected) }
+                        // Read again on each track change: the next item's tracks come after
+                        // its id, and a pick here is only playing once the tracks change.
+                        val tracksVersion by viewModel.tracksVersion.collectAsStateWithLifecycle()
+                        val choices =
+                            remember(tracksVersion) {
+                                viewModel.trackChoices(C.TRACK_TYPE_TEXT, context)
+                            }
+                        var selectedTrackIndex by
+                            remember(choices) { mutableIntStateOf(choices.selected) }
                         val delayMs by viewModel.subtitleDelay.collectAsStateWithLifecycle()
 
                         val cues by viewModel.activeCues.collectAsStateWithLifecycle()

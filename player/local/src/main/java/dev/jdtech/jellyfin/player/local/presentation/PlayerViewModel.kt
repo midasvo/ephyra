@@ -454,6 +454,14 @@ constructor(
     val subtitleDelayMs: Int
         get() = _subtitleDelay.value
 
+    private val _tracksVersion = MutableStateFlow(0)
+
+    /**
+     * CE (#619): goes up on every track change, so a sheet that lists [trackChoices] reads them
+     * again: the next item's tracks arrive after the item itself.
+     */
+    val tracksVersion: StateFlow<Int> = _tracksVersion.asStateFlow()
+
     /** The item [subtitleDelay] belongs to. */
     private var subtitleDelayItemId: String? = null
 
@@ -2035,6 +2043,7 @@ constructor(
     override fun onTracksChanged(tracks: Tracks) {
         handleDisplayRefreshRate(tracks)
         onTextTrackMaybeChanged()
+        _tracksVersion.value++
         val selectableTracks =
             tracks.groups.count { it.type == C.TRACK_TYPE_AUDIO || it.type == C.TRACK_TYPE_TEXT }
         val itemId = player.currentMediaItem?.mediaId
