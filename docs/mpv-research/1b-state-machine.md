@@ -60,7 +60,7 @@ The default reason is `PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST` (`579`).
 | `startPassedToLoadMs` (`359`) | `945` (null), `953` (= `initialSeekTo` when `start=` is used), `538` (null at the first restart) | Added by #267 |
 | `initialIndex` (`352`) | `829` | Only set by the 3-arg `setMediaItems` |
 | `currentMediaItemIndex` (`347`) | `828` (0 in `setMediaItems`), `479` (`playlist-current-pos`) | Not set by `seekTo`/`prepareMediaItem`, so it lags until mpv reports the new position |
-| `initialCommands` | `1186` (sub-add per external subtitle), `940` (cleared on reset) | Run on every `START_FILE` while `!isPlayerReady` (`517-521`); never cleared after running |
+| `initialCommands` | `1186` (sub-add per external subtitle), `940` (cleared on reset) | Run on every `START_FILE` while `!isPlayerReady` (`517-521`); never cleared after running. Since #617 each is `async sub-add`: the call returns at once, mpv downloads on its own worker thread, cancels the download when the file ends and waits for it in `mpv_terminate_destroy` |
 | `isSeekable` | `449`, `524`, `932` | |
 | `playbackSuppressionReason` | none | Always `NONE` (`979`); `onPlaybackSuppressionReasonChanged` never fires |
 | `isLoading` | none | Always `false` (`1092`); `onIsLoadingChanged` never fires |

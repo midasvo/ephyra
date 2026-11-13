@@ -414,6 +414,12 @@ class MPVPlayer(
      * cannot pass that mark on, so the track list gets it back from here.
      */
     private val forcedSubtitleFiles = HashSet<String>()
+
+    /**
+     * CE (#617): the subtitle files of the item being loaded, in its order. mpv downloads them side
+     * by side and lists each when it is there, so the track list puts them back in this order.
+     */
+    private val subtitleFiles = ArrayList<String>()
     private var initialIndex: Int = 0
     private var initialSeekTo: Long = 0L
 
@@ -464,7 +470,7 @@ class MPVPlayer(
             when (property) {
                 "track-list" -> {
                     val hadVideo = currentTracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
-                    val newTracks = getTracks(value, forcedSubtitleFiles)
+                    val newTracks = getTracks(value, forcedSubtitleFiles, subtitleFiles)
                     currentTracks = newTracks
                     // The selected video track's frame rate, not the last video group's:
                     // mpv also lists attached pictures as 1fps video tracks.
@@ -622,6 +628,7 @@ class MPVPlayer(
                     loadState.startFile()
                     streamBreak.reset()
                     if (!isPlayerReady) {
+                        // CE (#617): async, so these return without waiting for the download.
                         for (command in initialCommands) {
                             mpvLib.command(command)
                         }
@@ -1223,6 +1230,7 @@ class MPVPlayer(
         playbackParameters = PlaybackParameters.DEFAULT
         initialCommands.clear()
         forcedSubtitleFiles.clear()
+        subtitleFiles.clear()
         mpvLib.setPropertyDouble("sub-delay", 0.0)
     }
 
@@ -1571,8 +1579,15 @@ class MPVPlayer(
             startNewLoad(index)
             resetInternalState()
             mediaItem.localConfiguration?.subtitleConfigurations?.forEach { subtitle ->
+                subtitleFiles.add("${subtitle.uri}")
                 initialCommands.add(
                     arrayOf(
+                        // CE (#617): mpv downloads the file on its own thread and this call
+                        // returns at once instead of blocking the main thread until it is there.
+                        // mpv cancels the download when the file ends (another item, stop, an
+                        // error reload) and waits for it in destroy(). Without a reply, so mpv's
+                        // log is the only trace of a failed one, as before.
+                        /* prefix= */ "async",
                         /* command= */ "sub-add",
                         /* url= */ "${subtitle.uri}",
                         /* flags= */ "auto",
@@ -2314,18 +2329,23 @@ class MPVPlayer(
             )
         }
 
-        private fun getTracks(trackList: String, forcedSubtitleFiles: Set<String>): Tracks {
+        private fun getTracks(
+            trackList: String,
+            forcedSubtitleFiles: Set<String>,
+            subtitleFiles: List<String>,
+        ): Tracks {
             var tracks = Tracks.EMPTY
             val trackGroups = mutableListOf<Tracks.Group>()
             try {
                 val currentTrackList = JSONArray(trackList)
-                for (index in 0 until currentTrackList.length()) {
-                    val tracksGroup =
-                        createTracksGroupfromMpvJson(
-                            currentTrackList.getJSONObject(index),
-                            forcedSubtitleFiles,
-                        )
-                    trackGroups.add(tracksGroup)
+                // CE (#617): the item's subtitle files in its order, whichever finished first.
+                // The other tracks keep mpv's order, ahead of them as mpv lists them.
+                val sorted =
+                    (0 until currentTrackList.length())
+                        .map { currentTrackList.getJSONObject(it) }
+                        .sortedBy { subtitleFiles.indexOf(it.optNullableString("external-filename")) }
+                for (json in sorted) {
+                    trackGroups.add(createTracksGroupfromMpvJson(json, forcedSubtitleFiles))
                 }
                 if (trackGroups.isNotEmpty()) {
                     tracks = Tracks(trackGroups)
