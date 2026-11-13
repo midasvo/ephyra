@@ -98,6 +98,14 @@ class SubtitleOffsetRenderer(
         // Positive delay means the user wants subtitles to show later in playback,
         // so we subtract delayUs from the query timestamp.
         super.render(adjust(positionUs, delayUs), elapsedRealtimeUs)
+        // The text renderer reads one sample per render, and while paused the player renders
+        // once a second: replaying 30 s of cues took that many seconds before the cue that is
+        // due showed. Read the replayed samples now, at the same position.
+        var extraRenders = 0
+        while (stream?.hasPendingReplay() == true && extraRenders < MAX_REPLAY_RENDERS) {
+            super.render(adjust(positionUs, delayUs), elapsedRealtimeUs)
+            extraRenders++
+        }
     }
 
     override fun resetPosition(positionUs: Long, sampleStreamIsResetToKeyFrame: Boolean) {
@@ -137,5 +145,8 @@ class SubtitleOffsetRenderer(
     private companion object {
         /** How far back a cue may start and still be showing. */
         const val REPLAY_LOOKBACK_US = 30_000_000L
+
+        /** Bounds the extra renders per render; 30 s rarely holds more cues than this. */
+        const val MAX_REPLAY_RENDERS = 64
     }
 }

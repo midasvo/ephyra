@@ -46,6 +46,9 @@ class SubtitleReplaySampleStream(val upstream: SampleStream) : SampleStream {
         rewindFromUs = fromUs
     }
 
+    /** True while kept samples wait to be delivered again. */
+    fun hasPendingReplay(): Boolean = replay.isNotEmpty()
+
     override fun isReady(): Boolean =
         replay.isNotEmpty() || owedFormat != null || upstream.isReady()
 
@@ -138,20 +141,31 @@ class SubtitleReplaySampleStream(val upstream: SampleStream) : SampleStream {
                 (if (buffer.isFirstSample) C.BUFFER_FLAG_FIRST_SAMPLE else 0)
         samples.add(Sample(buffer.timeUs, flags, bytes))
         keptBytes += bytes.size
-        trim(newestUs = kept.lastKey())
+        trim(aroundUs = buffer.timeUs)
     }
 
-    private fun trim(newestUs: Long) {
-        while (kept.isNotEmpty()) {
-            val oldestUs = kept.firstKey()
-            if (oldestUs >= newestUs - KEEP_SPAN_US && keptBytes <= MAX_KEPT_BYTES) return
+    /**
+     * Keeps the span around the sample just read, [aroundUs]. Around the newest sample ever read
+     * instead, everything read after a long seek back was dropped as soon as it was kept.
+     */
+    private fun trim(aroundUs: Long) {
+        while (kept.isNotEmpty() && kept.firstKey() < aroundUs - KEEP_SPAN_US) {
+            kept.pollFirstEntry()?.value?.forEach { keptBytes -= it.data.size }
+        }
+        while (kept.isNotEmpty() && kept.lastKey() > aroundUs + KEEP_SPAN_US) {
+            kept.pollLastEntry()?.value?.forEach { keptBytes -= it.data.size }
+        }
+        while (kept.isNotEmpty() && keptBytes > MAX_KEPT_BYTES) {
             kept.pollFirstEntry()?.value?.forEach { keptBytes -= it.data.size }
         }
     }
 
     private companion object {
-        /** More than the largest delay, so every cue a delay can bring back is kept. */
-        const val KEEP_SPAN_US = 200_000_000L
+        /**
+         * More than the largest delay (180 s) and the renderer's look back (30 s), so every cue
+         * a delay can bring back is kept.
+         */
+        const val KEEP_SPAN_US = 240_000_000L
         /** Text is small; image subtitles are not, so the bytes are capped too. */
         const val MAX_KEPT_BYTES = 8L * 1024 * 1024
     }
