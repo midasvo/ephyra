@@ -7,8 +7,8 @@ default_platform(:android)
 # TV bundle's versionCode is one higher (EphyraVersion.TV_CODE), so both fit in one app.
 #
 # Flavors (#641): the phone bundle is `proprietary`, with Google Cast; Play users have Google Play
-# services anyway. The TV bundle is `libre` (app/tv has no other flavor). F-Droid, Amazon and
-# anything else outside Play stay `libre`.
+# services anyway. The TV bundle is `libre` (app/tv has no other flavor). F-Droid and Amazon stay
+# `libre`; GitHub releases and betas carry both phone flavors (release.yml, beta.yml).
 #
 # Signing: the bundles are signed with the Play *upload* key, through the same KEYSTORE_* variables
 # that release.yml uses for the release key. Play re-signs them with the app signing key.
