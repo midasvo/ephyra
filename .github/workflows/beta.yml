@@ -222,9 +222,81 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # The release notes: the pull requests merged since the latest stable release. This is a separate
+  # job with read-only permissions, and it runs the script from the workflow's own revision
+  # (github.sha, checked out as usual), never from the beta's sha, which for a pull request build
+  # is code the author controls. The beta's sha is only fetched, for its history. The full history
+  # and the tags are needed, so a checkout is simpler than the compare API, which caps at 250
+  # commits and has no first-parent view.
+  notes:
+    name: Release notes
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Fetch the beta's history
+        env:
+          SHA: ${{ needs.prepare.outputs.sha }}
+        run: git fetch --no-tags origin "$SHA"
+
+      # Pull request titles are untrusted text: the script reads them as data and writes them to
+      # a file, they never reach a command through a workflow expression.
+      - name: Write the release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.prepare.outputs.sha }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          LABEL: ${{ needs.prepare.outputs.label }}
+          LINK: ${{ needs.prepare.outputs.link }}
+          PR: ${{ inputs.pr }}
+        run: |
+          mkdir -p notes
+          changes="$RUNNER_TEMP/new-since.md"
+          if ! bash .github/scripts/beta-changelog.sh "$SHA" "$TAG" "$changes" "$PR" || [ ! -s "$changes" ]; then
+            echo "The list of changes could not be generated." > "$changes"
+          fi
+          {
+            cat "$changes"
+            printf '\n---\n\n'
+            printf 'Beta build of **%s** (%s) at commit %s.\n' "$LABEL" "$LINK" "$SHA"
+            cat <<'NOTES'
+
+          This is the "Ephyra Beta" app (`nl.midasvo.findroid.ce.staging`). It installs next to the
+          stable Ephyra app and keeps its own data. Betas are untested; expect bugs.
+
+          **Which APK?** A phone or tablet has two variants. `-libre-<abi>.apk` has no Google code.
+          `-proprietary-<abi>.apk` is the same app with **Google Cast** (Chromecast): cast to a TV
+          from the top bar; it needs Google Play services to cast. The two install over each other
+          and keep the login. In Obtainium, filter the APK with `-beta\.\d+-libre-arm64-v8a\.apk$`
+          or `-beta\.\d+-proprietary-arm64-v8a\.apk$`.
+
+          For Android TV, take a `-libre-tv-<abi>.apk`: `armeabi-v7a` for 32-bit boxes such as the Xiaomi
+          Mi Box, `arm64-v8a` for 64-bit ones. Phone and TV share one app ID, so the TV APK replaces
+          the phone beta on a device and keeps its login.
+          NOTES
+          } > notes/release-notes.md
+          cat notes/release-notes.md
+
+      - name: Upload the release notes
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-notes
+          path: notes/release-notes.md
+          if-no-files-found: error
+          retention-days: 1
+
   publish:
     name: Publish beta
-    needs: [prepare, build]
+    needs: [prepare, build, notes]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -249,6 +321,12 @@ jobs:
           done
           ls -l dist/*/apk dist/*/mapping
 
+      - name: Download the release notes
+        uses: actions/download-artifact@v8
+        with:
+          name: release-notes
+          path: notes
+
       - name: Create GitHub prerelease
         uses: softprops/action-gh-release@v3
         with:
@@ -257,21 +335,7 @@ jobs:
           name: Beta ${{ needs.prepare.outputs.version }} (${{ needs.prepare.outputs.label }} @ ${{ needs.prepare.outputs.short_sha }})
           prerelease: true
           make_latest: false
-          body: |
-            Beta build of **${{ needs.prepare.outputs.label }}** (${{ needs.prepare.outputs.link }}) at commit ${{ needs.prepare.outputs.sha }}.
-
-            This is the "Ephyra Beta" app (`nl.midasvo.findroid.ce.staging`). It installs next to the
-            stable Ephyra app and keeps its own data. Betas are untested; expect bugs.
-
-            **Which APK?** A phone or tablet has two variants. `-libre-<abi>.apk` has no Google code.
-            `-proprietary-<abi>.apk` is the same app with **Google Cast** (Chromecast): cast to a TV
-            from the top bar; it needs Google Play services to cast. The two install over each other
-            and keep the login. In Obtainium, filter the APK with `-beta\.\d+-libre-arm64-v8a\.apk$`
-            or `-beta\.\d+-proprietary-arm64-v8a\.apk$`.
-
-            For Android TV, take a `-libre-tv-<abi>.apk`: `armeabi-v7a` for 32-bit boxes such as the Xiaomi
-            Mi Box, `arm64-v8a` for 64-bit ones. Phone and TV share one app ID, so the TV APK replaces
-            the phone beta on a device and keeps its login.
+          body_path: notes/release-notes.md
           files: |
             dist/*/apk/*.apk
             dist/*/mapping/*.txt
