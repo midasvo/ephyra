@@ -108,9 +108,12 @@ regular expression** `^Beta`, and **Filter APKs by regular expression**
 
 - Resumable, with SD card support. Built on OkHttp, not Android's DownloadManager.
 - A quality per download: the original, or a server conversion from 4K down to 360p.
-- Whole seasons or series at once, with a limit on concurrent downloads.
+- Whole seasons or series at once, or only their unwatched episodes, with a limit on concurrent
+  downloads.
 - Downloads screen with progress per episode and per show, a storage breakdown, multi-select and undo.
 - Smart Downloads (opt-in): keeps the next episodes of what you're watching, removes them once watched.
+- In step with the server: what you watch offline is sent when you're back and moves up in Continue
+  Watching, and progress made on your other devices reaches your downloads.
 
 **Playback**
 
@@ -119,9 +122,10 @@ regular expression** `^Beta`, and **Filter APKs by regular expression**
 - Platform decoder first (Atmos), ffmpeg if a decoder fails.
 - PGS, VobSub and DVB subtitles without transcoding. Subtitle colour, outline, font and size, on
   ExoPlayer and mpv, with a switch to override a track's own styling.
+- Subtitle sync during playback: move subtitles earlier or later, or line one up with what is said.
 - Version picker before playing, quality switch during playback.
 - Audio and subtitle choice remembered per series and per user, on ExoPlayer, mpv and downloads.
-- Plays on into the next season. Chapter list. Skip, ask or ignore per media segment type.
+- Plays on into the next season. Shuffle a show or a season. Chapter list. Skip, ask or ignore per media segment type.
   "Still watching?" prompt after a run of autoplayed episodes.
 - "Up next" card with a countdown at the end of an episode. Sleep timer.
 - Background audio with lock screen controls (opt-in, Settings → Player → Background playback).
@@ -229,7 +233,7 @@ Same login and server as the phone app, same releases (the `-tv-` APKs). Built f
 - Library grid with an A to Z jump bar, a counter and the hide-watched filter.
 - Episodes open in their season, details first. Cast rows and person pages.
 - Player: D-pad seeking, media keys, trickplay thumbnails, an overlay with the series, end time,
-  previous, next and the queue.
+  previous, next and the queue. Subtitle sync.
 - Refresh rate switching to match the video.
 - Continue Watching and Next Up in the Android TV home screen's Watch Next row.
 - Screensaver with your library's artwork. Optional theme music on show pages.

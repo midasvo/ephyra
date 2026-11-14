@@ -13,6 +13,51 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v2.6.0] — 2026-11-14
+
+Shuffle comes to the phone and tablet, subtitles that run early or late can be put right during
+playback, and downloads stay in step with the server: progress made on another device reaches
+them, and what you watch offline moves up in Continue Watching everywhere. A season download can
+leave out the episodes you've already seen. The player now runs on Ephyra's own build of mpv.
+
+A warm welcome to Ephyra's new contributor, Jaret ([@jaretclifton](https://github.com/jaretclifton)).
+Shuffle on the phone, the offline sync and the season download question are his: five pull
+requests, each one tested on his own devices and server, reworked carefully after every review,
+and a pleasure to merge. Thank you, Jaret!
+
+### Added
+- Shuffle on the phone and tablet: a button next to Play on a show's and a season's page plays
+  its episodes in random order, also on a Cast receiver. A whole series starts in one request
+  instead of one per season (#638, by @jaretclifton).
+- Player: subtitle sync. A side sheet moves the subtitles earlier or later in steps of 0.1 s,
+  without reloading, and lists the lines around the current one so you can line one up with
+  what is said. Phone and TV, ExoPlayer and mpv (#619).
+- Downloads: a season or show download asks whether to download only the unwatched episodes or
+  all of them, when some are watched (#636, by @jaretclifton).
+
+### Changed
+- Sync: progress watched offline tells the server when it was watched, so the item moves up in
+  Continue Watching on every device. A later play on another device is kept rather than
+  overwritten (#633, by @jaretclifton).
+- Sync: downloads take over the progress made on other devices, so a download resumes where you
+  left it anywhere. When another device played an item after you did offline, its progress wins
+  (#635, by @jaretclifton).
+- Playback: stopping a downloaded item follows the server's resume settings (Dashboard →
+  Playback → Resume), so it keeps the same position and watched state as on the server, also
+  offline. Stopping early no longer marks a watched item unwatched (#637, by
+  @jaretclifton).
+- Player (mpv): Ephyra's own build of libmpv 1.1.0, with mpv 0.42, FFmpeg 9.0.2 and
+  libplacebo 7.387.0 (#655).
+
+### Fixed
+- Player (mpv): AV1 video with film grain could show a broken picture on some GPUs; the grain is
+  now applied by the decoder (#652).
+- Player (mpv): an item with external subtitles no longer holds up the app while they download
+  (#617).
+
+### Maintenance
+- The formatting check covers the Kotlin sources again (#661).
+
 ## [v2.5.0] — 2026-11-13
 
 Ephyra can cast. The new proprietary variant of the phone app adds Google Cast: pick a
@@ -999,6 +1044,7 @@ Initial CE fork off findroid `1.0.2`. These rapid early iterations established t
 `nl.midasvo.findroid.ce` application ID, downloads and SD-card storage improvements, and ongoing
 tracking of upstream. See the git history between the corresponding tags for commit-level detail.
 
+[v2.6.0]: https://github.com/midasvo/ephyra/releases/tag/v2.6.0
 [v2.5.0]: https://github.com/midasvo/ephyra/releases/tag/v2.5.0
 [v2.4.5]: https://github.com/midasvo/ephyra/releases/tag/v2.4.5
 [v2.4.4]: https://github.com/midasvo/ephyra/releases/tag/v2.4.4
