@@ -281,13 +281,18 @@ constructor(
     /** CE (#636): the questions of a download, see [EpisodeDownloadPrompts]. */
     private val downloadPrompts = EpisodeDownloadPrompts()
 
-    /** CE (#636): the open question of a download (the quality), or null. */
+    /** CE (#636): the open question of a download (which episodes, then the quality), or null. */
     val downloadPrompt: StateFlow<DownloadPrompt?> = downloadPrompts.prompt
+
+    /** CE (#636): the answer to [DownloadPrompt.Episodes]. */
+    fun chooseEpisodes(unwatchedOnly: Boolean) = downloadPrompts.chooseEpisodes(unwatchedOnly)
 
     /** CE (#636): the answer to [DownloadPrompt.Quality], which starts the download. */
     fun chooseQuality(maxBitrate: Int?) {
         val answer = downloadPrompts.chooseQuality(maxBitrate) ?: return
-        viewModelScope.launch(Dispatchers.IO) { enqueue(answer.episodes, answer.maxBitrate) }
+        viewModelScope.launch(Dispatchers.IO) {
+            enqueue(answer.episodes, answer.maxBitrate, answer.unwatchedOnly)
+        }
     }
 
     /** CE (#636): the open question was cancelled, so nothing is downloaded. */
@@ -300,9 +305,9 @@ constructor(
     private suspend fun startDownload(episodes: List<FindroidEpisode>) {
         val inFlightIds = downloadQueue.inFlightIds()
         if (selectEpisodesToDownload(episodes, inFlightIds).toQueue.isEmpty()) {
-            enqueue(episodes, maxBitrate = null)
+            enqueue(episodes, maxBitrate = null, unwatchedOnly = false)
         } else {
-            downloadPrompts.start(episodes)
+            downloadPrompts.start(episodes, inFlightIds)
         }
     }
 
@@ -310,10 +315,15 @@ constructor(
         viewModelScope.launch(Dispatchers.IO) { startDownload(_state.value.episodes) }
     }
 
-    private suspend fun enqueue(episodes: List<FindroidEpisode>, maxBitrate: Int?) {
+    private suspend fun enqueue(
+        episodes: List<FindroidEpisode>,
+        maxBitrate: Int?,
+        unwatchedOnly: Boolean,
+    ) {
         // An episode already enqueued (pending/downloading/paused) is "in progress" from the
         // user's perspective, so it counts as skipped rather than being enqueued again.
-        val (toQueue, skipped) = selectEpisodesToDownload(episodes, downloadQueue.inFlightIds())
+        val (toQueue, skipped) =
+            selectEpisodesToDownload(episodes, downloadQueue.inFlightIds(), unwatchedOnly)
 
         if (toQueue.isEmpty()) {
             eventsChannel.send(SeasonEvent.DownloadResult(0, skipped, 0))

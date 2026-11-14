@@ -61,6 +61,7 @@ import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
+import dev.jdtech.jellyfin.presentation.film.components.DownloadUnwatchedDialog
 import dev.jdtech.jellyfin.presentation.film.components.EpisodeCard
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemHeader
@@ -179,9 +180,16 @@ fun SeasonScreen(
         viewModel.onAction(action)
     }
 
-    // CE (#636): the questions of a season download, shared by the phone and wide layouts.
+    // CE (#636): the questions of a season download, shared by the phone and wide layouts: which
+    // episodes (only when some are watched), then the quality.
     val downloadPrompt by viewModel.downloadPrompt.collectAsStateWithLifecycle()
-    when (downloadPrompt) {
+    when (val prompt = downloadPrompt) {
+        is DownloadPrompt.Episodes ->
+            DownloadUnwatchedDialog(
+                choice = prompt.choice,
+                onSelect = { unwatchedOnly -> viewModel.chooseEpisodes(unwatchedOnly) },
+                onDismiss = { viewModel.dismissDownloadPrompt() },
+            )
         DownloadPrompt.Quality ->
             DownloadQualityDialog(
                 onSelect = { maxBitrate -> viewModel.chooseQuality(maxBitrate) },

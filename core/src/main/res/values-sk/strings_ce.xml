@@ -148,4 +148,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Stopa %1$d</string>
     <string name="ce_server_unreachable_downloads">Stiahnutý obsah sa dá stále prehrávať.</string>
+    <string name="ce_download_choice_title">Ktoré epizódy stiahnuť?</string>
+    <string name="ce_download_choice_message">Niektoré z týchto epizód ste už videli.</string>
+    <string name="ce_download_choice_unwatched">Len nepozreté (%1$d)</string>
+    <string name="ce_download_choice_all">Všetky epizódy (%1$d)</string>
 </resources>

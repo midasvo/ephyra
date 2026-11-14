@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Писта %1$d</string>
     <string name="ce_server_unreachable_downloads">Изтеглянията ви все още могат да се възпроизвеждат.</string>
+    <string name="ce_download_choice_title">Кои епизоди да се изтеглят?</string>
+    <string name="ce_download_choice_message">Вече сте гледали някои от тези епизоди.</string>
+    <string name="ce_download_choice_unwatched">Само негледаните (%1$d)</string>
+    <string name="ce_download_choice_all">Всички епизоди (%1$d)</string>
 </resources>

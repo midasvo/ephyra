@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Spor %1$d</string>
     <string name="ce_server_unreachable_downloads">Nedlastingane dine kan framleis spelast av.</string>
+    <string name="ce_download_choice_title">Kva episodar vil du laste ned?</string>
+    <string name="ce_download_choice_message">Du har allereie sett nokre av desse episodane.</string>
+    <string name="ce_download_choice_unwatched">Berre usette (%1$d)</string>
+    <string name="ce_download_choice_all">Alle episodane (%1$d)</string>
 </resources>

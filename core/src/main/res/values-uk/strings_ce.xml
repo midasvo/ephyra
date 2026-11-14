@@ -153,4 +153,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Доріжка %1$d</string>
     <string name="ce_server_unreachable_downloads">Завантажене, як і раніше, можна переглядати.</string>
+    <string name="ce_download_choice_title">Які серії завантажити?</string>
+    <string name="ce_download_choice_message">Деякі з цих серій ви вже переглянули.</string>
+    <string name="ce_download_choice_unwatched">Лише непереглянуті (%1$d)</string>
+    <string name="ce_download_choice_all">Усі серії (%1$d)</string>
 </resources>

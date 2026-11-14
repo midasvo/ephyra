@@ -153,4 +153,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Ścieżka %1$d</string>
     <string name="ce_server_unreachable_downloads">Pobrane materiały nadal można odtwarzać.</string>
+    <string name="ce_download_choice_title">Które odcinki pobrać?</string>
+    <string name="ce_download_choice_message">Niektóre z tych odcinków już obejrzałeś.</string>
+    <string name="ce_download_choice_unwatched">Tylko nieobejrzane (%1$d)</string>
+    <string name="ce_download_choice_all">Wszystkie odcinki (%1$d)</string>
 </resources>

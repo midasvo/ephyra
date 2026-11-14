@@ -138,4 +138,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Parça %1$d</string>
     <string name="ce_server_unreachable_downloads">İndirdikleriniz hâlâ oynatılabilir.</string>
+    <string name="ce_download_choice_title">Hangi bölümler indirilsin?</string>
+    <string name="ce_download_choice_message">Bu bölümlerin bazılarını zaten izledin.</string>
+    <string name="ce_download_choice_unwatched">Yalnızca izlenmeyenler (%1$d)</string>
+    <string name="ce_download_choice_all">Tüm bölümler (%1$d)</string>
 </resources>

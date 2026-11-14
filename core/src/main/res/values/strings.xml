@@ -263,4 +263,11 @@
     <string name="ce_track_number">Track %1$d</string>
     <!-- CE (#281): under "Can't reach the Jellyfin server", when something is downloaded -->
     <string name="ce_server_unreachable_downloads">Your downloads still play.</string>
+
+    <!-- CE (#636): a season or show download asks this when some of its episodes are watched.
+         %1$d is the number of episodes that choice downloads. -->
+    <string name="ce_download_choice_title">Download which episodes?</string>
+    <string name="ce_download_choice_message">You\'ve already watched some of these episodes.</string>
+    <string name="ce_download_choice_unwatched">Unwatched only (%1$d)</string>
+    <string name="ce_download_choice_all">All episodes (%1$d)</string>
 </resources>

@@ -286,13 +286,18 @@ constructor(
     /** CE (#636): the questions of a download, see [EpisodeDownloadPrompts]. */
     private val downloadPrompts = EpisodeDownloadPrompts()
 
-    /** CE (#636): the open question of a download (the quality), or null. */
+    /** CE (#636): the open question of a download (which episodes, then the quality), or null. */
     val downloadPrompt: StateFlow<DownloadPrompt?> = downloadPrompts.prompt
+
+    /** CE (#636): the answer to [DownloadPrompt.Episodes]. */
+    fun chooseEpisodes(unwatchedOnly: Boolean) = downloadPrompts.chooseEpisodes(unwatchedOnly)
 
     /** CE (#636): the answer to [DownloadPrompt.Quality], which starts the download. */
     fun chooseQuality(maxBitrate: Int?) {
         val answer = downloadPrompts.chooseQuality(maxBitrate) ?: return
-        viewModelScope.launch(Dispatchers.IO) { enqueue(answer.episodes, answer.maxBitrate) }
+        viewModelScope.launch(Dispatchers.IO) {
+            enqueue(answer.episodes, answer.maxBitrate, answer.unwatchedOnly)
+        }
     }
 
     /** CE (#636): the open question was cancelled, so nothing is downloaded. */
@@ -305,9 +310,9 @@ constructor(
     private suspend fun startDownload(episodes: List<FindroidEpisode>) {
         val inFlightIds = downloadQueue.inFlightIds()
         if (selectEpisodesToDownload(episodes, inFlightIds).toQueue.isEmpty()) {
-            enqueue(episodes, maxBitrate = null)
+            enqueue(episodes, maxBitrate = null, unwatchedOnly = false)
         } else {
-            downloadPrompts.start(episodes)
+            downloadPrompts.start(episodes, inFlightIds)
         }
     }
 
@@ -324,10 +329,15 @@ constructor(
         }
     }
 
-    private suspend fun enqueue(episodes: List<FindroidEpisode>, maxBitrate: Int?) {
+    private suspend fun enqueue(
+        episodes: List<FindroidEpisode>,
+        maxBitrate: Int?,
+        unwatchedOnly: Boolean,
+    ) {
         // Episodes already in flight count as skipped so the toast count
         // matches what actually got added to the queue.
-        val (toQueue, skipped) = selectEpisodesToDownload(episodes, downloadQueue.inFlightIds())
+        val (toQueue, skipped) =
+            selectEpisodesToDownload(episodes, downloadQueue.inFlightIds(), unwatchedOnly)
         downloadQueue.enqueueAll(toQueue, maxBitrate)
         eventsChannel.send(ShowEvent.DownloadResult(toQueue.size, skipped, 0))
         loadShow(showId)

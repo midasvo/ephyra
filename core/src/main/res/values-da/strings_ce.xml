@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Spor %1$d</string>
     <string name="ce_server_unreachable_downloads">Dine downloads kan stadig afspilles.</string>
+    <string name="ce_download_choice_title">Hvilke afsnit vil du downloade?</string>
+    <string name="ce_download_choice_message">Du har allerede set nogle af disse afsnit.</string>
+    <string name="ce_download_choice_unwatched">Kun ikke-sete (%1$d)</string>
+    <string name="ce_download_choice_all">Alle afsnit (%1$d)</string>
 </resources>
