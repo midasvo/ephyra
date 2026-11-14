@@ -45,7 +45,8 @@ both claim a device. Set:
 - `ephyra-v2.1.0-libre-armeabi-v7a.apk`: all Fire tablets, no Fire TV.
 - Amazon Automotive: off for both.
 
-Some devices may already be greyed out by the manifest (minSdk 29 excludes Fire OS 7); leave them.
+Fire OS 7 devices are only offered from the first release with minSdk 28 (#675). Leave any device
+the manifest greys out.
 
 | Section | Answer |
 |---|---|

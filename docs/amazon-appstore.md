@@ -1,7 +1,7 @@
 # Amazon Appstore
 
-What it would take to put Ephyra on the Amazon Appstore. Nothing here is done yet; the two decisions
-below come first, the rest is the same work as Google Play (`docs/play-store.md`).
+What it would take to put Ephyra on the Amazon Appstore. The two decisions below are
+settled; the rest is the same work as Google Play (`docs/play-store.md`).
 
 ## Where it reaches
 
@@ -23,8 +23,10 @@ still in use (Fire TV Stick 3rd gen, Lite, the first 4K). Fire OS 8 devices are 
 - **Lower to 28 for TV:** reaches Fire OS 7. Needs a check of what in Media3, libmpv and our own
   code requires API 29, and a lint pass with `NewApi` at 28.
 
-**Decision needed.** Whatever is chosen also applies to the GitHub and Play TV builds, since they
-share the module.
+**Decided (2026-11-14): 28 for TV** (#675). The TV app and the library modules have minSdk 28; the
+phone app stays on 29, since Fire tablets run Fire OS 8. This also applies to the GitHub, F-Droid
+and Play TV builds. Lint's `NewApi` check is clean at 28, and on an Android TV 9 emulator both
+ExoPlayer and mpv play. The first Appstore submission needs a release that includes #675.
 
 ## Decision 2: signing
 
