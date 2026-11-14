@@ -4,7 +4,7 @@
  * used, so syncing with Findroid never changes our version.
  */
 object EphyraVersion {
-    const val NAME = "2.6.0"
+    const val NAME = "2.7.0"
 
     private val parts =
         NAME.split(".").map { it.toInt() }.also {
@@ -20,8 +20,8 @@ object EphyraVersion {
      *
      * F-Droid's checkupdates parses CODE via regex: const val CODE = (\d+)
      */
-    const val CODE = 2060000
-    const val TV_CODE = 2060001
+    const val CODE = 2070000
+    const val TV_CODE = 2070001
 
     init {
         val expected = MAJOR * 1_000_000 + MINOR * 10_000 + PATCH * 100

@@ -13,6 +13,33 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v2.7.0] — 2026-11-14
+
+The Android TV app now runs on Android 9, which brings it to Fire OS 7 sticks. The server hears
+about a pause or a resume on the phone right away, also while playing in the background, and
+item pages show their backdrop again.
+
+### Added
+- Android TV: the TV app runs on Android 9 (API 28) and newer, so it installs on Fire OS 7
+  devices such as the Fire TV Stick 3rd gen, Lite, 4K and 4K Max. Phones and tablets still need
+  Android 10 (#675).
+- Home: when a row changes, its cards slide into place instead of jumping (#640).
+
+### Fixed
+- Player: a pause or a resume reaches the server at once instead of up to 5 s later, progress
+  reports arrive in order, and a pause while playing in the background is no longer lost (#674).
+- Player: with background audio on, progress is still reported after going to Home (#677).
+- Item pages: the backdrop is no longer covered by a fade; on wide layouts only its bottom edge
+  fades into the page (#631).
+- Cast: transcodes for a receiver that plays HEVC are encoded to H.264, as the receiver expects
+  (#673).
+- Sync: an unplayed mark on a download that never had a last played date is sent to the server,
+  and a login the server refused is logged as one line instead of a stack trace (#635, by
+  @jaretclifton).
+
+### Maintenance
+- Dependency updates: Google Cast framework 23, Robolectric 4.18, KSP 2.3.14.
+
 ## [v2.6.0] — 2026-11-14
 
 Shuffle comes to the phone and tablet, subtitles that run early or late can be put right during
@@ -1044,6 +1071,7 @@ Initial CE fork off findroid `1.0.2`. These rapid early iterations established t
 `nl.midasvo.findroid.ce` application ID, downloads and SD-card storage improvements, and ongoing
 tracking of upstream. See the git history between the corresponding tags for commit-level detail.
 
+[v2.7.0]: https://github.com/midasvo/ephyra/releases/tag/v2.7.0
 [v2.6.0]: https://github.com/midasvo/ephyra/releases/tag/v2.6.0
 [v2.5.0]: https://github.com/midasvo/ephyra/releases/tag/v2.5.0
 [v2.4.5]: https://github.com/midasvo/ephyra/releases/tag/v2.4.5
