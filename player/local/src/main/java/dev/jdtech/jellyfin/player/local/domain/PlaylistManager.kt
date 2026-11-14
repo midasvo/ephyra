@@ -38,6 +38,9 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
      * with them), so each item is fetched in full when it is about to play.
      */
     private var lightQueue = false
+
+    /** CE (#638): the items of a light queue that have been fetched in full. */
+    private val fetchedInFull = mutableSetOf<UUID>()
     private val playerItems: MutableList<PlayerItem> = mutableListOf()
     var currentItemIndex: Int = 0
 
@@ -97,6 +100,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         queueLoader = null
         shuffled = shuffle
         lightQueue = false
+        fetchedInFull.clear()
         // Playback sources fetched while the item itself was still loading.
         var prefetchedSources: List<FindroidSource>? = null
 
@@ -133,6 +137,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
 
                         lightQueue = true
                         val episode = fullEpisode(episodes.first())
+                        fetchedInFull += episode.id
                         items = listOf(episode) + episodes.drop(1)
                         episode
                     } else {
@@ -369,7 +374,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
     suspend fun jumpTo(itemId: UUID): PlayerItem? {
         val index = items.indexOfFirst { it.id == itemId }
         if (index < 0) return null
-        val playerItem = items[index].toPlayerItem(null, 0L)
+        val playerItem = queued(items[index]).toPlayerItem(null, 0L)
         playerItems.clear()
         playerItems.add(playerItem)
         currentItemIndex = index
@@ -397,7 +402,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
     ): PlayerItem {
         val item = items.firstOrNull { it.id == playerItem.itemId } ?: return playerItem
         val recreated =
-            item.toPlayerItem(
+            queued(item).toPlayerItem(
                 playerItem.mediaSourceId,
                 playerItem.playbackPosition,
                 selectedAudio = selectedAudio,
@@ -408,9 +413,18 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         return recreated
     }
 
-    /** CE (#638): [item] as it plays: in full when the queue was fetched without its details. */
-    private suspend fun queued(item: FindroidItem): FindroidItem =
-        if (lightQueue && item is FindroidEpisode) fullEpisode(item) else item
+    /**
+     * CE (#638): [item] as it plays: in full when the queue was fetched without its details. The
+     * full episode replaces the light one in [items], so it is fetched once, however often the
+     * item is converted (Previous, Next, a jump in the queue, a quality or audio switch).
+     */
+    private suspend fun queued(item: FindroidItem): FindroidItem {
+        if (!lightQueue || item !is FindroidEpisode || item.id in fetchedInFull) return item
+        val full = fullEpisode(item)
+        fetchedInFull += full.id
+        items = items.map { if (it.id == full.id) full else it }
+        return full
+    }
 
     private suspend fun FindroidItem.toPlayerItem(
         mediaSourceId: String?,

@@ -8,6 +8,7 @@ import dev.jdtech.jellyfin.models.FindroidSourceType
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.lang.reflect.Proxy
 import java.util.UUID
+import dev.jdtech.jellyfin.models.FindroidChapter
 import kotlinx.coroutines.runBlocking
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.junit.Assert.assertEquals
@@ -19,6 +20,7 @@ import org.junit.Test
 class PlaylistManagerShuffleTest {
     private val seriesId = UUID.randomUUID()
     private val calls = mutableListOf<String>()
+    private val chapters = listOf(FindroidChapter(startPosition = 0L, name = "Opening"))
 
     @Test
     fun `shuffling a series queues episodes across regular seasons and starts from 0`() {
@@ -71,7 +73,8 @@ class PlaylistManagerShuffleTest {
             }
 
         assertNotNull(initialItem)
-        assertEquals(listOf("getEpisodes"), calls)
+        // One request for the episode list, not one per season.
+        assertEquals(1, calls.count { it == "getEpisodes" })
         // Season 0 (Specials) is left out: 23 seasons of 5.
         assertEquals(115, 1 + manager.upcomingItems().size)
     }
@@ -93,6 +96,42 @@ class PlaylistManagerShuffleTest {
             assertNull("previous is already queued", manager.getPreviousPlayerItem())
             val third = manager.getNextPlayerItem()
             assertNotNull("third", third)
+        }
+    }
+
+    @Test
+    fun `jumping to a queued episode of a series shuffle gets its chapters`() {
+        val seasons = List(3) { season(it + 1) }
+        val showMap = seasons.associateWith { season -> List(4) { episode(season, it + 1) } }
+        val manager = PlaylistManager(fakeRepository(showMap))
+
+        runBlocking {
+            manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)
+            val later = manager.upcomingItems().last()
+
+            val jumped = manager.jumpTo(later.id)!!
+
+            assertEquals(1, jumped.chapters.size)
+        }
+    }
+
+    @Test
+    fun `a shuffled episode is fetched in full once, however often it is converted`() {
+        val seasons = List(2) { season(it + 1) }
+        val showMap = seasons.associateWith { season -> List(4) { episode(season, it + 1) } }
+        val manager = PlaylistManager(fakeRepository(showMap))
+
+        runBlocking {
+            val first =
+                manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)!!
+            manager.setCurrentMediaItemIndex(first.itemId)
+            val second = manager.getNextPlayerItem()!!
+            // A quality or audio switch rebuilds the item that is playing.
+            val rebuilt = manager.recreatePlayerItem(second)
+
+            assertEquals(1, rebuilt.chapters.size)
+            // The first item and the second, each once.
+            assertEquals(2, calls.count { it == "getEpisode" })
         }
     }
 
@@ -158,10 +197,13 @@ class PlaylistManagerShuffleTest {
                 "getSeason" -> show.keys.first { it.id == args[0] }
                 "getEpisodes" -> {
                     calls += "getEpisodes"
-                    if (args[1] == null) show.values.flatten()
+                    if (args[1] == null) show.values.flatten().map { it.copy(chapters = emptyList()) }
                     else show.entries.first { it.key.id == args[1] }.value
                 }
-                "getEpisode" -> show.values.flatten().first { it.id == args[0] }
+                "getEpisode" -> {
+                    calls += "getEpisode"
+                    show.values.flatten().first { it.id == args[0] }.copy(chapters = chapters)
+                }
                 "getPlaybackSources" -> listOf(source())
                 else -> error("Unexpected call to ${method.name}")
             }
