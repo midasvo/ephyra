@@ -63,6 +63,8 @@ class JellyfinRepositoryOfflineImpl(
 
     private fun currentServerId(): String? = appPreferences.getValue(appPreferences.currentServer)
 
+    private val resumeThresholds = ResumeThresholdsStore(appPreferences.sharedPreferences)
+
     /** A library row with the fields the sort options read, so sorting never maps to models. */
     private class LibraryEntry(
         val dto: Any,
@@ -463,10 +465,19 @@ class JellyfinRepositoryOfflineImpl(
         positionTicks: Long,
         playedPercentage: Int?,
     ) {
-        val userData = stopUserData(positionTicks, playedPercentage) ?: return
+        // CE (#637): with the server's resume settings, as last read online.
+        val userData =
+            withContext(Dispatchers.IO) {
+                stopUserData(
+                    positionTicks,
+                    playedPercentage,
+                    runtimeTicks = database.getRuntimeTicks(itemId),
+                    thresholds = resumeThresholds.get(currentServerId()),
+                )
+            } ?: return
         writeAndMarkToBeSynced(itemId) { userId ->
             setPlaybackPositionTicks(itemId, userId, userData.positionTicks)
-            setPlayed(userId, itemId, userData.played)
+            userData.played?.let { setPlayed(userId, itemId, it) }
             // CE (#633): sent with the row, so the server moves the item up in Continue Watching.
             setLastPlayedDate(userId, itemId, System.currentTimeMillis())
         }
