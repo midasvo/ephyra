@@ -211,7 +211,8 @@ class PlayerInvariantsTest {
         val screen = file.readText()
         assertTrue(
             "TvPlayerScreen must send progress through TvProgressReports (#458)",
-            screen.contains("TvProgressReports(send = viewModel::updatePlaybackProgress"),
+            Regex("""TvProgressReports\(\s*send = viewModel::updatePlaybackProgress""")
+                .containsMatchIn(screen),
         )
         assertTrue(
             "TvPlayerScreen must report only while started (#458)",
