@@ -230,6 +230,19 @@ class PendingUserDataSyncTest {
     }
 
     @Test
+    fun `marking unplayed without the server or a last played time sets one`() = runBlocking {
+        // CE (#635): a download from before 2.6.0 that no refresh has filled in yet. Without a
+        // time the mark would always count as older than the server's play.
+        storeMovie()
+
+        repository.markAsUnplayed(movieId)
+
+        val row = pending().single()
+        assertFalse(row.played)
+        assertNotNull(row.lastPlayedDate)
+    }
+
+    @Test
     fun `a row played again during the sync stays marked`() = runBlocking {
         storeMovie(positionTicks = 600_000_000L, toBeSynced = true)
         database.setLastPlayedDate(userId, movieId, 2_000L)
