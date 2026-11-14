@@ -158,6 +158,22 @@ class EpisodeDownloadSelectionTest {
     }
 
     @Test
+    fun `a second download while a question is open leaves it as it is`() {
+        val first = List(2) { episode(canDownload = true) }
+        val second = List(3) { episode(canDownload = true, played = true) } + episode(true)
+        val prompts = EpisodeDownloadPrompts()
+
+        prompts.start(first, emptySet())
+        prompts.start(second, emptySet())
+
+        assertEquals(DownloadPrompt.Quality, prompts.prompt.value)
+        assertEquals(
+            EpisodeDownloadPrompts.Answer(first, null, false),
+            prompts.chooseQuality(maxBitrate = null),
+        )
+    }
+
+    @Test
     fun `dismissing the prompts downloads nothing`() {
         val prompts = EpisodeDownloadPrompts()
         prompts.start(listOf(episode(canDownload = true, played = true)), emptySet())

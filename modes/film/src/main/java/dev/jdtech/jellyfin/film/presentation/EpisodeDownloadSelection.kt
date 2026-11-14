@@ -101,8 +101,13 @@ internal class EpisodeDownloadPrompts {
     /** The open question, or null when none is. */
     val prompt: StateFlow<DownloadPrompt?> = _prompt.asStateFlow()
 
-    /** Starts the questions for a download of [episodes]. */
+    /**
+     * Starts the questions for a download of [episodes]. While a question is open, another download
+     * (one whose episodes were still loading) is ignored, so the question on screen never changes
+     * under the user's answer.
+     */
     fun start(episodes: List<FindroidEpisode>, inFlightIds: Set<UUID>) {
+        if (_prompt.value != null) return
         this.episodes = episodes
         unwatchedOnly = false
         val choice = downloadChoiceFor(episodes, inFlightIds)
