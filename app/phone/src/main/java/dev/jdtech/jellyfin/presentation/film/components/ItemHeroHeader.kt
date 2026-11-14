@@ -24,8 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
@@ -37,8 +35,10 @@ import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.FadeIntoPageHeight
 import dev.jdtech.jellyfin.presentation.utils.Layout
 import dev.jdtech.jellyfin.presentation.utils.WidthClass
+import dev.jdtech.jellyfin.presentation.utils.drawFadeIntoPage
 import dev.jdtech.jellyfin.presentation.utils.drawTopScrimOverArt
 import dev.jdtech.jellyfin.presentation.utils.parallaxLayoutModifier
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
@@ -92,9 +92,12 @@ fun ItemHeroHeader(
                     alignment = Alignment.TopCenter,
                 )
                 Canvas(modifier = Modifier.matchParentSize()) {
-                    drawRect(
-                        brush =
-                            Brush.verticalGradient(0.5f to Color.Transparent, 1f to pageBackground)
+                    // No text sits on the backdrop, so only its bottom edge fades into the page
+                    // (#631).
+                    drawFadeIntoPage(
+                        background = pageBackground,
+                        fadeTop = size.height - FadeIntoPageHeight.toPx(),
+                        fadeBottom = size.height,
                     )
                     drawTopScrimOverArt()
                 }
