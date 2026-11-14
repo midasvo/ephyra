@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.film.presentation.home.HomeAction
 import dev.jdtech.jellyfin.models.HomeSection
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.animateRowItem
 import dev.jdtech.jellyfin.presentation.utils.rememberLazyListStateAtStart
 
 @Composable
@@ -50,6 +51,8 @@ fun HomeSection(
                     direction = Direction.HORIZONTAL,
                     preferThumb = preferThumb,
                     onClick = { onAction(HomeAction.OnItemClick(item)) },
+                    // CE (#640): a card that joins or moves fades and slides into place.
+                    modifier = animateRowItem(),
                 )
             }
         }
