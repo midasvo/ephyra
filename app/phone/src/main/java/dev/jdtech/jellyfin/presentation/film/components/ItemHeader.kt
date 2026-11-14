@@ -15,8 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -25,7 +24,9 @@ import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.FadeIntoPageHeight
 import dev.jdtech.jellyfin.presentation.utils.Layout
+import dev.jdtech.jellyfin.presentation.utils.drawFadeIntoPage
 import dev.jdtech.jellyfin.presentation.utils.drawTopScrimOverArt
 import dev.jdtech.jellyfin.presentation.utils.parallaxLayoutModifier
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
@@ -113,18 +114,25 @@ private fun ItemHeaderBase(
         val headerHeight = maxOf(288.dp, minOf(maxWidth * 9f / 16f, windowHeight * 0.5f))
         Box(modifier = Modifier.height(headerHeight).clipToBounds()) {
             backdropImage()
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                drawRect(Color.Black.copy(alpha = 0.1f))
-                drawRect(
-                    brush =
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, backgroundColor),
-                            startY = 0f,
+            Canvas(modifier = Modifier.fillMaxSize()) { drawTopScrimOverArt() }
+            // CE (#631): the page colour only comes in where the text needs it. Over the text the
+            // fade is what it was over the whole header (clear at the top edge, the page colour
+            // at the bottom); above the text it eases out over FadeIntoPageHeight, and the artwork
+            // above that is left as it is.
+            Box(
+                modifier =
+                    Modifier.align(Alignment.BottomStart).fillMaxWidth().drawBehind {
+                        val header = headerHeight.toPx()
+                        drawFadeIntoPage(
+                            background = backgroundColor,
+                            fadeTop = -FadeIntoPageHeight.toPx(),
+                            fadeBottom = 0f,
+                            alpha = ((header - size.height) / header).coerceIn(0f, 1f),
+                            artBottom = size.height,
                         )
-                )
-                drawTopScrimOverArt()
-            }
-            content()
+                    },
+                content = content,
+            )
             if (showLogo) {
                 AsyncImage(
                     model = logoUri,
