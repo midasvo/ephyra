@@ -75,20 +75,4 @@ class SyncWorkerDecisionsTest {
     fun `a row marked during the run needs another run`() {
         assertTrue(needsAnotherRun(sent = listOf(row(1)), stillMarked = listOf(row(2))))
     }
-
-    @Test
-    fun `a row no longer marked as it was sent reached the server`() {
-        val a = row(1)
-        val b = row(2)
-
-        assertTrue(anyReachedServer(sent = listOf(a, b), stillMarked = listOf(b)))
-    }
-
-    @Test
-    fun `nothing reached the server while every row is still marked as sent`() {
-        val a = row(1)
-
-        assertFalse(anyReachedServer(sent = listOf(a), stillMarked = listOf(a)))
-        assertFalse(anyReachedServer(sent = emptyList(), stillMarked = emptyList()))
-    }
 }

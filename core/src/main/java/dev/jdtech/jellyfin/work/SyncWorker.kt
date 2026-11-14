@@ -62,13 +62,12 @@ constructor(
                     if (pending.isEmpty()) continue
 
                     val api = apiFor(serverAddress.address, user.accessToken, user.id)
-                    if (!syncUserData(api, user.id, pending)) hadFailures = true
+                    val outcome = syncUserData(api, user.id, pending)
+                    if (!outcome.allOk) hadFailures = true
+                    if (outcome.sent > 0) reachedServer = true
                     // A write that failed while this run was sending keeps its row marked, and
                     // asking for a sync during a run does nothing: run again for those rows.
                     val stillMarked = database.getAllUserDataToBeSynced(server.id, user.id)
-                    if (anyReachedServer(sent = pending, stillMarked = stillMarked)) {
-                        reachedServer = true
-                    }
                     if (needsAnotherRun(sent = pending, stillMarked = stillMarked)) {
                         hadFailures = true
                     }
@@ -144,11 +143,14 @@ constructor(
             found + serverUserDataOf(items)
         }
 
+    /** CE (#633): how a run for one user went: whether to retry, and how many rows were sent. */
+    private data class SyncOutcome(val allOk: Boolean, val sent: Int)
+
     private suspend fun syncUserData(
         api: ApiClient,
         userId: UUID,
         items: List<FindroidUserDataDto>,
-    ): Boolean {
+    ): SyncOutcome {
         // The item the server still has "playing" for this device: its stop report did not get
         // through. Asked first, so an unreachable server ends the run after one request.
         val leftPlaying =
@@ -161,24 +163,26 @@ constructor(
                 null
             } catch (e: Exception) {
                 Timber.e(e, "Failed to sync user data: the server was not reached")
-                return false
+                return SyncOutcome(allOk = false, sent = 0)
             }
 
         // CE (#633): what the server has now, so a row only sends its LastPlayedDate when it is
         // newer: another device that watched the item later keeps it at the top of Continue
         // Watching. Read before anything is sent, also before a stale session's stop below, which
-        // sets the server's date to now. Without an answer the date is sent, as before.
+        // sets the server's date to now. Without the answer nothing is sent: the run is retried,
+        // rather than sending dates that may be older than the server's.
         val onServer =
             try {
                 fetchServerUserData(api, userId, items.map { it.itemId })
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.w(e, "Could not read the server's user data before sending")
-                emptyMap()
+                Timber.e(e, "Failed to sync user data: the server's user data could not be read")
+                return SyncOutcome(allOk = false, sent = 0)
             }
 
         var allOk = true
+        var sent = 0
         for (userData in items) {
             try {
                 if (
@@ -218,6 +222,7 @@ constructor(
                                     ?.let(::localDateTimeOf),
                         ),
                 )
+                sent++
 
                 database.clearUserDataToBeSynced(
                     userId = userId,
@@ -253,10 +258,10 @@ constructor(
                 // The server was not reached: the other rows would fail the same way, each after
                 // its own timeout.
                 Timber.e(e, "Failed to sync user data, leaving the rest for the next run")
-                return false
+                return SyncOutcome(allOk = false, sent = sent)
             }
         }
-        return allOk
+        return SyncOutcome(allOk = allOk, sent = sent)
     }
 }
 
@@ -331,15 +336,6 @@ internal fun afterStatus(status: Int): AfterStatus =
  * not in their current state. A row that is still marked exactly as it was sent failed in this
  * run, and that failure decides for itself.
  */
-/**
- * CE (#633): whether at least one of the rows in [sent] reached the server: it is no longer marked
- * as it was sent ([stillMarked] holds the rows marked after the run).
- */
-internal fun anyReachedServer(
-    sent: List<FindroidUserDataDto>,
-    stillMarked: List<FindroidUserDataDto>,
-): Boolean = sent.any { it !in stillMarked }
-
 internal fun needsAnotherRun(
     sent: List<FindroidUserDataDto>,
     stillMarked: List<FindroidUserDataDto>,
