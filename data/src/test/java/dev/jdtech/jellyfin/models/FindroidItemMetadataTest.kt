@@ -5,6 +5,9 @@ import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.lang.reflect.Proxy
 import java.time.DayOfWeek
 import java.util.Locale
+import java.time.Instant
+import java.time.LocalDateTime
+import java.util.TimeZone
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -205,6 +208,37 @@ class FindroidItemMetadataTest {
             "daily 08:00",
             show("Continuing", DayOfWeek.entries.reversed(), "08:00").airSchedule(Locale.ENGLISH, "daily"),
         )
+    }
+
+    @Test
+    fun `a download keeps the server's last played date in its row`() {
+        // CE (#633): marking it played offline then keeps that date, as the server does.
+        val default = TimeZone.getDefault()
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
+        try {
+            val played = LocalDateTime.of(2026, 11, 12, 19, 2, 51)
+            val movie =
+                runBlocking {
+                    BaseItemDto(
+                            id = id,
+                            type = BaseItemKind.MOVIE,
+                            userData = userData(playCount = 1).copy(lastPlayedDate = played),
+                        )
+                        .toFindroidMovie(repository, emptyMap())
+                }
+            val never =
+                runBlocking {
+                    BaseItemDto(id = id, type = BaseItemKind.MOVIE).toFindroidMovie(repository, emptyMap())
+                }
+
+            assertEquals(
+                Instant.parse("2026-11-13T03:02:51Z").toEpochMilli(),
+                movie.toFindroidUserDataDto(id).lastPlayedDate,
+            )
+            assertNull(never.toFindroidUserDataDto(id).lastPlayedDate)
+        } finally {
+            TimeZone.setDefault(default)
+        }
     }
 
     private fun userData(playCount: Int) =

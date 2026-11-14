@@ -781,6 +781,8 @@ class JellyfinRepositoryImpl(
             if (userData != null) {
                 database.setPlaybackPositionTicks(itemId, currentUserId, userData.positionTicks)
                 database.setPlayed(currentUserId, itemId, userData.played)
+                // CE (#633): sent along if this stop has to be synced later.
+                database.setLastPlayedDate(currentUserId, itemId, System.currentTimeMillis())
             }
             try {
                 jellyfinApi.sessionApi.reportPlaybackStopped(
@@ -809,6 +811,8 @@ class JellyfinRepositoryImpl(
         val report = playSessions.playReport(itemId, transcoded)
         withContext(Dispatchers.IO) {
             database.setPlaybackPositionTicks(itemId, currentUserId, positionTicks)
+            // CE (#633): sent along if this progress has to be synced later.
+            database.setLastPlayedDate(currentUserId, itemId, System.currentTimeMillis())
             try {
                 jellyfinApi.sessionApi.reportPlaybackProgress(
                     PlaybackProgressInfo(
@@ -854,6 +858,8 @@ class JellyfinRepositoryImpl(
     override suspend fun markAsPlayed(itemId: UUID) {
         withContext(Dispatchers.IO) {
             database.setPlayed(currentUserId, itemId, true)
+            // CE (#633): as the server does for a played mark without a date.
+            database.setLastPlayedDateIfUnknown(currentUserId, itemId, System.currentTimeMillis())
             try {
                 jellyfinApi.userDataApi.markPlayedItem(itemId)
             } catch (_: Exception) {
@@ -865,6 +871,8 @@ class JellyfinRepositoryImpl(
     override suspend fun markAsUnplayed(itemId: UUID) {
         withContext(Dispatchers.IO) {
             database.setPlayed(currentUserId, itemId, false)
+            // CE (#633): the server clears it for an unplayed mark too.
+            database.setLastPlayedDate(currentUserId, itemId, null)
             try {
                 jellyfinApi.userDataApi.markUnplayedItem(itemId)
             } catch (_: Exception) {

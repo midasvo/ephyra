@@ -10,6 +10,10 @@ import dev.jdtech.jellyfin.utils.ObserveAsEvents
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
+/**
+ * Emits when the player has reported a stop, and (CE #633) when the sync has sent progress watched
+ * offline: either way what the screen on display shows may have changed.
+ */
 val LocalPlaybackStopped = staticCompositionLocalOf<Flow<Unit>> { emptyFlow() }
 
 /**

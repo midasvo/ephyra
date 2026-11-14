@@ -465,6 +465,8 @@ class JellyfinRepositoryOfflineImpl(
         withContext(Dispatchers.IO) {
             database.setPlaybackPositionTicks(itemId, currentUserId, userData.positionTicks)
             database.setPlayed(currentUserId, itemId, userData.played)
+            // CE (#633): sent with the row, so the server moves the item up in Continue Watching.
+            database.setLastPlayedDate(currentUserId, itemId, System.currentTimeMillis())
             markToBeSynced(itemId)
         }
     }
@@ -477,6 +479,7 @@ class JellyfinRepositoryOfflineImpl(
     ) {
         withContext(Dispatchers.IO) {
             database.setPlaybackPositionTicks(itemId, currentUserId, positionTicks)
+            database.setLastPlayedDate(currentUserId, itemId, System.currentTimeMillis())
             markToBeSynced(itemId)
         }
     }
@@ -499,6 +502,8 @@ class JellyfinRepositoryOfflineImpl(
         withContext(Dispatchers.IO) {
             database.setPlayed(currentUserId, itemId, true)
             database.setPlaybackPositionTicks(itemId, currentUserId, 0)
+            // CE (#633): as the server does for a played mark without a date.
+            database.setLastPlayedDateIfUnknown(currentUserId, itemId, System.currentTimeMillis())
             markToBeSynced(itemId)
         }
     }
@@ -506,6 +511,9 @@ class JellyfinRepositoryOfflineImpl(
     override suspend fun markAsUnplayed(itemId: UUID) {
         withContext(Dispatchers.IO) {
             database.setPlayed(currentUserId, itemId, false)
+            // CE (#633): the server clears it for an unplayed mark; the sync cannot send that, so
+            // nothing is sent and the server keeps its own until the mark reaches it.
+            database.setLastPlayedDate(currentUserId, itemId, null)
             markToBeSynced(itemId)
         }
     }

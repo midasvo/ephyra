@@ -24,17 +24,21 @@ import dev.jdtech.jellyfin.presentation.utils.LocalPlaybackStopped
 import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
 import dev.jdtech.jellyfin.presentation.utils.ProvideLocalNetworkBlock
 import dev.jdtech.jellyfin.presentation.utils.ServerStatusUi
+import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.PlaybackEvents
 import dev.jdtech.jellyfin.utils.shouldRequestNotificationPermission
 import dev.jdtech.jellyfin.viewmodels.MainViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
 
     @Inject lateinit var playbackEvents: PlaybackEvents
+
+    @Inject lateinit var dataChangeEvents: DataChangeEvents
 
     // CE (#372): registered here rather than in the download quality dialog, which closes on the
     // tap that asks. The download has already started; once allowed, its notification is posted
@@ -51,7 +55,10 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
-            val stopped = remember { playbackEvents.stopped.map {} }
+            // CE (#633): a sync that sent offline progress reloads the screen on display too.
+            val stopped = remember {
+                merge(playbackEvents.stopped.map {}, dataChangeEvents.synced)
+            }
             // CE (#281): whether the server answers, for the banner and the error pages.
             val server by viewModel.serverStatus.collectAsStateWithLifecycle()
             val serverStatus =

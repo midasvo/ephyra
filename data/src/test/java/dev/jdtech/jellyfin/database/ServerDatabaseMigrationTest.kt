@@ -8,9 +8,11 @@ import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.sqlite.execSQL
 import androidx.test.platform.app.InstrumentationRegistry
 import java.util.UUID
+import kotlin.math.abs
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,6 +28,8 @@ import org.robolectric.annotation.Config
  * The target is the highest schema in `data/schemas/`, not a fixed number. A new version that has
  * no migration fails every test here with "no migration path"; in the app it would hit
  * `fallbackToDestructiveMigration` and silently wipe the database instead.
+ *
+ * CE (#633): the offline position's row also gets a last played time when it waits to be sent.
  *
  * Released schemas: 12 (v1.2.0-ce.0 to ce.3), 14 (v1.2.0-ce.4 to 2.1.0), 16 (2.2.0), 18 (2.3.0,
  * 2.4.0).
@@ -181,6 +185,12 @@ class ServerDatabaseMigrationTest {
         assertEquals(1L, long("SELECT COUNT(*) FROM mediastreams WHERE sourceId = 'source'"))
         assertEquals(POSITION, long("SELECT playbackPositionTicks FROM userdata"))
         assertEquals(1L, long("SELECT toBeSynced FROM userdata"))
+        // CE (#633): progress waiting to be sent gets the time of the upgrade as its last play.
+        val lastPlayed = long("SELECT lastPlayedDate FROM userdata")
+        assertTrue(
+            "lastPlayedDate $lastPlayed is not about now",
+            abs(System.currentTimeMillis() - lastPlayed) < 60_000L,
+        )
         assertEquals(EPISODE, text("SELECT itemId FROM pending_downloads"))
         assertEquals(0L, long("SELECT smartQueued FROM sources"))
         if (from >= 14) {
