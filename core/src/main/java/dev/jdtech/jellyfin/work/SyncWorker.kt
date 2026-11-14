@@ -91,8 +91,7 @@ constructor(
             }
 
             // CE (#633): what the server shows changed (Continue Watching, positions), so the
-            // screen
-            // on display reloads, as after a playback stop. Also after a partly failed run.
+            // screen on display reloads, as after a playback stop. Also after a partly failed run.
             if (reachedServer) dataChanges.onSynced()
 
             if (hadFailures) {
