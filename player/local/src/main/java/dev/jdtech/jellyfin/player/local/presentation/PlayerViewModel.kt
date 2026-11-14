@@ -60,6 +60,7 @@ import dev.jdtech.jellyfin.player.local.domain.DisplayRefreshRateManager
 import dev.jdtech.jellyfin.player.local.domain.NetworkRecovery
 import dev.jdtech.jellyfin.player.local.domain.PlaybackStartGate
 import dev.jdtech.jellyfin.player.local.domain.PlaylistManager
+import dev.jdtech.jellyfin.player.local.domain.ReportedPause
 import dev.jdtech.jellyfin.player.local.domain.SegmentDecision
 import dev.jdtech.jellyfin.player.local.domain.SegmentTracker
 import dev.jdtech.jellyfin.player.local.domain.SessionTrackPicks
@@ -124,6 +125,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.jellyfin.sdk.model.api.BaseItemKind
@@ -1152,8 +1155,31 @@ constructor(
         }
     }
 
+    /** CE (#674): one progress report at a time; see [updatePlaybackProgress]. */
+    private val progressReportLock = Mutex()
+
+    /** CE (#674): the number of the latest [updatePlaybackProgress] call. Main thread only. */
+    private var progressReportSeq = 0L
+
+    /**
+     * CE (#674): what the last progress report told the server; guarded by [progressReportLock].
+     */
+    private val reportedPause = ReportedPause()
+
     fun updatePlaybackProgress() {
         Timber.d("Updating playback progress")
+        reportProgress(seq = ++progressReportSeq, onlyIfReportedPaused = false)
+    }
+
+    /**
+     * CE (#674): playback started. A resume that had to buffer first was reported as paused, so
+     * correct that now; after any other report this sends nothing, so a stall adds no reports.
+     */
+    private fun reportPlayingIfReportedPaused() {
+        reportProgress(seq = progressReportSeq, onlyIfReportedPaused = true)
+    }
+
+    private fun reportProgress(seq: Long, onlyIfReportedPaused: Boolean) {
         viewModelScope.launch(Dispatchers.Main) {
             refreshPlayingSnapshot()
             savedStateHandle["position"] = player.currentPosition
@@ -1165,20 +1191,39 @@ constructor(
             // server marks an item without a runtime played at its first position report, so an
             // item that failed to open was marked played.
             if (playing?.startJob == null) return@launch
+            // CE (#674): a pause right after the start must not reach the server before the start,
+            // which would then mark the item playing again. The stop waits the same way. join()
+            // returns for a failed or cancelled start too.
+            val startJob = playing?.startJob
+            if (startJob != null && !startJob.isCompleted) {
+                withTimeoutOrNull(START_REPORT_WAIT_MS) { startJob.join() }
+                if (playing?.startJob == null) return@launch
+            }
             val mediaItem = player.currentMediaItem ?: return@launch
             if (mediaItem.mediaId.isNotEmpty()) {
                 val itemId = UUID.fromString(mediaItem.mediaId)
                 // CE (#599): the item as it plays now; a quality switch replaces it in items.
                 val transcoded = items.firstOrNull { it.itemId == itemId }?.isTranscoded == true
-                try {
-                    repository.postPlaybackProgress(
-                        itemId,
-                        player.currentPosition.times(10000),
-                        !player.isPlaying,
-                        transcoded,
-                    )
-                } catch (e: Exception) {
-                    Timber.e(e)
+                // CE (#674): a pause and a resume are reported as they happen, so two reports can
+                // be in flight at once and reach the server in the wrong order. Send one at a
+                // time, skip any that a newer call replaces, and read the state when it is sent.
+                progressReportLock.withLock {
+                    if (seq != progressReportSeq) return@withLock
+                    if (onlyIfReportedPaused && !reportedPause.needsReportWhenPlaying()) {
+                        return@withLock
+                    }
+                    val isPaused = !player.isPlaying
+                    try {
+                        repository.postPlaybackProgress(
+                            itemId,
+                            player.currentPosition.times(10000),
+                            isPaused,
+                            transcoded,
+                        )
+                        reportedPause.onReported(isPaused)
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                    }
                 }
             }
         }
@@ -2629,6 +2674,7 @@ constructor(
         }
         if (isBackgroundAudioEnabled) sessionStore.onPlayingChanged(isPlaying)
         if (isPlaying && isBackgroundAudioEnabled) startBackgroundProgressReports()
+        if (isPlaying) reportPlayingIfReportedPaused()
     }
 
     /**

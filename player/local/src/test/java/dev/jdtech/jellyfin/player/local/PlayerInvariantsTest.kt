@@ -214,8 +214,10 @@ class PlayerInvariantsTest {
             "STATE_READY must send the start the gate holds (#601)",
             ready!!.value.contains("startGate.onReady()"),
         )
-        val progress = Regex("""fun updatePlaybackProgress\(\) \{[\s\S]*?\n    }""").find(viewModel)
-        assertTrue("PlayerViewModel.updatePlaybackProgress not found", progress != null)
+        // #674: updatePlaybackProgress sends its report through reportProgress.
+        val progress =
+            Regex("""private fun reportProgress\([^)]*\) \{[\s\S]*?\n    }""").find(viewModel)
+        assertTrue("PlayerViewModel.reportProgress not found", progress != null)
         assertTrue(
             "No progress report before the start report (#601)",
             progress!!.value.contains("if (playing?.startJob == null) return@launch"),
@@ -235,6 +237,14 @@ class PlayerInvariantsTest {
             "onPlayWhenReadyChanged must call updatePlaybackProgress() when not at the end (#674)",
             Regex("""\n {8}} else \{[\s\S]*?\n {12}updatePlaybackProgress\(\)\n {8}}""")
                 .containsMatchIn(callback!!.value),
+        )
+        // A resume that buffered first was reported as paused: correct it once it plays.
+        val isPlaying =
+            Regex("""override fun onIsPlayingChanged\([\s\S]*?\n    }""").find(viewModel)
+        assertTrue("PlayerViewModel.onIsPlayingChanged not found", isPlaying != null)
+        assertTrue(
+            "onIsPlayingChanged must report a start of playback the server has as paused (#674)",
+            isPlaying!!.value.contains("if (isPlaying) reportPlayingIfReportedPaused()"),
         )
     }
 
