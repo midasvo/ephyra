@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Spur %1$d</string>
     <string name="ce_server_unreachable_downloads">Deine Downloads lassen sich weiterhin abspielen.</string>
+    <string name="ce_download_choice_title">Welche Folgen herunterladen?</string>
+    <string name="ce_download_choice_message">Du hast einige dieser Folgen schon gesehen.</string>
+    <string name="ce_download_choice_unwatched">Nur ungesehene (%1$d)</string>
+    <string name="ce_download_choice_all">Alle Folgen (%1$d)</string>
 </resources>

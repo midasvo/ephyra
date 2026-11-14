@@ -138,4 +138,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Track %1$d</string>
     <string name="ce_server_unreachable_downloads">Bạn vẫn có thể phát các nội dung đã tải xuống.</string>
+    <string name="ce_download_choice_title">Tải xuống những tập nào?</string>
+    <string name="ce_download_choice_message">Bạn đã xem một số tập trong số này.</string>
+    <string name="ce_download_choice_unwatched">Chỉ tập chưa xem (%1$d)</string>
+    <string name="ce_download_choice_all">Tất cả các tập (%1$d)</string>
 </resources>

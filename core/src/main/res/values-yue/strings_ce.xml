@@ -138,4 +138,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">軌道 %1$d</string>
     <string name="ce_server_unreachable_downloads">你下載咗嘅內容仍然可以播放。</string>
+    <string name="ce_download_choice_title">要下載邊幾集？</string>
+    <string name="ce_download_choice_message">呢啲集數入面有部分你已經睇過。</string>
+    <string name="ce_download_choice_unwatched">只限未睇 (%1$d)</string>
+    <string name="ce_download_choice_all">全部集數 (%1$d)</string>
 </resources>

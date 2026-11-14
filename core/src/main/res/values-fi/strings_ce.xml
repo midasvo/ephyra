@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Raita %1$d</string>
     <string name="ce_server_unreachable_downloads">Latauksesi ovat edelleen toistettavissa.</string>
+    <string name="ce_download_choice_title">Mitkä jaksot ladataan?</string>
+    <string name="ce_download_choice_message">Olet jo katsonut osan näistä jaksoista.</string>
+    <string name="ce_download_choice_unwatched">Vain katsomattomat (%1$d)</string>
+    <string name="ce_download_choice_all">Kaikki jaksot (%1$d)</string>
 </resources>

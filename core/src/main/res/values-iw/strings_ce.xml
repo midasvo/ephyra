@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">רצועה %1$d</string>
     <string name="ce_server_unreachable_downloads">עדיין אפשר לנגן את ההורדות שלך.</string>
+    <string name="ce_download_choice_title">אילו פרקים להוריד?</string>
+    <string name="ce_download_choice_message">כבר צפית בחלק מהפרקים האלה.</string>
+    <string name="ce_download_choice_unwatched">רק כאלה שלא נצפו (%1$d)</string>
+    <string name="ce_download_choice_all">כל הפרקים (%1$d)</string>
 </resources>

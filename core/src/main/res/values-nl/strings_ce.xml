@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Spoor %1$d</string>
     <string name="ce_server_unreachable_downloads">Je downloads kun je nog afspelen.</string>
+    <string name="ce_download_choice_title">Welke afleveringen downloaden?</string>
+    <string name="ce_download_choice_message">Je hebt een deel van deze afleveringen al gezien.</string>
+    <string name="ce_download_choice_unwatched">Alleen ongezien (%1$d)</string>
+    <string name="ce_download_choice_all">Alle afleveringen (%1$d)</string>
 </resources>

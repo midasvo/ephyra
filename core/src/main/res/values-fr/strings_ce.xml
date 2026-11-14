@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Piste %1$d</string>
     <string name="ce_server_unreachable_downloads">Vos téléchargements restent lisibles.</string>
+    <string name="ce_download_choice_title">Quels épisodes télécharger ?</string>
+    <string name="ce_download_choice_message">Vous avez déjà regardé certains de ces épisodes.</string>
+    <string name="ce_download_choice_unwatched">Non vus uniquement (%1$d)</string>
+    <string name="ce_download_choice_all">Tous les épisodes (%1$d)</string>
 </resources>

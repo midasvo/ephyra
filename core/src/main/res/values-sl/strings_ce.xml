@@ -153,4 +153,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Steza %1$d</string>
     <string name="ce_server_unreachable_downloads">Prenose lahko še vedno predvajate.</string>
+    <string name="ce_download_choice_title">Katere epizode prenesti?</string>
+    <string name="ce_download_choice_message">Nekatere od teh epizod ste že gledali.</string>
+    <string name="ce_download_choice_unwatched">Samo neogledane (%1$d)</string>
+    <string name="ce_download_choice_all">Vse epizode (%1$d)</string>
 </resources>

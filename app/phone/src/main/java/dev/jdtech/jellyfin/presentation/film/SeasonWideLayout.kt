@@ -226,7 +226,7 @@ fun SeasonListDetail(
     onSelectEpisode: (UUID) -> Unit,
     lazyListState: LazyListState,
     onAction: (SeasonAction) -> Unit,
-    onDownloadSeason: (maxBitrate: Int?) -> Unit,
+    onDownloadSeason: () -> Unit,
     onDeleteSeasonDownloads: () -> Unit,
     onReloadSeason: () -> Unit,
     navigateToPerson: (personId: UUID) -> Unit,
@@ -286,7 +286,7 @@ fun SeasonWideLayout(
     selectedEpisodeId: UUID?,
     onSelectEpisode: (UUID) -> Unit,
     onAction: (SeasonAction) -> Unit,
-    onDownloadSeason: (maxBitrate: Int?) -> Unit,
+    onDownloadSeason: () -> Unit,
     onDeleteSeasonDownloads: () -> Unit,
     detailPane: @Composable (episodeId: UUID) -> Unit,
     lazyListState: LazyListState = rememberLazyListState(),
@@ -304,7 +304,6 @@ fun SeasonWideLayout(
     // CE (#437): the artwork under the top bar, if any; shared by the header and the bar.
     val artwork = rememberArtworkState(state.season, ArtworkPlacement.Header)
 
-    var seasonQualityDialogOpen by remember { mutableStateOf(false) }
     var episodeQualityTarget by remember { mutableStateOf<FindroidEpisode?>(null) }
 
     // Downloads removed from the list wait behind an Undo snackbar, as on the single-column page.
@@ -422,7 +421,7 @@ fun SeasonWideLayout(
                                         }
                                     },
                                     onTrailerClick = {},
-                                    onDownloadClick = { seasonQualityDialogOpen = true },
+                                    onDownloadClick = onDownloadSeason,
                                     onDownloadCancelClick = {},
                                     onDownloadDeleteClick = onDeleteSeasonDownloads,
                                     modifier =
@@ -548,15 +547,6 @@ fun SeasonWideLayout(
             }
         }
 
-        if (seasonQualityDialogOpen) {
-            DownloadQualityDialog(
-                onSelect = { maxBitrate ->
-                    onDownloadSeason(maxBitrate)
-                    seasonQualityDialogOpen = false
-                },
-                onDismiss = { seasonQualityDialogOpen = false },
-            )
-        }
         episodeQualityTarget?.let { episode ->
             DownloadQualityDialog(
                 onSelect = { maxBitrate ->

@@ -153,4 +153,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Дорожка %1$d</string>
     <string name="ce_server_unreachable_downloads">Загруженное по-прежнему можно смотреть.</string>
+    <string name="ce_download_choice_title">Какие серии скачать?</string>
+    <string name="ce_download_choice_message">Некоторые из этих серий вы уже посмотрели.</string>
+    <string name="ce_download_choice_unwatched">Только непросмотренные (%1$d)</string>
+    <string name="ce_download_choice_all">Все серии (%1$d)</string>
 </resources>
