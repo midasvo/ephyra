@@ -478,6 +478,31 @@ interface ServerDatabaseDao {
     )
 
     /**
+     * CE (#635): another device played the item after this one did, so its progress replaces the
+     * row's and the row counts as sent. Only while the row still holds what the sync read
+     * (`sent*`), as [clearUserDataToBeSynced] does: a write in between keeps the row marked. The
+     * row's favourite is kept; the sync sends it on its own.
+     */
+    @Query(
+        "UPDATE userdata SET played = :played, playbackPositionTicks = :playbackPositionTicks, " +
+            "lastPlayedDate = :lastPlayedDate, toBeSynced = 0 " +
+            "WHERE userId = :userId AND itemId = :itemId AND played = :sentPlayed " +
+            "AND favorite = :sentFavorite AND playbackPositionTicks = :sentPlaybackPositionTicks " +
+            "AND lastPlayedDate IS :sentLastPlayedDate"
+    )
+    suspend fun takeServerProgress(
+        userId: UUID,
+        itemId: UUID,
+        played: Boolean,
+        playbackPositionTicks: Long,
+        lastPlayedDate: Long?,
+        sentPlayed: Boolean,
+        sentFavorite: Boolean,
+        sentPlaybackPositionTicks: Long,
+        sentLastPlayedDate: Long?,
+    )
+
+    /**
      * Marks a row as sent, but only while it still holds the values that were sent: a write that
      * failed during the sync keeps the row marked.
      */

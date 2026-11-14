@@ -193,6 +193,51 @@ constructor(
         }
     }
 
+    /**
+     * CE (#635): [row] was played here before another device played the item ([server] is newer),
+     * so the server's progress wins: it is copied into the row and nothing of the phone's progress
+     * is sent. A favourite changed here is still sent, on its own. A session the server still has
+     * playing for this device is ended at the server's own position, or its idle check would end it
+     * later with the position it last heard from here (#584).
+     */
+    private suspend fun keepServerProgress(
+        api: ApiClient,
+        userId: UUID,
+        row: FindroidUserDataDto,
+        server: ServerUserData,
+        leftPlaying: UUID?,
+    ) {
+        Timber.d("Item ${row.itemId} was played later elsewhere, keeping the server's progress")
+        if (endsStaleSession(row.itemId, leftPlaying, playbackEvents.playingItemId.value)) {
+            api.sessionApi.reportPlaybackStopped(
+                PlaybackStopInfo(
+                    itemId = row.itemId,
+                    positionTicks = server.playbackPositionTicks,
+                    failed = false,
+                )
+            )
+        }
+        if (row.favorite != server.favorite) {
+            api.userDataApi.updateItemUserData(
+                itemId = row.itemId,
+                userId = userId,
+                data = UpdateUserItemDataDto(isFavorite = row.favorite),
+            )
+        }
+        database.takeServerProgress(
+            userId = userId,
+            itemId = row.itemId,
+            played = server.played,
+            playbackPositionTicks = server.playbackPositionTicks,
+            lastPlayedDate = server.lastPlayedDate,
+            sentPlayed = row.played,
+            sentFavorite = row.favorite,
+            sentPlaybackPositionTicks = row.playbackPositionTicks,
+            sentLastPlayedDate = row.lastPlayedDate,
+        )
+        database.deleteUserDataIfOrphaned(userId, row.itemId)
+    }
+
     private suspend fun syncUserData(
         api: ApiClient,
         userId: UUID,
@@ -232,6 +277,14 @@ constructor(
         var sent = 0
         for (userData in items) {
             try {
+                val server = onServer[userData.itemId]
+                if (
+                    server != null && serverIsNewer(userData.lastPlayedDate, server.lastPlayedDate)
+                ) {
+                    keepServerProgress(api, userId, userData, server, leftPlaying)
+                    continue
+                }
+
                 if (
                     endsStaleSession(
                         rowItemId = userData.itemId,
@@ -350,6 +403,14 @@ internal fun serverUserDataOf(items: List<BaseItemDto>): Map<UUID, ServerUserDat
  */
 internal fun isNewerThanServer(local: Long?, server: Long?): Boolean =
     local != null && (server == null || local > server)
+
+/**
+ * CE (#635): whether the server's last-played time [server] is newer than the local one [local]:
+ * another device played the item after this one did. The other side of [isNewerThanServer]; an
+ * equal time is not newer.
+ */
+internal fun serverIsNewer(local: Long?, server: Long?): Boolean =
+    isNewerThanServer(local = server, server = local)
 
 /**
  * CE (#633): the SDK reads and writes dates as local date-times of this device's time zone, and the

@@ -237,6 +237,60 @@ class PendingUserDataSyncTest {
     }
 
     @Test
+    fun `a newer play elsewhere replaces the row and counts as sent`() {
+        runBlocking {
+            storeMovie(positionTicks = 600_000_000L, toBeSynced = true)
+            database.setFavorite(userId, movieId, true)
+            database.setLastPlayedDate(userId, movieId, 1_000L)
+
+            // #635: the sync read the row as stored; the server has a later play at 900.
+            database.takeServerProgress(
+                userId = userId,
+                itemId = movieId,
+                played = false,
+                playbackPositionTicks = 900_000_000L,
+                lastPlayedDate = 2_000L,
+                sentPlayed = false,
+                sentFavorite = true,
+                sentPlaybackPositionTicks = 600_000_000L,
+                sentLastPlayedDate = 1_000L,
+            )
+
+            assertTrue(pending().isEmpty())
+            val row = database.getUserData(movieId, userId)!!
+            assertEquals(900_000_000L, row.playbackPositionTicks)
+            assertEquals(2_000L, row.lastPlayedDate)
+            // The phone's favourite stays: the sync sends it on its own.
+            assertTrue(row.favorite)
+        }
+    }
+
+    @Test
+    fun `a row played again while the sync read the server keeps its own progress`() {
+        runBlocking {
+            storeMovie(positionTicks = 700_000_000L, toBeSynced = true)
+            database.setLastPlayedDate(userId, movieId, 3_000L)
+
+            // The sync read the row at 600 / 1000; it has been played since.
+            database.takeServerProgress(
+                userId = userId,
+                itemId = movieId,
+                played = false,
+                playbackPositionTicks = 900_000_000L,
+                lastPlayedDate = 2_000L,
+                sentPlayed = false,
+                sentFavorite = false,
+                sentPlaybackPositionTicks = 600_000_000L,
+                sentLastPlayedDate = 1_000L,
+            )
+
+            val row = pending().single()
+            assertEquals(700_000_000L, row.playbackPositionTicks)
+            assertEquals(3_000L, row.lastPlayedDate)
+        }
+    }
+
+    @Test
     fun `a show's row is not synced`() = runBlocking {
         database.insertShow(
             FindroidShowDto(

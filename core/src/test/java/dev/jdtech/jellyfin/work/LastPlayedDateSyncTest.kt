@@ -47,6 +47,26 @@ class LastPlayedDateSyncTest {
     }
 
     @Test
+    fun `a later play on the server wins over the phone's`() {
+        // #635: another device played the item after this one did.
+        assertTrue(serverIsNewer(local = 1_000L, server = 2_000L))
+    }
+
+    @Test
+    fun `an earlier play on the server does not win`() {
+        assertFalse(serverIsNewer(local = 2_000L, server = 1_000L))
+        assertFalse(serverIsNewer(local = 1_000L, server = 1_000L))
+    }
+
+    @Test
+    fun `a server without a date never wins, a row without one always loses`() {
+        assertFalse(serverIsNewer(local = 1_000L, server = null))
+        assertFalse(serverIsNewer(local = null, server = null))
+        // A row that was never played here (a favourite changed offline) has no progress to send.
+        assertTrue(serverIsNewer(local = null, server = 1_000L))
+    }
+
+    @Test
     fun `the server's user data is read by item, with its last played date`() {
         // The SDK hands dates over in the device's zone; in a zone that is not UTC, a conversion
         // that ignored it would be hours off.
