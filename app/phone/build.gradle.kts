@@ -65,7 +65,7 @@ android {
 
     defaultConfig {
         applicationId = "nl.midasvo.findroid.ce"
-        minSdk = Versions.MIN_SDK
+        minSdk = Versions.PHONE_MIN_SDK
         targetSdk = Versions.TARGET_SDK
 
         // CE-owned: Ephyra's own version (EphyraVersion.kt), not upstream's Versions.APP_*.

@@ -1,6 +1,6 @@
 # Ephyra
 
-> Ephyra is a free, open-source (GPLv3) Jellyfin client for Android phones, tablets and Android TV. It is a fork of Findroid and was called Findroid CE until version 2.0.0. It needs a Jellyfin server and Android 10 or newer.
+> Ephyra is a free, open-source (GPLv3) Jellyfin client for Android phones, tablets and Android TV. It is a fork of Findroid and was called Findroid CE until version 2.0.0. It needs a Jellyfin server and Android 10 or newer (Android 9 or newer on TV).
 
 What Ephyra adds to Findroid:
 
