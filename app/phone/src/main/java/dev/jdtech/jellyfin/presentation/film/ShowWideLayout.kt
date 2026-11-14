@@ -131,6 +131,7 @@ fun ShowWideLayout(
                         onPlayClick = { startFromBeginning ->
                             onAction(ShowAction.Play(startFromBeginning = startFromBeginning))
                         },
+                        onShuffleClick = { onAction(ShowAction.Shuffle) },
                         onMarkAsPlayedClick = {
                             when (show.played) {
                                 true -> onAction(ShowAction.UnmarkAsPlayed)

@@ -145,10 +145,21 @@ fun SeasonScreen(
             when (action) {
                 is SeasonAction.Play -> {
                     // CE (#626): on the Cast receiver when one is connected.
-                    if (!castPlayback.play(seasonId, BaseItemKind.SEASON, false, null)) {
+                    if (!castPlayback.play(seasonId, BaseItemKind.SEASON, false, null, shuffle = false)) {
                         val intent = Intent(context, PlayerActivity::class.java)
                         intent.putExtra("itemId", seasonId.toString())
                         intent.putExtra("itemKind", BaseItemKind.SEASON.serialName)
+                        context.startActivity(intent)
+                    }
+                }
+                // CE (#638): this season's episodes in random order.
+                is SeasonAction.Shuffle -> {
+                    // On the Cast receiver when one is connected, as Play does (#626).
+                    if (!castPlayback.play(seasonId, BaseItemKind.SEASON, false, null, shuffle = true)) {
+                        val intent = Intent(context, PlayerActivity::class.java)
+                        intent.putExtra("itemId", seasonId.toString())
+                        intent.putExtra("itemKind", BaseItemKind.SEASON.serialName)
+                        intent.putExtra("shuffle", true)
                         context.startActivity(intent)
                     }
                 }
@@ -292,6 +303,7 @@ private fun SeasonScreenLayout(
                         onPlayClick = { startFromBeginning ->
                             onAction(SeasonAction.Play(startFromBeginning = startFromBeginning))
                         },
+                        onShuffleClick = { onAction(SeasonAction.Shuffle) },
                         onMarkAsPlayedClick = {
                             when (season.played) {
                                 true -> onAction(SeasonAction.UnmarkAsPlayed)

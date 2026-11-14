@@ -144,10 +144,21 @@ fun ShowScreen(
             when (action) {
                 is ShowAction.Play -> {
                     // CE (#626): on the Cast receiver when one is connected.
-                    if (!castPlayback.play(showId, BaseItemKind.SERIES, false, null)) {
+                    if (!castPlayback.play(showId, BaseItemKind.SERIES, false, null, shuffle = false)) {
                         val intent = Intent(context, PlayerActivity::class.java)
                         intent.putExtra("itemId", showId.toString())
                         intent.putExtra("itemKind", BaseItemKind.SERIES.serialName)
+                        context.startActivity(intent)
+                    }
+                }
+                // CE (#638): every season's episodes, Specials left out, in random order.
+                is ShowAction.Shuffle -> {
+                    // On the Cast receiver when one is connected, as Play does (#626).
+                    if (!castPlayback.play(showId, BaseItemKind.SERIES, false, null, shuffle = true)) {
+                        val intent = Intent(context, PlayerActivity::class.java)
+                        intent.putExtra("itemId", showId.toString())
+                        intent.putExtra("itemKind", BaseItemKind.SERIES.serialName)
+                        intent.putExtra("shuffle", true)
                         context.startActivity(intent)
                     }
                 }
@@ -294,6 +305,7 @@ private fun ShowScreenLayout(
                         onPlayClick = { startFromBeginning ->
                             onAction(ShowAction.Play(startFromBeginning = startFromBeginning))
                         },
+                        onShuffleClick = { onAction(ShowAction.Shuffle) },
                         onMarkAsPlayedClick = {
                             when (show.played) {
                                 true -> onAction(ShowAction.UnmarkAsPlayed)

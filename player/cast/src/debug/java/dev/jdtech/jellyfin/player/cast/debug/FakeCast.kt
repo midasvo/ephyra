@@ -239,6 +239,7 @@ internal class FakeCastPlayerController(
         itemKind: String,
         startFromBeginning: Boolean,
         mediaSourceId: String?,
+        shuffle: Boolean,
     ) {
         manager = playlistManagers.get()
         load {
@@ -247,6 +248,7 @@ internal class FakeCastPlayerController(
                 itemKind = BaseItemKind.fromName(itemKind),
                 mediaSourceId = mediaSourceId,
                 startFromBeginning = startFromBeginning,
+                shuffle = shuffle,
             )
         }
     }

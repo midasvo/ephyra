@@ -140,7 +140,7 @@ fun MovieScreen(
             when (action) {
                 is MovieAction.Play -> {
                     // CE (#626): on the Cast receiver when one is connected.
-                    if (!castPlayback.play(movieId, BaseItemKind.MOVIE, action.startFromBeginning, action.mediaSourceId)) {
+                    if (!castPlayback.play(movieId, BaseItemKind.MOVIE, action.startFromBeginning, action.mediaSourceId, shuffle = false)) {
                         val intent = Intent(context, PlayerActivity::class.java)
                         intent.putExtra("itemId", movieId.toString())
                         intent.putExtra("itemKind", BaseItemKind.MOVIE.serialName)
