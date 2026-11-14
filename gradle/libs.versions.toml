@@ -31,7 +31,7 @@ junit = "4.13.2"
 kotlin = "2.4.21"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.13.0"
-ksp = "2.3.13"
+ksp = "2.3.14"
 # The ktfmt Gradle plugin. 0.27.0 is the first version that finds the Kotlin sources under
 # AGP 9's built-in Kotlin: 0.26.0 checked only the .gradle.kts scripts (#661).
 ktfmt = "0.27.0"
