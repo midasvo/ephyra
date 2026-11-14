@@ -6,13 +6,13 @@
   <a href="https://github.com/midasvo/ephyra/releases/latest"><img src="https://img.shields.io/github/v/release/midasvo/ephyra?label=release&color=4FD8F0" alt="Latest release"></a>
   <a href="https://github.com/midasvo/ephyra/releases"><img src="https://img.shields.io/github/downloads/midasvo/ephyra/total?label=downloads&color=4FD8F0" alt="Total downloads"></a>
   <a href="https://github.com/midasvo/ephyra/issues"><img src="https://img.shields.io/github/issues/midasvo/ephyra?color=4FD8F0" alt="Open issues"></a>
-  <img src="https://img.shields.io/badge/Android-10%2B-B9A3FF" alt="Android 10 or newer">
   <a href="https://jellyfin.org/"><img src="https://img.shields.io/badge/Jellyfin-12.0%2B-B9A3FF" alt="Jellyfin 12.0 or newer"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPLv3-B9A3FF" alt="License: GPLv3"></a>
+</p>
+<p align="center">
   <a href="#install"><img src="https://img.shields.io/badge/Android-10%2B-5A6B85?logo=android&logoColor=white" alt="Android 10 or newer on phones and tablets"></a>
   <a href="#android-tv"><img src="https://img.shields.io/badge/Android%20TV-9%2B-5A6B85?logo=android&logoColor=white" alt="Android TV 9 or newer"></a>
 </p>
-
 <p align="center">
   <a href="https://midasvo.nl/ephyra/">Website</a> ·
   <a href="#install">Install</a> ·
