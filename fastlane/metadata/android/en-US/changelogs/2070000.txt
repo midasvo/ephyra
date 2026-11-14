@@ -1,0 +1,7 @@
+The Android TV app comes to Android 9 and Fire OS 7, and the server hears about a pause right away.
+
+- Android TV: runs on Android 9, including Fire OS 7 sticks.
+- Home rows: cards slide into place when a row changes.
+- A pause or a resume reaches the server at once, also in the background.
+- Item pages show their backdrop again.
+- Cast: transcodes to H.264 on HEVC receivers.
