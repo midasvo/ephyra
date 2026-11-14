@@ -517,7 +517,10 @@ class JellyfinRepositoryOfflineImpl(
             setPlayed(userId, itemId, false)
             // CE (#635): the last played time stays. The sync cannot clear the server's either,
             // and with it the sync sees the mark is not older than the play it undoes: it is
-            // sent unless another device played the item since.
+            // sent unless another device played the item since. A row without one (a download
+            // from before 2.6.0 that no refresh has filled in yet) gets the time of the mark,
+            // or it would always count as older than the server's play.
+            setLastPlayedDateIfUnknown(userId, itemId, System.currentTimeMillis())
         }
     }
 

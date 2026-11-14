@@ -931,6 +931,9 @@ class JellyfinRepositoryImpl(
 
     override suspend fun markAsUnplayed(itemId: UUID) {
         withContext(Dispatchers.IO) {
+            // CE (#635): the time of the mark, taken before the request: a request that fails only
+            // after a timeout must not make the mark look later than a play elsewhere meanwhile.
+            val markedAt = System.currentTimeMillis()
             database.setPlayed(currentUserId, itemId, false)
             try {
                 jellyfinApi.userDataApi.markUnplayedItem(itemId)
@@ -938,7 +941,9 @@ class JellyfinRepositoryImpl(
                 database.setLastPlayedDate(currentUserId, itemId, null)
             } catch (_: Exception) {
                 // CE (#635): kept until the sync sends the mark, which cannot clear the server's;
-                // with it the sync sees the mark is not older than the play it undoes.
+                // with it the sync sees the mark is not older than the play it undoes. A row
+                // without one gets the time of the mark, or it would always count as older.
+                database.setLastPlayedDateIfUnknown(currentUserId, itemId, markedAt)
                 markToBeSynced(itemId)
             }
         }

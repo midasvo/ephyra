@@ -162,6 +162,20 @@ constructor(
         }
 
     /**
+     * CE (#635): logs [message] with [e]'s stack trace, as a warning when [warn]. A refused login
+     * ([isRefusedLogin]) is one line instead: a user signed out on the server, or whose login
+     * expired, gets one on every run for as long as it stays on this device, and the trace tells
+     * nothing more.
+     */
+    private fun logFailure(e: Exception, message: String, warn: Boolean = false) {
+        when {
+            isRefusedLogin(e) -> Timber.w("%s: the server refused this user's login (401)", message)
+            warn -> Timber.w(e, message)
+            else -> Timber.e(e, message)
+        }
+    }
+
+    /**
      * CE (#633): how a run for one user went: whether to retry, and how many rows were sent. CE
      * (#635): and how many rows took the server's newer progress instead.
      */
@@ -197,7 +211,11 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(e, "Could not refresh the user data of downloads from the server")
+            logFailure(
+                e,
+                "Could not refresh the user data of downloads from the server",
+                warn = true,
+            )
         }
         return changed
     }
@@ -263,7 +281,7 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: InvalidStatusException) {
-                Timber.w(e, "Could not read the playback session")
+                logFailure(e, "Could not read the playback session", warn = true)
                 null
             } catch (e: Exception) {
                 Timber.e(e, "Failed to sync user data: the server was not reached")
@@ -281,7 +299,7 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, "Failed to sync user data: the server's user data could not be read")
+                logFailure(e, "Failed to sync user data: the server's user data could not be read")
                 return SyncOutcome(allOk = false, sent = 0)
             }
 
@@ -475,6 +493,10 @@ internal enum class AfterStatus {
     RETRY,
 }
 
+/** CE (#635): whether [e] is the server refusing the user's login: signed out there, or expired. */
+internal fun isRefusedLogin(e: Throwable): Boolean =
+    e is InvalidStatusException && e.status == HTTP_UNAUTHORIZED
+
 /** What an error status from the server means for the row that was sent. */
 internal fun afterStatus(status: Int): AfterStatus =
     when {
@@ -496,5 +518,6 @@ internal fun needsAnotherRun(
 /** CE (#633): items per request when reading the server's user data, to keep the URL short. */
 private const val USER_DATA_BATCH_SIZE = 100
 
+private const val HTTP_UNAUTHORIZED = 401
 private const val HTTP_NOT_FOUND = 404
 private const val HTTP_SERVER_ERROR = 500
