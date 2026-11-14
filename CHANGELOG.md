@@ -13,14 +13,6 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
-
-### Maintenance
-- libmpv now comes from Ephyra's own fork, `io.github.midasvo:libmpv` 1.1.0: mpv 0.42.0,
-  FFmpeg 9.0.2, libplacebo 7.387.0, dav1d 1.5.4, libass 0.17.5 and mbedtls 3.6.7, with security
-  fixes in libass, mbedtls and FFmpeg. Network reads stay on FFmpeg, and mpv no longer writes its
-  verbose messages, which contain stream URLs, to logcat (#654).
-
 ## [v2.5.0] — 2026-11-13
 
 Ephyra can cast. The new proprietary variant of the phone app adds Google Cast: pick a

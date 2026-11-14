@@ -65,8 +65,8 @@ Make a branch, set `libmpv = "1.2.0"`, and apply what step 2 found. Then run:
 ```bash
 ./gradlew ktfmtCheck :player:local:testDebugUnitTest testDebugUnitTest :app:phone:assembleLibreDebug :app:tv:assembleDebug
 ```
-Add a line under `### Maintenance` in `## [Unreleased]` in `CHANGELOG.md` ("libmpv 1.2.0: mpv …,
-FFmpeg …"), or under `### Fixed` if it fixes something users see.
+Don't edit `CHANGELOG.md`: the `release` skill writes it (CLAUDE.md). Put the versions ("libmpv
+1.2.0: mpv …, FFmpeg …") and anything users see in the commit body and the PR description.
 
 ### 5. Test on devices
 Run the whole of `docs/mpv-checklist.md` on a phone and on TV, not just the "Every PR" part: on an
