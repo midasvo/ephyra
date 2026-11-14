@@ -146,6 +146,18 @@ class PlayerInvariantsTest {
     }
 
     @Test
+    fun `mpv applies AV1 film grain on the CPU`() {
+        // #652, #655: libplacebo's grain shader flipped the picture on OpenGL ES before 7.387.0,
+        // and on Mali it fails to compile in every version tested, which drops the grain silently
+        // (measured on a Dimensity 1200: pixel noise 0.5 with the shader, 14.3 with dav1d).
+        val mpvPlayer = source("mpv/MPVPlayer.kt")
+        assertTrue(
+            "MPVPlayer must set vd-lavc-film-grain=cpu (#652, #655)",
+            mpvPlayer.contains("""setOptionString("vd-lavc-film-grain", "cpu")"""),
+        )
+    }
+
+    @Test
     fun `mpv reports a failed load at END_FILE without requiring an error line`() {
         // #446: libmpv can deliver END_FILE before the error lines that explain it. Requiring an
         // error line first left the player black and BUFFERING without an error.

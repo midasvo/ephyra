@@ -15,10 +15,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Fixed
-- mpv: AV1 videos with film grain are decoded with the grain on the GPU again, without the split,
-  mirrored colours. The fix is in libplacebo 7.387.0, so the CPU workaround is gone (#652).
-
 ### Maintenance
 - libmpv now comes from Ephyra's own fork, `io.github.midasvo:libmpv` 1.1.0: mpv 0.42.0,
   FFmpeg 9.0.2, libplacebo 7.387.0, dav1d 1.5.4, libass 0.17.5 and mbedtls 3.6.7, with security

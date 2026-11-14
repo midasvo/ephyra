@@ -247,6 +247,13 @@ class MPVPlayer(
         mpvLib.setOptionString("hwdec", hwDec)
         mpvLib.setOptionString("hwdec-codecs", "h264,hevc,mpeg4,mpeg2video,vp8,vp9,av1")
 
+        // AV1 film grain on the CPU (dav1d) when mpv decodes in software. With gpu-next the
+        // default is libplacebo's grain shader, which is not safe on every GPU: in libplacebo
+        // 7.360.1 it flipped the luma plane on OpenGL ES (#652, fixed in 7.387.0), and on Mali
+        // (tested on a Dimensity 1200, both versions) it fails to compile, so libplacebo drops
+        // the grain silently. Hardware decoders apply the grain themselves. mpv.conf overrides it.
+        mpvLib.setOptionString("vd-lavc-film-grain", "cpu")
+
         // TLS. Has to stay: the libmpv build has no CA bundle, and mpv 0.42 defaults to "yes".
         mpvLib.setOptionString("tls-verify", "no")
 
