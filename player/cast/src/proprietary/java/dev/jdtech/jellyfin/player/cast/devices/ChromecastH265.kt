@@ -43,7 +43,10 @@ object ChromecastH265 {
         transcodingProfile {
             container = "ts"
             type = DlnaProfileType.VIDEO
-            videoCodec("hevc", "h264")
+            // The server encodes to the first codec and copies a stream whose codec is anywhere in
+            // the list: H.264 first, so a transcode is never encoded to HEVC (#673), while an HEVC
+            // source that only needs another container or audio codec is still copied.
+            videoCodec("h264", "hevc")
             audioCodec("aac", "mp3", "ac3", "eac3")
             protocol = MediaStreamProtocol.HLS
             context = EncodingContext.STREAMING
