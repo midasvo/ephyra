@@ -504,9 +504,9 @@ class JellyfinRepositoryOfflineImpl(
     override suspend fun markAsUnplayed(itemId: UUID) {
         writeAndMarkToBeSynced(itemId) { userId ->
             setPlayed(userId, itemId, false)
-            // CE (#633): the server clears it for an unplayed mark; the sync cannot send that, so
-            // nothing is sent and the server keeps its own until the mark reaches it.
-            setLastPlayedDate(userId, itemId, null)
+            // CE (#635): the last played time stays. The sync cannot clear the server's either,
+            // and with it the sync sees the mark is not older than the play it undoes: it is
+            // sent unless another device played the item since.
         }
     }
 
