@@ -29,6 +29,15 @@ import timber.log.Timber
 class PlaylistManager @Inject internal constructor(private val repository: JellyfinRepository) {
     private var startItem: FindroidItem? = null
     private var items: List<FindroidItem> = emptyList()
+
+    /** CE (#638): a queue in random order does not go on with the next season at its end. */
+    private var shuffled = false
+
+    /**
+     * CE (#638): the queue was fetched without trickplay and chapters (a whole series is too slow
+     * with them), so each item is fetched in full when it is about to play.
+     */
+    private var lightQueue = false
     private val playerItems: MutableList<PlayerItem> = mutableListOf()
     var currentItemIndex: Int = 0
 
@@ -86,6 +95,8 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         Timber.d("Retrieving initial player item")
 
         queueLoader = null
+        shuffled = shuffle
+        lightQueue = false
         // Playback sources fetched while the item itself was still loading.
         var prefetchedSources: List<FindroidSource>? = null
 
@@ -105,19 +116,24 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                 }
                 BaseItemKind.SERIES -> {
                     if (shuffle) {
-                        val allSeasons = repository.getSeasons(itemId)
-                        val seasons = allSeasons.filter { it.indexNumber != 0 }.ifEmpty { allSeasons }
+                        // CE (#638): the whole series in one request, without trickplay and
+                        // chapters: 578 episodes take 0.4 s that way, and over 10 s one season at
+                        // a time with them. Specials are left out, unless the series has nothing
+                        // else.
+                        val all =
+                            repository
+                                .getEpisodes(seriesId = itemId, seasonId = null)
+                                .filter { !it.missing }
                         val episodes =
-                            seasons
-                                .flatMap { season -> fetchEpisodes(itemId, season.id) }
-                                .shuffled()
+                            all.filter { it.parentIndexNumber != 0 }.ifEmpty { all }.shuffled()
 
                         if (episodes.isEmpty()) {
                             return null
                         }
 
-                        val episode = episodes.first()
-                        items = episodes
+                        lightQueue = true
+                        val episode = fullEpisode(episodes.first())
+                        items = listOf(episode) + episodes.drop(1)
                         episode
                     } else {
                         val nextUpEpisode = repository.getNextUp(itemId).firstOrNull()
@@ -237,7 +253,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                         val item = items[itemIndex]
                         if (playerItems.firstOrNull { it.itemId == item.id } == null) {
                             try {
-                                item.toPlayerItem(null, 0L)
+                                queued(item).toPlayerItem(null, 0L)
                             } catch (e: Exception) {
                                 Timber.e("Failed to retrieve previous player item: $e")
                                 null
@@ -266,7 +282,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
             when (startItem) {
                 is FindroidMovie -> null
                 is FindroidEpisode -> {
-                    if (currentItemIndex == items.lastIndex) {
+                    if (currentItemIndex == items.lastIndex && !shuffled) {
                         appendNextSeason()
                     }
 
@@ -276,7 +292,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                         val item = items[itemIndex]
                         if (playerItems.firstOrNull { it.itemId == item.id } == null) {
                             try {
-                                item.toPlayerItem(null, 0L)
+                                queued(item).toPlayerItem(null, 0L)
                             } catch (e: Exception) {
                                 Timber.e("Failed to retrieve next player item: $e")
                                 null
@@ -389,6 +405,10 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         playerItems.add(recreated)
         return recreated
     }
+
+    /** CE (#638): [item] as it plays: in full when the queue was fetched without its details. */
+    private suspend fun queued(item: FindroidItem): FindroidItem =
+        if (lightQueue && item is FindroidEpisode) fullEpisode(item) else item
 
     private suspend fun FindroidItem.toPlayerItem(
         mediaSourceId: String?,

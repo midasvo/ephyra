@@ -12,11 +12,13 @@ import kotlinx.coroutines.runBlocking
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PlaylistManagerShuffleTest {
     private val seriesId = UUID.randomUUID()
+    private val calls = mutableListOf<String>()
 
     @Test
     fun `shuffling a series queues episodes across regular seasons and starts from 0`() {
@@ -57,6 +59,58 @@ class PlaylistManagerShuffleTest {
         assertEquals(setOf(ep1.id, ep2.id, ep3.id), allQueuedIds)
     }
 
+    @Test
+    fun `shuffling a series asks for its episodes once, not per season`() {
+        val seasons = List(24) { season(it) }
+        val showMap = seasons.associateWith { season -> List(5) { episode(season, it + 1) } }
+
+        val manager = PlaylistManager(fakeRepository(showMap))
+        val initialItem =
+            runBlocking {
+                manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)
+            }
+
+        assertNotNull(initialItem)
+        assertEquals(listOf("getEpisodes"), calls)
+        // Season 0 (Specials) is left out: 23 seasons of 5.
+        assertEquals(115, 1 + manager.upcomingItems().size)
+    }
+
+    @Test
+    fun `a shuffled series keeps going after the second episode`() {
+        val seasons = List(4) { season(it + 1) }
+        val showMap = seasons.associateWith { season -> List(5) { episode(season, it + 1) } }
+        val manager = PlaylistManager(fakeRepository(showMap))
+
+        runBlocking {
+            val first =
+                manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)!!
+            manager.setCurrentMediaItemIndex(first.itemId)
+            val second = manager.getNextPlayerItem()
+            assertNotNull("second", second)
+
+            manager.setCurrentMediaItemIndex(second!!.itemId)
+            assertNull("previous is already queued", manager.getPreviousPlayerItem())
+            val third = manager.getNextPlayerItem()
+            assertNotNull("third", third)
+        }
+    }
+
+    @Test
+    fun `a series with only specials shuffles the specials`() {
+        val specials = season(0)
+        val showMap = mapOf(specials to List(3) { episode(specials, it + 1) })
+
+        val manager = PlaylistManager(fakeRepository(showMap))
+        val initialItem =
+            runBlocking {
+                manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)
+            }
+
+        assertNotNull(initialItem)
+        assertEquals(3, 1 + manager.upcomingItems().size)
+    }
+
     private fun fakeRepository(show: Map<FindroidSeason, List<FindroidEpisode>>) =
         Proxy.newProxyInstance(
             JellyfinRepository::class.java.classLoader,
@@ -64,7 +118,12 @@ class PlaylistManagerShuffleTest {
         ) { _, method, args ->
             when (method.name) {
                 "getSeasons" -> show.keys.toList()
-                "getEpisodes" -> show.entries.first { it.key.id == args[1] }.value
+                "getEpisodes" -> {
+                    calls += "getEpisodes"
+                    if (args[1] == null) show.values.flatten()
+                    else show.entries.first { it.key.id == args[1] }.value
+                }
+                "getEpisode" -> show.values.flatten().first { it.id == args[0] }
                 "getPlaybackSources" -> listOf(source())
                 else -> error("Unexpected call to ${method.name}")
             }
