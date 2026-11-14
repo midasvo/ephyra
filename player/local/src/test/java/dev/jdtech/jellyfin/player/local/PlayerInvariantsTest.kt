@@ -222,6 +222,12 @@ class PlayerInvariantsTest {
             "No progress report before the start report (#601)",
             progress!!.value.contains("if (playing?.startJob == null) return@launch"),
         )
+        // #674: a report that waited for the lock must not follow its item's stop.
+        val locked = progress.value.substringAfter("progressReportLock.withLock {", "")
+        assertTrue(
+            "reportProgress must check the item again once it holds the lock (#674)",
+            locked.contains("playing?.startJob !== startJob"),
+        )
     }
 
     @Test

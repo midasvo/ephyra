@@ -1209,6 +1209,16 @@ constructor(
                 // time, skip any that a newer call replaces, and read the state when it is sent.
                 progressReportLock.withLock {
                     if (seq != progressReportSeq) return@withLock
+                    // While this report waited for the lock, the item's stop may have been sent
+                    // (the snapshot is cleared) or another item may have started (a new start
+                    // report). Posting now would reopen the stopped item's session, or send the
+                    // new item's position for the old one.
+                    if (
+                        playing?.startJob !== startJob ||
+                            player.currentMediaItem?.mediaId != mediaItem.mediaId
+                    ) {
+                        return@withLock
+                    }
                     if (onlyIfReportedPaused && !reportedPause.needsReportWhenPlaying()) {
                         return@withLock
                     }
