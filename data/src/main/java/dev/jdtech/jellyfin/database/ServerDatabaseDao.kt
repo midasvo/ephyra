@@ -440,6 +440,44 @@ interface ServerDatabaseDao {
     suspend fun markUserDataToBeSynced(userId: UUID, itemId: UUID): Int
 
     /**
+     * CE (#635): the downloaded movies and episodes of [serverId] whose user data of [userId] has
+     * reached the server, so the server's values may replace it. Rows still to be sent are left
+     * out: those are newer than what the server has.
+     */
+    @Query(
+        "SELECT itemId FROM userdata WHERE userId = :userId AND toBeSynced = 0 AND (" +
+            "itemId IN (SELECT id FROM movies WHERE serverId = :serverId) OR " +
+            "itemId IN (SELECT id FROM episodes WHERE serverId = :serverId))"
+    )
+    suspend fun getSyncedUserDataItemIds(serverId: String, userId: UUID): List<UUID>
+
+    /** CE (#635): whether any downloaded movie or episode has user data the server may refresh. */
+    @Query(
+        "SELECT EXISTS(SELECT 1 FROM userdata WHERE toBeSynced = 0 " +
+            "AND (itemId IN (SELECT id FROM movies) OR itemId IN (SELECT id FROM episodes)))"
+    )
+    suspend fun hasSyncedUserData(): Boolean
+
+    /**
+     * CE (#635): writes the server's user data into a downloaded item's row, so it resumes offline
+     * where it was left on any device. A row marked to be sent in the meantime keeps its own
+     * values: the condition is in the update itself, so no write can slip in between.
+     */
+    @Query(
+        "UPDATE userdata SET played = :played, favorite = :favorite, " +
+            "playbackPositionTicks = :playbackPositionTicks, lastPlayedDate = :lastPlayedDate " +
+            "WHERE userId = :userId AND itemId = :itemId AND toBeSynced = 0"
+    )
+    suspend fun refreshUserDataFromServer(
+        userId: UUID,
+        itemId: UUID,
+        played: Boolean,
+        favorite: Boolean,
+        playbackPositionTicks: Long,
+        lastPlayedDate: Long?,
+    )
+
+    /**
      * Marks a row as sent, but only while it still holds the values that were sent: a write that
      * failed during the sync keeps the row marked.
      */

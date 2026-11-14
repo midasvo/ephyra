@@ -56,21 +56,33 @@ constructor(
                         it.id == server.currentServerAddressId
                     } ?: continue
                 for (user in serverWithAddressesAndUsers.users) {
-                    // Only the rows still marked to be synced: most runs have none, and then no
-                    // item is loaded, no client is built and no request is made (#250).
+                    // Only the rows still marked to be synced, and the downloads whose progress
+                    // the server may have moved on: without either, no item is loaded, no client
+                    // is built and no request is made (#250).
                     val pending = database.getAllUserDataToBeSynced(server.id, user.id)
-                    if (pending.isEmpty()) continue
+                    val hasDownloads =
+                        database.getSyncedUserDataItemIds(server.id, user.id).isNotEmpty()
+                    if (pending.isEmpty() && !hasDownloads) continue
 
                     val api = apiFor(serverAddress.address, user.accessToken, user.id)
-                    val outcome = syncUserData(api, user.id, pending)
-                    if (!outcome.allOk) hadFailures = true
-                    if (outcome.sent > 0) reachedServer = true
-                    // A write that failed while this run was sending keeps its row marked, and
-                    // asking for a sync during a run does nothing: run again for those rows.
-                    val stillMarked = database.getAllUserDataToBeSynced(server.id, user.id)
-                    if (needsAnotherRun(sent = pending, stillMarked = stillMarked)) {
-                        hadFailures = true
+                    var ok = true
+                    if (pending.isNotEmpty()) {
+                        val outcome = syncUserData(api, user.id, pending)
+                        if (!outcome.allOk) ok = false
+                        if (outcome.sent > 0) reachedServer = true
+                        // A write that failed while this run was sending keeps its row marked,
+                        // and asking for a sync during a run does nothing: run again for those.
+                        val stillMarked = database.getAllUserDataToBeSynced(server.id, user.id)
+                        if (needsAnotherRun(sent = pending, stillMarked = stillMarked)) {
+                            ok = false
+                        }
                     }
+                    if (!ok) {
+                        hadFailures = true
+                        continue
+                    }
+                    // CE (#635): after sending, so the server's values include what was just sent.
+                    refreshFromServer(api, server.id, user.id)
                 }
             }
 
@@ -149,6 +161,37 @@ constructor(
 
     /** CE (#633): how a run for one user went: whether to retry, and how many rows were sent. */
     private data class SyncOutcome(val allOk: Boolean, val sent: Int)
+
+    /**
+     * CE (#635): copies the server's user data into the rows of [userId]'s downloads from
+     * [serverId], so a download resumes offline where it was left on any device (web, TV), not
+     * where it was when it was downloaded. Uses [fetchServerUserData] (#633).
+     *
+     * Rows waiting to be sent are never touched, see [ServerDatabaseDao.refreshUserDataFromServer].
+     * A failure only leaves the rows as they were, so it does not make the sync retry.
+     */
+    private suspend fun refreshFromServer(api: ApiClient, serverId: String, userId: UUID) {
+        val itemIds = database.getSyncedUserDataItemIds(serverId, userId)
+        if (itemIds.isEmpty()) return
+        try {
+            val onServer = fetchServerUserData(api, userId, itemIds)
+            for (userData in serverUserDataToStore(onServer, playbackEvents.playingItemId.value)) {
+                database.refreshUserDataFromServer(
+                    userId = userId,
+                    itemId = userData.itemId,
+                    played = userData.played,
+                    favorite = userData.favorite,
+                    playbackPositionTicks = userData.playbackPositionTicks,
+                    lastPlayedDate = userData.lastPlayedDate,
+                )
+            }
+            Timber.d("Refreshed the user data of ${itemIds.size} downloads from the server")
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Could not refresh the user data of downloads from the server")
+        }
+    }
 
     private suspend fun syncUserData(
         api: ApiClient,
@@ -272,7 +315,10 @@ constructor(
     }
 }
 
-/** CE (#633): the server's user data of one item, as the sync compares it with the local row. */
+/**
+ * CE (#633): the server's user data of one item, as the sync compares it with the local row and
+ * (#635) as the refresh stores it in the row of a download.
+ */
 internal data class ServerUserData(
     val itemId: UUID,
     val played: Boolean,
@@ -317,6 +363,16 @@ internal fun localDateTimeOf(
 /** CE (#633): the reverse of [localDateTimeOf]. */
 internal fun epochMillisOf(dateTime: LocalDateTime, zone: ZoneId = ZoneId.systemDefault()): Long =
     dateTime.atZone(zone).toInstant().toEpochMilli()
+
+/**
+ * CE (#635): the server's user data to store in the rows of downloads. The item open in the player
+ * here ([playingHere]) is left out: its own reports keep its row current, and the server's value
+ * may be a few seconds behind them.
+ */
+internal fun serverUserDataToStore(
+    onServer: Map<UUID, ServerUserData>,
+    playingHere: UUID?,
+): List<ServerUserData> = onServer.values.filter { it.itemId != playingHere }
 
 /**
  * Whether the sync of [rowItemId] has to end a playback session first: the server still has the
