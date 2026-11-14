@@ -225,6 +225,11 @@ class MPVPlayer(
         mpvLib =
             MPVLib.create(context) ?: throw IllegalStateException("MPVLib.create() returned null")
 
+        // The wrapper sends mpv's messages from "v" up to the log observer and to logcat, and
+        // verbose ones include the URLs mpv opens, with the Jellyfin token. The log observer only
+        // acts on errors, so warnings are enough.
+        mpvLib.requestLogMessages("warn")
+
         // General
         mpvLib.setOptionString("config", "yes")
         mpvLib.setOptionString("config-dir", configDir.path)
@@ -242,14 +247,21 @@ class MPVPlayer(
         mpvLib.setOptionString("hwdec", hwDec)
         mpvLib.setOptionString("hwdec-codecs", "h264,hevc,mpeg4,mpeg2video,vp8,vp9,av1")
 
-        // #652: AV1 film grain on the CPU. With gpu-next the default is the GPU, and the grain
-        // shader of the libplacebo in libmpv 1.0.0 (7.360.1) flips the luma plane on OpenGL ES
-        // when a software-decoded video is shown unscaled (mpv-player/mpv#14651). Fixed in
-        // libplacebo 7.387.0: drop this line with the libmpv that has it. mpv.conf overrides it.
+        // AV1 film grain on the CPU (dav1d) when mpv decodes in software. With gpu-next the
+        // default is libplacebo's grain shader, which is not safe on every GPU: in libplacebo
+        // 7.360.1 it flipped the luma plane on OpenGL ES (#652, fixed in 7.387.0), and on Mali
+        // (tested on a Dimensity 1200, both versions) it fails to compile, so libplacebo drops
+        // the grain silently. Hardware decoders apply the grain themselves. mpv.conf overrides it.
         mpvLib.setOptionString("vd-lavc-film-grain", "cpu")
 
-        // TLS
+        // TLS. Has to stay: the libmpv build has no CA bundle, and mpv 0.42 defaults to "yes".
         mpvLib.setOptionString("tls-verify", "no")
+
+        // Network through ffmpeg, not mpv 0.42's libcurl backend (on by default with FFmpeg 9).
+        // The curl backend ignores network-timeout (#460) and logs its errors as "curl", which
+        // MpvStreamBreak and MpvErrorRecovery don't recognise, so a lost connection would no
+        // longer be detected. Revisit when those are tested against curl on a real stall.
+        mpvLib.setOptionString("curl-enabled", "no")
 
         // Cache
         mpvLib.setOptionString("cache", "yes")
@@ -1255,7 +1267,7 @@ class MPVPlayer(
         internalMediaItems.forEachIndexed { index, mediaItem ->
             val uri = "${mediaItem.localConfiguration?.uri}"
             if (index == 0 && initialIndex == 0 && initialSeekTo > 0L) {
-                // mpv 0.38+ (the bundled build is 0.41): loadfile <url> <flags> <index> <options>.
+                // mpv 0.38+ (the bundled build is 0.42): loadfile <url> <flags> <index> <options>.
                 // An index of -1 is the default, the options are what is needed here.
                 val startSeconds = initialSeekTo.toDouble().div(C.MILLIS_PER_SECOND)
                 mpvLib.command(arrayOf("loadfile", uri, "replace", "-1", "start=$startSeconds"))

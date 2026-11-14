@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">%1$d. sáv</string>
     <string name="ce_server_unreachable_downloads">A letöltéseid továbbra is lejátszhatók.</string>
+    <string name="ce_download_choice_title">Mely epizódokat töltsük le?</string>
+    <string name="ce_download_choice_message">Ezek közül néhány epizódot már megnéztél.</string>
+    <string name="ce_download_choice_unwatched">Csak a nem látottak (%1$d)</string>
+    <string name="ce_download_choice_all">Minden epizód (%1$d)</string>
 </resources>

@@ -465,20 +465,21 @@ class JellyfinRepositoryOfflineImpl(
         positionTicks: Long,
         playedPercentage: Int?,
     ) {
-        withContext(Dispatchers.IO) {
-            // CE (#637): with the server's resume settings, as last read online.
-            val userData =
+        // CE (#637): with the server's resume settings, as last read online.
+        val userData =
+            withContext(Dispatchers.IO) {
                 stopUserData(
                     positionTicks,
                     playedPercentage,
                     runtimeTicks = database.getRuntimeTicks(itemId),
                     thresholds = resumeThresholds.get(currentServerId()),
-                ) ?: return@withContext
-            database.setPlaybackPositionTicks(itemId, currentUserId, userData.positionTicks)
-            userData.played?.let { database.setPlayed(currentUserId, itemId, it) }
+                )
+            } ?: return
+        writeAndMarkToBeSynced(itemId) { userId ->
+            setPlaybackPositionTicks(itemId, userId, userData.positionTicks)
+            userData.played?.let { setPlayed(userId, itemId, it) }
             // CE (#633): sent with the row, so the server moves the item up in Continue Watching.
-            database.setLastPlayedDate(currentUserId, itemId, System.currentTimeMillis())
-            markToBeSynced(itemId)
+            setLastPlayedDate(userId, itemId, System.currentTimeMillis())
         }
     }
 
@@ -488,53 +489,54 @@ class JellyfinRepositoryOfflineImpl(
         isPaused: Boolean,
         transcoded: Boolean,
     ) {
-        withContext(Dispatchers.IO) {
-            database.setPlaybackPositionTicks(itemId, currentUserId, positionTicks)
-            database.setLastPlayedDate(currentUserId, itemId, System.currentTimeMillis())
-            markToBeSynced(itemId)
+        writeAndMarkToBeSynced(itemId) { userId ->
+            setPlaybackPositionTicks(itemId, userId, positionTicks)
+            setLastPlayedDate(userId, itemId, System.currentTimeMillis())
         }
     }
 
     override suspend fun markAsFavorite(itemId: UUID) {
-        withContext(Dispatchers.IO) {
-            database.setFavorite(currentUserId, itemId, true)
-            markToBeSynced(itemId)
-        }
+        writeAndMarkToBeSynced(itemId) { userId -> setFavorite(userId, itemId, true) }
     }
 
     override suspend fun unmarkAsFavorite(itemId: UUID) {
-        withContext(Dispatchers.IO) {
-            database.setFavorite(currentUserId, itemId, false)
-            markToBeSynced(itemId)
-        }
+        writeAndMarkToBeSynced(itemId) { userId -> setFavorite(userId, itemId, false) }
     }
 
     override suspend fun markAsPlayed(itemId: UUID) {
-        withContext(Dispatchers.IO) {
-            database.setPlayed(currentUserId, itemId, true)
-            database.setPlaybackPositionTicks(itemId, currentUserId, 0)
+        writeAndMarkToBeSynced(itemId) { userId ->
+            setPlayed(userId, itemId, true)
+            setPlaybackPositionTicks(itemId, userId, 0)
             // CE (#633): as the server does for a played mark without a date.
-            database.setLastPlayedDateIfUnknown(currentUserId, itemId, System.currentTimeMillis())
-            markToBeSynced(itemId)
+            setLastPlayedDateIfUnknown(userId, itemId, System.currentTimeMillis())
         }
     }
 
     override suspend fun markAsUnplayed(itemId: UUID) {
-        withContext(Dispatchers.IO) {
-            database.setPlayed(currentUserId, itemId, false)
-            // CE (#633): the server clears it for an unplayed mark; the sync cannot send that, so
-            // nothing is sent and the server keeps its own until the mark reaches it.
-            database.setLastPlayedDate(currentUserId, itemId, null)
-            markToBeSynced(itemId)
+        writeAndMarkToBeSynced(itemId) { userId ->
+            setPlayed(userId, itemId, false)
+            // CE (#635): the last played time stays. The sync cannot clear the server's either,
+            // and with it the sync sees the mark is not older than the play it undoes: it is
+            // sent unless another device played the item since.
         }
     }
 
     /**
-     * Marks the item's user data to be sent to the server later and asks for a sync. The request is
-     * only made when the mark is new, so a run of failed progress reports asks once.
+     * Writes the item's user data with [write] and marks it to be sent to the server later, in one
+     * transaction (CE #635: so the sync's refresh from the server cannot replace the write before
+     * it is marked), then asks for a sync. The request is only made when the mark is new, so a run
+     * of failed progress reports asks once.
      */
-    private suspend fun markToBeSynced(itemId: UUID) {
-        if (database.markUserDataToBeSynced(currentUserId, itemId) > 0) syncRequester.request()
+    private suspend fun writeAndMarkToBeSynced(
+        itemId: UUID,
+        write: suspend ServerDatabaseDao.(userId: UUID) -> Unit,
+    ) {
+        val userId = currentUserId
+        val marked =
+            withContext(Dispatchers.IO) {
+                database.writeAndMarkToBeSynced(userId, itemId) { write(userId) }
+            }
+        if (marked > 0) syncRequester.request()
     }
 
     override fun getBaseUrl(): String {

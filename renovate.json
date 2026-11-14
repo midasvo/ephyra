@@ -59,6 +59,13 @@
         "major"
       ],
       "automerge": false
+    },
+    {
+      "description": "Never auto-merge libmpv: every bump needs docs/mpv-checklist.md on a device (see the libmpv-release skill)",
+      "matchPackageNames": [
+        "io.github.midasvo:libmpv"
+      ],
+      "automerge": false
     }
   ]
 }

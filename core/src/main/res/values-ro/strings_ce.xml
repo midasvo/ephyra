@@ -148,4 +148,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">Pista %1$d</string>
     <string name="ce_server_unreachable_downloads">Descărcările tale pot fi redate în continuare.</string>
+    <string name="ce_download_choice_title">Ce episoade descarci?</string>
+    <string name="ce_download_choice_message">Ai văzut deja câteva dintre aceste episoade.</string>
+    <string name="ce_download_choice_unwatched">Doar cele nevizionate (%1$d)</string>
+    <string name="ce_download_choice_all">Toate episoadele (%1$d)</string>
 </resources>

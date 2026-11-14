@@ -40,7 +40,6 @@ import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
 import dev.jdtech.jellyfin.presentation.film.components.AirScheduleText
 import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.Direction
-import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
 import dev.jdtech.jellyfin.presentation.film.components.HeroMetadataLine
 import dev.jdtech.jellyfin.presentation.film.components.HeroSubtitle
 import dev.jdtech.jellyfin.presentation.film.components.HeroTitle
@@ -75,7 +74,7 @@ import java.util.UUID
 fun ShowWideLayout(
     state: ShowState,
     onAction: (ShowAction) -> Unit,
-    onDownloadSeasons: (seasonIds: Set<UUID>, maxBitrate: Int?) -> Unit,
+    onDownloadSeasons: (seasonIds: Set<UUID>) -> Unit,
     onDeleteShowDownloads: () -> Unit,
 ) {
     val widthClass = currentWidthClass()
@@ -90,8 +89,6 @@ fun ShowWideLayout(
     val artwork = rememberArtworkState(state.show, ArtworkPlacement.Hero)
 
     var seasonSelectionDialogOpen by remember { mutableStateOf(false) }
-    // Seasons picked in the selection dialog, awaiting a quality choice.
-    var pendingDownloadSeasonIds by remember { mutableStateOf<Set<UUID>?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         state.show?.let { show ->
@@ -257,20 +254,11 @@ fun ShowWideLayout(
             SeasonSelectionDialog(
                 seasons = state.downloadableSeasons,
                 onConfirm = { selectedSeasonIds ->
-                    pendingDownloadSeasonIds = selectedSeasonIds
+                    onDownloadSeasons(selectedSeasonIds)
                     seasonSelectionDialogOpen = false
                 },
                 onDismiss = { seasonSelectionDialogOpen = false },
                 seasonDownloadInfo = state.seasonDownloadInfo,
-            )
-        }
-        pendingDownloadSeasonIds?.let { seasonIds ->
-            DownloadQualityDialog(
-                onSelect = { maxBitrate ->
-                    onDownloadSeasons(seasonIds, maxBitrate)
-                    pendingDownloadSeasonIds = null
-                },
-                onDismiss = { pendingDownloadSeasonIds = null },
             )
         }
     }
@@ -323,7 +311,7 @@ private fun ShowWideLayoutPreview() {
         ShowWideLayout(
             state = ShowState(show = dummyShow, nextUp = dummyEpisode),
             onAction = {},
-            onDownloadSeasons = { _, _ -> },
+            onDownloadSeasons = {},
             onDeleteShowDownloads = {},
         )
     }

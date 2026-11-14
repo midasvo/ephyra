@@ -33,6 +33,9 @@ import timber.log.Timber
  *   comes to the foreground or the device changes network (home Wi-Fi after mobile data). With rows
  *   waiting, each of those starts the sync over, so it does not sit out the delay of a retry.
  *
+ * - CE (#635): with nothing waiting, those signs still run the sync now and then, at most every 15
+ *   minutes and only with downloads, so it refreshes their user data from the server.
+ *
  * With the process gone only the retries are left, which is why they back off linearly: after a day
  * without the server the next try is at most about 40 minutes away, not 5 hours.
  *
@@ -49,6 +52,7 @@ constructor(
 ) : UserDataSyncRequester {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var started = false
+    @Volatile private var lastRefreshRequestAt: Long? = null
 
     override fun request() = enqueue(ExistingWorkPolicy.KEEP, initialDelaySeconds = 0)
 
@@ -71,7 +75,10 @@ constructor(
     private suspend fun restartIfWaiting(reason: String) {
         try {
             // First, and without WorkManager: most of the time nothing is waiting.
-            if (!database.hasUserDataToBeSynced()) return
+            if (!database.hasUserDataToBeSynced()) {
+                refreshIfDue(reason)
+                return
+            }
             val state =
                 withContext(Dispatchers.IO) {
                     workManager
@@ -89,6 +96,21 @@ constructor(
         } catch (e: Exception) {
             Timber.e(e, "Failed to restart the user data sync")
         }
+    }
+
+    /**
+     * CE (#635): with nothing waiting to be sent, runs the sync anyway now and then, for its
+     * refresh of the downloads' user data from the server. That way progress made on another device
+     * reaches the downloads while the app is used, not only at app start. Only with downloads, and
+     * at most once per [REFRESH_INTERVAL_MILLIS].
+     */
+    private suspend fun refreshIfDue(reason: String) {
+        val now = System.currentTimeMillis()
+        if (!refreshDue(lastRefreshRequestAt, now, REFRESH_INTERVAL_MILLIS)) return
+        if (!database.hasSyncedUserData()) return
+        lastRefreshRequestAt = now
+        Timber.d("User data sync: %s, refreshing downloads", reason)
+        enqueue(ExistingWorkPolicy.KEEP, RESTART_DELAY_SECONDS)
     }
 
     private fun enqueue(policy: ExistingWorkPolicy, initialDelaySeconds: Long) {
@@ -120,6 +142,9 @@ constructor(
          * and for a cold start to leave the first seconds to the Home screen (#250).
          */
         private const val RESTART_DELAY_SECONDS = 5L
+
+        /** CE (#635): the least time between two refreshes asked for by [restartIfWaiting]. */
+        private const val REFRESH_INTERVAL_MILLIS = 15 * 60 * 1000L
     }
 }
 
@@ -134,3 +159,10 @@ internal fun restartPolicy(hasPending: Boolean, state: WorkInfo.State?): Existin
         state == WorkInfo.State.RUNNING -> null
         else -> ExistingWorkPolicy.REPLACE
     }
+
+/**
+ * CE (#635): whether a refresh of the downloads' user data may be asked for at [now], the last one
+ * having been asked for at [lastAt] (null: never in this process).
+ */
+internal fun refreshDue(lastAt: Long?, now: Long, intervalMillis: Long): Boolean =
+    lastAt == null || now - lastAt >= intervalMillis

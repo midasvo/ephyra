@@ -216,13 +216,17 @@ class PendingUserDataSyncTest {
     }
 
     @Test
-    fun `marking unplayed clears the last played time`() = runBlocking {
+    fun `marking unplayed without the server keeps the last played time`() = runBlocking {
         storeMovie()
         database.setLastPlayedDate(userId, movieId, 1_000L)
 
         repository.markAsUnplayed(movieId)
 
-        assertNull(pending().single().lastPlayedDate)
+        // CE (#635): the sync compares it with the server's, so the mark is not taken for older
+        // than the play it undoes.
+        val row = pending().single()
+        assertFalse(row.played)
+        assertEquals(1_000L, row.lastPlayedDate)
     }
 
     @Test
@@ -234,6 +238,141 @@ class PendingUserDataSyncTest {
         database.clearUserDataToBeSynced(userId, movieId, false, false, 600_000_000L, 1_000L)
 
         assertEquals(2_000L, pending().single().lastPlayedDate)
+    }
+
+    @Test
+    fun `a newer play elsewhere replaces the row and counts as sent`() {
+        runBlocking {
+            storeMovie(positionTicks = 600_000_000L, toBeSynced = true)
+            database.setFavorite(userId, movieId, true)
+            database.setLastPlayedDate(userId, movieId, 1_000L)
+
+            // #635: the sync read the row as stored; the server has a later play that finished it.
+            val took =
+                database.takeServerProgress(
+                    userId = userId,
+                    itemId = movieId,
+                    played = true,
+                    playbackPositionTicks = 0L,
+                    lastPlayedDate = 2_000L,
+                    sentPlayed = false,
+                    sentFavorite = true,
+                    sentPlaybackPositionTicks = 600_000_000L,
+                    sentLastPlayedDate = 1_000L,
+                )
+
+            assertEquals(1, took)
+            assertTrue(pending().isEmpty())
+            val row = database.getUserData(movieId, userId)!!
+            assertTrue(row.played)
+            assertEquals(0L, row.playbackPositionTicks)
+            assertEquals(2_000L, row.lastPlayedDate)
+            // The phone's favourite stays: the sync sends it on its own.
+            assertTrue(row.favorite)
+        }
+    }
+
+    @Test
+    fun `a row played again while the sync read the server keeps its own progress`() {
+        runBlocking {
+            storeMovie(positionTicks = 700_000_000L, toBeSynced = true)
+            database.setLastPlayedDate(userId, movieId, 3_000L)
+
+            // The sync read the row at 600 / 1000; it has been played since.
+            database.takeServerProgress(
+                userId = userId,
+                itemId = movieId,
+                played = false,
+                playbackPositionTicks = 900_000_000L,
+                lastPlayedDate = 2_000L,
+                sentPlayed = false,
+                sentFavorite = false,
+                sentPlaybackPositionTicks = 600_000_000L,
+                sentLastPlayedDate = 1_000L,
+            )
+
+            val row = pending().single()
+            assertEquals(700_000_000L, row.playbackPositionTicks)
+            assertEquals(3_000L, row.lastPlayedDate)
+        }
+    }
+
+    @Test
+    fun `only a marked row takes the server's progress`() = runBlocking {
+        // CE (#635): the row holds what the sync read, but it is no longer waiting to be sent.
+        storeMovie(positionTicks = 600_000_000L)
+        database.setLastPlayedDate(userId, movieId, 1_000L)
+
+        val took =
+            database.takeServerProgress(
+                userId = userId,
+                itemId = movieId,
+                played = false,
+                playbackPositionTicks = 900_000_000L,
+                lastPlayedDate = 2_000L,
+                sentPlayed = false,
+                sentFavorite = false,
+                sentPlaybackPositionTicks = 600_000_000L,
+                sentLastPlayedDate = 1_000L,
+            )
+
+        assertEquals(0, took)
+        assertEquals(600_000_000L, database.getUserData(movieId, userId)!!.playbackPositionTicks)
+    }
+
+    @Test
+    fun `a refresh counts only rows it changed`() = runBlocking {
+        storeMovie(positionTicks = 600_000_000L)
+        database.setLastPlayedDate(userId, movieId, 1_000L)
+
+        suspend fun refresh(positionTicks: Long, lastPlayedDate: Long?) =
+            database.refreshUserDataFromServer(
+                userId = userId,
+                itemId = movieId,
+                played = false,
+                favorite = false,
+                playbackPositionTicks = positionTicks,
+                lastPlayedDate = lastPlayedDate,
+            )
+
+        // CE (#635): the same values change nothing, so the screen on display is not reloaded.
+        assertEquals(0, refresh(600_000_000L, 1_000L))
+        assertEquals(1, refresh(900_000_000L, 2_000L))
+        assertEquals(1, refresh(900_000_000L, null))
+        assertEquals(900_000_000L, database.getUserData(movieId, userId)!!.playbackPositionTicks)
+    }
+
+    @Test
+    fun `a refresh leaves a marked row alone`() = runBlocking {
+        storeMovie(positionTicks = 600_000_000L, toBeSynced = true)
+
+        val changed =
+            database.refreshUserDataFromServer(
+                userId = userId,
+                itemId = movieId,
+                played = true,
+                favorite = false,
+                playbackPositionTicks = 0L,
+                lastPlayedDate = 2_000L,
+            )
+
+        assertEquals(0, changed)
+        assertEquals(600_000_000L, pending().single().playbackPositionTicks)
+    }
+
+    @Test
+    fun `a write and its mark go together`() = runBlocking {
+        storeMovie()
+
+        // CE (#635): one transaction, so a refresh cannot replace the write before it is marked.
+        val first =
+            database.writeAndMarkToBeSynced(userId, movieId) { setFavorite(userId, movieId, true) }
+        val second =
+            database.writeAndMarkToBeSynced(userId, movieId) { setFavorite(userId, movieId, false) }
+
+        assertEquals(1, first)
+        assertEquals(0, second)
+        assertFalse(pending().single().favorite)
     }
 
     @Test

@@ -138,4 +138,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">트랙 %1$d</string>
     <string name="ce_server_unreachable_downloads">다운로드한 항목은 계속 재생할 수 있습니다.</string>
+    <string name="ce_download_choice_title">어떤 에피소드를 다운로드할까요?</string>
+    <string name="ce_download_choice_message">이 에피소드 중 일부는 이미 시청했습니다.</string>
+    <string name="ce_download_choice_unwatched">시청하지 않은 에피소드만 (%1$d)</string>
+    <string name="ce_download_choice_all">모든 에피소드 (%1$d)</string>
 </resources>

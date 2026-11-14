@@ -145,6 +145,30 @@ class PlayerInvariantsTest {
     }
 
     @Test
+    fun `mpv keeps the network on ffmpeg`() {
+        // #654: mpv 0.42 reads http(s) through libcurl by default. That backend ignores
+        // network-timeout and logs its errors under "curl", so the stall handling (#460) and the
+        // stream-break and connection-error detection (#445, #576) would stop working.
+        val mpvPlayer = source("mpv/MPVPlayer.kt")
+        assertTrue(
+            "MPVPlayer must set curl-enabled=no until curl is handled (#654)",
+            mpvPlayer.contains("""setOptionString("curl-enabled", "no")"""),
+        )
+    }
+
+    @Test
+    fun `mpv applies AV1 film grain on the CPU`() {
+        // #652, #655: libplacebo's grain shader flipped the picture on OpenGL ES before 7.387.0,
+        // and on Mali it fails to compile in every version tested, which drops the grain silently
+        // (measured on a Dimensity 1200: pixel noise 0.5 with the shader, 14.3 with dav1d).
+        val mpvPlayer = source("mpv/MPVPlayer.kt")
+        assertTrue(
+            "MPVPlayer must set vd-lavc-film-grain=cpu (#652, #655)",
+            mpvPlayer.contains("""setOptionString("vd-lavc-film-grain", "cpu")"""),
+        )
+    }
+
+    @Test
     fun `mpv reports a failed load at END_FILE without requiring an error line`() {
         // #446: libmpv can deliver END_FILE before the error lines that explain it. Requiring an
         // error line first left the player black and BUFFERING without an error.

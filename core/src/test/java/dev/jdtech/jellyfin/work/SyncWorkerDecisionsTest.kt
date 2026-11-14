@@ -77,4 +77,11 @@ class SyncWorkerDecisionsTest {
     fun `a row marked during the run needs another run`() {
         assertTrue(needsAnotherRun(sent = listOf(row(1)), stillMarked = listOf(row(2))))
     }
+
+    @Test
+    fun `a row marked during a run that only refreshed needs another run`() {
+        // CE (#635): the run had nothing to send; a request made meanwhile was dropped (KEEP).
+        assertTrue(needsAnotherRun(sent = emptyList(), stillMarked = listOf(row(1))))
+        assertFalse(needsAnotherRun(sent = emptyList(), stillMarked = emptyList()))
+    }
 }

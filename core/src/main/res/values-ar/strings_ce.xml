@@ -163,4 +163,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">المسار %1$d</string>
     <string name="ce_server_unreachable_downloads">ما زال بإمكانك تشغيل تنزيلاتك.</string>
+    <string name="ce_download_choice_title">أي الحلقات تريد تنزيلها؟</string>
+    <string name="ce_download_choice_message">لقد شاهدت بعض هذه الحلقات بالفعل.</string>
+    <string name="ce_download_choice_unwatched">غير المشاهدة فقط (%1$d)</string>
+    <string name="ce_download_choice_all">كل الحلقات (%1$d)</string>
 </resources>

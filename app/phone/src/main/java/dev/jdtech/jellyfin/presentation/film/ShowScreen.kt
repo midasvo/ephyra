@@ -44,6 +44,7 @@ import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyShow
+import dev.jdtech.jellyfin.film.presentation.DownloadPrompt
 import dev.jdtech.jellyfin.film.presentation.show.ShowAction
 import dev.jdtech.jellyfin.film.presentation.show.ShowEvent
 import dev.jdtech.jellyfin.film.presentation.show.ShowState
@@ -57,6 +58,7 @@ import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.CriticRating
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
+import dev.jdtech.jellyfin.presentation.film.components.DownloadUnwatchedDialog
 import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
 import dev.jdtech.jellyfin.presentation.film.components.InfoText
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
@@ -136,6 +138,24 @@ fun ShowScreen(
         }
     }
 
+    // CE (#636): the questions of a season download, shared by the phone and wide layouts: which
+    // episodes (only when some are watched), then the quality.
+    val downloadPrompt by viewModel.downloadPrompt.collectAsStateWithLifecycle()
+    when (val prompt = downloadPrompt) {
+        is DownloadPrompt.Episodes ->
+            DownloadUnwatchedDialog(
+                choice = prompt.choice,
+                onSelect = { unwatchedOnly -> viewModel.chooseEpisodes(unwatchedOnly) },
+                onDismiss = { viewModel.dismissDownloadPrompt() },
+            )
+        DownloadPrompt.Quality ->
+            DownloadQualityDialog(
+                onSelect = { maxBitrate -> viewModel.chooseQuality(maxBitrate) },
+                onDismiss = { viewModel.dismissDownloadPrompt() },
+            )
+        null -> Unit
+    }
+
     ShowScreenLayout(
         state = state,
         onAction = { action ->
@@ -187,9 +207,7 @@ fun ShowScreen(
             }
             viewModel.onAction(action)
         },
-        onDownloadSeasons = { seasonIds, maxBitrate ->
-            viewModel.downloadSeasons(seasonIds, maxBitrate)
-        },
+        onDownloadSeasons = { seasonIds -> viewModel.downloadSeasons(seasonIds) },
         onDeleteShowDownloads = { viewModel.deleteShowDownloads() },
     )
 }
@@ -198,7 +216,7 @@ fun ShowScreen(
 private fun ShowScreenLayout(
     state: ShowState,
     onAction: (ShowAction) -> Unit,
-    onDownloadSeasons: (seasonIds: Set<UUID>, maxBitrate: Int?) -> Unit,
+    onDownloadSeasons: (seasonIds: Set<UUID>) -> Unit,
     onDeleteShowDownloads: () -> Unit,
 ) {
     // CE: medium and expanded windows get the hero layout (docs/tablet/4-design.md §6).
@@ -218,8 +236,6 @@ private fun ShowScreenLayout(
     val artwork = rememberArtworkState(state.show, ArtworkPlacement.Header)
 
     var seasonSelectionDialogOpen by remember { mutableStateOf(false) }
-    // Seasons picked in the selection dialog, awaiting a quality choice.
-    var pendingDownloadSeasonIds by remember { mutableStateOf<Set<UUID>?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         state.show?.let { show ->
@@ -455,20 +471,11 @@ private fun ShowScreenLayout(
             SeasonSelectionDialog(
                 seasons = state.downloadableSeasons,
                 onConfirm = { selectedSeasonIds ->
-                    pendingDownloadSeasonIds = selectedSeasonIds
+                    onDownloadSeasons(selectedSeasonIds)
                     seasonSelectionDialogOpen = false
                 },
                 onDismiss = { seasonSelectionDialogOpen = false },
                 seasonDownloadInfo = state.seasonDownloadInfo,
-            )
-        }
-        pendingDownloadSeasonIds?.let { seasonIds ->
-            DownloadQualityDialog(
-                onSelect = { maxBitrate ->
-                    onDownloadSeasons(seasonIds, maxBitrate)
-                    pendingDownloadSeasonIds = null
-                },
-                onDismiss = { pendingDownloadSeasonIds = null },
             )
         }
     }
@@ -512,7 +519,7 @@ private fun EpisodeScreenLayoutPreview() {
         ShowScreenLayout(
             state = ShowState(show = dummyShow),
             onAction = {},
-            onDownloadSeasons = { _, _ -> },
+            onDownloadSeasons = {},
             onDeleteShowDownloads = {},
         )
     }

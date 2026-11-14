@@ -143,4 +143,8 @@
     <string name="ce_track_sdh">SDH</string>
     <string name="ce_track_number">ट्रैक %1$d</string>
     <string name="ce_server_unreachable_downloads">आपके डाउनलोड अब भी चलाए जा सकते हैं।</string>
+    <string name="ce_download_choice_title">कौन-से एपिसोड डाउनलोड करें?</string>
+    <string name="ce_download_choice_message">आप इनमें से कुछ एपिसोड पहले ही देख चुके हैं।</string>
+    <string name="ce_download_choice_unwatched">केवल बिना देखे (%1$d)</string>
+    <string name="ce_download_choice_all">सभी एपिसोड (%1$d)</string>
 </resources>
