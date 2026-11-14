@@ -1,6 +1,8 @@
 package dev.jdtech.jellyfin.models
 
 import androidx.room3.Entity
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 @Entity(tableName = "userdata", primaryKeys = ["userId", "itemId"])
@@ -26,5 +28,15 @@ fun FindroidItem.toFindroidUserDataDto(userId: UUID): FindroidUserDataDto {
         played = played,
         favorite = favorite,
         playbackPositionTicks = playbackPositionTicks,
+        // CE (#633): the server's, so marking played offline keeps it, as the server does.
+        lastPlayedDate = lastPlayedDateOf(this)?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli(),
     )
 }
+
+/** CE (#633): when the server last saw [item] played, for the item types that carry it. */
+private fun lastPlayedDateOf(item: FindroidItem): LocalDateTime? =
+    when (item) {
+        is FindroidMovie -> item.lastPlayedDate
+        is FindroidEpisode -> item.lastPlayedDate
+        else -> null
+    }
