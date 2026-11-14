@@ -1,0 +1,7 @@
+Shuffle on the phone, subtitle sync, and downloads in step with the server.
+
+- Shuffle a show or season from its page, also when casting.
+- Subtitle sync: move subtitles earlier or later during playback.
+- A season download can leave out what you've watched.
+- Offline progress moves items up in Continue Watching, and downloads take progress from your other devices.
+- Ephyra's own mpv build.
