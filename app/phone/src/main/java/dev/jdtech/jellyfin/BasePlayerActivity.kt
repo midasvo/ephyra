@@ -79,10 +79,12 @@ abstract class BasePlayerActivity : AppCompatActivity() {
             wasPip = true
         } else {
             viewModel.playWhenReady = viewModel.player.playWhenReady
-            if (pausesOnLeave) {
+            if (pausesOnLeave && viewModel.player.playWhenReady) {
+                // CE (#674): the view model reports this pause itself.
                 viewModel.player.playWhenReady = false
+            } else {
+                viewModel.updatePlaybackProgress()
             }
-            viewModel.updatePlaybackProgress()
         }
     }
 
