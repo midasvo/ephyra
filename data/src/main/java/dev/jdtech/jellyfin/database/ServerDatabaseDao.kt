@@ -440,6 +440,22 @@ interface ServerDatabaseDao {
     suspend fun markUserDataToBeSynced(userId: UUID, itemId: UUID): Int
 
     /**
+     * CE (#635): runs [write] on the row of [itemId] and marks it to be sent, in one transaction.
+     * The refresh from the server ([refreshUserDataFromServer]) only touches rows that are not
+     * marked, so it cannot land between the write and the mark and replace what was just written.
+     * Returns what [markUserDataToBeSynced] returns.
+     */
+    @Transaction
+    suspend fun writeAndMarkToBeSynced(
+        userId: UUID,
+        itemId: UUID,
+        write: suspend ServerDatabaseDao.() -> Unit,
+    ): Int {
+        write()
+        return markUserDataToBeSynced(userId, itemId)
+    }
+
+    /**
      * CE (#635): the downloaded movies and episodes of [serverId] whose user data of [userId] has
      * reached the server, so the server's values may replace it. Rows still to be sent are left
      * out: those are newer than what the server has.
@@ -481,12 +497,13 @@ interface ServerDatabaseDao {
      * CE (#635): another device played the item after this one did, so its progress replaces the
      * row's and the row counts as sent. Only while the row still holds what the sync read
      * (`sent*`), as [clearUserDataToBeSynced] does: a write in between keeps the row marked. The
-     * row's favourite is kept; the sync sends it on its own.
+     * row's favourite is kept; the sync sends it on its own. Returns 1 when the row was taken over.
      */
     @Query(
         "UPDATE userdata SET played = :played, playbackPositionTicks = :playbackPositionTicks, " +
             "lastPlayedDate = :lastPlayedDate, toBeSynced = 0 " +
-            "WHERE userId = :userId AND itemId = :itemId AND played = :sentPlayed " +
+            "WHERE userId = :userId AND itemId = :itemId AND toBeSynced = 1 " +
+            "AND played = :sentPlayed " +
             "AND favorite = :sentFavorite AND playbackPositionTicks = :sentPlaybackPositionTicks " +
             "AND lastPlayedDate IS :sentLastPlayedDate"
     )
@@ -500,7 +517,7 @@ interface ServerDatabaseDao {
         sentFavorite: Boolean,
         sentPlaybackPositionTicks: Long,
         sentLastPlayedDate: Long?,
-    )
+    ): Int
 
     /**
      * Marks a row as sent, but only while it still holds the values that were sent: a write that

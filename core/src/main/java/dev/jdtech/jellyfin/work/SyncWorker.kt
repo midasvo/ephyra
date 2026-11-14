@@ -74,19 +74,15 @@ constructor(
                         val outcome = syncUserData(api, user.id, pending)
                         if (!outcome.allOk) ok = false
                         if (outcome.sent > 0) reachedServer = true
-                        // A write that failed while this run was sending keeps its row marked,
-                        // and asking for a sync during a run does nothing: run again for those.
-                        val stillMarked = database.getAllUserDataToBeSynced(server.id, user.id)
-                        if (needsAnotherRun(sent = pending, stillMarked = stillMarked)) {
-                            ok = false
-                        }
-                    }
-                    if (!ok) {
-                        hadFailures = true
-                        continue
                     }
                     // CE (#635): after sending, so the server's values include what was just sent.
-                    if (refresh) refreshFromServer(api, server.id, user.id)
+                    if (ok && refresh) refreshFromServer(api, server.id, user.id)
+                    // A write that failed while this run was sending keeps its row marked, and
+                    // asking for a sync during a run does nothing: run again for those. CE (#635):
+                    // also for a row marked during a run that only refreshed.
+                    val stillMarked = database.getAllUserDataToBeSynced(server.id, user.id)
+                    if (needsAnotherRun(sent = pending, stillMarked = stillMarked)) ok = false
+                    if (!ok) hadFailures = true
                 }
             }
 

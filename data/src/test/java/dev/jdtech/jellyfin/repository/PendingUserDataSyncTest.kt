@@ -243,22 +243,25 @@ class PendingUserDataSyncTest {
             database.setFavorite(userId, movieId, true)
             database.setLastPlayedDate(userId, movieId, 1_000L)
 
-            // #635: the sync read the row as stored; the server has a later play at 900.
-            database.takeServerProgress(
-                userId = userId,
-                itemId = movieId,
-                played = false,
-                playbackPositionTicks = 900_000_000L,
-                lastPlayedDate = 2_000L,
-                sentPlayed = false,
-                sentFavorite = true,
-                sentPlaybackPositionTicks = 600_000_000L,
-                sentLastPlayedDate = 1_000L,
-            )
+            // #635: the sync read the row as stored; the server has a later play that finished it.
+            val took =
+                database.takeServerProgress(
+                    userId = userId,
+                    itemId = movieId,
+                    played = true,
+                    playbackPositionTicks = 0L,
+                    lastPlayedDate = 2_000L,
+                    sentPlayed = false,
+                    sentFavorite = true,
+                    sentPlaybackPositionTicks = 600_000_000L,
+                    sentLastPlayedDate = 1_000L,
+                )
 
+            assertEquals(1, took)
             assertTrue(pending().isEmpty())
             val row = database.getUserData(movieId, userId)!!
-            assertEquals(900_000_000L, row.playbackPositionTicks)
+            assertTrue(row.played)
+            assertEquals(0L, row.playbackPositionTicks)
             assertEquals(2_000L, row.lastPlayedDate)
             // The phone's favourite stays: the sync sends it on its own.
             assertTrue(row.favorite)
@@ -288,6 +291,44 @@ class PendingUserDataSyncTest {
             assertEquals(700_000_000L, row.playbackPositionTicks)
             assertEquals(3_000L, row.lastPlayedDate)
         }
+    }
+
+    @Test
+    fun `only a marked row takes the server's progress`() = runBlocking {
+        // CE (#635): the row holds what the sync read, but it is no longer waiting to be sent.
+        storeMovie(positionTicks = 600_000_000L)
+        database.setLastPlayedDate(userId, movieId, 1_000L)
+
+        val took =
+            database.takeServerProgress(
+                userId = userId,
+                itemId = movieId,
+                played = false,
+                playbackPositionTicks = 900_000_000L,
+                lastPlayedDate = 2_000L,
+                sentPlayed = false,
+                sentFavorite = false,
+                sentPlaybackPositionTicks = 600_000_000L,
+                sentLastPlayedDate = 1_000L,
+            )
+
+        assertEquals(0, took)
+        assertEquals(600_000_000L, database.getUserData(movieId, userId)!!.playbackPositionTicks)
+    }
+
+    @Test
+    fun `a write and its mark go together`() = runBlocking {
+        storeMovie()
+
+        // CE (#635): one transaction, so a refresh cannot replace the write before it is marked.
+        val first =
+            database.writeAndMarkToBeSynced(userId, movieId) { setFavorite(userId, movieId, true) }
+        val second =
+            database.writeAndMarkToBeSynced(userId, movieId) { setFavorite(userId, movieId, false) }
+
+        assertEquals(1, first)
+        assertEquals(0, second)
+        assertFalse(pending().single().favorite)
     }
 
     @Test
