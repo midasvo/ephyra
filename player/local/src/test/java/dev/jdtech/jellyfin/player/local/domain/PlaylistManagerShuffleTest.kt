@@ -111,6 +111,43 @@ class PlaylistManagerShuffleTest {
         assertEquals(3, 1 + manager.upcomingItems().size)
     }
 
+    @Test
+    fun `shuffling a season queues only its episodes and starts from 0`() {
+        val season1 = season(1)
+        val season2 = season(2)
+        val inSeason = List(10) { episode(season1, it + 1) }.map { it.copy(playbackPositionTicks = 50000000L) }
+        val showMap = mapOf(season1 to inSeason, season2 to listOf(episode(season2, 1)))
+
+        val manager = PlaylistManager(fakeRepository(showMap))
+        val initialItem =
+            runBlocking {
+                manager.getInitialItem(
+                    itemId = season1.id,
+                    itemKind = BaseItemKind.SEASON,
+                    shuffle = true,
+                )
+            }
+
+        assertNotNull(initialItem)
+        assertEquals(0L, initialItem!!.playbackPosition)
+        val queued = listOf(initialItem.itemId) + manager.upcomingItems().map { it.id }
+        assertEquals(inSeason.map { it.id }.toSet(), queued.toSet())
+        assertEquals(inSeason.size, queued.size)
+    }
+
+    @Test
+    fun `a season without shuffle plays in order from its first episode`() {
+        val season1 = season(1)
+        val inSeason = List(10) { episode(season1, it + 1) }
+        val manager = PlaylistManager(fakeRepository(mapOf(season1 to inSeason)))
+
+        val initialItem =
+            runBlocking { manager.getInitialItem(itemId = season1.id, itemKind = BaseItemKind.SEASON) }
+
+        val queued = listOf(initialItem!!.itemId) + manager.upcomingItems().map { it.id }
+        assertEquals(inSeason.map { it.id }, queued)
+    }
+
     private fun fakeRepository(show: Map<FindroidSeason, List<FindroidEpisode>>) =
         Proxy.newProxyInstance(
             JellyfinRepository::class.java.classLoader,
@@ -118,6 +155,7 @@ class PlaylistManagerShuffleTest {
         ) { _, method, args ->
             when (method.name) {
                 "getSeasons" -> show.keys.toList()
+                "getSeason" -> show.keys.first { it.id == args[0] }
                 "getEpisodes" -> {
                     calls += "getEpisodes"
                     if (args[1] == null) show.values.flatten()

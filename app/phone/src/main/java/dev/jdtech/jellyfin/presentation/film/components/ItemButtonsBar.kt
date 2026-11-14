@@ -67,6 +67,8 @@ fun ItemButtonsBar(
     isDownloaded: Boolean = item.isDownloaded(),
     onPlayVersionClick: ((startFromBeginning: Boolean, mediaSourceId: String) -> Unit)? = null,
     hasMoreToDownload: Boolean = false,
+    /** CE (#638): when set, a Shuffle button next to Play (shows and seasons). */
+    onShuffleClick: (() -> Unit)? = null,
 ) {
     // Read inside this composable so a progress tick only recomposes the buttons bar, not the
     // screen that hosts it.
@@ -136,6 +138,14 @@ fun ItemButtonsBar(
                             )
                         }
                     }
+                    if (onShuffleClick != null) {
+                        FilledTonalIconButton(onClick = onShuffleClick, enabled = item.canPlay && canPlay) {
+                            Icon(
+                                painter = painterResource(CoreR.drawable.ic_shuffle),
+                                contentDescription = stringResource(CoreR.string.shuffle),
+                            )
+                        }
+                    }
                 }
             }
             // Wraps instead of clipping when the buttons don't fit beside each other (#429).
@@ -158,6 +168,14 @@ fun ItemButtonsBar(
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_rotate_ccw),
                                 contentDescription = stringResource(CoreR.string.play_from_beginning),
+                            )
+                        }
+                    }
+                    if (onShuffleClick != null) {
+                        FilledTonalIconButton(onClick = onShuffleClick, enabled = item.canPlay && canPlay) {
+                            Icon(
+                                painter = painterResource(CoreR.drawable.ic_shuffle),
+                                contentDescription = stringResource(CoreR.string.shuffle),
                             )
                         }
                     }

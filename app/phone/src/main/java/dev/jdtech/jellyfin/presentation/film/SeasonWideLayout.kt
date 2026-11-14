@@ -405,6 +405,7 @@ fun SeasonWideLayout(
                                             SeasonAction.Play(startFromBeginning = startFromBeginning)
                                         )
                                     },
+                                    onShuffleClick = { onAction(SeasonAction.Shuffle) },
                                     onMarkAsPlayedClick = {
                                         when (season.played) {
                                             true -> onAction(SeasonAction.UnmarkAsPlayed)

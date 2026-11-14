@@ -173,7 +173,9 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                 }
                 BaseItemKind.SEASON -> {
                     val season = repository.getSeason(itemId)
-                    val episodes = fetchEpisodes(season.seriesId, season.id)
+                    // CE (#638): shuffle a single season too, not only a whole series.
+                    val inOrder = fetchEpisodes(season.seriesId, season.id)
+                    val episodes = if (shuffle) inOrder.shuffled() else inOrder
 
                     if (episodes.isEmpty()) {
                         return null

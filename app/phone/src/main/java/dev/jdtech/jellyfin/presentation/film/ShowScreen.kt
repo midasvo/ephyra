@@ -151,6 +151,14 @@ fun ShowScreen(
                         context.startActivity(intent)
                     }
                 }
+                // CE (#638): every season's episodes, Specials left out, in random order.
+                is ShowAction.Shuffle -> {
+                    val intent = Intent(context, PlayerActivity::class.java)
+                    intent.putExtra("itemId", showId.toString())
+                    intent.putExtra("itemKind", BaseItemKind.SERIES.serialName)
+                    intent.putExtra("shuffle", true)
+                    context.startActivity(intent)
+                }
                 is ShowAction.PlayTrailer -> {
                     try {
                         uriHandler.openUri(action.trailer)
@@ -294,6 +302,7 @@ private fun ShowScreenLayout(
                         onPlayClick = { startFromBeginning ->
                             onAction(ShowAction.Play(startFromBeginning = startFromBeginning))
                         },
+                        onShuffleClick = { onAction(ShowAction.Shuffle) },
                         onMarkAsPlayedClick = {
                             when (show.played) {
                                 true -> onAction(ShowAction.UnmarkAsPlayed)

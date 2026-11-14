@@ -152,6 +152,14 @@ fun SeasonScreen(
                         context.startActivity(intent)
                     }
                 }
+                // CE (#638): this season's episodes in random order.
+                is SeasonAction.Shuffle -> {
+                    val intent = Intent(context, PlayerActivity::class.java)
+                    intent.putExtra("itemId", seasonId.toString())
+                    intent.putExtra("itemKind", BaseItemKind.SEASON.serialName)
+                    intent.putExtra("shuffle", true)
+                    context.startActivity(intent)
+                }
                 is SeasonAction.OnBackClick -> navigateBack()
                 is SeasonAction.OnHomeClick -> navigateHome()
                 is SeasonAction.NavigateToItem -> navigateToItem(action.item)
@@ -292,6 +300,7 @@ private fun SeasonScreenLayout(
                         onPlayClick = { startFromBeginning ->
                             onAction(SeasonAction.Play(startFromBeginning = startFromBeginning))
                         },
+                        onShuffleClick = { onAction(SeasonAction.Shuffle) },
                         onMarkAsPlayedClick = {
                             when (season.played) {
                                 true -> onAction(SeasonAction.UnmarkAsPlayed)

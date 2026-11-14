@@ -649,6 +649,8 @@ class PlayerActivity : BasePlayerActivity() {
         val itemKind = intent.extras?.getString("itemKind")
         val startFromBeginning = intent.extras?.getBoolean("startFromBeginning") ?: false
         val mediaSourceId = intent.extras?.getString("mediaSourceId")
+        // CE (#638): a show or season played in random order, from the Shuffle button.
+        val shuffle = intent.extras?.getBoolean("shuffle") ?: false
 
         isControlsLocked = false
         updatePlayerOrientation()
@@ -1099,6 +1101,7 @@ class PlayerActivity : BasePlayerActivity() {
                 itemKind = itemKind ?: "",
                 startFromBeginning = startFromBeginning,
                 mediaSourceId = mediaSourceId,
+                shuffle = shuffle,
             )
         }
         hideSystemUI()
@@ -1420,12 +1423,14 @@ class PlayerActivity : BasePlayerActivity() {
         val itemKind = intent.extras!!.getString("itemKind")
         val startFromBeginning = intent.extras!!.getBoolean("startFromBeginning")
         val mediaSourceId = intent.extras!!.getString("mediaSourceId")
+        val shuffle = intent.extras!!.getBoolean("shuffle")
 
         viewModel.initializePlayer(
             itemId = itemId,
             itemKind = itemKind ?: "",
             startFromBeginning = startFromBeginning,
             mediaSourceId = mediaSourceId,
+            shuffle = shuffle,
         )
     }
 
