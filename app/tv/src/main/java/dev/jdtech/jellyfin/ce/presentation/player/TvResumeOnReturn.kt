@@ -1,16 +1,16 @@
 package dev.jdtech.jellyfin.ce.presentation.player
 
 /**
- * CE (#462): what the TV player does when the app comes back (Home and back, standby and wake).
- * The screen pauses the player on ON_PAUSE; on ON_RESUME it plays again if it was playing, as
- * the phone's BasePlayerActivity does, or shows the controls if it was paused, so the paused
- * state can be seen.
+ * CE (#462): what the TV player does when the app comes back (Home and back, standby and wake). The
+ * screen pauses the player on ON_PAUSE; on ON_RESUME it plays again if it was playing, as the
+ * phone's BasePlayerActivity does, or shows the controls if it was paused, so the paused state can
+ * be seen.
  *
- * The decision is taken at the first ON_PAUSE since the last ON_RESUME, so a second ON_PAUSE
- * cannot overwrite "was playing" with the pause the screen made itself. Anything else that
- * changes the play state while the app is away (a play/pause from the remote or the media
- * session, the still-watching timeout) or the sleep timer firing cancels the resume: the return
- * then leaves the play state alone and only shows the controls if the player is not playing.
+ * The decision is taken at the first ON_PAUSE since the last ON_RESUME, so a second ON_PAUSE cannot
+ * overwrite "was playing" with the pause the screen made itself. Anything else that changes the
+ * play state while the app is away (a play/pause from the remote or the media session, the
+ * still-watching timeout) or the sleep timer firing cancels the resume: the return then leaves the
+ * play state alone and only shows the controls if the player is not playing.
  */
 internal class TvResumeOnReturn {
 
@@ -20,8 +20,8 @@ internal class TvResumeOnReturn {
         /** It was playing before: play again. */
         PLAY,
         /**
-         * It was paused already, or someone else took over the play state: show the controls if
-         * it is not playing, so the paused state is visible.
+         * It was paused already, or someone else took over the play state: show the controls if it
+         * is not playing, so the paused state is visible.
          */
         SHOW_CONTROLS,
     }

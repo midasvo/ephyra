@@ -73,7 +73,9 @@ class SubtitleSyncDialogFragment : DialogFragment() {
                             tracks = tracks,
                             selectedTrackIndex = selectedTrackIndex,
                             subtitleDelayMs = delayMs,
-                            getCurrentPositionMs = { viewModel.player.currentPosition.coerceAtLeast(0L) },
+                            getCurrentPositionMs = {
+                                viewModel.player.currentPosition.coerceAtLeast(0L)
+                            },
                             availableCues = cues,
                             isLoadingCues = isLoadingCues,
                             onTrackSelected = { newIndex ->
@@ -104,10 +106,9 @@ class SubtitleSyncDialogFragment : DialogFragment() {
 
     override fun onStart() {
         super.onStart()
-        dialog?.window?.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-        )
+        dialog
+            ?.window
+            ?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
     }
 
     override fun onDestroy() {

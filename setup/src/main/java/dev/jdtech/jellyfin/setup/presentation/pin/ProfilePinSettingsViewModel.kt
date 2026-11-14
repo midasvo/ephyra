@@ -64,8 +64,8 @@ sealed interface ProfilePinSettingsAction {
     data object OnSetClick : ProfilePinSettingsAction
 
     /**
-     * CE (#330): lock the profile with [type]. With a lock already in place (of either type) it asks
-     * for that one first, so switching between PIN and pattern needs the current lock.
+     * CE (#330): lock the profile with [type]. With a lock already in place (of either type) it
+     * asks for that one first, so switching between PIN and pattern needs the current lock.
      */
     data class OnSetLockClick(val type: ProfileLockType) : ProfilePinSettingsAction
 
@@ -152,7 +152,8 @@ constructor(private val repository: SetupRepository, private val profileLock: Pr
         val previous = _state.value.prompt
         val lockType = lockTypeFor(step)
         val prompt =
-            if (error != null && previous != null) previous.rejected(error).copy(lockType = lockType)
+            if (error != null && previous != null)
+                previous.rejected(error).copy(lockType = lockType)
             else PinPrompt(user.id, user.name, lockType = lockType)
         _state.update { it.copy(step = step, prompt = prompt) }
     }
@@ -194,7 +195,8 @@ constructor(private val repository: SetupRepository, private val profileLock: Pr
                     } else {
                         when (entry) {
                             is ProfileLockEntry.Pin -> profileLock.setPin(user.id, entry.pin)
-                            is ProfileLockEntry.Pattern -> profileLock.setPattern(user.id, entry.dots)
+                            is ProfileLockEntry.Pattern ->
+                                profileLock.setPattern(user.id, entry.dots)
                         }
                         _state.update {
                             it.copy(step = null, prompt = null, changedLockType = entry.type)

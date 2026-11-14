@@ -28,7 +28,9 @@ internal data class CastTracks(
 
 /** The id of the subtitle track the server picks for this user, `null` when it picks none. */
 internal fun defaultSubtitleTrackId(mediaSource: MediaSourceInfo): Int? =
-    mediaSource.defaultSubtitleStreamIndex?.takeIf { it >= 0 }?.let { it + SUBTITLE_TRACK_ID_OFFSET }
+    mediaSource.defaultSubtitleStreamIndex
+        ?.takeIf { it >= 0 }
+        ?.let { it + SUBTITLE_TRACK_ID_OFFSET }
 
 /**
  * The tracks of [mediaSource], for the receiver and for the track dialogs. [audioStreamIndex] is

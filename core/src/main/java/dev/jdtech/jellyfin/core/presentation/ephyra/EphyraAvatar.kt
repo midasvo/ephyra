@@ -1,11 +1,11 @@
 package dev.jdtech.jellyfin.core.presentation.ephyra
 
-import java.text.BreakIterator
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -27,12 +27,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.text.BasicText
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.core.presentation.theme.OutfitFamily
+import java.text.BreakIterator
 import java.util.Locale
 import java.util.UUID
 import kotlin.math.abs
@@ -48,7 +48,7 @@ data class AvatarColors(
     val badgeContainer: Color,
     val badgeContent: Color,
     val badgeRing: Color,
-    /** CE (#299): the lock badge, a neutral chip colour (VISION §3.4). */
+    /** CE (#299): the lock badge, a neutral chip colour (VISION ï¿½3.4). */
     val lockContainer: Color,
     val lockContent: Color,
 )
@@ -149,7 +149,8 @@ fun EphyraAvatar(
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
-                    modifier = Modifier.size(badgeSize).background(colors.lockContainer, CircleShape),
+                    modifier =
+                        Modifier.size(badgeSize).background(colors.lockContainer, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Image(
@@ -172,7 +173,8 @@ fun EphyraAvatar(
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
-                    modifier = Modifier.size(badgeSize).background(colors.badgeContainer, CircleShape),
+                    modifier =
+                        Modifier.size(badgeSize).background(colors.badgeContainer, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Image(

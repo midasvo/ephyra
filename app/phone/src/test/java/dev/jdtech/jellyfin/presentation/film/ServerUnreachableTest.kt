@@ -417,7 +417,9 @@ class ServerUnreachableTest {
         setButtons()
         assertButtons(shown = false)
         // Play stays: a download plays without the server.
-        rule.onNodeWithContentDescription(string(CoreR.string.play_button_description)).assertExists()
+        rule
+            .onNodeWithContentDescription(string(CoreR.string.play_button_description))
+            .assertExists()
 
         status = ServerStatusUi()
         settle()

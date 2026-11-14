@@ -27,8 +27,8 @@ import dev.jdtech.jellyfin.core.R as CoreR
 internal const val PersonPhotoPlaceholderTag = "person_photo_placeholder"
 
 /**
- * CE (#396): a person's photo, or the person icon when there is none or it fails to load, as on
- * TV. While the photo loads the frame stays plain, so a photo never follows a flash of the icon.
+ * CE (#396): a person's photo, or the person icon when there is none or it fails to load, as on TV.
+ * While the photo loads the frame stays plain, so a photo never follows a flash of the icon.
  * [modifier] sizes and clips the frame.
  */
 @Composable

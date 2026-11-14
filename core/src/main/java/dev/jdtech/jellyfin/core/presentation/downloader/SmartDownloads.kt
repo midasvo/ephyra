@@ -30,8 +30,8 @@ import timber.log.Timber
  * removes the ones Smart Downloads queued itself once you have watched them. What to queue and
  * remove is decided by [planSmartDownloads]; this class gathers its input and carries it out.
  *
- * It runs after playback stops and after the sync that pushes offline progress, so episodes
- * watched offline or on another device are covered too.
+ * It runs after playback stops and after the sync that pushes offline progress, so episodes watched
+ * offline or on another device are covered too.
  */
 @Singleton
 class SmartDownloads
@@ -118,7 +118,11 @@ constructor(
         val episodes =
             repository.getSeasons(seriesId).flatMap { season ->
                 // Without CanDownload every episode reads as not downloadable.
-                repository.getEpisodes(seriesId, season.id, fields = listOf(ItemFields.CAN_DOWNLOAD))
+                repository.getEpisodes(
+                    seriesId,
+                    season.id,
+                    fields = listOf(ItemFields.CAN_DOWNLOAD),
+                )
             }
 
         // The server decides what counts as watched, so wait until our own progress has reached
@@ -128,22 +132,20 @@ constructor(
             return
         }
 
-        val sourcesByEpisode =
-            episodes.associate { episode ->
-                episode.id to
-                    database.getSources(episode.id).filter { it.type == FindroidSourceType.LOCAL }
-            }
+        val sourcesByEpisode = episodes.associate { episode ->
+            episode.id to
+                database.getSources(episode.id).filter { it.type == FindroidSourceType.LOCAL }
+        }
         val completed =
             sourcesByEpisode
                 .mapValues { (_, sources) -> sources.filter { !it.path.endsWith(".download") } }
                 .filterValues { it.isNotEmpty() }
-        val downloads =
-            completed.mapValues { (_, sources) ->
-                SmartDownload(
-                    downloadedAt = sources.first().downloadedAt,
-                    smartQueued = sources.first().smartQueued,
-                )
-            }
+        val downloads = completed.mapValues { (_, sources) ->
+            SmartDownload(
+                downloadedAt = sources.first().downloadedAt,
+                smartQueued = sources.first().smartQueued,
+            )
+        }
         val inFlightIds =
             downloadQueue.entries.value
                 .filter {
@@ -159,7 +161,9 @@ constructor(
                 downloads = downloads,
                 inFlightIds = inFlightIds,
                 keepReady =
-                    appPreferences.getValue(appPreferences.smartDownloadsKeepReady).coerceAtLeast(1),
+                    appPreferences
+                        .getValue(appPreferences.smartDownloadsKeepReady)
+                        .coerceAtLeast(1),
                 since = since,
                 finishedRecently = finishedRecently,
                 playingItemId = playbackEvents.playingItemId.value,

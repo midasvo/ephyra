@@ -19,9 +19,9 @@ import dev.jdtech.jellyfin.models.FindroidSourceDto
 import dev.jdtech.jellyfin.models.FindroidTrickplayInfoDto
 import dev.jdtech.jellyfin.models.FindroidUserDataDto
 import dev.jdtech.jellyfin.models.PendingDownloadDto
+import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.models.Server
 import dev.jdtech.jellyfin.models.ServerAddress
-import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.models.User
 
 @Database(
@@ -72,8 +72,8 @@ abstract class ServerDatabase : RoomDatabase() {
     @DeleteTable(tableName = "intros") class IntrosMigration : AutoMigrationSpec
 
     /**
-     * CE (#633): rows with playback waiting to be sent from before `lastPlayedDate` existed get
-     * the time of the upgrade, so their sync still moves the item up in Continue Watching. Close
+     * CE (#633): rows with playback waiting to be sent from before `lastPlayedDate` existed get the
+     * time of the upgrade, so their sync still moves the item up in Continue Watching. Close
      * enough: the playback happened before the upgrade, and usually shortly before.
      */
     class LastPlayedDateMigration : AutoMigrationSpec {

@@ -8,7 +8,10 @@ class JellyfinImageSizeInterceptorTest {
 
     @Test
     fun `adds the size and quality to an item image`() {
-        assertEquals("$poster&fillWidth=320&fillHeight=480&quality=90", poster.withImageSize(300, 450))
+        assertEquals(
+            "$poster&fillWidth=320&fillHeight=480&quality=90",
+            poster.withImageSize(300, 450),
+        )
     }
 
     @Test

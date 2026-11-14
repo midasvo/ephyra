@@ -73,11 +73,11 @@ import dev.jdtech.jellyfin.film.presentation.show.ShowAction
 import dev.jdtech.jellyfin.film.presentation.show.ShowState
 import dev.jdtech.jellyfin.film.presentation.show.ShowViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
+import dev.jdtech.jellyfin.models.airSchedule
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.ui.components.Direction
 import dev.jdtech.jellyfin.ui.components.ItemCard
-import dev.jdtech.jellyfin.models.airSchedule
 import dev.jdtech.jellyfin.utils.AfterFirstFrame
 import dev.jdtech.jellyfin.utils.getShowDateString
 import java.util.UUID
@@ -199,7 +199,9 @@ private fun ShowScreenContent(
                 }
             // The list holds the header, the seasons and the cast when there are any, then these.
             val firstRelatedIndex =
-                1 + (if (state.seasons.isNotEmpty()) 1 else 0) + (if (state.actors.isNotEmpty()) 1 else 0)
+                1 +
+                    (if (state.seasons.isNotEmpty()) 1 else 0) +
+                    (if (state.actors.isNotEmpty()) 1 else 0)
             var size by remember { mutableStateOf(Size.Zero) }
             Box(
                 modifier =
@@ -219,7 +221,10 @@ private fun ShowScreenContent(
                             Modifier.fillMaxSize()
                                 .background(
                                     Brush.radialGradient(
-                                        listOf(Color.Black.copy(alpha = .2f), MaterialTheme.colorScheme.surface),
+                                        listOf(
+                                            Color.Black.copy(alpha = .2f),
+                                            MaterialTheme.colorScheme.surface,
+                                        ),
                                         center = Offset(size.width, 0f),
                                         radius = size.width * .8f,
                                     )
@@ -292,14 +297,19 @@ private fun ShowScreenContent(
                                 }
                                 TvCriticRating(show.criticRating)
                             }
-                            show.airSchedule(locale, stringResource(CoreR.string.item_airs_daily))?.let { schedule ->
-                                Spacer(modifier = Modifier.height(MaterialTheme.spacings.extraSmall))
-                                Text(
-                                    text = stringResource(CoreR.string.item_airs, schedule),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = Color.White.copy(alpha = .7f),
-                                )
-                            }
+                            show
+                                .airSchedule(locale, stringResource(CoreR.string.item_airs_daily))
+                                ?.let { schedule ->
+                                    Spacer(
+                                        modifier =
+                                            Modifier.height(MaterialTheme.spacings.extraSmall)
+                                    )
+                                    Text(
+                                        text = stringResource(CoreR.string.item_airs, schedule),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = Color.White.copy(alpha = .7f),
+                                    )
+                                }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
                             TvTagline(show.tagline)
                             // CE (#545): a cut overview takes focus and opens in full on OK.
@@ -319,8 +329,7 @@ private fun ShowScreenContent(
                                 Button(
                                     border = ephyraButtonBorder(),
                                     onClick = { onAction(ShowAction.Play()) },
-                                    modifier =
-                                        Modifier.focusPosition(focusPosition, ROW_BUTTONS, 0),
+                                    modifier = Modifier.focusPosition(focusPosition, ROW_BUTTONS, 0),
                                 ) {
                                     Icon(
                                         painter = painterResource(id = CoreR.drawable.ic_play),
@@ -332,8 +341,7 @@ private fun ShowScreenContent(
                                 Button(
                                     border = ephyraButtonBorder(),
                                     onClick = { onAction(ShowAction.Shuffle) },
-                                    modifier =
-                                        Modifier.focusPosition(focusPosition, ROW_BUTTONS, 1),
+                                    modifier = Modifier.focusPosition(focusPosition, ROW_BUTTONS, 1),
                                 ) {
                                     Icon(
                                         painter = painterResource(id = CoreR.drawable.ic_shuffle),
@@ -365,8 +373,7 @@ private fun ShowScreenContent(
                                             false -> onAction(ShowAction.MarkAsPlayed)
                                         }
                                     },
-                                    modifier =
-                                        Modifier.focusPosition(focusPosition, ROW_BUTTONS, 3),
+                                    modifier = Modifier.focusPosition(focusPosition, ROW_BUTTONS, 3),
                                 ) {
                                     Icon(
                                         painter = painterResource(id = CoreR.drawable.ic_check),
@@ -393,8 +400,7 @@ private fun ShowScreenContent(
                                             false -> onAction(ShowAction.MarkAsFavorite)
                                         }
                                     },
-                                    modifier =
-                                        Modifier.focusPosition(focusPosition, ROW_BUTTONS, 4),
+                                    modifier = Modifier.focusPosition(focusPosition, ROW_BUTTONS, 4),
                                 ) {
                                     Icon(
                                         painter =
@@ -510,9 +516,10 @@ private fun ShowScreenContent(
                                                 }
                                             },
                                     ) {
-                                        itemsIndexed(state.actors, key = { _, actor -> actor.id }) {
-                                            index,
-                                            actor ->
+                                        itemsIndexed(
+                                            state.actors,
+                                            key = { _, actor -> actor.id },
+                                        ) { index, actor ->
                                             PersonCard(
                                                 person = actor,
                                                 onClick = {
@@ -544,9 +551,9 @@ private fun ShowScreenContent(
                                 row = related.row,
                                 rowSpec = rowSpec,
                                 onFocused = {
-                                    relatedRows.relatedLazyIndex(related.row, firstRelatedIndex)?.let {
-                                        scrollToRow(it)
-                                    }
+                                    relatedRows
+                                        .relatedLazyIndex(related.row, firstRelatedIndex)
+                                        ?.let { scrollToRow(it) }
                                 },
                                 onClick = { item ->
                                     onAction(

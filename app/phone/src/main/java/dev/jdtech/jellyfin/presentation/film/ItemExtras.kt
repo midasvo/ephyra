@@ -9,8 +9,8 @@ import java.util.UUID
 import org.jellyfin.sdk.model.api.BaseItemKind
 
 /**
- * CE (#332): plays a local trailer or special feature in the app's own player. The player loads
- * an extra the way it loads a movie: one video item, no queue.
+ * CE (#332): plays a local trailer or special feature in the app's own player. The player loads an
+ * extra the way it loads a movie: one video item, no queue.
  */
 internal fun playExtra(context: Context, extraId: UUID) {
     val intent = Intent(context, PlayerActivity::class.java)

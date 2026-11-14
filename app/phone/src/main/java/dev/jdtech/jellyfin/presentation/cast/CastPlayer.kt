@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -78,11 +77,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.core.R as CoreR
-import dev.jdtech.jellyfin.core.presentation.theme.EphyraColor
 import dev.jdtech.jellyfin.core.presentation.ephyra.EphyraMotion
 import dev.jdtech.jellyfin.core.presentation.ephyra.ephyraGlow
 import dev.jdtech.jellyfin.core.presentation.ephyra.glowEnabled
-import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.core.presentation.theme.EphyraColor
 import dev.jdtech.jellyfin.player.cast.models.CastPlaybackStatus
 import dev.jdtech.jellyfin.player.cast.presentation.CastNowPlaying
 import dev.jdtech.jellyfin.player.cast.presentation.CastUiState
@@ -90,6 +88,7 @@ import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
 import dev.jdtech.jellyfin.player.core.domain.models.Track
 import dev.jdtech.jellyfin.player.local.R as PlayerR
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.isCompactHeight
 import org.jellyfin.sdk.model.api.BaseItemKind
 
@@ -123,8 +122,8 @@ class CastPlayerActions(
 )
 
 /**
- * CE (#626): the controls of what the receiver plays, as the app's usual sheet. On a phone it
- * fills the screen; on a wider window it keeps a sheet's width (4-design.md §1.4).
+ * CE (#626): the controls of what the receiver plays, as the app's usual sheet. On a phone it fills
+ * the screen; on a wider window it keeps a sheet's width (4-design.md §1.4).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -167,7 +166,9 @@ fun CastPlayerPanel(state: CastUiState, actions: CastPlayerActions, modifier: Mo
         BoxWithConstraints(
             modifier =
                 Modifier.windowInsetsPadding(
-                    WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
+                    WindowInsets.safeDrawing.only(
+                        WindowInsetsSides.Vertical + WindowInsetsSides.End
+                    )
                 )
         ) {
             CastPlayerContent(
@@ -197,8 +198,7 @@ internal fun CastPlayerContent(
     if (sideBySide) {
         // A phone in landscape: the picture beside the controls, each in half the width.
         Row(
-            modifier =
-                modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacings.default),
+            modifier = modifier.fillMaxWidth().padding(horizontal = MaterialTheme.spacings.default),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
         ) {
             Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())) {
@@ -351,7 +351,8 @@ private fun Artwork(
                     !state.isReconnecting
             AnimatedVisibility(
                 visible = canSkip,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(MaterialTheme.spacings.small),
+                modifier =
+                    Modifier.align(Alignment.BottomEnd).padding(MaterialTheme.spacings.small),
                 enter =
                     fadeIn(tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingEnter)),
                 exit = fadeOut(tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingExit)),
@@ -388,7 +389,11 @@ private fun Titles(shown: CastNowPlaying?) {
 }
 
 @Composable
-private fun Controls(state: CastUiState, actions: CastPlayerActions, onDialog: (CastDialog) -> Unit) {
+private fun Controls(
+    state: CastUiState,
+    actions: CastPlayerActions,
+    onDialog: (CastDialog) -> Unit,
+) {
     val deviceName = state.device?.name.orEmpty()
     val playing = state.nowPlaying
 
@@ -769,8 +774,7 @@ internal fun formatTime(millis: Long): String {
     else "%d:%02d".format(minutes, seconds)
 }
 
-private val previewActions =
-    CastPlayerActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+private val previewActions = CastPlayerActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 860)
 @Preview(showBackground = true, widthDp = 412, heightDp = 860, fontScale = 2f)
@@ -778,7 +782,12 @@ private val previewActions =
 private fun CastPlayerPreview() {
     FindroidTheme {
         Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
-            CastPlayerContent(CastPreviews.playing, previewActions, sideBySide = false, closeButton = false)
+            CastPlayerContent(
+                CastPreviews.playing,
+                previewActions,
+                sideBySide = false,
+                closeButton = false,
+            )
         }
     }
 }
@@ -788,7 +797,12 @@ private fun CastPlayerPreview() {
 private fun CastPlayerLandscapePreview() {
     FindroidTheme {
         Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
-            CastPlayerContent(CastPreviews.playing, previewActions, sideBySide = true, closeButton = false)
+            CastPlayerContent(
+                CastPreviews.playing,
+                previewActions,
+                sideBySide = true,
+                closeButton = false,
+            )
         }
     }
 }
@@ -798,7 +812,12 @@ private fun CastPlayerLandscapePreview() {
 private fun CastPlayerFailedPreview() {
     FindroidTheme {
         Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
-            CastPlayerContent(CastPreviews.failed, previewActions, sideBySide = false, closeButton = true)
+            CastPlayerContent(
+                CastPreviews.failed,
+                previewActions,
+                sideBySide = false,
+                closeButton = true,
+            )
         }
     }
 }

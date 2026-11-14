@@ -56,9 +56,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()
             // CE (#633): a sync that sent offline progress reloads the screen on display too.
-            val stopped = remember {
-                merge(playbackEvents.stopped.map {}, dataChangeEvents.synced)
-            }
+            val stopped = remember { merge(playbackEvents.stopped.map {}, dataChangeEvents.synced) }
             // CE (#281): whether the server answers, for the banner and the error pages.
             val server by viewModel.serverStatus.collectAsStateWithLifecycle()
             val serverStatus =

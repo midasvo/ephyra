@@ -37,9 +37,9 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,7 +78,6 @@ import androidx.media3.ui.PlayerView
 import androidx.tv.material3.Button
 import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.ClickableSurfaceDefaults
-import androidx.tv.material3.Glow
 import androidx.tv.material3.Icon
 import androidx.tv.material3.IconButton
 import androidx.tv.material3.MaterialTheme
@@ -95,13 +94,13 @@ import dev.jdtech.jellyfin.di.SubtitleStyleEntryPoint
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.player.local.R as PlayerR
+import dev.jdtech.jellyfin.player.local.domain.SleepTimerOption
 import dev.jdtech.jellyfin.player.local.domain.StillWatchingTracker
 import dev.jdtech.jellyfin.player.local.presentation.PlayerAction
 import dev.jdtech.jellyfin.player.local.presentation.PlayerEvents
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
-import dev.jdtech.jellyfin.presentation.theme.spacings
-import dev.jdtech.jellyfin.player.local.domain.SleepTimerOption
 import dev.jdtech.jellyfin.player.local.presentation.label
+import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.ui.components.Direction
 import dev.jdtech.jellyfin.ui.components.ItemPoster
 import dev.jdtech.jellyfin.ui.components.ProgressBadge
@@ -203,8 +202,9 @@ fun TvPlayerScreen(
     }
     val seekSettings = remember {
         TvSeekSettings(
-            backMs = appPreferences.getValue(appPreferences.playerTvSeekBackInc).toLongOrNull()
-                ?: 10_000L,
+            backMs =
+                appPreferences.getValue(appPreferences.playerTvSeekBackInc).toLongOrNull()
+                    ?: 10_000L,
             forwardMs =
                 appPreferences.getValue(appPreferences.playerTvSeekForwardInc).toLongOrNull()
                     ?: 30_000L,
@@ -224,9 +224,7 @@ fun TvPlayerScreen(
         if (window != null) {
             viewModel.attachWindow(window)
         }
-        onDispose {
-            viewModel.detachWindow()
-        }
+        onDispose { viewModel.detachWindow() }
     }
 
     // The media session is owned by PlayerViewModel; building a second one here would crash,
@@ -276,7 +274,10 @@ fun TvPlayerScreen(
     // pauses, and on ON_PAUSE (in the PlayerView's update below). Nothing posts after Home or
     // after the screen is left.
     val progressReports = remember {
-        TvProgressReports(send = viewModel::updatePlaybackProgress, isPlaying = { player.isPlaying })
+        TvProgressReports(
+            send = viewModel::updatePlaybackProgress,
+            isPlaying = { player.isPlaying },
+        )
     }
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -468,7 +469,11 @@ fun TvPlayerScreen(
                     // Any key means someone is watching, as a touch does on phone: it resets the
                     // still-watching counters.
                     if (event.type == KeyEventType.KeyDown) viewModel.markUserInteraction()
-                    keyHandler.onKeyEvent(event.key.nativeKeyCode, native.action, native.repeatCount)
+                    keyHandler.onKeyEvent(
+                        event.key.nativeKeyCode,
+                        native.action,
+                        native.repeatCount,
+                    )
                 }
                 .focusRequester(rootFocus)
                 .focusable()
@@ -529,7 +534,8 @@ fun TvPlayerScreen(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier =
-                        Modifier.align(Alignment.TopCenter).padding(top = MaterialTheme.spacings.large),
+                        Modifier.align(Alignment.TopCenter)
+                            .padding(top = MaterialTheme.spacings.large),
                 ) {
                     indicatorFrame?.let {
                         TrickplayThumbnail(
@@ -642,8 +648,15 @@ fun TvPlayerScreen(
                 val item = uiState.currentItem
                 PlayerControls(
                     seriesName = item?.seriesName,
-                    title = item?.let { episodeLine(it.parentIndexNumber, it.indexNumber, it.indexNumberEnd, it.name) }
-                        ?: uiState.currentItemTitle,
+                    title =
+                        item?.let {
+                            episodeLine(
+                                it.parentIndexNumber,
+                                it.indexNumber,
+                                it.indexNumberEnd,
+                                it.name,
+                            )
+                        } ?: uiState.currentItemTitle,
                     playbackSpeed = viewModel.playbackSpeed,
                     queue = queue,
                     queueOpen = queueOpen,
@@ -659,7 +672,9 @@ fun TvPlayerScreen(
                         remember(uiState.currentChapters, durationMs) {
                             val duration = durationMs
                             if (duration > 0) {
-                                uiState.currentChapters.map { it.startPosition.toFloat() / duration }
+                                uiState.currentChapters.map {
+                                    it.startPosition.toFloat() / duration
+                                }
                             } else {
                                 emptyList()
                             }
@@ -755,9 +770,7 @@ fun TvPlayerScreen(
                     title = stringResource(PlayerR.string.select_audio_track),
                     options = choices.names,
                     selectedIndex = choices.selected.coerceAtLeast(0),
-                    onSelect = { index ->
-                        viewModel.switchToTrack(C.TRACK_TYPE_AUDIO, index)
-                    },
+                    onSelect = { index -> viewModel.switchToTrack(C.TRACK_TYPE_AUDIO, index) },
                     onDismiss = close,
                 )
             }
@@ -875,14 +888,17 @@ private fun PlayerControls(
                 remember(shownPositionMs, durationMs) {
                     { (durationMs - shownPositionMs()).coerceAtLeast(0L) }
                 }
-            // CE (#134): the thumbnail sits above the time row, over where the pending position lands.
+            // CE (#134): the thumbnail sits above the time row, over where the pending position
+            // lands.
             Box(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small)) {
                     Row(modifier = Modifier.fillMaxWidth()) {
                         TimeText(
                             timeMs = shownPositionMs,
                             prefix = "",
-                            color = if (pendingSeekMs != null) MaterialTheme.colorScheme.primary else Color.White,
+                            color =
+                                if (pendingSeekMs != null) MaterialTheme.colorScheme.primary
+                                else Color.White,
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         if (sleepTimerActive) SleepTimerText(remainingMs = sleepTimerRemainingMs)
@@ -922,20 +938,17 @@ private fun PlayerControls(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium),
                 modifier =
-                    Modifier.focusRestorer(playPauseFocus)
-                        .focusGroup()
-                        .onPreviewKeyEvent { event ->
-                            // Down from the buttons opens the queue below them.
-                            val down =
-                                event.key == Key.DirectionDown &&
-                                    event.type == KeyEventType.KeyDown
-                            if (down && queue.isNotEmpty() && !queueOpen) {
-                                callbacks.onOpenQueue()
-                                true
-                            } else {
-                                false
-                            }
-                        },
+                    Modifier.focusRestorer(playPauseFocus).focusGroup().onPreviewKeyEvent { event ->
+                        // Down from the buttons opens the queue below them.
+                        val down =
+                            event.key == Key.DirectionDown && event.type == KeyEventType.KeyDown
+                        if (down && queue.isNotEmpty() && !queueOpen) {
+                            callbacks.onOpenQueue()
+                            true
+                        } else {
+                            false
+                        }
+                    },
             ) {
                 ControlButton(
                     icon = CoreR.drawable.ic_skip_back,
@@ -953,7 +966,8 @@ private fun PlayerControls(
                 )
                 ControlButton(
                     icon = CoreR.drawable.ic_skip_forward,
-                    contentDescription = stringResource(PlayerR.string.player_controls_next_episode),
+                    contentDescription =
+                        stringResource(PlayerR.string.player_controls_next_episode),
                     focusRequester = remember { FocusRequester() },
                     // Stays enabled on the last episode (and does nothing there): turning it off
                     // while it has focus, as the last episode starts, would lose focus.
@@ -982,7 +996,9 @@ private fun PlayerControls(
                     onFocus = onInteraction,
                 )
                 ControlButton(
-                    icon = if (sleepTimerActive) CoreR.drawable.ic_moon_star else CoreR.drawable.ic_moon,
+                    icon =
+                        if (sleepTimerActive) CoreR.drawable.ic_moon_star
+                        else CoreR.drawable.ic_moon,
                     contentDescription = stringResource(PlayerR.string.sleep_timer),
                     focusRequester = dialogOpenerFocus.getValue(PlayerDialog.SLEEP_TIMER),
                     onClick = { onOpenDialog(PlayerDialog.SLEEP_TIMER) },
@@ -1180,14 +1196,20 @@ private fun QueueCard(
                 )
                 ProgressBadge(
                     item = item,
-                    modifier = Modifier.align(Alignment.TopEnd).padding(MaterialTheme.spacings.extraSmall),
+                    modifier =
+                        Modifier.align(Alignment.TopEnd).padding(MaterialTheme.spacings.extraSmall),
                 )
             }
             Spacer(modifier = Modifier.height(MaterialTheme.spacings.extraSmall))
             Text(
                 text =
                     if (item is FindroidEpisode) {
-                        episodeLine(item.parentIndexNumber, item.indexNumber, item.indexNumberEnd, item.name)
+                        episodeLine(
+                            item.parentIndexNumber,
+                            item.indexNumber,
+                            item.indexNumberEnd,
+                            item.name,
+                        )
                     } else {
                         item.name
                     },
@@ -1273,7 +1295,10 @@ private fun StillWatchingDialog(endsAtMs: Long, onContinue: () -> Unit, onStop: 
                 val focusRequester = remember { FocusRequester() }
                 LaunchedEffect(Unit) { focusWhenReady(focusRequester) }
                 Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.medium)) {
-                    Button(onClick = onContinue, modifier = Modifier.focusRequester(focusRequester)) {
+                    Button(
+                        onClick = onContinue,
+                        modifier = Modifier.focusRequester(focusRequester),
+                    ) {
                         Text(text = stringResource(PlayerR.string.still_watching_continue))
                     }
                     Button(onClick = onStop) {
@@ -1325,9 +1350,7 @@ private fun ControlButton(
     IconButton(
         onClick = onClick,
         modifier =
-            Modifier.focusRequester(focusRequester).onFocusChanged {
-                if (it.isFocused) onFocus()
-            },
+            Modifier.focusRequester(focusRequester).onFocusChanged { if (it.isFocused) onFocus() },
     ) {
         Icon(painter = painterResource(id = icon), contentDescription = contentDescription)
     }
@@ -1342,7 +1365,10 @@ private fun SeekIndicatorView(indicator: SeekIndicator, durationMs: Long, modifi
         modifier =
             modifier
                 .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(24.dp))
-                .padding(horizontal = MaterialTheme.spacings.medium, vertical = MaterialTheme.spacings.small),
+                .padding(
+                    horizontal = MaterialTheme.spacings.medium,
+                    vertical = MaterialTheme.spacings.small,
+                ),
     ) {
         Icon(
             painter =

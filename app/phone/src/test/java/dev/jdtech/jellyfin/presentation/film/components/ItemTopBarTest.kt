@@ -42,7 +42,8 @@ class ItemTopBarTest {
         assertEquals(Color.White, topLeftPixel())
     }
 
-    private fun topLeftPixel(): Color = rule.onNodeWithTag("page").captureToImage().toPixelMap()[0, 0]
+    private fun topLeftPixel(): Color =
+        rule.onNodeWithTag("page").captureToImage().toPixelMap()[0, 0]
 
     private fun show(overArtwork: Boolean) {
         rule.setContent {

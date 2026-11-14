@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -15,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -31,17 +29,17 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.about.AboutInfo
+import dev.jdtech.jellyfin.about.AboutServer
+import dev.jdtech.jellyfin.about.BugReportLink
+import dev.jdtech.jellyfin.about.InstallSource
+import dev.jdtech.jellyfin.about.ReleaseChannel
+import dev.jdtech.jellyfin.about.ScreenSummary
 import dev.jdtech.jellyfin.about.buildText
 import dev.jdtech.jellyfin.about.channelText
 import dev.jdtech.jellyfin.about.decodersText
 import dev.jdtech.jellyfin.about.hdrText
 import dev.jdtech.jellyfin.about.installSourceText
 import dev.jdtech.jellyfin.about.resolutionText
-import dev.jdtech.jellyfin.about.AboutServer
-import dev.jdtech.jellyfin.about.BugReportLink
-import dev.jdtech.jellyfin.about.InstallSource
-import dev.jdtech.jellyfin.about.ReleaseChannel
-import dev.jdtech.jellyfin.about.ScreenSummary
 import dev.jdtech.jellyfin.ce.ui.QrCode
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
@@ -79,8 +77,8 @@ fun AboutScreen(
 internal const val ABOUT_LICENSES_TAG = "ce_about_licenses"
 
 /**
- * How far a focused pill button reaches past its bottom edge: tv-material's 1.1 focus scale of a
- * 40 dp button (2 dp), and the ring 2 dp outside it, 3 dp wide, scaled too (#539).
+ * How far a focused pill button reaches past its bottom edge: tv-material's 1.1 focus scale of a 40
+ * dp button (2 dp), and the ring 2 dp outside it, 3 dp wide, scaled too (#539).
  */
 private val FOCUSED_BUTTON_OVERHANG = 8.dp
 
@@ -187,7 +185,10 @@ private fun AppSection(info: AboutInfo) {
             label = stringResource(SettingsR.string.about_installed_from),
             value = installSourceText(info.installSource),
         )
-        InfoRow(label = stringResource(SettingsR.string.about_build), value = buildText(info, isTv = true))
+        InfoRow(
+            label = stringResource(SettingsR.string.about_build),
+            value = buildText(info, isTv = true),
+        )
     }
 }
 
@@ -213,7 +214,10 @@ private fun ServerSection(server: AboutServer) {
 
 @Composable
 private fun DeviceSection(info: AboutInfo, modifier: Modifier = Modifier) {
-    InfoSection(title = stringResource(SettingsR.string.about_section_device), modifier = modifier) {
+    InfoSection(
+        title = stringResource(SettingsR.string.about_section_device),
+        modifier = modifier,
+    ) {
         InfoRow(label = stringResource(SettingsR.string.about_device_model), value = info.device)
         InfoRow(
             label = stringResource(SettingsR.string.about_android_version),

@@ -37,7 +37,8 @@ internal fun planSmartDownloads(
     finishedRecently: Boolean,
     playingItemId: UUID?,
 ): SmartDownloadPlan {
-    // Specials do not take part in the aired order, so neither deleting nor topping up looks at them.
+    // Specials do not take part in the aired order, so neither deleting nor topping up looks at
+    // them.
     val ordered =
         episodes
             .filter { it.parentIndexNumber != 0 }
@@ -52,7 +53,8 @@ internal fun planSmartDownloads(
         val download = downloads[episode.id] ?: return false
         val downloadedAt = download.downloadedAt ?: return false
         val lastPlayedAt =
-            episode.lastPlayedDate?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli() ?: return false
+            episode.lastPlayedDate?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
+                ?: return false
         return played(episode) && lastPlayedAt > downloadedAt && lastPlayedAt > since
     }
 

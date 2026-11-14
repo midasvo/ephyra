@@ -29,7 +29,9 @@ suspend fun <T> serverOrStored(
         try {
             // Boxed, so a server answer of null is told apart from the timeout.
             withTimeoutOrNull(timeoutMs) { Fresh(server()) }
-                ?: null.also { Timber.w("Server took over %d ms, using the stored copy", timeoutMs) }
+                ?: null.also {
+                    Timber.w("Server took over %d ms, using the stored copy", timeoutMs)
+                }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -47,6 +49,7 @@ suspend fun <T> serverOrStoredList(
     stored: List<T>,
     timeoutMs: Long = STORED_FALLBACK_TIMEOUT_MS,
     server: suspend () -> List<T>,
-): List<T> = serverOrStored(stored.takeIf { it.isNotEmpty() }?.let { suspend { it } }, timeoutMs, server)
+): List<T> =
+    serverOrStored(stored.takeIf { it.isNotEmpty() }?.let { suspend { it } }, timeoutMs, server)
 
 private class Fresh<T>(val value: T)

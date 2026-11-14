@@ -8,11 +8,7 @@ import dev.jdtech.jellyfin.MainActivity
  * What a Watch Next program opens: the item, resumed in the player. The user id keeps a program
  * left over from another user from playing in this user's session.
  */
-data class WatchNextLink(
-    val itemId: String,
-    val itemType: WatchNextItemType,
-    val userId: String,
-) {
+data class WatchNextLink(val itemId: String, val itemType: WatchNextItemType, val userId: String) {
     fun toIntent(context: Context): Intent =
         Intent(context, MainActivity::class.java)
             .setAction(ACTION_PLAY)

@@ -19,7 +19,8 @@ object LoadErrorText {
     fun reason(error: Throwable): UiText {
         val status = error.causes().filterIsInstance<InvalidStatusException>().firstOrNull()
         return when {
-            status != null -> UiText.StringResource(CoreR.string.ce_error_server_status, status.status)
+            status != null ->
+                UiText.StringResource(CoreR.string.ce_error_server_status, status.status)
             isConnectionError(error) ->
                 UiText.StringResource(CoreR.string.download_error_server_unreachable)
             else -> UiText.StringResource(CoreR.string.unknown_error)

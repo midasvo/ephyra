@@ -192,7 +192,9 @@ internal fun DownloadsScreenLayout(
     val sections =
         remember(state.sections, hiddenIds) {
             state.sections
-                .map { section -> section.copy(items = section.items.filterNot { it.id in hiddenIds }) }
+                .map { section ->
+                    section.copy(items = section.items.filterNot { it.id in hiddenIds })
+                }
                 .filter { it.items.isNotEmpty() }
         }
     val libraryItems = remember(sections) { sections.flatMap { it.items } }
@@ -218,7 +220,8 @@ internal fun DownloadsScreenLayout(
 
     // Multi-select: entered from the top bar or by long-pressing a row.
     var selecting by rememberSaveable { mutableStateOf(false) }
-    var selectedIds by rememberSaveable(stateSaver = UuidSetSaver) { mutableStateOf(emptySet<UUID>()) }
+    var selectedIds by
+        rememberSaveable(stateSaver = UuidSetSaver) { mutableStateOf(emptySet<UUID>()) }
     fun exitSelection() {
         selecting = false
         selectedIds = emptySet()
@@ -311,7 +314,8 @@ internal fun DownloadsScreenLayout(
         // One column below Expanded, which lays out exactly like the list it replaces.
         val spacing = if (expandedWidth) Layout.gutter(widthClass) else 2.dp
         LazyVerticalGrid(
-            columns = if (expandedWidth) GridCells.Adaptive(minSize = 480.dp) else GridCells.Fixed(1),
+            columns =
+                if (expandedWidth) GridCells.Adaptive(minSize = 480.dp) else GridCells.Fixed(1),
             modifier = Modifier.padding(innerPadding).fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(spacing),
@@ -485,8 +489,8 @@ private fun LazyGridScope.downloadingSection(
 
 /**
  * CE (#434): a grid measures each item at the exact width of its cell or span, so a `widthIn` on
- * the item itself has no effect. The item fills its cell and [content] gets the cap of a row
- * (720 dp, 4-design.md §5), at the start, in line with the columns below.
+ * the item itself has no effect. The item fills its cell and [content] gets the cap of a row (720
+ * dp, 4-design.md §5), at the start, in line with the columns below.
  */
 @Composable
 private fun RowWidth(
@@ -555,7 +559,9 @@ private fun LibraryRow(
                 when (item) {
                     is FindroidShow ->
                         episodeCount?.let {
-                            add(pluralStringResource(CoreR.plurals.downloaded_episode_count, it, it))
+                            add(
+                                pluralStringResource(CoreR.plurals.downloaded_episode_count, it, it)
+                            )
                         }
                     is FindroidMovie -> {
                         item.productionYear?.let { add(it.toString()) }
@@ -579,7 +585,9 @@ private fun LibraryRow(
         state = dismissState,
         enableDismissFromStartToEnd = false,
         gesturesEnabled = selected == null,
-        backgroundContent = { SwipeActionBackground(icon = CoreR.drawable.ic_trash, shape = shape) },
+        backgroundContent = {
+            SwipeActionBackground(icon = CoreR.drawable.ic_trash, shape = shape)
+        },
         modifier = modifier,
     ) {
         DownloadRow(
@@ -603,7 +611,8 @@ private fun LibraryRow(
 @Composable
 private fun SectionHeader(title: String, modifier: Modifier = Modifier, trailing: String? = null) {
     Row(
-        modifier = modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 20.dp, bottom = 8.dp),
+        modifier =
+            modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 20.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(

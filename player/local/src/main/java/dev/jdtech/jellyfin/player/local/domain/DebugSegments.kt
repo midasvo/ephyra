@@ -17,8 +17,9 @@ import timber.log.Timber
  * ```
  * adb shell "run-as nl.midasvo.findroid.ce.debug sh -c 'printf \"INTRO,10,40\\nOUTRO,60,9999\\n\" > files/fake_segments.txt'"
  * ```
- * The segments then apply to every item. An `end` past the runtime is clamped by the player.
- * Delete the file to go back to the server's segments.
+ *
+ * The segments then apply to every item. An `end` past the runtime is clamped by the player. Delete
+ * the file to go back to the server's segments.
  */
 object DebugSegments {
     private const val FILE_NAME = "fake_segments.txt"

@@ -69,7 +69,9 @@ fun UserItem(
                     IconButton(
                         onClick = onRemoveClick,
                         modifier =
-                            Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-4).dp).size(32.dp),
+                            Modifier.align(Alignment.TopEnd)
+                                .offset(x = 8.dp, y = (-4).dp)
+                                .size(32.dp),
                     ) {
                         Icon(
                             painter = painterResource(CoreR.drawable.ic_trash),

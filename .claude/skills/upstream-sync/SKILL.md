@@ -120,12 +120,13 @@ Summarise for the user: what came in, how conflicts were resolved, the checks, a
   - `AppPreferences.playerMpvAo` = `audiotrack` (upstream: `aaudio`). Reverting it reintroduces
     the mpv seek/track-switch video freeze — issue #52, upstream #1246, mpv-android#1283 (open).
     `MPVPlayer`'s constructor and Builder defaults mirror it.
-  - `ktfmt` = `0.26.0` in `gradle/libs.versions.toml` (upstream: `0.27.0`). 0.27.0 bundles ktfmt
-    0.64, whose formatting differs from 0.62 across the whole tree; taking the bump turns Lint
-    red on ~100 files. Upstream's own `main` is red for this reason — their bump PR touched only
-    `libs.versions.toml`, and the lint workflow's `**.kt`/`**.kts` path filter meant Lint never
-    ran on it (upstream has since renamed `lint.yaml` → `format.yaml`). Unpin only together with
-    a tree-wide `ktfmtFormat`, ideally after upstream reformats.
+  - The **ktfmt formatter** = `0.62`: `ktfmt-formatter` in `gradle/libs.versions.toml`, forced
+    onto the plugin's `ktfmt` configuration in the root `build.gradle.kts`. The ktfmt Gradle
+    plugin itself is on upstream's `0.27.0` (the first that sees the sources under AGP 9's
+    built-in Kotlin, #661), but its default formatter, 0.64, formats the whole tree differently.
+    Move the formatter only together with a tree-wide `ktfmtFormat`, ideally after upstream
+    reformats. Plugin 0.28.0 needs ktfmt 0.65 and can't run 0.62. `ktfmtCheckCoverage` (under
+    `ktfmtCheck`) fails if a plugin change leaves Kotlin files unchecked again.
   - **JDK 21** — `Versions.JAVA` = `JavaLanguageVersion.of(21)` in `buildSrc/.../Versions.kt` and
     `java-version: 21` in every `.github/workflows/*` (upstream: 17, since `1d5081d6`). Local dev
     machines only have JDK 21 and toolchain auto-provisioning isn't configured, so taking 17

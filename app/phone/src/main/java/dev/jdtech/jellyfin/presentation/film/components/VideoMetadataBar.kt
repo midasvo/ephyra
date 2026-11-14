@@ -43,9 +43,9 @@ const val MEDIA_INFO_CHIP_TAG = "media_info_chip"
 /**
  * The badges that sum up the file. With [onInfoClick] (CE, #510) the row ends in an info chip and
  * the whole row opens the media info sheet: the chip says there is more, the row is the touch
- * target, since a badge alone is too small to aim for. A press shows on the chip alone, wherever
- * on the row it lands: a ripple over the whole row would flash across the gaps between the badges
- * and, on the hero layouts, across the artwork behind them.
+ * target, since a badge alone is too small to aim for. A press shows on the chip alone, wherever on
+ * the row it lands: a ripple over the whole row would flash across the gaps between the badges and,
+ * on the hero layouts, across the artwork behind them.
  */
 @Composable
 fun VideoMetadataBar(
@@ -124,8 +124,8 @@ fun VideoMetadataBar(
 /**
  * A metadata chip. [text] may be null for an icon-only badge (a wordmark such as HDR10+); give
  * those a [contentDescription]. An icon-only badge shows its drawable at the size it was drawn,
- * which suits a wordmark; [squareIcon] is for a 24 dp glyph, drawn as high as a line of text.
- * With an [interactionSource] the chip shows that source's presses as its own.
+ * which suits a wordmark; [squareIcon] is for a 24 dp glyph, drawn as high as a line of text. With
+ * an [interactionSource] the chip shows that source's presses as its own.
  */
 @Composable
 fun VideoMetadataBarItem(

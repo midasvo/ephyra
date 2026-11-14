@@ -26,8 +26,6 @@ val LocalPlaybackStopped = staticCompositionLocalOf<Flow<Unit>> { emptyFlow() }
 fun ReloadOnResume(shouldReload: () -> Boolean, onReload: () -> Unit) {
     val currentShouldReload by rememberUpdatedState(shouldReload)
     val currentOnReload by rememberUpdatedState(onReload)
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        if (currentShouldReload()) currentOnReload()
-    }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { if (currentShouldReload()) currentOnReload() }
     ObserveAsEvents(LocalPlaybackStopped.current) { currentOnReload() }
 }

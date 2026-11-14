@@ -63,7 +63,8 @@ private fun MacrobenchmarkScope.openFirstCard(): Boolean {
     repeat(3) {
         try {
             val list =
-                device.wait(Until.findObject(By.scrollable(true)), SCREEN_TIMEOUT_MS) ?: return false
+                device.wait(Until.findObject(By.scrollable(true)), SCREEN_TIMEOUT_MS)
+                    ?: return false
             val card =
                 list.findObjects(By.clickable(true)).firstOrNull { it.visibleBounds.height() > 100 }
                     ?: return false

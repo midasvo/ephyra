@@ -53,9 +53,9 @@ private enum class ControlKind {
 }
 
 /**
- * App Store-style download control: a ring that fills with progress around a stop glyph, so
- * the progress indicator and the cancel button are one element. A failed download shows a
- * retry glyph instead and a finished one a check, each popping in with a small spring.
+ * App Store-style download control: a ring that fills with progress around a stop glyph, so the
+ * progress indicator and the cancel button are one element. A failed download shows a retry glyph
+ * instead and a finished one a check, each popping in with a small spring.
  */
 @Composable
 fun DownloadProgressButton(
@@ -156,10 +156,7 @@ private fun ProgressRing(state: DownloadControlState, progress: () -> Float) {
             )
         }
         // Stop glyph: tapping the ring cancels.
-        Box(
-            modifier =
-                Modifier.size(9.dp).clip(RoundedCornerShape(2.dp)).background(activeColor)
-        )
+        Box(modifier = Modifier.size(9.dp).clip(RoundedCornerShape(2.dp)).background(activeColor))
     }
 }
 

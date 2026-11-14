@@ -26,9 +26,9 @@ import dev.jdtech.jellyfin.ce.ui.focus.ephyraFocusedBorder
 import kotlinx.coroutines.launch
 
 /**
- * A text cut to [maxLines], or to the height it is given, such as an overview or a biography (#508,
- * #545). Only when it is cut, it takes focus with the Ephyra ring and OK opens the full text in a
- * [TvTextDialog] titled [title]; Back from the dialog puts focus on it again. A text that fits
+ * A text cut to [maxLines], or to the height it is given, such as an overview or a biography
+ * (#508, #545). Only when it is cut, it takes focus with the Ephyra ring and OK opens the full text
+ * in a [TvTextDialog] titled [title]; Back from the dialog puts focus on it again. A text that fits
  * takes no focus.
  */
 @Composable

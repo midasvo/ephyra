@@ -25,19 +25,19 @@ data class MediaInfo(
 data class MediaInfoTrack(
     /** The server's own description: "4K HEVC HDR10", "English - TrueHD 7.1 - Default". */
     val title: String,
-    /** The numbers behind it, in reading order: "3840×2160", "23.976 fps", "10-bit", "58.3 Mbps". */
+    /**
+     * The numbers behind it, in reading order: "3840×2160", "23.976 fps", "10-bit", "58.3 Mbps".
+     */
     val details: List<String>,
 )
 
 /**
- * The versions the media info sheet can describe: those whose video or audio tracks are known.
- * A download stores only its sidecar subtitles, so the copy on the device is not among them, and
+ * The versions the media info sheet can describe: those whose video or audio tracks are known. A
+ * download stores only its sidecar subtitles, so the copy on the device is not among them, and
  * offline, where the downloads are all there is, the list is empty.
  */
 fun List<FindroidSource>.withMediaInfo(): List<FindroidSource> = filter { source ->
-    source.mediaStreams.any {
-        it.type == MediaStreamType.VIDEO || it.type == MediaStreamType.AUDIO
-    }
+    source.mediaStreams.any { it.type == MediaStreamType.VIDEO || it.type == MediaStreamType.AUDIO }
 }
 
 fun FindroidSource.toMediaInfo(locale: Locale = Locale.getDefault()): MediaInfo {

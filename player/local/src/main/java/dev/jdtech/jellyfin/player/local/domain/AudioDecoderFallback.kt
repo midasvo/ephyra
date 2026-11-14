@@ -59,9 +59,9 @@ class AudioDecoderFallback(
     /**
      * Rule out the audio decoder that caused [error], if one did.
      *
-     * @return `true` if preparing the player again can recover from [error]. A decoder is only ruled
-     *   out once and there are finitely many, so this cannot retry forever. `false` for anything
-     *   else, including a failure in ffmpeg itself.
+     * @return `true` if preparing the player again can recover from [error]. A decoder is only
+     *   ruled out once and there are finitely many, so this cannot retry forever. `false` for
+     *   anything else, including a failure in ffmpeg itself.
      */
     fun onPlayerError(error: PlaybackException): Boolean =
         failedAudioDecoder(error)?.let { markBroken(it) } ?: false

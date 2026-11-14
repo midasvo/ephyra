@@ -107,8 +107,7 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     // manufacturer check — see mpv-android/mpv-android#1283, still unfixed.
     // "audiotrack" is also what mpv's own autoprobe order picks on Android, and what
     // mpv-android uses. aaudio stays selectable for anyone who wants it.
-    val playerMpvAo =
-        Preference("pref_player_mpv_ao", Constants.MpvAudioOutput.AUDIOTRACK)
+    val playerMpvAo = Preference("pref_player_mpv_ao", Constants.MpvAudioOutput.AUDIOTRACK)
 
     // Player - gestures
     val playerGestures = Preference("pref_player_gestures", true)
@@ -186,8 +185,7 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
         get() = Preference("pref_player_media_segments_outro_action", MediaSegmentsMigration.ASK)
 
     val playerMediaSegmentsRecapAction
-        get() =
-            Preference("pref_player_media_segments_recap_action", MediaSegmentsMigration.IGNORE)
+        get() = Preference("pref_player_media_segments_recap_action", MediaSegmentsMigration.IGNORE)
 
     val playerMediaSegmentsPreviewAction
         get() =
@@ -232,10 +230,7 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
             Constants.SubtitleStyle.DEFAULT_BG_COLOR,
         )
     val subtitleEdgeColor =
-        Preference<String?>(
-            "pref_subtitle_edge_color",
-            Constants.SubtitleStyle.DEFAULT_EDGE_COLOR,
-        )
+        Preference<String?>("pref_subtitle_edge_color", Constants.SubtitleStyle.DEFAULT_EDGE_COLOR)
     val subtitleEdgeType =
         Preference<String?>("pref_subtitle_edge_type", Constants.SubtitleStyle.EDGE_OUTLINE)
     val subtitleFontFamily =
@@ -243,8 +238,7 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     val subtitleFontScale = Preference("pref_subtitle_font_scale", 100)
     // CE (#300): apply the style above to subtitles that bring their own (ASS/SSA), on both
     // backends. Off by default, so those tracks look the way their authors made them.
-    val subtitleOverrideEmbeddedStyles =
-        Preference("pref_subtitle_override_embedded_styles", false)
+    val subtitleOverrideEmbeddedStyles = Preference("pref_subtitle_override_embedded_styles", false)
 
     // Downloads
     val downloadOverMobileData = Preference("pref_downloads_mobile_data", false)
@@ -301,23 +295,22 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
         Preference("pref_player_media_segments_actions_migrated", false)
 
     /**
-     * CE (#271): one-shot move from the old global media segment switches (show skip button,
-     * auto skip, and their type lists) to one stored action per segment type, so the settings
-     * show every type's effective value. An action the user already picked per type is kept. See
+     * CE (#271): one-shot move from the old global media segment switches (show skip button, auto
+     * skip, and their type lists) to one stored action per segment type, so the settings show every
+     * type's effective value. An action the user already picked per type is kept. See
      * [MediaSegmentsMigration.actions] for the mapping.
      */
     fun migrateMediaSegmentActions() {
         if (getValue(mediaSegmentActionsMigrated)) return
         val preferences = playerMediaSegmentsActions
-        val explicit =
-            preferences.mapValues { (_, preference) ->
-                // Read without the default: an absent value is "never picked".
-                try {
-                    sharedPreferences.getString(preference.backendName, null)
-                } catch (_: ClassCastException) {
-                    null
-                }
+        val explicit = preferences.mapValues { (_, preference) ->
+            // Read without the default: an absent value is "never picked".
+            try {
+                sharedPreferences.getString(preference.backendName, null)
+            } catch (_: ClassCastException) {
+                null
             }
+        }
         val actions =
             MediaSegmentsMigration.actions(
                 explicit = explicit,
@@ -336,8 +329,8 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
      *
      * Flipping [playerMpvAo]'s default is not enough on its own: the settings picker persists a
      * value on *any* tap, including on the row that is already selected, so everyone who merely
-     * opened Audio output while troubleshooting the freeze has "aaudio" written to disk — which
-     * is exactly the population that hit the bug. Rewrite that one value once.
+     * opened Audio output while troubleshooting the freeze has "aaudio" written to disk — which is
+     * exactly the population that hit the bug. Rewrite that one value once.
      *
      * Guarded by [mpvAoAaudioMigrated] so a deliberate re-selection afterwards sticks; we correct
      * an accidental value, we don't keep overruling the user.
@@ -406,7 +399,10 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
             is Float -> editor.putFloat(preference.backendName, value as Float)
             is String? -> editor.putString(preference.backendName, value as String?)
             is Set<*> -> editor.putStringSet(preference.backendName, value as Set<String>)
-            else -> throw IllegalArgumentException("Unsupported preference type: ${preference.defaultValue}")
+            else ->
+                throw IllegalArgumentException(
+                    "Unsupported preference type: ${preference.defaultValue}"
+                )
         }
         editor.apply()
     }

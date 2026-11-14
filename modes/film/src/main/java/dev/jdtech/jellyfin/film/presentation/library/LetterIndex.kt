@@ -5,7 +5,8 @@ package dev.jdtech.jellyfin.film.presentation.library
  *
  * Built from server counts instead of item names, because a paged grid only has the names it has
  * loaded. The server also decides what a sort name is ("The Office" sorts as "office"), so the bar
- * always agrees with the order of the grid. Everything before "a" (digits, most symbols) is [OTHER].
+ * always agrees with the order of the grid. Everything before "a" (digits, most symbols) is
+ * [OTHER].
  */
 class LetterIndex private constructor(val letters: List<Letter>, val total: Int) {
     /** A letter of the bar: its items are positions `start until start + count`. */
@@ -46,12 +47,11 @@ class LetterIndex private constructor(val letters: List<Letter>, val total: Int)
             // Where each letter starts in ascending order, plus the end of the list.
             val bounds = listOf(0) + countsBefore + total
             if (bounds.zipWithNext().any { (a, b) -> b < a } || total < 0) return null
-            val letters =
-                CHARS.mapIndexed { i, char ->
-                    val start = bounds[i]
-                    val count = bounds[i + 1] - start
-                    Letter(char, if (ascending) start else total - start - count, count)
-                }
+            val letters = CHARS.mapIndexed { i, char ->
+                val start = bounds[i]
+                val count = bounds[i + 1] - start
+                Letter(char, if (ascending) start else total - start - count, count)
+            }
             return LetterIndex(if (ascending) letters else letters.reversed(), total)
         }
     }

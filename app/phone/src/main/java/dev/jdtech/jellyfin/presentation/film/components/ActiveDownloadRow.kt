@@ -13,8 +13,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import dev.jdtech.jellyfin.core.R as CoreR
@@ -109,8 +109,8 @@ fun ActiveDownloadRow(
 }
 
 /**
- * Title and optional second line for a download row. Episodes put the series name first and
- * the episode on its own line, so a long series name can't truncate away which episode it is.
+ * Title and optional second line for a download row. Episodes put the series name first and the
+ * episode on its own line, so a long series name can't truncate away which episode it is.
  */
 @Composable
 fun downloadTitles(item: FindroidItem): Pair<String, String?> {

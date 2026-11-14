@@ -70,8 +70,7 @@ fun TvLoadError(
         Button(
             onClick = onRetry,
             border = ephyraButtonBorder(),
-            modifier =
-                Modifier.focusPosition(focusPosition, 0, 0).testTag(TV_LOAD_ERROR_RETRY_TAG),
+            modifier = Modifier.focusPosition(focusPosition, 0, 0).testTag(TV_LOAD_ERROR_RETRY_TAG),
         ) {
             Text(text = stringResource(CoreR.string.retry))
         }

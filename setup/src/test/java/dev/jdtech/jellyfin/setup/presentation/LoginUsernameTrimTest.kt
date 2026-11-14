@@ -53,7 +53,8 @@ class LoginUsernameTrimTest {
 
     @Test
     fun `a username with spaces around it reaches the repository trimmed`() = runTest {
-        val viewModel = LoginViewModel(repository, ServerLocalNetworkBlock(FakeLocalNetworkAccess(), { null }))
+        val viewModel =
+            LoginViewModel(repository, ServerLocalNetworkBlock(FakeLocalNetworkAccess(), { null }))
 
         viewModel.onAction(LoginAction.OnLoginClick(" demo  ", " pass word "))
 

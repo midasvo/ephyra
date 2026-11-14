@@ -153,10 +153,7 @@ private fun SubtitleStyleScreenLayout(
 }
 
 @Composable
-private fun SubtitleStylePreview(
-    state: SubtitleStyleState,
-    modifier: Modifier = Modifier,
-) {
+private fun SubtitleStylePreview(state: SubtitleStyleState, modifier: Modifier = Modifier) {
     val sampleText = stringResource(SettingsR.string.subtitle_style_preview_text)
 
     Box(
@@ -168,11 +165,7 @@ private fun SubtitleStylePreview(
                     // Dark gradient that mimics a bright-then-dark frame, so the user can judge
                     // contrast against both extremes.
                     Brush.horizontalGradient(
-                        listOf(
-                            Color(0xFF1E1E1E),
-                            Color(0xFF5C4A2E),
-                            Color(0xFFE2C792),
-                        )
+                        listOf(Color(0xFF1E1E1E), Color(0xFF5C4A2E), Color(0xFFE2C792))
                     )
                 ),
         contentAlignment = Alignment.Center,
@@ -195,7 +188,7 @@ private fun SubtitleStylePreview(
                         (state.fontScale.coerceIn(
                             Constants.SubtitleStyle.FONT_SCALE_MIN,
                             Constants.SubtitleStyle.FONT_SCALE_MAX,
-                        ) / 100f),
+                        ) / 100f)
                 )
                 view.setCues(listOf(Cue.Builder().setText(sampleText).build()))
             },

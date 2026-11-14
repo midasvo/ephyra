@@ -119,10 +119,7 @@ class SubtitleSyncDialogTest {
                 SubtitleSyncCue(90_000L, text = "Far future line"),
             )
 
-        val tracks =
-            listOf(
-                SubtitleTrackItem(0, "English [CC]", isSelected = true),
-            )
+        val tracks = listOf(SubtitleTrackItem(0, "English [CC]", isSelected = true))
 
         rule.setContent {
             FindroidTheme(darkTheme = true) {
@@ -160,7 +157,8 @@ class SubtitleSyncDialogTest {
         rule.onNodeWithText("Just before reaction").performScrollTo().performClick()
         rule.waitForIdle()
 
-        // Expected delay = playbackTime (45000) - cue.startTime (44200) - reaction compensation (300) = +500ms
+        // Expected delay = playbackTime (45000) - cue.startTime (44200) - reaction compensation
+        // (300) = +500ms
         val expected = (45_000L - 44_200L - HUMAN_REACTION_COMPENSATION_MS).toInt()
         assertEquals(500, expected)
         assertEquals(expected, appliedDelayMs)

@@ -17,8 +17,8 @@ interface ThemeMusicOutput {
  * another app is already playing audio: we don't take audio focus, so we'd play over it.
  *
  * It stops, with a fade, on leaving the page, playback starting, the app going to the background
- * and the screensaver. Once it has started it doesn't start again during this visit, so Back from
- * a season or the player stays quiet; [played] is kept with the page for that (see
+ * and the screensaver. Once it has started it doesn't start again during this visit, so Back from a
+ * season or the player stays quiet; [played] is kept with the page for that (see
  * [rememberThemeMusic]).
  */
 class ThemeMusicSession(

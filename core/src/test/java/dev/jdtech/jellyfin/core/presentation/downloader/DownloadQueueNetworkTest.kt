@@ -106,9 +106,9 @@ class DownloadQueueNetworkTest {
     private fun queue(): DownloadQueue {
         val context = RuntimeEnvironment.getApplication()
         val preferences =
-            context.getSharedPreferences("download-queue-network-test", Context.MODE_PRIVATE).apply {
-                edit().clear().putInt("pref_downloads_max_concurrent", 1).commit()
-            }
+            context
+                .getSharedPreferences("download-queue-network-test", Context.MODE_PRIVATE)
+                .apply { edit().clear().putInt("pref_downloads_max_concurrent", 1).commit() }
         return DownloadQueue(
             downloader = downloader,
             appPreferences = AppPreferences(preferences),
@@ -171,8 +171,9 @@ class DownloadQueueNetworkTest {
 
         override suspend fun getProgress(downloadId: Long?) = running
 
-        override suspend fun getProgress(downloadIds: List<Long>) =
-            downloadIds.associateWith { running }
+        override suspend fun getProgress(downloadIds: List<Long>) = downloadIds.associateWith {
+            running
+        }
 
         override suspend fun getActiveDownloads() = emptyList<Downloader.ActiveDownload>()
 

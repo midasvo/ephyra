@@ -80,6 +80,10 @@ class HomeSectionStartTest {
 
         // The cards the user scrolled to stay put; the new one is off to the left, out of view.
         assertNotEquals(0f, shown)
-        assertEquals(shown, rule.onNodeWithText("Movie 3").fetchSemanticsNode().positionInRoot.x, 1f)
+        assertEquals(
+            shown,
+            rule.onNodeWithText("Movie 3").fetchSemanticsNode().positionInRoot.x,
+            1f,
+        )
     }
 }

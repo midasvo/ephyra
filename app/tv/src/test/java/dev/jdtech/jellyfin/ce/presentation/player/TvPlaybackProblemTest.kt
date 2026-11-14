@@ -31,7 +31,9 @@ class TvPlaybackProblemTest {
 
     @Test
     fun `no wait and no error is no problem`() {
-        assertNull(playbackProblem(waitingForNetwork = false, hasError = false, nothingLoaded = false))
+        assertNull(
+            playbackProblem(waitingForNetwork = false, hasError = false, nothingLoaded = false)
+        )
     }
 
     @Test

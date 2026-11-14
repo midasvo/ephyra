@@ -15,8 +15,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -156,7 +156,10 @@ fun TvPinPad(
                             modifier =
                                 if (digit == '1') Modifier.focusRequester(firstKey) else Modifier,
                         ) {
-                            Text(text = digit.toString(), style = MaterialTheme.typography.titleLarge)
+                            Text(
+                                text = digit.toString(),
+                                style = MaterialTheme.typography.titleLarge,
+                            )
                         }
                     }
                 }
@@ -175,7 +178,8 @@ fun TvPinPad(
                 PadKey(onClick = { type('0') }) {
                     Text(text = "0", style = MaterialTheme.typography.titleLarge)
                 }
-                // Dimmed, not disabled, until the PIN is long enough: focus can still rest on it. The
+                // Dimmed, not disabled, until the PIN is long enough: focus can still rest on it.
+                // The
                 // icon is dimmed rather than the key, so the focus ring outside it is not cut off.
                 PadKey(
                     onClick = ::submit,
@@ -193,7 +197,9 @@ fun TvPinPad(
     }
 }
 
-/** One key of the pad: a round button with the focus ring. Never disabled, so focus can rest on it. */
+/**
+ * One key of the pad: a round button with the focus ring. Never disabled, so focus can rest on it.
+ */
 @Composable
 private fun PadKey(
     onClick: () -> Unit,
@@ -239,15 +245,25 @@ private fun PinDots(count: Int, error: Boolean, modifier: Modifier = Modifier) {
 
 private fun Key.digit(): Char? =
     when (this) {
-        Key.Zero, Key.NumPad0 -> '0'
-        Key.One, Key.NumPad1 -> '1'
-        Key.Two, Key.NumPad2 -> '2'
-        Key.Three, Key.NumPad3 -> '3'
-        Key.Four, Key.NumPad4 -> '4'
-        Key.Five, Key.NumPad5 -> '5'
-        Key.Six, Key.NumPad6 -> '6'
-        Key.Seven, Key.NumPad7 -> '7'
-        Key.Eight, Key.NumPad8 -> '8'
-        Key.Nine, Key.NumPad9 -> '9'
+        Key.Zero,
+        Key.NumPad0 -> '0'
+        Key.One,
+        Key.NumPad1 -> '1'
+        Key.Two,
+        Key.NumPad2 -> '2'
+        Key.Three,
+        Key.NumPad3 -> '3'
+        Key.Four,
+        Key.NumPad4 -> '4'
+        Key.Five,
+        Key.NumPad5 -> '5'
+        Key.Six,
+        Key.NumPad6 -> '6'
+        Key.Seven,
+        Key.NumPad7 -> '7'
+        Key.Eight,
+        Key.NumPad8 -> '8'
+        Key.Nine,
+        Key.NumPad9 -> '9'
         else -> null
     }

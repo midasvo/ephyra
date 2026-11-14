@@ -42,8 +42,8 @@ fun ephyraButtonBorder(): ButtonBorder =
 const val EphyraFocusGlowAlpha = 0.55f
 
 /**
- * The halo behind the focus ring: `primary` at [EphyraFocusGlowAlpha], 20 dp. Read from the
- * scheme, so it follows the ring's colour.
+ * The halo behind the focus ring: `primary` at [EphyraFocusGlowAlpha], 20 dp. Read from the scheme,
+ * so it follows the ring's colour.
  */
 @Composable
 fun ephyraFocusedGlow(): Glow =

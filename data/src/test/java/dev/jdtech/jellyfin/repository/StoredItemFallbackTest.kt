@@ -3,7 +3,6 @@ package dev.jdtech.jellyfin.repository
 import android.app.Application
 import android.content.Context
 import android.provider.Settings
-import org.robolectric.RuntimeEnvironment
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.FindroidEpisode
@@ -27,6 +26,7 @@ import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**

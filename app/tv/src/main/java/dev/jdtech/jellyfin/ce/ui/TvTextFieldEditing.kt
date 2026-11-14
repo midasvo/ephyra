@@ -39,8 +39,8 @@ class TvTextFieldEditing internal constructor() {
     internal var focused = false
 
     /**
-     * Makes the field editable, so the keyboard opens when it is focused: for the IME's Next, before
-     * it moves focus here.
+     * Makes the field editable, so the keyboard opens when it is focused: for the IME's Next,
+     * before it moves focus here.
      */
     fun startEditing() {
         editing = true
@@ -51,8 +51,7 @@ class TvTextFieldEditing internal constructor() {
     }
 }
 
-@Composable
-fun rememberTvTextFieldEditing(): TvTextFieldEditing = remember { TvTextFieldEditing() }
+@Composable fun rememberTvTextFieldEditing(): TvTextFieldEditing = remember { TvTextFieldEditing() }
 
 /**
  * OK on the focused read-only field makes it editable and opens the keyboard. A letter typed on a

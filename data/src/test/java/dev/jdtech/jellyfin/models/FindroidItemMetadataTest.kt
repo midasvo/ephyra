@@ -4,20 +4,20 @@ import android.app.Application
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.lang.reflect.Proxy
 import java.time.DayOfWeek
-import java.util.Locale
 import java.time.Instant
 import java.time.LocalDateTime
+import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.DayOfWeek as JellyfinDayOfWeek
 import org.jellyfin.sdk.model.api.ExternalUrl
 import org.jellyfin.sdk.model.api.MediaUrl
 import org.jellyfin.sdk.model.api.NameGuidPair
 import org.jellyfin.sdk.model.api.UserItemDataDto
 import org.jellyfin.sdk.model.api.Video3dFormat
-import org.jellyfin.sdk.model.api.DayOfWeek as JellyfinDayOfWeek
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -52,7 +52,10 @@ class FindroidItemMetadataTest {
                 criticRating = 91f,
                 taglines = listOf(" ", "In space no one can hear you scream."),
                 studios = listOf(NameGuidPair(name = "Brandywine", id = UUID.randomUUID())),
-                externalUrls = listOf(ExternalUrl(name = "IMDb", url = "https://www.imdb.com/title/tt0078748")),
+                externalUrls =
+                    listOf(
+                        ExternalUrl(name = "IMDb", url = "https://www.imdb.com/title/tt0078748")
+                    ),
                 remoteTrailers =
                     listOf(
                         MediaUrl(url = "https://youtu.be/a", name = "Official trailer"),
@@ -90,8 +93,9 @@ class FindroidItemMetadataTest {
 
     @Test
     fun `a bare movie leaves every new field empty`() {
-        val movie =
-            runBlocking { BaseItemDto(id = id, type = BaseItemKind.MOVIE).toFindroidMovie(repository, emptyMap()) }
+        val movie = runBlocking {
+            BaseItemDto(id = id, type = BaseItemKind.MOVIE).toFindroidMovie(repository, emptyMap())
+        }
 
         assertNull(movie.criticRating)
         assertNull(movie.tagline)
@@ -166,7 +170,9 @@ class FindroidItemMetadataTest {
         // A movie has no TVDB page.
         assertEquals(
             listOf("https://www.themoviedb.org/movie/2"),
-            externalLinks(null, mapOf("Tmdb" to "2", "Tvdb" to "3"), BaseItemKind.MOVIE).map { it.url },
+            externalLinks(null, mapOf("Tmdb" to "2", "Tvdb" to "3"), BaseItemKind.MOVIE).map {
+                it.url
+            },
         )
     }
 
@@ -185,7 +191,10 @@ class FindroidItemMetadataTest {
                 type = BaseItemKind.MOVIE,
             )
 
-        assertEquals(listOf(FindroidExternalLink("Trakt", "https://trakt.tv/movies/alien-1979")), links)
+        assertEquals(
+            listOf(FindroidExternalLink("Trakt", "https://trakt.tv/movies/alien-1979")),
+            links,
+        )
     }
 
     @Test
@@ -195,18 +204,27 @@ class FindroidItemMetadataTest {
                 .toFindroidShow(repository)
                 .copy(status = status, airDays = days, airTime = time)
 
-        assertNull(show("Ended", listOf(DayOfWeek.MONDAY), "20:00").airSchedule(Locale.ENGLISH, "daily"))
+        assertNull(
+            show("Ended", listOf(DayOfWeek.MONDAY), "20:00").airSchedule(Locale.ENGLISH, "daily")
+        )
         assertNull(show("Continuing", emptyList(), null).airSchedule(Locale.ENGLISH, "daily"))
         assertEquals(
             "Mon, Thu 20:00",
             show("Continuing", listOf(DayOfWeek.THURSDAY, DayOfWeek.MONDAY), "20:00")
                 .airSchedule(Locale.ENGLISH, "daily"),
         )
-        assertEquals("Friday", show("Continuing", listOf(DayOfWeek.FRIDAY), null).airSchedule(Locale.ENGLISH, "daily"))
-        assertEquals("9:00 PM", show("Continuing", emptyList(), "9:00 PM").airSchedule(Locale.ENGLISH, "daily"))
+        assertEquals(
+            "Friday",
+            show("Continuing", listOf(DayOfWeek.FRIDAY), null).airSchedule(Locale.ENGLISH, "daily"),
+        )
+        assertEquals(
+            "9:00 PM",
+            show("Continuing", emptyList(), "9:00 PM").airSchedule(Locale.ENGLISH, "daily"),
+        )
         assertEquals(
             "daily 08:00",
-            show("Continuing", DayOfWeek.entries.reversed(), "08:00").airSchedule(Locale.ENGLISH, "daily"),
+            show("Continuing", DayOfWeek.entries.reversed(), "08:00")
+                .airSchedule(Locale.ENGLISH, "daily"),
         )
     }
 
@@ -217,19 +235,18 @@ class FindroidItemMetadataTest {
         TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
         try {
             val played = LocalDateTime.of(2026, 11, 12, 19, 2, 51)
-            val movie =
-                runBlocking {
-                    BaseItemDto(
-                            id = id,
-                            type = BaseItemKind.MOVIE,
-                            userData = userData(playCount = 1).copy(lastPlayedDate = played),
-                        )
-                        .toFindroidMovie(repository, emptyMap())
-                }
-            val never =
-                runBlocking {
-                    BaseItemDto(id = id, type = BaseItemKind.MOVIE).toFindroidMovie(repository, emptyMap())
-                }
+            val movie = runBlocking {
+                BaseItemDto(
+                        id = id,
+                        type = BaseItemKind.MOVIE,
+                        userData = userData(playCount = 1).copy(lastPlayedDate = played),
+                    )
+                    .toFindroidMovie(repository, emptyMap())
+            }
+            val never = runBlocking {
+                BaseItemDto(id = id, type = BaseItemKind.MOVIE)
+                    .toFindroidMovie(repository, emptyMap())
+            }
 
             assertEquals(
                 Instant.parse("2026-11-13T03:02:51Z").toEpochMilli(),

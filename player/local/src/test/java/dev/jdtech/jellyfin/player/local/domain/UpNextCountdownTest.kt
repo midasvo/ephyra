@@ -110,7 +110,10 @@ class UpNextCountdownTest {
     fun `the seconds are real ones at a faster speed`() {
         val countdown = UpNextCountdown()
         val outro = duration - 90_000L
-        assertEquals(UpNextDecision.Show(15, 1f), countdown.at(outro, outroStartMs = outro, speed = 2f))
+        assertEquals(
+            UpNextDecision.Show(15, 1f),
+            countdown.at(outro, outroStartMs = outro, speed = 2f),
+        )
         assertEquals(
             UpNextDecision.Show(10, 10f / 15),
             countdown.at(outro + 10_000L, outroStartMs = outro, speed = 2f),

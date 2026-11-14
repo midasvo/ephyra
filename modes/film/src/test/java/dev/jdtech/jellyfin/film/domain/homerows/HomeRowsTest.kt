@@ -43,7 +43,13 @@ class HomeRowsTest {
 
     @Test
     fun `the old switches carry over`() {
-        val old = LegacyHomeSwitches(suggestions = false, continueWatching = true, nextUp = false, latest = false)
+        val old =
+            LegacyHomeSwitches(
+                suggestions = false,
+                continueWatching = true,
+                nextUp = false,
+                latest = false,
+            )
 
         val rows = HomeRows.resolve(null, listOf(movies), old)
 
@@ -76,10 +82,7 @@ class HomeRowsTest {
             listOf("latest:$movies", "suggestions", "next_up", "continue_watching"),
             keys(rows),
         )
-        assertEquals(
-            listOf("latest:$movies", "continue_watching"),
-            visibleKeys(rows),
-        )
+        assertEquals(listOf("latest:$movies", "continue_watching"), visibleKeys(rows))
         // The first row can't move up, the last can't move down.
         assertEquals(rows, HomeRows.move(rows, "latest:$movies", -1))
         assertEquals(rows, HomeRows.move(rows, "continue_watching", 1))
@@ -99,13 +102,7 @@ class HomeRowsTest {
         val rows = HomeRows.resolve(stored, listOf(shows, anime), legacy)
 
         assertEquals(
-            listOf(
-                "next_up",
-                "suggestions",
-                "continue_watching",
-                "latest:$shows",
-                "latest:$anime",
-            ),
+            listOf("next_up", "suggestions", "continue_watching", "latest:$shows", "latest:$anime"),
             keys(rows),
         )
         assertEquals(true, rows.last().visible)
@@ -129,13 +126,16 @@ class HomeRowsTest {
 
     @Test
     fun `encoding round-trips and skips what it can't read`() {
-        val rows = HomeRows.setVisible(HomeRows.defaults(legacy, listOf(movies, shows)), "next_up", false)
+        val rows =
+            HomeRows.setVisible(HomeRows.defaults(legacy, listOf(movies, shows)), "next_up", false)
 
         assertEquals(rows, HomeRows.decode(HomeRows.encode(rows)))
         assertNull(HomeRows.decode(null))
         assertEquals(
             listOf(HomeRowConfig(NEXT_UP, visible = false)),
-            HomeRows.decode("next_up,,0;favorites,,1;genres,,1;latest,,1;latest,not-a-uuid,1;broken"),
+            HomeRows.decode(
+                "next_up,,0;favorites,,1;genres,,1;latest,,1;latest,not-a-uuid,1;broken"
+            ),
         )
     }
 
@@ -240,8 +240,9 @@ internal class MemorySharedPreferences : SharedPreferences {
     private inner class Editor : SharedPreferences.Editor {
         override fun putString(key: String, value: String?) = apply { values[key] = value }
 
-        override fun putStringSet(key: String, values: Set<String>?) =
-            apply { this@MemorySharedPreferences.values[key] = values }
+        override fun putStringSet(key: String, values: Set<String>?) = apply {
+            this@MemorySharedPreferences.values[key] = values
+        }
 
         override fun putInt(key: String, value: Int) = apply { values[key] = value }
 

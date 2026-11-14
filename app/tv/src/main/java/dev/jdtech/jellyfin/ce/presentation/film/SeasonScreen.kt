@@ -73,9 +73,9 @@ import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraFocusedBorder
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraFocusedGlow
-import dev.jdtech.jellyfin.ce.ui.itemInfoLine
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
 import dev.jdtech.jellyfin.ce.ui.focus.rememberFocusPosition
+import dev.jdtech.jellyfin.ce.ui.itemInfoLine
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisodes
 import dev.jdtech.jellyfin.core.presentation.dummy.dummySeason
@@ -151,7 +151,8 @@ fun SeasonScreen(
             seasonViewModel.loadSeason(
                 UUID.fromString(it),
                 includeSeriesSeasons = true,
-                // Read from the flow, not the composable state: this effect runs outside composition.
+                // Read from the flow, not the composable state: this effect runs outside
+                // composition.
                 seriesId = seriesId ?: episodeViewModel.state.value.episode?.seriesId,
             )
         }
@@ -321,11 +322,11 @@ internal fun SeasonScreenLayout(
                         modifier =
                             Modifier.focusRequesterIf(item.id == season.id, seasonRequester)
                                 .focusPosition(
-                                focusPosition,
-                                ROW_SEASONS,
-                                index,
-                                item.id.toString(),
-                            ),
+                                    focusPosition,
+                                    ROW_SEASONS,
+                                    index,
+                                    item.id.toString(),
+                                ),
                     ) {
                         Text(text = item.name)
                     }
@@ -376,11 +377,11 @@ internal fun SeasonScreenLayout(
                         modifier =
                             Modifier.focusRequesterIf(isSelected, episodeRequester)
                                 .focusPosition(
-                                focusPosition,
-                                ROW_EPISODES,
-                                index,
-                                item.id.toString(),
-                            ),
+                                    focusPosition,
+                                    ROW_EPISODES,
+                                    index,
+                                    item.id.toString(),
+                                ),
                     )
                 }
             }
@@ -497,9 +498,7 @@ private fun EpisodeDetails(
         Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
         // Reserve the chips' height, so the buttons don't jump when they load.
         Box(modifier = Modifier.height(24.dp)) {
-            loaded?.let {
-                TechnicalChips(chips = technicalChips(it.episode, it.videoMetadata))
-            }
+            loaded?.let { TechnicalChips(chips = technicalChips(it.episode, it.videoMetadata)) }
         }
         Spacer(modifier = Modifier.weight(1f))
         Row(
@@ -563,7 +562,9 @@ private fun EpisodeDetails(
                                 if (episode.played) CoreR.string.unmark_as_played
                                 else CoreR.string.mark_as_played
                         ),
-                    tint = if (episode.played) MaterialTheme.colorScheme.tertiary else LocalContentColor.current,
+                    tint =
+                        if (episode.played) MaterialTheme.colorScheme.tertiary
+                        else LocalContentColor.current,
                 )
             }
             IconButton(
@@ -590,7 +591,9 @@ private fun EpisodeDetails(
                                 if (episode.favorite) CoreR.string.remove_from_favorites
                                 else CoreR.string.add_to_favorites
                         ),
-                    tint = if (episode.favorite) MaterialTheme.colorScheme.tertiary else LocalContentColor.current,
+                    tint =
+                        if (episode.favorite) MaterialTheme.colorScheme.tertiary
+                        else LocalContentColor.current,
                 )
             }
             if (versions.size > 1) {
@@ -623,8 +626,8 @@ private fun EpisodeDetails(
 
 /**
  * Resolution, video codec, every HDR format (Dolby Vision and its HDR10+ fallback are separate
- * chips), and the language and format of the first audio track, with its spatial audio format
- * (e.g. "English Dolby TrueHD Atmos 7.1").
+ * chips), and the language and format of the first audio track, with its spatial audio format (e.g.
+ * "English Dolby TrueHD Atmos 7.1").
  */
 private fun technicalChips(episode: FindroidEpisode?, metadata: VideoMetadata?): List<String> {
     val source = episode?.sources?.firstOrNull() ?: return emptyList()
@@ -657,9 +660,9 @@ private fun resolutionName(height: Int): String =
     }
 
 /**
- * The name of an audio track's language in the app's language, or null when the track has none:
- * no code, "und" (undetermined, #415) or a code without a name. The server sends three-letter
- * codes ("nld"), which [Locale] only names by their two-letter form ("nl").
+ * The name of an audio track's language in the app's language, or null when the track has none: no
+ * code, "und" (undetermined, #415) or a code without a name. The server sends three-letter codes
+ * ("nld"), which [Locale] only names by their two-letter form ("nl").
  */
 internal fun audioLanguageName(code: String, locale: Locale = Locale.getDefault()): String? {
     val tag = code.trim().lowercase()
@@ -726,10 +729,14 @@ private fun EpisodeRowCard(
                     modifier =
                         Modifier.align(Alignment.TopEnd).padding(MaterialTheme.spacings.small),
                 )
-                if (episode.playbackPositionTicks > 0 && episode.runtimeTicks > 0 && !episode.played) {
+                if (
+                    episode.playbackPositionTicks > 0 && episode.runtimeTicks > 0 && !episode.played
+                ) {
                     val progress =
-                        (episode.playbackPositionTicks.toFloat() / episode.runtimeTicks)
-                            .coerceIn(0f, 1f)
+                        (episode.playbackPositionTicks.toFloat() / episode.runtimeTicks).coerceIn(
+                            0f,
+                            1f,
+                        )
                     Box(
                         modifier =
                             Modifier.align(Alignment.BottomStart)
@@ -744,7 +751,8 @@ private fun EpisodeRowCard(
         }
         Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
         Text(
-            text = stringResource(id = CoreR.string.episode_name, episode.indexNumber, episode.name),
+            text =
+                stringResource(id = CoreR.string.episode_name, episode.indexNumber, episode.name),
             style = MaterialTheme.typography.titleSmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

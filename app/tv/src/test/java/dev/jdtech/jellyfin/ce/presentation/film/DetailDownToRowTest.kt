@@ -106,7 +106,8 @@ class DetailDownToRowTest {
     }
 
     private fun assertCastCardFocused(index: Int) {
-        rule.onNode(isFocused() and hasParent(hasTestTag(personCardTag(actors[index].id))))
+        rule
+            .onNode(isFocused() and hasParent(hasTestTag(personCardTag(actors[index].id))))
             .assertExists()
     }
 
@@ -187,7 +188,8 @@ class DetailDownToRowTest {
 
         press(Key.DirectionDown)
 
-        rule.onNode(isFocused() and hasParent(hasAnyDescendant(hasText("Season card 0"))))
+        rule
+            .onNode(isFocused() and hasParent(hasAnyDescendant(hasText("Season card 0"))))
             .assertExists()
     }
 }

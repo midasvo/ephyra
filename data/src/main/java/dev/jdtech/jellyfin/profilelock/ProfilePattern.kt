@@ -1,10 +1,10 @@
 package dev.jdtech.jellyfin.profilelock
 
 /**
- * CE (#330): an unlock pattern, the dots connected on a 3×3 grid in the order they were drawn.
- * Dots are numbered row by row, 0 top left to 8 bottom right. A pattern connects at least
- * [MIN_DOTS] dots and none twice; it is stored as their numbers joined by dashes (`0-1-2-5-8`),
- * hashed like a PIN.
+ * CE (#330): an unlock pattern, the dots connected on a 3×3 grid in the order they were drawn. Dots
+ * are numbered row by row, 0 top left to 8 bottom right. A pattern connects at least [MIN_DOTS]
+ * dots and none twice; it is stored as their numbers joined by dashes (`0-1-2-5-8`), hashed like a
+ * PIN.
  */
 object ProfilePattern {
     const val SIZE = 3
@@ -12,7 +12,9 @@ object ProfilePattern {
     const val MIN_DOTS = 4
 
     fun isValid(dots: List<Int>): Boolean =
-        dots.size in MIN_DOTS..DOTS && dots.all { it in 0 until DOTS } && dots.toSet().size == dots.size
+        dots.size in MIN_DOTS..DOTS &&
+            dots.all { it in 0 until DOTS } &&
+            dots.toSet().size == dots.size
 
     fun serialize(dots: List<Int>): String = dots.joinToString("-")
 

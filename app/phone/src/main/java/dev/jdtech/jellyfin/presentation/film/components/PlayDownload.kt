@@ -11,9 +11,7 @@ import org.jellyfin.sdk.model.api.BaseItemKind
 /** Whether [playDownloadedItem] can start [item] directly. */
 fun canPlayDirectly(item: FindroidItem): Boolean = item is FindroidMovie || item is FindroidEpisode
 
-/**
- * Resumes [item] in the player. The player picks the downloaded copy over streaming on its own.
- */
+/** Resumes [item] in the player. The player picks the downloaded copy over streaming on its own. */
 fun Context.playDownloadedItem(item: FindroidItem) {
     val kind =
         when (item) {

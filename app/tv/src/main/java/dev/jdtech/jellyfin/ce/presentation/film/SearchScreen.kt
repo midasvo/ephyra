@@ -30,8 +30,8 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -270,16 +270,15 @@ internal fun SearchScreenLayout(
 
         groups.forEach { (group, items) ->
             item(key = group.name) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small)
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small)) {
                     Text(
                         text = stringResource(group.title),
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(horizontal = TvSafeArea.horizontal),
                     )
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
+                        horizontalArrangement =
+                            Arrangement.spacedBy(MaterialTheme.spacings.default),
                         // Room for the focused card to scale up, and the safe area.
                         contentPadding =
                             PaddingValues(

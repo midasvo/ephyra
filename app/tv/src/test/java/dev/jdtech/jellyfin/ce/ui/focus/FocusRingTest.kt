@@ -64,10 +64,12 @@ class FocusRingTest {
 
     private fun PixelMap.count(area: Rect, test: (Color) -> Boolean): Int {
         var found = 0
-        for (x in area.left.roundToInt().coerceAtLeast(0) until
-            area.right.roundToInt().coerceAtMost(width)) {
-            for (y in area.top.roundToInt().coerceAtLeast(0) until
-                area.bottom.roundToInt().coerceAtMost(height)) {
+        for (x in
+            area.left.roundToInt().coerceAtLeast(0) until
+                area.right.roundToInt().coerceAtMost(width)) {
+            for (y in
+                area.top.roundToInt().coerceAtLeast(0) until
+                    area.bottom.roundToInt().coerceAtMost(height)) {
                 if (test(this[x, y])) found++
             }
         }

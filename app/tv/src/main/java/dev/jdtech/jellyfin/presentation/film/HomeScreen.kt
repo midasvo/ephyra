@@ -72,11 +72,7 @@ private fun HomeScreenLayout(state: HomeState, onAction: (HomeAction) -> Unit) {
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding =
-            PaddingValues(
-                top = TvSafeArea.vertical,
-                bottom = TvSafeArea.vertical,
-            ),
+        contentPadding = PaddingValues(top = TvSafeArea.vertical, bottom = TvSafeArea.vertical),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.large),
     ) {
         state.suggestionsSection?.let { section ->

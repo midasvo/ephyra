@@ -86,9 +86,7 @@ internal fun NavigationDrawerScope.DrawerProfileItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
                 Modifier.fillMaxHeight()
-                    .padding(
-                        start = if (hasFocus) LeadingStartExpanded else LeadingStartCollapsed
-                    ),
+                    .padding(start = if (hasFocus) LeadingStartExpanded else LeadingStartCollapsed),
         ) {
             // The leading content's 24 dp box, as in the other items.
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(24.dp)) {

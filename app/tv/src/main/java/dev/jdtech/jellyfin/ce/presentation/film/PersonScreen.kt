@@ -40,13 +40,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Button
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
@@ -254,8 +252,7 @@ internal fun PersonScreenLayout(
                                             name = person.name,
                                             biography = person.overview,
                                             modifier =
-                                                Modifier.weight(1f, fill = false)
-                                                    .fillMaxWidth(0.9f),
+                                                Modifier.weight(1f, fill = false).fillMaxWidth(0.9f),
                                         )
                                     }
                                 }
@@ -290,8 +287,7 @@ internal fun PersonScreenLayout(
                                 Text(
                                     text = stringResource(section.titleRes),
                                     style = MaterialTheme.typography.headlineMedium,
-                                    modifier =
-                                        Modifier.padding(horizontal = TvSafeArea.horizontal),
+                                    modifier = Modifier.padding(horizontal = TvSafeArea.horizontal),
                                 )
                                 Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
                                 CompositionLocalProvider(LocalBringIntoViewSpec provides rowSpec) {
@@ -335,10 +331,7 @@ internal fun PersonScreenLayout(
                     }
                 }
 
-                RestoreFocus(
-                    position = focusPosition,
-                    ready = !state.isLoading,
-                ) { position ->
+                RestoreFocus(position = focusPosition, ready = !state.isLoading) { position ->
                     if (sections.isEmpty()) return@RestoreFocus
                     val sectionIndex = position.row.coerceIn(0, sections.lastIndex)
                     val section = sections[sectionIndex]

@@ -21,8 +21,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 
 /**
  * CE (#141): plays [url], the show's theme song, while this page is shown (see [ThemeMusicSession]
- * for the rules). Null means no song, or the setting is off. Call [ThemeMusicSession.onPlaybackStarted]
- * on the returned session right before going to the player.
+ * for the rules). Null means no song, or the setting is off. Call
+ * [ThemeMusicSession.onPlaybackStarted] on the returned session right before going to the player.
  */
 @Composable
 fun rememberThemeMusic(url: String?): ThemeMusicSession {
@@ -32,18 +32,18 @@ fun rememberThemeMusic(url: String?): ThemeMusicSession {
     var played by rememberSaveable { mutableStateOf(false) }
 
     val session = remember {
-            val audioManager = context.getSystemService(AudioManager::class.java)
-            lateinit var session: ThemeMusicSession
-            val player = ExoThemeMusicPlayer(context) { session.onFinished() }
-            session =
-                ThemeMusicSession(
-                    output = player,
-                    isOtherAudioActive = { audioManager?.isMusicActive == true },
-                    played = played,
-                    onPlayed = { played = true },
-                )
-            session
-        }
+        val audioManager = context.getSystemService(AudioManager::class.java)
+        lateinit var session: ThemeMusicSession
+        val player = ExoThemeMusicPlayer(context) { session.onFinished() }
+        session =
+            ThemeMusicSession(
+                output = player,
+                isOtherAudioActive = { audioManager?.isMusicActive == true },
+                played = played,
+                onPlayed = { played = true },
+            )
+        session
+    }
 
     LaunchedEffect(url) { session.onSongFound(url) }
 

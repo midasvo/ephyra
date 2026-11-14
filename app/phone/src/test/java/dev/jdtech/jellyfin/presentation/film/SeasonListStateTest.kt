@@ -31,8 +31,8 @@ import org.robolectric.annotation.Config
  * #435: the Season page's episode list keeps its position over a rotation, which recreates the
  * activity and may switch between the single-column page and the list-detail.
  *
- * The list here is 100 dp items in a 400 dp box, so it can scroll 100 dp per item past the
- * first four.
+ * The list here is 100 dp items in a 400 dp box, so it can scroll 100 dp per item past the first
+ * four.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)

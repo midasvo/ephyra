@@ -15,8 +15,8 @@ import javax.inject.Provider
 import javax.inject.Singleton
 
 /**
- * A stand-in for the Cast SDK, which a debug build can turn on to show the Cast screens where
- * there is no receiver (an emulator). Release builds have none.
+ * A stand-in for the Cast SDK, which a debug build can turn on to show the Cast screens where there
+ * is no receiver (an emulator). Release builds have none.
  */
 interface CastStandIn {
     /** `null` unless the stand-in is turned on. */

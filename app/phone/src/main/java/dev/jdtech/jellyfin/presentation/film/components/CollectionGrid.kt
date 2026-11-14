@@ -11,7 +11,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.film.presentation.collection.CollectionAction
 import dev.jdtech.jellyfin.models.CollectionSection
 import dev.jdtech.jellyfin.models.FindroidEpisode
@@ -27,7 +26,11 @@ fun CollectionGrid(
     onAction: (CollectionAction) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCellsAdaptiveWithMinColumns(minSize = Layout.gridMinCell(currentWidthClass()), minColumns = 2),
+        columns =
+            GridCellsAdaptiveWithMinColumns(
+                minSize = Layout.gridMinCell(currentWidthClass()),
+                minColumns = 2,
+            ),
         modifier = Modifier.padding(innerPadding).fillMaxSize(),
         contentPadding = PaddingValues(all = MaterialTheme.spacings.default),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),

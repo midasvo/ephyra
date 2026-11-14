@@ -36,7 +36,6 @@ import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
-import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderAction
@@ -51,30 +50,31 @@ import dev.jdtech.jellyfin.film.presentation.movie.MovieState
 import dev.jdtech.jellyfin.film.presentation.movie.MovieViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
+import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
 import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.CriticRating
 import dev.jdtech.jellyfin.presentation.film.components.Direction
-import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
-import dev.jdtech.jellyfin.presentation.film.components.ItemsRow
-import dev.jdtech.jellyfin.presentation.film.components.TaglineText
-import dev.jdtech.jellyfin.presentation.film.components.WatchHistoryText
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
-import dev.jdtech.jellyfin.presentation.film.components.MediaInfoSheet
+import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
 import dev.jdtech.jellyfin.presentation.film.components.InfoText
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemHeader
 import dev.jdtech.jellyfin.presentation.film.components.ItemTopBar
+import dev.jdtech.jellyfin.presentation.film.components.ItemsRow
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
+import dev.jdtech.jellyfin.presentation.film.components.MediaInfoSheet
 import dev.jdtech.jellyfin.presentation.film.components.OverviewText
+import dev.jdtech.jellyfin.presentation.film.components.TaglineText
 import dev.jdtech.jellyfin.presentation.film.components.VideoMetadataBar
+import dev.jdtech.jellyfin.presentation.film.components.WatchHistoryText
 import dev.jdtech.jellyfin.presentation.film.components.rememberArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.rememberTopBarBackgroundAlpha
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.LightStatusBarOverArtwork
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
 import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
-import dev.jdtech.jellyfin.presentation.utils.LightStatusBarOverArtwork
 import dev.jdtech.jellyfin.presentation.utils.ReloadOnResume
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import dev.jdtech.jellyfin.presentation.utils.useWideItemLayout
@@ -126,8 +126,9 @@ fun MovieScreen(
                 }
             }
             is DownloaderEvent.Failed -> {
-                val message = event.errorText?.asString(context.resources)
-                    ?: context.getString(CoreR.string.download_failed)
+                val message =
+                    event.errorText?.asString(context.resources)
+                        ?: context.getString(CoreR.string.download_failed)
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
         }
@@ -140,7 +141,15 @@ fun MovieScreen(
             when (action) {
                 is MovieAction.Play -> {
                     // CE (#626): on the Cast receiver when one is connected.
-                    if (!castPlayback.play(movieId, BaseItemKind.MOVIE, action.startFromBeginning, action.mediaSourceId, shuffle = false)) {
+                    if (
+                        !castPlayback.play(
+                            movieId,
+                            BaseItemKind.MOVIE,
+                            action.startFromBeginning,
+                            action.mediaSourceId,
+                            shuffle = false,
+                        )
+                    ) {
                         val intent = Intent(context, PlayerActivity::class.java)
                         intent.putExtra("itemId", movieId.toString())
                         intent.putExtra("itemKind", BaseItemKind.MOVIE.serialName)
@@ -186,10 +195,7 @@ private fun MovieScreenLayout(
     // No chip when there is nothing to describe: offline, a download has no track data.
     val onMediaInfoClick = { mediaInfoOpen = true }.takeIf { mediaInfoSources.isNotEmpty() }
     if (mediaInfoOpen && mediaInfoSources.isNotEmpty()) {
-        MediaInfoSheet(
-            sources = mediaInfoSources,
-            onDismissRequest = { mediaInfoOpen = false },
-        )
+        MediaInfoSheet(sources = mediaInfoSources, onDismissRequest = { mediaInfoOpen = false })
     }
 
     // CE: medium and expanded windows get the hero layout (docs/tablet/4-design.md §6).
@@ -265,10 +271,11 @@ private fun MovieScreenLayout(
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
-                        val runtimeText = stringResource(
-                            CoreR.string.runtime_minutes,
-                            movie.runtimeTicks.div(Constants.TICKS_PER_MINUTE),
-                        )
+                        val runtimeText =
+                            stringResource(
+                                CoreR.string.runtime_minutes,
+                                movie.runtimeTicks.div(Constants.TICKS_PER_MINUTE),
+                            )
                         Text(
                             text = runtimeText,
                             modifier = Modifier.copyOnLongClick(runtimeText),
@@ -278,14 +285,14 @@ private fun MovieScreenLayout(
                             Text(
                                 text = officialRating,
                                 modifier = Modifier.copyOnLongClick(officialRating),
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                         movie.communityRating?.let { communityRating ->
                             val ratingText = "%.1f".format(communityRating)
                             Row(
                                 modifier = Modifier.copyOnLongClick(ratingText),
-                                verticalAlignment = Alignment.Bottom
+                                verticalAlignment = Alignment.Bottom,
                             ) {
                                 Icon(
                                     painter = painterResource(CoreR.drawable.ic_star),
@@ -379,12 +386,13 @@ private fun MovieScreenLayout(
                 )
                 Spacer(Modifier.height(paddingBottom))
             }
-        } ?: run {
-            LoadingOrError(
-                error = state.error,
-                onRetryClick = { onAction(MovieAction.OnRetryClick) },
-            )
         }
+            ?: run {
+                LoadingOrError(
+                    error = state.error,
+                    onRetryClick = { onAction(MovieAction.OnRetryClick) },
+                )
+            }
 
         LightStatusBarOverArtwork(artwork.hasArtwork, rememberTopBarBackgroundAlpha(scrollState))
         ItemTopBar(
@@ -395,7 +403,6 @@ private fun MovieScreenLayout(
             onBackClick = { onAction(MovieAction.OnBackClick) },
             onHomeClick = { onAction(MovieAction.OnHomeClick) },
         )
-
 
         if (downloadQualityDialogOpen) {
             DownloadQualityDialog(

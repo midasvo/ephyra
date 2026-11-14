@@ -26,9 +26,9 @@ import timber.log.Timber
 
 /**
  * The last Home rows per server and user, in a JSON file (#251), so a cold start shows them at once
- * and the network only refreshes them. Only what the cards draw is kept: movies, shows and
- * episodes with their ids, names, image links, progress and numbers. Sources, people and the like
- * come with the refresh.
+ * and the network only refreshes them. Only what the cards draw is kept: movies, shows and episodes
+ * with their ids, names, image links, progress and numbers. Sources, people and the like come with
+ * the refresh.
  */
 @Singleton
 class HomeCache @Inject constructor(@ApplicationContext context: Context) {
@@ -57,8 +57,12 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
                         json.optJSONObject("suggestions")?.let { obj ->
                             HomeItem.Suggestions(UUID.fromString(obj.getString("id")), items(obj))
                         },
-                    resume = json.optJSONObject("resume")?.let { section(it, FilmR.string.ce_continue_watching) },
-                    nextUp = json.optJSONObject("nextUp")?.let { section(it, FilmR.string.next_up) },
+                    resume =
+                        json.optJSONObject("resume")?.let {
+                            section(it, FilmR.string.ce_continue_watching)
+                        },
+                    nextUp =
+                        json.optJSONObject("nextUp")?.let { section(it, FilmR.string.next_up) },
                     views =
                         json.getJSONArray("views").objects().map { obj ->
                             HomeItem.ViewItem(
@@ -116,7 +120,9 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
             }
         }
 
-    /** Drops every server's and user's rows: the Clear cache row in settings, or the setting off. */
+    /**
+     * Drops every server's and user's rows: the Clear cache row in settings, or the setting off.
+     */
     suspend fun clear() =
         withContext(Dispatchers.IO) {
             dir.listFiles()?.forEach { file -> file.delete() }
@@ -254,7 +260,8 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
                     seriesId = UUID.fromString(obj.getString("seriesId")),
                     seriesName = obj.getString("seriesName"),
                     seasonId = UUID.fromString(obj.getString("seasonId")),
-                    seasonName = if (obj.isNull("seasonName")) null else obj.getString("seasonName"),
+                    seasonName =
+                        if (obj.isNull("seasonName")) null else obj.getString("seasonName"),
                     communityRating = null,
                     people = emptyList(),
                     unplayedItemCount = unplayed,

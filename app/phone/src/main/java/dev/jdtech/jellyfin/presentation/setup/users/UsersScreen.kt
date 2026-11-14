@@ -41,8 +41,8 @@ import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyUser
 import dev.jdtech.jellyfin.models.User
 import dev.jdtech.jellyfin.presentation.setup.components.RootLayout
-import dev.jdtech.jellyfin.presentation.setup.pin.SwitchPinDialog
 import dev.jdtech.jellyfin.presentation.setup.components.UserItem
+import dev.jdtech.jellyfin.presentation.setup.pin.SwitchPinDialog
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.setup.R as SetupR
@@ -251,7 +251,11 @@ private fun UsersScreenLayoutPreview() {
         UsersScreenLayout(
             state =
                 UsersState(
-                    users = listOf(dummyUser, User(id = UUID.randomUUID(), name = "Bob", serverId = "")),
+                    users =
+                        listOf(
+                            dummyUser,
+                            User(id = UUID.randomUUID(), name = "Bob", serverId = ""),
+                        ),
                     publicUsers =
                         listOf(User(id = UUID.randomUUID(), name = "Alice", serverId = "")),
                     serverName = "Jellyfin",

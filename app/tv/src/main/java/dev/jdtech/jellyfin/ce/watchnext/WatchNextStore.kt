@@ -49,14 +49,21 @@ class WatchNextStore @Inject constructor(@ApplicationContext context: Context) {
     }
 
     private fun readMap(key: String): Map<String, Long> =
-        prefs.getStringSet(key, emptySet()).orEmpty().mapNotNull { line ->
-            val itemId = line.substringBefore(SEPARATOR)
-            val value = line.substringAfter(SEPARATOR, "").toLongOrNull() ?: return@mapNotNull null
-            itemId to value
-        }.toMap()
+        prefs
+            .getStringSet(key, emptySet())
+            .orEmpty()
+            .mapNotNull { line ->
+                val itemId = line.substringBefore(SEPARATOR)
+                val value =
+                    line.substringAfter(SEPARATOR, "").toLongOrNull() ?: return@mapNotNull null
+                itemId to value
+            }
+            .toMap()
 
     private fun writeMap(key: String, map: Map<String, Long>) {
-        prefs.edit { putStringSet(key, map.map { (itemId, value) -> "$itemId$SEPARATOR$value" }.toSet()) }
+        prefs.edit {
+            putStringSet(key, map.map { (itemId, value) -> "$itemId$SEPARATOR$value" }.toSet())
+        }
     }
 
     private companion object {

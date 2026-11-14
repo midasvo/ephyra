@@ -64,7 +64,8 @@ class ScreensaverItemsTest {
 
     @Test
     fun `a failing server gives an empty list`() = runBlocking {
-        val items = loadScreensaverItems(repository { throw IllegalStateException("offline") }, "random")
+        val items =
+            loadScreensaverItems(repository { throw IllegalStateException("offline") }, "random")
 
         assertTrue(items.isEmpty())
     }

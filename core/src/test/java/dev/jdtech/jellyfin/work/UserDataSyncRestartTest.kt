@@ -32,7 +32,10 @@ class UserDataSyncRestartTest {
     @Test
     fun `rows waiting without any work start one`() {
         for (state in listOf(null, WorkInfo.State.SUCCEEDED, WorkInfo.State.CANCELLED)) {
-            assertEquals(ExistingWorkPolicy.REPLACE, restartPolicy(hasPending = true, state = state))
+            assertEquals(
+                ExistingWorkPolicy.REPLACE,
+                restartPolicy(hasPending = true, state = state),
+            )
         }
     }
 }

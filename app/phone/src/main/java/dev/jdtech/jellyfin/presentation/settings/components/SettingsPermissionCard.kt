@@ -38,10 +38,7 @@ import dev.jdtech.jellyfin.utils.openAppSettings
 import dev.jdtech.jellyfin.utils.shouldShowPermissionRationale
 
 @Composable
-fun SettingsPermissionCard(
-    preference: PreferencePermission,
-    modifier: Modifier = Modifier,
-) {
+fun SettingsPermissionCard(preference: PreferencePermission, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var isGranted by remember {
         mutableStateOf(isPermissionGranted(context, preference.permission))
@@ -87,10 +84,7 @@ fun SettingsPermissionCard(
             modifier = Modifier.padding(MaterialTheme.spacings.medium),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                painter = painterResource(preference.iconDrawableId),
-                contentDescription = null,
-            )
+            Icon(painter = painterResource(preference.iconDrawableId), contentDescription = null)
             Spacer(modifier = Modifier.width(MaterialTheme.spacings.default))
             Column(modifier = Modifier.weight(1f)) {
                 Text(

@@ -217,7 +217,8 @@ constructor(
                 userDisconnected = false
                 _state.update { it.copy(connectionState = connection, connectFailedDevice = null) }
             }
-            CastConnectionState.CONNECTING -> _state.update { it.copy(connectionState = connection) }
+            CastConnectionState.CONNECTING ->
+                _state.update { it.copy(connectionState = connection) }
             CastConnectionState.DISCONNECTED -> {
                 val failed = connectingTo.takeIf { !wasConnected }
                 if (wasConnected && !userDisconnected) {
@@ -262,20 +263,19 @@ constructor(
         segments = emptyList()
         _state.update { it.copy(segment = null) }
         segmentsJob?.cancel()
-        segmentsJob =
-            viewModelScope.launch {
-                val loaded =
-                    try {
-                        repository.getSegments(item.itemId)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to load segments for item ${item.itemId}")
-                        emptyList()
-                    }
-                // Another item took over, or the session ended, while these were loading.
-                if (segmentsItemId == item.itemId) segments = loaded
-            }
+        segmentsJob = viewModelScope.launch {
+            val loaded =
+                try {
+                    repository.getSegments(item.itemId)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to load segments for item ${item.itemId}")
+                    emptyList()
+                }
+            // Another item took over, or the session ended, while these were loading.
+            if (segmentsItemId == item.itemId) segments = loaded
+        }
     }
 
     private fun onNoItem() {
@@ -330,7 +330,9 @@ constructor(
     }
 
     private fun updateSegment(positionMs: Long) {
-        val active = segments.firstOrNull { positionMs >= it.startTicks && positionMs < it.endTicks }
+        val active = segments.firstOrNull {
+            positionMs >= it.startTicks && positionMs < it.endTicks
+        }
         if (active == _state.value.segment) return
         _state.update {
             it.copy(
@@ -368,11 +370,10 @@ constructor(
         sessionManager.updateDiscovery(activeScan = true)
         _state.update { it.copy(discovery = CastDiscovery.SEARCHING) }
         discoveryJob?.cancel()
-        discoveryJob =
-            viewModelScope.launch {
-                delay(SEARCH_MILLIS)
-                _state.update { it.copy(discovery = CastDiscovery.DONE) }
-            }
+        discoveryJob = viewModelScope.launch {
+            delay(SEARCH_MILLIS)
+            _state.update { it.copy(discovery = CastDiscovery.DONE) }
+        }
     }
 
     fun stopDiscovery() {
@@ -403,7 +404,8 @@ constructor(
         startFromBeginning: Boolean,
         mediaSourceId: String?,
         shuffle: Boolean = false,
-    ): Boolean = play(itemId, kind, startFromBeginning, mediaSourceId, known = null, shuffle = shuffle)
+    ): Boolean =
+        play(itemId, kind, startFromBeginning, mediaSourceId, known = null, shuffle = shuffle)
 
     private fun play(
         itemId: UUID,
@@ -425,7 +427,13 @@ constructor(
                 startingItem = known,
             )
         }
-        playerController.playItem(itemId, kind.serialName, startFromBeginning, mediaSourceId, shuffle)
+        playerController.playItem(
+            itemId,
+            kind.serialName,
+            startFromBeginning,
+            mediaSourceId,
+            shuffle,
+        )
         return true
     }
 
@@ -439,7 +447,8 @@ constructor(
                     current.itemId,
                     current.kind,
                     startFromBeginning = false,
-                    mediaSourceId = request?.mediaSourceId?.takeIf { request.itemId == current.itemId },
+                    mediaSourceId =
+                        request?.mediaSourceId?.takeIf { request.itemId == current.itemId },
                     known = current,
                 )
             request != null ->

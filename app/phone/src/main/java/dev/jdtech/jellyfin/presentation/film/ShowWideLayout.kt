@@ -39,7 +39,6 @@ import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
 import dev.jdtech.jellyfin.presentation.film.components.AirScheduleText
 import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
-import dev.jdtech.jellyfin.presentation.film.components.TaglineText
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
 import dev.jdtech.jellyfin.presentation.film.components.HeroMetadataLine
@@ -54,6 +53,7 @@ import dev.jdtech.jellyfin.presentation.film.components.ItemTopBar
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
 import dev.jdtech.jellyfin.presentation.film.components.OverviewText
 import dev.jdtech.jellyfin.presentation.film.components.SeasonSelectionDialog
+import dev.jdtech.jellyfin.presentation.film.components.TaglineText
 import dev.jdtech.jellyfin.presentation.film.components.rememberArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.rememberTopBarBackgroundAlpha
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme

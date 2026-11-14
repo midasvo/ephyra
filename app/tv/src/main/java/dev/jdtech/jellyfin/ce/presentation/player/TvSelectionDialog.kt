@@ -84,7 +84,8 @@ fun TvSelectionDialog(
                             modifier =
                                 Modifier.fillMaxWidth()
                                     .then(
-                                        if (index == initial) Modifier.focusRequester(focusRequester)
+                                        if (index == initial)
+                                            Modifier.focusRequester(focusRequester)
                                         else Modifier
                                     ),
                         )

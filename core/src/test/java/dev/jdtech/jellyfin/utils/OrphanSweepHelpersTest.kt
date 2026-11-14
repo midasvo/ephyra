@@ -189,9 +189,10 @@ class OrphanSweepHelpersTest {
     fun `path not under any mounted root returns false`() {
         assertFalse(
             isUnderMountedRoot(
-                path = "/storage/sdcard1/Android/data/nl.midasvo.findroid.ce/files/downloads/Movie.mkv",
+                path =
+                    "/storage/sdcard1/Android/data/nl.midasvo.findroid.ce/files/downloads/Movie.mkv",
                 mountedRoots = listOf(root),
-            ),
+            )
         )
     }
 

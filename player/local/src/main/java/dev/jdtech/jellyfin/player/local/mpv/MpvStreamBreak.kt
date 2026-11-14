@@ -45,8 +45,8 @@ internal class MpvStreamBreak(
     private var positionMs: Long? = null
 
     /**
-     * The target of the last seek this player issued, until data arrives after it or playback
-     * moves on from it.
+     * The target of the last seek this player issued, until data arrives after it or playback moves
+     * on from it.
      */
     private var pendingSeekMs: Long? = null
 
@@ -126,10 +126,10 @@ internal class MpvStreamBreak(
         /**
          * The layers that read the file: ffmpeg's protocols (`ffmpeg`: tcp, http, tls), its
          * demuxers (`ffmpeg/demuxer`), mpv's demuxer (`lavf`, `demux`) and stream (`stream`).
-         * Decoders (`ffmpeg/video`, `vd`, `ad`) and outputs (`vo/...`, `ao/...`) log errors
-         * during normal playback, so they do not count. Nor does the hardware decoder's Java
-         * wrapper, which logs under plain `ffmpeg` ("amediacodec: java.lang.IllegalStateException"
-         * on a seek), or the empty line that follows it.
+         * Decoders (`ffmpeg/video`, `vd`, `ad`) and outputs (`vo/...`, `ao/...`) log errors during
+         * normal playback, so they do not count. Nor does the hardware decoder's Java wrapper,
+         * which logs under plain `ffmpeg` ("amediacodec: java.lang.IllegalStateException" on a
+         * seek), or the empty line that follows it.
          */
         fun isStreamError(prefix: String, text: String): Boolean {
             val message = text.trim()

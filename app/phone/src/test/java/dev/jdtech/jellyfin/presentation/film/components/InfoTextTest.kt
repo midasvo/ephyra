@@ -107,9 +107,7 @@ class InfoTextTest {
     @Test
     fun nothingToShowTakesNoSpace() {
         rule.setContent {
-            FindroidTheme {
-                InfoText(genres = emptyList(), director = null, writers = emptyList())
-            }
+            FindroidTheme { InfoText(genres = emptyList(), director = null, writers = emptyList()) }
         }
 
         rule.onAllNodesWithTag(INFO_GENRES_TAG).assertCountEquals(0)

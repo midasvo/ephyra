@@ -47,7 +47,10 @@ class NetworkRecoveryTest {
 
     @Test
     fun `nothing loaded shows the error`() {
-        assertEquals(OnError.SHOW_ERROR, recovery.onError(connectionFailed, null, canPrepare = true))
+        assertEquals(
+            OnError.SHOW_ERROR,
+            recovery.onError(connectionFailed, null, canPrepare = true),
+        )
     }
 
     @Test
@@ -63,7 +66,10 @@ class NetworkRecoveryTest {
     fun `a failed retry keeps waiting from the first error`() {
         recovery.onError(connectionFailed, "a", canPrepare = true)
         now = 5 * 60_000L
-        assertEquals(OnError.KEEP_WAITING, recovery.onError(connectionFailed, "a", canPrepare = true))
+        assertEquals(
+            OnError.KEEP_WAITING,
+            recovery.onError(connectionFailed, "a", canPrepare = true),
+        )
         now = NetworkRecovery.GIVE_UP_MS - 1
         assertEquals(Check.RETRY, recovery.check("a"))
     }

@@ -8,7 +8,6 @@ import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.settings.presentation.enums.AppVariant
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceCategory
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceFileEdit
-import dev.jdtech.jellyfin.settings.presentation.models.PreferenceGroup
 import dev.jdtech.jellyfin.settings.presentation.settings.SettingsViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -37,33 +36,32 @@ class SettingsTreeVariantTest {
     }
 
     @Test
-    fun `TV variant hides gestures, pip, and background playback in player settings`() =
-        runTest {
-            val tvViewModel = SettingsViewModel(context, appPreferences, AppVariant.TV)
-            tvViewModel.loadPreferences(listOf(SettingsR.string.settings_category_player))
+    fun `TV variant hides gestures, pip, and background playback in player settings`() = runTest {
+        val tvViewModel = SettingsViewModel(context, appPreferences, AppVariant.TV)
+        tvViewModel.loadPreferences(listOf(SettingsR.string.settings_category_player))
 
-            val groups = tvViewModel.state.value.preferenceGroups
-            val groupTitles = groups.mapNotNull { it.nameStringResource }
+        val groups = tvViewModel.state.value.preferenceGroups
+        val groupTitles = groups.mapNotNull { it.nameStringResource }
 
-            assertFalse(
-                "Gestures group must be hidden on TV",
-                groupTitles.contains(SettingsR.string.gestures),
-            )
-            assertFalse(
-                "PiP group must be hidden on TV",
-                groupTitles.contains(SettingsR.string.picture_in_picture),
-            )
-            assertFalse(
-                "Background audio group must be hidden on TV",
-                groupTitles.contains(SettingsR.string.pref_player_background_group),
-            )
+        assertFalse(
+            "Gestures group must be hidden on TV",
+            groupTitles.contains(SettingsR.string.gestures),
+        )
+        assertFalse(
+            "PiP group must be hidden on TV",
+            groupTitles.contains(SettingsR.string.picture_in_picture),
+        )
+        assertFalse(
+            "Background audio group must be hidden on TV",
+            groupTitles.contains(SettingsR.string.pref_player_background_group),
+        )
 
-            // Seeking group must be present on TV
-            assertTrue(
-                "Seeking group must be present on TV",
-                groupTitles.contains(SettingsR.string.seeking),
-            )
-        }
+        // Seeking group must be present on TV
+        assertTrue(
+            "Seeking group must be present on TV",
+            groupTitles.contains(SettingsR.string.seeking),
+        )
+    }
 
     @Test
     fun `TV variant shows the trickplay switch but not the gesture one`() = runTest {
@@ -223,7 +221,10 @@ class SettingsTreeVariantTest {
     fun `TV variant shows match refresh rate switch and Phone variant hides it`() = runTest {
         val tvViewModel = SettingsViewModel(context, appPreferences, AppVariant.TV)
         tvViewModel.loadPreferences(listOf(SettingsR.string.settings_category_player))
-        val tvPrefs = tvViewModel.state.value.preferenceGroups.flatMap { it.preferences }.map { it.nameStringResource }
+        val tvPrefs =
+            tvViewModel.state.value.preferenceGroups
+                .flatMap { it.preferences }
+                .map { it.nameStringResource }
         assertTrue(
             "Match refresh rate switch must be present on TV",
             tvPrefs.contains(SettingsR.string.pref_player_tv_match_refresh_rate),
@@ -231,7 +232,10 @@ class SettingsTreeVariantTest {
 
         val phoneViewModel = SettingsViewModel(context, appPreferences, AppVariant.PHONE)
         phoneViewModel.loadPreferences(listOf(SettingsR.string.settings_category_player))
-        val phonePrefs = phoneViewModel.state.value.preferenceGroups.flatMap { it.preferences }.map { it.nameStringResource }
+        val phonePrefs =
+            phoneViewModel.state.value.preferenceGroups
+                .flatMap { it.preferences }
+                .map { it.nameStringResource }
         assertFalse(
             "Match refresh rate switch must be hidden on Phone",
             phonePrefs.contains(SettingsR.string.pref_player_tv_match_refresh_rate),
@@ -240,11 +244,13 @@ class SettingsTreeVariantTest {
 
     @Test
     fun `TV variant shows the Watch Next switch and Phone variant hides it`() = runTest {
-        val path =
-            listOf(SettingsR.string.settings_category_interface)
+        val path = listOf(SettingsR.string.settings_category_interface)
         val tvViewModel = SettingsViewModel(context, appPreferences, AppVariant.TV)
         tvViewModel.loadPreferences(path)
-        val tvPrefs = tvViewModel.state.value.preferenceGroups.flatMap { it.preferences }.map { it.nameStringResource }
+        val tvPrefs =
+            tvViewModel.state.value.preferenceGroups
+                .flatMap { it.preferences }
+                .map { it.nameStringResource }
         assertTrue(
             "Watch Next switch must be present on TV",
             tvPrefs.contains(SettingsR.string.pref_tv_watch_next),
@@ -252,7 +258,10 @@ class SettingsTreeVariantTest {
 
         val phoneViewModel = SettingsViewModel(context, appPreferences, AppVariant.PHONE)
         phoneViewModel.loadPreferences(path)
-        val phonePrefs = phoneViewModel.state.value.preferenceGroups.flatMap { it.preferences }.map { it.nameStringResource }
+        val phonePrefs =
+            phoneViewModel.state.value.preferenceGroups
+                .flatMap { it.preferences }
+                .map { it.nameStringResource }
         assertFalse(
             "Watch Next switch must be hidden on Phone",
             phonePrefs.contains(SettingsR.string.pref_tv_watch_next),
@@ -355,12 +364,17 @@ class SettingsTreeVariantTest {
                 vm.loadPreferences(path)
                 val groups = vm.state.value.preferenceGroups
                 for (group in groups) {
-                    val groupTitle = group.nameStringResource?.let { context.resources.getResourceEntryName(it) } ?: "(unnamed group)"
+                    val groupTitle =
+                        group.nameStringResource?.let { context.resources.getResourceEntryName(it) }
+                            ?: "(unnamed group)"
                     sb.appendLine("${indent}Group: $groupTitle")
                     for (pref in group.preferences) {
-                        val prefName = context.resources.getResourceEntryName(pref.nameStringResource)
+                        val prefName =
+                            context.resources.getResourceEntryName(pref.nameStringResource)
                         sb.appendLine("${indent}  - $prefName (${pref::class.simpleName})")
-                        if (pref is PreferenceCategory && pref.nestedPreferenceGroups.isNotEmpty()) {
+                        if (
+                            pref is PreferenceCategory && pref.nestedPreferenceGroups.isNotEmpty()
+                        ) {
                             printGroups(path + pref.nameStringResource, "$indent    ")
                         }
                     }

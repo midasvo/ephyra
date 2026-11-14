@@ -39,7 +39,9 @@ class SyncWorkerDecisionsTest {
     @Test
     fun `a session the server still has playing is ended before its row is sent`() {
         val item = UUID(0L, 1L)
-        assertTrue(endsStaleSession(rowItemId = item, leftPlayingOnServer = item, playingHere = null))
+        assertTrue(
+            endsStaleSession(rowItemId = item, leftPlayingOnServer = item, playingHere = null)
+        )
         assertTrue(endsStaleSession(item, leftPlayingOnServer = item, playingHere = UUID(0L, 2L)))
     }
 

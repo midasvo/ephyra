@@ -48,17 +48,11 @@ import dev.jdtech.jellyfin.core.presentation.ephyra.SPECK_LOOP_MILLIS
 import dev.jdtech.jellyfin.core.presentation.ephyra.drawSpecks
 import dev.jdtech.jellyfin.core.presentation.ephyra.reducedMotion
 import dev.jdtech.jellyfin.models.FindroidItem
-import dev.jdtech.jellyfin.models.SortBy
-import dev.jdtech.jellyfin.models.SortOrder
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import java.util.Date
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.withContext
-import org.jellyfin.sdk.model.api.BaseItemKind
-import timber.log.Timber
 
 @Composable
 fun ScreensaverScreen(
@@ -121,11 +115,7 @@ fun ScreensaverScreen(
 
     val currentItem = items.getOrNull(currentIndex)
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
+    Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
         // Behind the artwork, so they show only in the crossfade gaps and when there is none.
         ScreensaverSpecks(modifier = Modifier.fillMaxSize())
 
@@ -147,11 +137,7 @@ fun ScreensaverScreen(
         }
 
         if (showClock) {
-            ScreensaverClock(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .tvSafeAreaPadding()
-            )
+            ScreensaverClock(modifier = Modifier.align(Alignment.TopEnd).tvSafeAreaPadding())
         }
     }
 }
@@ -223,17 +209,13 @@ private fun ScreensaverArtwork(
                     .align(Alignment.BottomStart)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)),
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
                         )
                     )
         )
 
         // Bottom-start title or logo within TV safe area
-        Box(
-            modifier =
-                Modifier.align(Alignment.BottomStart)
-                    .tvSafeAreaPadding()
-        ) {
+        Box(modifier = Modifier.align(Alignment.BottomStart).tvSafeAreaPadding()) {
             var logoFailed by remember(item.id) { mutableStateOf(false) }
 
             if (logoUrl != null && !logoFailed) {

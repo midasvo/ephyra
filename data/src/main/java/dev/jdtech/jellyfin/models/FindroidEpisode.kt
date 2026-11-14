@@ -89,7 +89,12 @@ suspend fun BaseItemDto.toFindroidEpisode(
             trickplayInfo =
                 trickplay
                     ?.mapNotNull { (width, info) ->
-                        info?.keys?.maxOrNull()?.let { info[it] }?.toFindroidTrickplayInfo()?.let { width to it }
+                        info
+                            ?.keys
+                            ?.maxOrNull()
+                            ?.let { info[it] }
+                            ?.toFindroidTrickplayInfo()
+                            ?.let { width to it }
                     }
                     ?.toMap(),
         )

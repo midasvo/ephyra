@@ -29,9 +29,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/**
- * "Open → Back → same card focused" for the CE collection grid (#129, ADR 0003).
- */
+/** "Open → Back → same card focused" for the CE collection grid (#129, ADR 0003). */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class CollectionFocusRestoreTest {

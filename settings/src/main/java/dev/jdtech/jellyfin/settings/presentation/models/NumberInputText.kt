@@ -3,9 +3,9 @@ package dev.jdtech.jellyfin.settings.presentation.models
 /**
  * CE (#400): the text a number setting shows for [value], on the phone and on TV.
  *
- * A zero label stands for 0 where 0 turns the setting off or lifts a limit ("Off", "No limit").
- * A plural puts the number in the word ("1 episode", "2 episodes"). Otherwise the number goes
- * between the prefix and the suffix, as before. A negative value (not loaded yet) shows no number.
+ * A zero label stands for 0 where 0 turns the setting off or lifts a limit ("Off", "No limit"). A
+ * plural puts the number in the word ("1 episode", "2 episodes"). Otherwise the number goes between
+ * the prefix and the suffix, as before. A negative value (not loaded yet) shows no number.
  *
  * [string] and [quantityString] look up a string and a plural formatted with the quantity, so the
  * rule can be tested without Android resources.

@@ -284,11 +284,7 @@ constructor(
         }
 
         mediaRouter.removeCallback(routeCallback)
-        mediaRouter.addCallback(
-            routeSelector,
-            routeCallback,
-            flags,
-        )
+        mediaRouter.addCallback(routeSelector, routeCallback, flags)
         updateRoutes()
     }
 

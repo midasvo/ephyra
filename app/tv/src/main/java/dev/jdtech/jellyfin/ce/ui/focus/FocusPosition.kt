@@ -19,12 +19,12 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 
 /**
- * CE (ADR 0003): the element that last had focus on a screen, as a `(row, column)` plus an
- * optional item key.
+ * CE (ADR 0003): the element that last had focus on a screen, as a `(row, column)` plus an optional
+ * item key.
  *
- * Remember it with [rememberFocusPosition], so Navigation 3 keeps it per back-stack entry. Mark each
- * focusable element with [focusPosition], and call [RestoreFocus] once per screen. On the first
- * visit that focuses the default position, and on a return the saved one.
+ * Remember it with [rememberFocusPosition], so Navigation 3 keeps it per back-stack entry. Mark
+ * each focusable element with [focusPosition], and call [RestoreFocus] once per screen. On the
+ * first visit that focuses the default position, and on a return the saved one.
  *
  * Writing the position on focus changes doesn't recompose anything: it's plain fields, read only
  * when the state is saved and when focus is restored.
@@ -103,8 +103,8 @@ class FocusPosition internal constructor(row: Int, column: Int, key: String?) {
 }
 
 /**
- * Remembers the focus position of a screen per back-stack entry. [row] and [column] are the
- * default element, focused on the first visit.
+ * Remembers the focus position of a screen per back-stack entry. [row] and [column] are the default
+ * element, focused on the first visit.
  */
 @Composable
 fun rememberFocusPosition(row: Int = 0, column: Int = 0): FocusPosition =
@@ -112,9 +112,9 @@ fun rememberFocusPosition(row: Int = 0, column: Int = 0): FocusPosition =
         .also { it.setDefault(row, column) }
 
 /**
- * Marks this element as `(row, column)` of [position]: it saves the position when the element (or
- * a child) gains focus, and lets [RestoreFocus] focus it. [key] identifies the item in lists that
- * can change, see [FocusPosition.resolve].
+ * Marks this element as `(row, column)` of [position]: it saves the position when the element (or a
+ * child) gains focus, and lets [RestoreFocus] focus it. [key] identifies the item in lists that can
+ * change, see [FocusPosition.resolve].
  */
 @Composable
 fun Modifier.focusPosition(

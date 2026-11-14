@@ -58,7 +58,10 @@ fun TvCriticRating(criticRating: Float?) {
     val text = "${rating.toInt()}%"
     val description = stringResource(CoreR.string.item_critic_rating)
     Row(
-        modifier = Modifier.semantics(mergeDescendants = true) { contentDescription = "$description $text" },
+        modifier =
+            Modifier.semantics(mergeDescendants = true) {
+                contentDescription = "$description $text"
+            },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -93,7 +96,9 @@ fun TvWatchHistory(playCount: Int, lastPlayedDate: LocalDateTime?) {
             stringResource(
                 CoreR.string.item_watch_count_last,
                 playCount,
-                date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)),
+                date.format(
+                    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+                ),
             )
         } ?: stringResource(CoreR.string.item_watch_count, playCount)
     Text(
@@ -150,8 +155,8 @@ fun List<RelatedRow>.relatedLazyIndex(row: Int, firstIndex: Int): Int? =
     indexOfFirst { it.row == row }.takeIf { it >= 0 }?.let { firstIndex + it }
 
 /**
- * A titled row of cards at the bottom of a detail page (extras, collections, "More like this"),
- * as row [row] of [focusPosition] so Back from an item lands on it again. [rowSpec] is the
+ * A titled row of cards at the bottom of a detail page (extras, collections, "More like this"), as
+ * row [row] of [focusPosition] so Back from an item lands on it again. [rowSpec] is the
  * bring-into-view spec of the row, for a page that turns it off for itself (#514).
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -177,8 +182,7 @@ fun TvItemsRow(
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
                 contentPadding = PaddingValues(horizontal = MaterialTheme.spacings.default * 2),
-                modifier =
-                    Modifier.focusRestorer().onFocusChanged { if (it.hasFocus) onFocused() },
+                modifier = Modifier.focusRestorer().onFocusChanged { if (it.hasFocus) onFocused() },
             ) {
                 itemsIndexed(items, key = { _, item -> item.id }) { index, item ->
                     ItemCard(

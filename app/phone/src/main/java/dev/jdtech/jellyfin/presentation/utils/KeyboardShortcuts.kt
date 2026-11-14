@@ -11,9 +11,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.MutableSharedFlow
 
 /**
- * CE (R8): app-wide keyboard shortcuts. `MainActivity` hands every key event to [onKeyEvent]
- * before the views see it, because a Compose key handler only gets keys when something below it
- * has focus, and after a touch nothing has.
+ * CE (R8): app-wide keyboard shortcuts. `MainActivity` hands every key event to [onKeyEvent] before
+ * the views see it, because a Compose key handler only gets keys when something below it has focus,
+ * and after a touch nothing has.
  */
 object KeyboardShortcuts {
     private val find = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
@@ -41,15 +41,13 @@ object KeyboardShortcuts {
     }
 
     /** Calls [onFind] for Ctrl+F while the calling screen is resumed. */
-    @Composable
-    fun OnFind(onFind: () -> Unit) = Collect(find, onFind)
+    @Composable fun OnFind(onFind: () -> Unit) = Collect(find, onFind)
 
     /**
      * Calls [onEscape] for Esc while the calling screen is resumed. Esc is only taken while a
      * screen listens, so call this only while there is something to close (#430).
      */
-    @Composable
-    fun OnEscape(onEscape: () -> Unit) = Collect(escape, onEscape)
+    @Composable fun OnEscape(onEscape: () -> Unit) = Collect(escape, onEscape)
 
     @Composable
     private fun Collect(flow: MutableSharedFlow<Unit>, action: () -> Unit) {

@@ -54,9 +54,9 @@ interface JellyfinRepository {
     ): List<FindroidItem>
 
     /**
-     * CE: like [getItems], but with the number of items that match in total (ignoring
-     * [startIndex] and [limit]) when [includeTotal] is set, so a pager gets its length from its
-     * first page instead of a separate [getItemCount]. The server counts only when asked, so leave
+     * CE: like [getItems], but with the number of items that match in total (ignoring [startIndex]
+     * and [limit]) when [includeTotal] is set, so a pager gets its length from its first page
+     * instead of a separate [getItemCount]. The server counts only when asked, so leave
      * [includeTotal] off for later pages.
      */
     suspend fun getItemsPage(
@@ -147,15 +147,14 @@ interface JellyfinRepository {
     ): List<FindroidEpisode>
 
     /**
-     * Resolves the sources for downloading an item. Always asks for the original
-     * file, except — when [transcodeDolbyVision] is set — Dolby Vision files, which
-     * the server then transcodes to a device-compatible H.264 copy so they play
-     * offline. Every non-DV file is still the original regardless of the flag.
+     * Resolves the sources for downloading an item. Always asks for the original file, except —
+     * when [transcodeDolbyVision] is set — Dolby Vision files, which the server then transcodes to
+     * a device-compatible H.264 copy so they play offline. Every non-DV file is still the original
+     * regardless of the flag.
      *
-     * [maxBitrate] (bits/sec) is the user-selected download quality cap. Files
-     * whose bitrate exceeds it get a progressive server-side transcode down to
-     * the cap; files under it still download as the original. Null = original
-     * quality for everything.
+     * [maxBitrate] (bits/sec) is the user-selected download quality cap. Files whose bitrate
+     * exceeds it get a progressive server-side transcode down to the cap; files under it still
+     * download as the original. Null = original quality for everything.
      */
     suspend fun getMediaSources(
         itemId: UUID,
@@ -165,17 +164,17 @@ interface JellyfinRepository {
     ): List<FindroidSource>
 
     /**
-     * Resolves the sources to play an item. Unlike [getMediaSources] (which always
-     * asks for the original file and is shared with the downloader), this sends an
-     * honest device profile so the server transcodes anything the player cannot
-     * direct-play — notably Dolby Vision on hardware without a working DV pipeline.
+     * Resolves the sources to play an item. Unlike [getMediaSources] (which always asks for the
+     * original file and is shared with the downloader), this sends an honest device profile so the
+     * server transcodes anything the player cannot direct-play — notably Dolby Vision on hardware
+     * without a working DV pipeline.
      *
      * When a downloaded copy exists and [mediaSourceId] is null or names it, the server is not
      * asked: the player plays the local copy then anyway, and waiting on the server only delays it.
      *
-     * CE (#580): [audioStreamIndex] names the audio stream of [mediaSourceId] that a transcode
-     * has to carry, as a transcode carries one. The server only takes it together with the
-     * source's id. It means nothing for a source that plays directly or from a download.
+     * CE (#580): [audioStreamIndex] names the audio stream of [mediaSourceId] that a transcode has
+     * to carry, as a transcode carries one. The server only takes it together with the source's id.
+     * It means nothing for a source that plays directly or from a download.
      */
     suspend fun getPlaybackSources(
         itemId: UUID,
@@ -202,8 +201,10 @@ interface JellyfinRepository {
      * CE (#332): up to [limit] items like [itemId], for "More like this". The detail pages load it
      * after they are shown. Offline there is nothing to compare with, so the default is empty.
      */
-    suspend fun getSimilarItems(itemId: UUID, limit: Int = SIMILAR_ITEMS_LIMIT): List<FindroidItem> =
-        emptyList()
+    suspend fun getSimilarItems(
+        itemId: UUID,
+        limit: Int = SIMILAR_ITEMS_LIMIT,
+    ): List<FindroidItem> = emptyList()
 
     /**
      * CE (#332): the extras of [itemId] — its local trailers, then its special features (behind the

@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.presentation.film
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,11 +34,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
-import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderAction
@@ -50,26 +49,27 @@ import dev.jdtech.jellyfin.film.domain.withMediaInfo
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeAction
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeState
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeViewModel
+import dev.jdtech.jellyfin.models.FindroidEpisode
+import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
 import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
 import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
-import dev.jdtech.jellyfin.presentation.film.components.MediaInfoSheet
-import dev.jdtech.jellyfin.presentation.film.components.WatchHistoryText
-import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemHeader
 import dev.jdtech.jellyfin.presentation.film.components.ItemTopBar
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
+import dev.jdtech.jellyfin.presentation.film.components.MediaInfoSheet
 import dev.jdtech.jellyfin.presentation.film.components.OverviewText
 import dev.jdtech.jellyfin.presentation.film.components.VideoMetadataBar
+import dev.jdtech.jellyfin.presentation.film.components.WatchHistoryText
 import dev.jdtech.jellyfin.presentation.film.components.rememberArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.rememberTopBarBackgroundAlpha
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.LightStatusBarOverArtwork
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
 import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
-import dev.jdtech.jellyfin.presentation.utils.LightStatusBarOverArtwork
 import dev.jdtech.jellyfin.presentation.utils.ReloadOnResume
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import dev.jdtech.jellyfin.presentation.utils.useSeasonListDetail
@@ -77,7 +77,6 @@ import dev.jdtech.jellyfin.presentation.utils.useWideItemLayout
 import dev.jdtech.jellyfin.utils.ObserveAsEvents
 import dev.jdtech.jellyfin.utils.copyOnLongClick
 import dev.jdtech.jellyfin.utils.format
-import android.widget.Toast
 import java.util.UUID
 import org.jellyfin.sdk.model.api.BaseItemKind
 
@@ -123,8 +122,9 @@ fun EpisodeScreen(
                 }
             }
             is DownloaderEvent.Failed -> {
-                val message = event.errorText?.asString(context.resources)
-                    ?: context.getString(CoreR.string.download_failed)
+                val message =
+                    event.errorText?.asString(context.resources)
+                        ?: context.getString(CoreR.string.download_failed)
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
         }
@@ -155,7 +155,15 @@ fun EpisodeScreen(
             when (action) {
                 is EpisodeAction.Play -> {
                     // CE (#626): on the Cast receiver when one is connected.
-                    if (!castPlayback.play(episodeId, BaseItemKind.EPISODE, action.startFromBeginning, action.mediaSourceId, shuffle = false)) {
+                    if (
+                        !castPlayback.play(
+                            episodeId,
+                            BaseItemKind.EPISODE,
+                            action.startFromBeginning,
+                            action.mediaSourceId,
+                            shuffle = false,
+                        )
+                    ) {
                         val intent = Intent(context, PlayerActivity::class.java)
                         intent.putExtra("itemId", episodeId.toString())
                         intent.putExtra("itemKind", BaseItemKind.EPISODE.serialName)
@@ -164,11 +172,13 @@ fun EpisodeScreen(
                         context.startActivity(intent)
                     }
                 }
-                is EpisodeAction.OpenExternalLink -> openExternalLink(context, uriHandler, action.url)
+                is EpisodeAction.OpenExternalLink ->
+                    openExternalLink(context, uriHandler, action.url)
                 is EpisodeAction.OnBackClick -> navigateBack()
                 is EpisodeAction.OnHomeClick -> navigateHome()
                 is EpisodeAction.NavigateToPerson -> navigateToPerson(action.personId)
-                is EpisodeAction.NavigateToSeason -> navigateToSeason(action.seasonId, action.seriesId)
+                is EpisodeAction.NavigateToSeason ->
+                    navigateToSeason(action.seasonId, action.seriesId)
                 is EpisodeAction.NavigateToSeries -> navigateToSeries(action.seriesId)
                 else -> Unit
             }
@@ -194,10 +204,7 @@ private fun EpisodeScreenLayout(
     // No chip when there is nothing to describe: offline, a download has no track data.
     val onMediaInfoClick = { mediaInfoOpen = true }.takeIf { mediaInfoSources.isNotEmpty() }
     if (mediaInfoOpen && mediaInfoSources.isNotEmpty()) {
-        MediaInfoSheet(
-            sources = mediaInfoSources,
-            onDismissRequest = { mediaInfoOpen = false },
-        )
+        MediaInfoSheet(sources = mediaInfoSources, onDismissRequest = { mediaInfoOpen = false })
     }
 
     // CE: medium and expanded windows get the hero layout (docs/tablet/4-design.md §6).
@@ -251,10 +258,11 @@ private fun EpisodeScreenLayout(
                                             episode.parentIndexNumber,
                                         )
                                     }
-                            val episodeNumberText = stringResource(
-                                id = CoreR.string.episode_number,
-                                episode.indexNumber,
-                            )
+                            val episodeNumberText =
+                                stringResource(
+                                    id = CoreR.string.episode_number,
+                                    episode.indexNumber,
+                                )
                             val prefixText = "$seasonName - $episodeNumberText"
                             Text(
                                 text = prefixText,
@@ -288,10 +296,11 @@ private fun EpisodeScreenLayout(
                                 style = MaterialTheme.typography.bodyMedium,
                             )
                         }
-                        val runtimeText = stringResource(
-                            CoreR.string.runtime_minutes,
-                            episode.runtimeTicks.div(Constants.TICKS_PER_MINUTE),
-                        )
+                        val runtimeText =
+                            stringResource(
+                                CoreR.string.runtime_minutes,
+                                episode.runtimeTicks.div(Constants.TICKS_PER_MINUTE),
+                            )
                         Text(
                             text = runtimeText,
                             modifier = Modifier.copyOnLongClick(runtimeText),
@@ -301,7 +310,7 @@ private fun EpisodeScreenLayout(
                             val ratingText = "%.1f".format(communityRating)
                             Row(
                                 modifier = Modifier.copyOnLongClick(ratingText),
-                                verticalAlignment = Alignment.Bottom
+                                verticalAlignment = Alignment.Bottom,
                             ) {
                                 Icon(
                                     painter = painterResource(CoreR.drawable.ic_star),
@@ -373,12 +382,13 @@ private fun EpisodeScreenLayout(
                 }
                 Spacer(Modifier.height(paddingBottom))
             }
-        } ?: run {
-            LoadingOrError(
-                error = state.error,
-                onRetryClick = { onAction(EpisodeAction.OnRetryClick) },
-            )
         }
+            ?: run {
+                LoadingOrError(
+                    error = state.error,
+                    onRetryClick = { onAction(EpisodeAction.OnRetryClick) },
+                )
+            }
 
         LightStatusBarOverArtwork(artwork.hasArtwork, rememberTopBarBackgroundAlpha(scrollState))
         ItemTopBar(

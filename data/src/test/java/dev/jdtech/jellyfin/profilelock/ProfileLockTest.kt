@@ -106,7 +106,9 @@ class ProfileLockTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun `a pattern of three dots is refused`() = runBlocking { lock.setPattern(alice.id, listOf(0, 1, 2)) }
+    fun `a pattern of three dots is refused`() = runBlocking {
+        lock.setPattern(alice.id, listOf(0, 1, 2))
+    }
 
     @Test(expected = IllegalArgumentException::class)
     fun `a pattern that uses a dot twice is refused`() = runBlocking {

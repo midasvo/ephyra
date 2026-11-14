@@ -79,7 +79,12 @@ class TrackNamesTest {
         // The demo server's only track: "und - mp4a.40.2" on ExoPlayer, "aac" on mpv.
         assertBoth(
             "AAC 2.0",
-            exoAudio(language = "und", mime = "audio/mp4a-latm", codecs = "mp4a.40.2", channels = 2),
+            exoAudio(
+                language = "und",
+                mime = "audio/mp4a-latm",
+                codecs = "mp4a.40.2",
+                channels = 2,
+            ),
             mpvTrack("audio", codec = "aac", channels = 2),
         )
     }
@@ -105,7 +110,13 @@ class TrackNamesTest {
                 codecs = "mp4a.40.2",
                 channels = 1,
             ),
-            mpvTrack("audio", label = "English Stereo", language = "eng", codec = "aac", channels = 1),
+            mpvTrack(
+                "audio",
+                label = "English Stereo",
+                language = "eng",
+                codec = "aac",
+                channels = 1,
+            ),
         )
         assertBoth(
             "Dutch 5.1 · AC3",
@@ -230,7 +241,10 @@ class TrackNamesTest {
             name(exoAudio("Dutch 5.1", "nl", "audio/ac3", channels = 6)),
             serverName(ServerAudioTrack(3, "Dutch 5.1", "nld", "ac3", 6)),
         )
-        assertEquals("Dutch 5.1 · AC3", serverName(ServerAudioTrack(3, "Dutch 5.1", "nld", "ac3", 6)))
+        assertEquals(
+            "Dutch 5.1 · AC3",
+            serverName(ServerAudioTrack(3, "Dutch 5.1", "nld", "ac3", 6)),
+        )
         assertEquals(
             "English Stereo · AAC 2.0",
             serverName(ServerAudioTrack(2, "English Stereo", "eng", "aac", 2)),

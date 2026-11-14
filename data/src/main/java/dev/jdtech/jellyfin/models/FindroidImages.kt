@@ -65,14 +65,13 @@ fun BaseItemDto.toFindroidImages(jellyfinRepository: JellyfinRepository): Findro
                 .appendQueryParameter("tag", tag)
                 .build()
         }
-    val showLogo =
-        parentLogoImageTag?.let { tag ->
-            baseUrl
-                .buildUpon()
-                .appendEncodedPath("items/${parentLogoItemId ?: seriesId}/Images/${ImageType.LOGO}")
-                .appendQueryParameter("tag", tag)
-                .build()
-        }
+    val showLogo = parentLogoImageTag?.let { tag ->
+        baseUrl
+            .buildUpon()
+            .appendEncodedPath("items/${parentLogoItemId ?: seriesId}/Images/${ImageType.LOGO}")
+            .appendQueryParameter("tag", tag)
+            .build()
+    }
     val thumb =
         imageTags?.get(ImageType.THUMB)?.let { tag ->
             baseUrl

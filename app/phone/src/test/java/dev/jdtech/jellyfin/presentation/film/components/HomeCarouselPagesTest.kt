@@ -55,9 +55,7 @@ class HomeCarouselPagesTest {
         assertEquals(2, carouselPageCount(WidthClass.Expanded, compactHeight = true))
     }
 
-    @Test
-    @Config(qualifiers = "w411dp-h914dp-port")
-    fun `a phone shows one page`() = assertPages(1)
+    @Test @Config(qualifiers = "w411dp-h914dp-port") fun `a phone shows one page`() = assertPages(1)
 
     @Test
     @Config(qualifiers = "w914dp-h411dp-land")

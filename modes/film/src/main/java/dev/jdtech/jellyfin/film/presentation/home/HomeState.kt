@@ -18,8 +18,8 @@ data class HomeState(
     /** CE: offline, and this server has no downloads, so Home is empty for that reason. */
     val nothingDownloaded: Boolean = false,
     /**
-     * CE (#608): the cards of Continue Watching and Next Up show the episode's own image instead
-     * of the series' or movie's thumb.
+     * CE (#608): the cards of Continue Watching and Next Up show the episode's own image instead of
+     * the series' or movie's thumb.
      */
     val useEpisodeImages: Boolean = false,
 ) {

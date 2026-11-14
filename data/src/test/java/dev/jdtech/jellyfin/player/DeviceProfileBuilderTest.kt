@@ -10,28 +10,34 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Tests the pure profile-assembly half of [DeviceProfileBuilder]. The
- * `MediaCodecList` hardware probe needs a device and is not covered here.
+ * Tests the pure profile-assembly half of [DeviceProfileBuilder]. The `MediaCodecList` hardware
+ * probe needs a device and is not covered here.
  */
 class DeviceProfileBuilderTest {
 
     private val uhd60 = DolbyVisionLimit(3840, 2160, 60)
 
-    private fun probedWithDolbyVision(vararg profiles: Pair<Int, DolbyVisionLimit>) = ProbedCodecs(
-        videoCodecProfiles = mapOf("hevc" to setOf("Main 10"), "av1" to emptySet()),
-        audioCodecs = setOf("aac"),
-        dolbyVisionProfiles = mapOf(*profiles),
-    )
+    private fun probedWithDolbyVision(vararg profiles: Pair<Int, DolbyVisionLimit>) =
+        ProbedCodecs(
+            videoCodecProfiles = mapOf("hevc" to setOf("Main 10"), "av1" to emptySet()),
+            audioCodecs = setOf("aac"),
+            dolbyVisionProfiles = mapOf(*profiles),
+        )
 
     private fun rangeTypes(profile: DeviceProfile, codec: String, container: String = "mkv") =
         profile.codecProfiles
             .filter { it.codec == codec && it.container == container }
             .flatMap { it.conditions }
             .first { it.property == ProfileConditionValue.VIDEO_RANGE_TYPE }
-            .value.orEmpty()
+            .value
+            .orEmpty()
             .split("|")
 
-    private fun dolbyVisionLimits(profile: DeviceProfile, codec: String, container: String = "mkv") =
+    private fun dolbyVisionLimits(
+        profile: DeviceProfile,
+        codec: String,
+        container: String = "mkv",
+    ) =
         profile.codecProfiles.filter {
             it.codec == codec && it.container == container && it.applyConditions.isNotEmpty()
         }
@@ -60,16 +66,16 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `an advertised dolby vision profile only opens its own range types`() {
-        val cases = mapOf(
-            5 to listOf("DOVI"),
-            7 to listOf("DOVIWithEL", "DOVIWithELHDR10Plus"),
-            8 to listOf("DOVIWithHDR10", "DOVIWithHLG", "DOVIWithSDR", "DOVIWithHDR10Plus"),
-        )
+        val cases =
+            mapOf(
+                5 to listOf("DOVI"),
+                7 to listOf("DOVIWithEL", "DOVIWithELHDR10Plus"),
+                8 to listOf("DOVIWithHDR10", "DOVIWithHLG", "DOVIWithSDR", "DOVIWithHDR10Plus"),
+            )
 
         for ((dvProfile, expected) in cases) {
-            val profile = DeviceProfileBuilder.buildDeviceProfile(
-                probedWithDolbyVision(dvProfile to uhd60),
-            )
+            val profile =
+                DeviceProfileBuilder.buildDeviceProfile(probedWithDolbyVision(dvProfile to uhd60))
 
             assertEquals(
                 "hevc range types for DV profile $dvProfile",
@@ -106,9 +112,10 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `out-of-spec dolby vision is never direct-played`() {
-        val profile = DeviceProfileBuilder.buildDeviceProfile(
-            probedWithDolbyVision(5 to uhd60, 7 to uhd60, 8 to uhd60, 10 to uhd60),
-        )
+        val profile =
+            DeviceProfileBuilder.buildDeviceProfile(
+                probedWithDolbyVision(5 to uhd60, 7 to uhd60, 8 to uhd60, 10 to uhd60)
+            )
 
         assertFalse("DOVIInvalid" in rangeTypes(profile, "hevc"))
         assertFalse("DOVIInvalid" in rangeTypes(profile, "av1"))
@@ -138,31 +145,34 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `dolby vision is held to the advertised level`() {
-        val profile = DeviceProfileBuilder.buildDeviceProfile(
-            probedWithDolbyVision(
-                5 to DolbyVisionLimit(1920, 1080, 60),
-                8 to DolbyVisionLimit(3840, 2160, 24),
-            ),
-        )
+        val profile =
+            DeviceProfileBuilder.buildDeviceProfile(
+                probedWithDolbyVision(
+                    5 to DolbyVisionLimit(1920, 1080, 60),
+                    8 to DolbyVisionLimit(3840, 2160, 24),
+                )
+            )
 
-        val limits = dolbyVisionLimits(profile, "hevc").associate { limit ->
-            limit.applyConditions.single().value to limit.conditions.associate {
-                it.property to it.value
+        val limits =
+            dolbyVisionLimits(profile, "hevc").associate { limit ->
+                limit.applyConditions.single().value to
+                    limit.conditions.associate { it.property to it.value }
             }
-        }
 
         assertEquals(
             mapOf(
-                "DOVI" to mapOf(
-                    ProfileConditionValue.WIDTH to "1920",
-                    ProfileConditionValue.HEIGHT to "1080",
-                    ProfileConditionValue.VIDEO_FRAMERATE to "60",
-                ),
-                "DOVIWithHDR10|DOVIWithHLG|DOVIWithSDR|DOVIWithHDR10Plus" to mapOf(
-                    ProfileConditionValue.WIDTH to "3840",
-                    ProfileConditionValue.HEIGHT to "2160",
-                    ProfileConditionValue.VIDEO_FRAMERATE to "24",
-                ),
+                "DOVI" to
+                    mapOf(
+                        ProfileConditionValue.WIDTH to "1920",
+                        ProfileConditionValue.HEIGHT to "1080",
+                        ProfileConditionValue.VIDEO_FRAMERATE to "60",
+                    ),
+                "DOVIWithHDR10|DOVIWithHLG|DOVIWithSDR|DOVIWithHDR10Plus" to
+                    mapOf(
+                        ProfileConditionValue.WIDTH to "3840",
+                        ProfileConditionValue.HEIGHT to "2160",
+                        ProfileConditionValue.VIDEO_FRAMERATE to "24",
+                    ),
             ),
             limits,
         )
@@ -182,10 +192,11 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `hevc codec profile excludes every Dolby Vision range from direct play`() {
-        val probed = ProbedCodecs(
-            videoCodecProfiles = mapOf("hevc" to setOf("Main", "Main 10")),
-            audioCodecs = setOf("aac"),
-        )
+        val probed =
+            ProbedCodecs(
+                videoCodecProfiles = mapOf("hevc" to setOf("Main", "Main 10")),
+                audioCodecs = setOf("aac"),
+            )
 
         val rangeCondition = hevcRangeCondition(probed)
 
@@ -200,10 +211,11 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `hevc is still range-restricted when the decoder reports no profiles`() {
-        val probed = ProbedCodecs(
-            videoCodecProfiles = mapOf("hevc" to emptySet()),
-            audioCodecs = setOf("aac"),
-        )
+        val probed =
+            ProbedCodecs(
+                videoCodecProfiles = mapOf("hevc" to emptySet()),
+                audioCodecs = setOf("aac"),
+            )
 
         assertTrue(
             "DV must be excluded even with no enumerable hevc profiles",
@@ -213,26 +225,29 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `codecs that cannot carry Dolby Vision are not range restricted`() {
-        val probed = ProbedCodecs(
-            videoCodecProfiles = mapOf("h264" to setOf("high", "main")),
-            audioCodecs = setOf("aac"),
-        )
+        val probed =
+            ProbedCodecs(
+                videoCodecProfiles = mapOf("h264" to setOf("high", "main")),
+                audioCodecs = setOf("aac"),
+            )
 
-        val h264RangeConditions = DeviceProfileBuilder.buildDeviceProfile(probed)
-            .codecProfiles
-            .filter { it.codec == "h264" }
-            .flatMap { it.conditions }
-            .filter { it.property == ProfileConditionValue.VIDEO_RANGE_TYPE }
+        val h264RangeConditions =
+            DeviceProfileBuilder.buildDeviceProfile(probed)
+                .codecProfiles
+                .filter { it.codec == "h264" }
+                .flatMap { it.conditions }
+                .filter { it.property == ProfileConditionValue.VIDEO_RANGE_TYPE }
 
         assertEquals(emptyList<Any>(), h264RangeConditions)
     }
 
     @Test
     fun `device profile direct-plays supported codecs and offers an HLS transcode`() {
-        val probed = ProbedCodecs(
-            videoCodecProfiles = mapOf("h264" to setOf("high"), "hevc" to setOf("Main 10")),
-            audioCodecs = setOf("aac"),
-        )
+        val probed =
+            ProbedCodecs(
+                videoCodecProfiles = mapOf("h264" to setOf("high"), "hevc" to setOf("Main 10")),
+                audioCodecs = setOf("aac"),
+            )
 
         val profile = DeviceProfileBuilder.buildDeviceProfile(probed)
 
@@ -254,27 +269,35 @@ class DeviceProfileBuilderTest {
     @Test
     fun `e-ac-3 in mp4 is direct-played`() {
         // Media3 reads E-AC-3 from mp4. Left out, every such file went through the server.
-        val profile = DeviceProfileBuilder.buildDeviceProfile(
-            ProbedCodecs(videoCodecProfiles = mapOf("h264" to setOf("high")), audioCodecs = setOf("aac")),
-        )
+        val profile =
+            DeviceProfileBuilder.buildDeviceProfile(
+                ProbedCodecs(
+                    videoCodecProfiles = mapOf("h264" to setOf("high")),
+                    audioCodecs = setOf("aac"),
+                )
+            )
 
         for (container in listOf("mp4", "fmp4", "mkv", "mpegts")) {
-            val audioCodecs = profile.directPlayProfiles
-                .first { it.container == container && it.videoCodec != null }
-                .audioCodec.orEmpty()
-                .split(",")
+            val audioCodecs =
+                profile.directPlayProfiles
+                    .first { it.container == container && it.videoCodec != null }
+                    .audioCodec
+                    .orEmpty()
+                    .split(",")
             assertTrue("eac3 missing from $container: $audioCodecs", "eac3" in audioCodecs)
         }
     }
 
     @Test
     fun `the HLS transcode copies hevc when the device decodes it and still encodes to h264`() {
-        val profile = DeviceProfileBuilder.buildDeviceProfile(
-            ProbedCodecs(
-                videoCodecProfiles = mapOf("h264" to setOf("high"), "hevc" to setOf("Main", "Main 10")),
-                audioCodecs = setOf("aac"),
-            ),
-        )
+        val profile =
+            DeviceProfileBuilder.buildDeviceProfile(
+                ProbedCodecs(
+                    videoCodecProfiles =
+                        mapOf("h264" to setOf("high"), "hevc" to setOf("Main", "Main 10")),
+                    audioCodecs = setOf("aac"),
+                )
+            )
 
         // The server encodes to the first codec and copies any codec in the list.
         assertEquals("h264,hevc", hlsProfile(profile).videoCodec)
@@ -282,9 +305,13 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `the HLS transcode is h264 only without an hevc decoder`() {
-        val profile = DeviceProfileBuilder.buildDeviceProfile(
-            ProbedCodecs(videoCodecProfiles = mapOf("h264" to setOf("high")), audioCodecs = setOf("aac")),
-        )
+        val profile =
+            DeviceProfileBuilder.buildDeviceProfile(
+                ProbedCodecs(
+                    videoCodecProfiles = mapOf("h264" to setOf("high")),
+                    audioCodecs = setOf("aac"),
+                )
+            )
 
         assertEquals("h264", hlsProfile(profile).videoCodec)
         assertTrue(profile.codecProfiles.none { it.container == "ts" })
@@ -294,9 +321,8 @@ class DeviceProfileBuilderTest {
     fun `hevc is only copied into the HLS transcode without dolby vision`() {
         // Without a codec profile on the segment container the server copies any HEVC stream,
         // Dolby Vision included, and MPEG-TS hides the Dolby Vision configuration from media3.
-        val profile = DeviceProfileBuilder.buildDeviceProfile(
-            probedWithDolbyVision(5 to uhd60, 8 to uhd60),
-        )
+        val profile =
+            DeviceProfileBuilder.buildDeviceProfile(probedWithDolbyVision(5 to uhd60, 8 to uhd60))
 
         val rangeTypes = rangeTypes(profile, "hevc", container = "ts")
         assertTrue("HDR10" in rangeTypes && "SDR" in rangeTypes)
@@ -304,20 +330,22 @@ class DeviceProfileBuilderTest {
             "DV ranges leaked into the HLS copy: $rangeTypes",
             rangeTypes.any { it.startsWith("DOVI") },
         )
-        val videoProfiles = profile.codecProfiles
-            .single { it.codec == "hevc" && it.container == "ts" }
-            .conditions
-            .first { it.property == ProfileConditionValue.VIDEO_PROFILE }
-            .value
+        val videoProfiles =
+            profile.codecProfiles
+                .single { it.codec == "hevc" && it.container == "ts" }
+                .conditions
+                .first { it.property == ProfileConditionValue.VIDEO_PROFILE }
+                .value
         assertEquals("Main 10", videoProfiles)
     }
 
     @Test
     fun `unsupported codecs are not advertised for direct play`() {
-        val probed = ProbedCodecs(
-            videoCodecProfiles = mapOf("h264" to setOf("high")),
-            audioCodecs = setOf("aac"),
-        )
+        val probed =
+            ProbedCodecs(
+                videoCodecProfiles = mapOf("h264" to setOf("high")),
+                audioCodecs = setOf("aac"),
+            )
 
         val profile = DeviceProfileBuilder.buildDeviceProfile(probed)
 
@@ -330,10 +358,11 @@ class DeviceProfileBuilderTest {
 
     @Test
     fun `image-based subtitle formats are deliverable embedded and external`() {
-        val probed = ProbedCodecs(
-            videoCodecProfiles = mapOf("h264" to setOf("high")),
-            audioCodecs = setOf("aac"),
-        )
+        val probed =
+            ProbedCodecs(
+                videoCodecProfiles = mapOf("h264" to setOf("high")),
+                audioCodecs = setOf("aac"),
+            )
 
         val subtitleProfiles = DeviceProfileBuilder.buildDeviceProfile(probed).subtitleProfiles
 
@@ -368,42 +397,45 @@ class DeviceProfileBuilderTest {
         // Locks down the exact (format, method) pairs the device profile emits.
         // Catches typos ("pgsub"), accidental drops (srt), and accidental
         // additions that a per-format presence test cannot see.
-        val probed = ProbedCodecs(
-            videoCodecProfiles = mapOf("h264" to setOf("high")),
-            audioCodecs = setOf("aac"),
-        )
+        val probed =
+            ProbedCodecs(
+                videoCodecProfiles = mapOf("h264" to setOf("high")),
+                audioCodecs = setOf("aac"),
+            )
 
-        val asPairs = DeviceProfileBuilder.buildDeviceProfile(probed)
-            .subtitleProfiles
-            .map { it.format to it.method }
-            .toSet()
+        val asPairs =
+            DeviceProfileBuilder.buildDeviceProfile(probed)
+                .subtitleProfiles
+                .map { it.format to it.method }
+                .toSet()
 
-        val expected = setOf(
-            // Embed: text + image formats media3 can decode from the container.
-            "dvbsub" to SubtitleDeliveryMethod.EMBED,
-            "dvdsub" to SubtitleDeliveryMethod.EMBED,
-            "pgssub" to SubtitleDeliveryMethod.EMBED,
-            "srt" to SubtitleDeliveryMethod.EMBED,
-            "subrip" to SubtitleDeliveryMethod.EMBED,
-            "ttml" to SubtitleDeliveryMethod.EMBED,
-            "ass" to SubtitleDeliveryMethod.EMBED,
-            "ssa" to SubtitleDeliveryMethod.EMBED,
-            // External: sidecar formats (text + image where the server can stream them).
-            "dvbsub" to SubtitleDeliveryMethod.EXTERNAL,
-            "dvdsub" to SubtitleDeliveryMethod.EXTERNAL,
-            "pgssub" to SubtitleDeliveryMethod.EXTERNAL,
-            "srt" to SubtitleDeliveryMethod.EXTERNAL,
-            "subrip" to SubtitleDeliveryMethod.EXTERNAL,
-            "ttml" to SubtitleDeliveryMethod.EXTERNAL,
-            "vtt" to SubtitleDeliveryMethod.EXTERNAL,
-            "webvtt" to SubtitleDeliveryMethod.EXTERNAL,
-            "ass" to SubtitleDeliveryMethod.EXTERNAL,
-            "ssa" to SubtitleDeliveryMethod.EXTERNAL,
-            // Encode: burn-in fallback for image subtitles only.
-            "dvbsub" to SubtitleDeliveryMethod.ENCODE,
-            "dvdsub" to SubtitleDeliveryMethod.ENCODE,
-            "pgssub" to SubtitleDeliveryMethod.ENCODE,
-        )
+        val expected =
+            setOf(
+                // Embed: text + image formats media3 can decode from the container.
+                "dvbsub" to SubtitleDeliveryMethod.EMBED,
+                "dvdsub" to SubtitleDeliveryMethod.EMBED,
+                "pgssub" to SubtitleDeliveryMethod.EMBED,
+                "srt" to SubtitleDeliveryMethod.EMBED,
+                "subrip" to SubtitleDeliveryMethod.EMBED,
+                "ttml" to SubtitleDeliveryMethod.EMBED,
+                "ass" to SubtitleDeliveryMethod.EMBED,
+                "ssa" to SubtitleDeliveryMethod.EMBED,
+                // External: sidecar formats (text + image where the server can stream them).
+                "dvbsub" to SubtitleDeliveryMethod.EXTERNAL,
+                "dvdsub" to SubtitleDeliveryMethod.EXTERNAL,
+                "pgssub" to SubtitleDeliveryMethod.EXTERNAL,
+                "srt" to SubtitleDeliveryMethod.EXTERNAL,
+                "subrip" to SubtitleDeliveryMethod.EXTERNAL,
+                "ttml" to SubtitleDeliveryMethod.EXTERNAL,
+                "vtt" to SubtitleDeliveryMethod.EXTERNAL,
+                "webvtt" to SubtitleDeliveryMethod.EXTERNAL,
+                "ass" to SubtitleDeliveryMethod.EXTERNAL,
+                "ssa" to SubtitleDeliveryMethod.EXTERNAL,
+                // Encode: burn-in fallback for image subtitles only.
+                "dvbsub" to SubtitleDeliveryMethod.ENCODE,
+                "dvdsub" to SubtitleDeliveryMethod.ENCODE,
+                "pgssub" to SubtitleDeliveryMethod.ENCODE,
+            )
 
         assertEquals(expected, asPairs)
     }
@@ -429,10 +461,11 @@ class DeviceProfileBuilderTest {
         assertTrue(profile.directPlayProfiles.all { it.container == "" })
 
         // DV is excluded from direct play, so the server transcodes it instead.
-        val rangeCondition = profile.codecProfiles
-            .filter { it.codec == "hevc" }
-            .flatMap { it.conditions }
-            .firstOrNull { it.property == ProfileConditionValue.VIDEO_RANGE_TYPE }
+        val rangeCondition =
+            profile.codecProfiles
+                .filter { it.codec == "hevc" }
+                .flatMap { it.conditions }
+                .firstOrNull { it.property == ProfileConditionValue.VIDEO_RANGE_TYPE }
         assertTrue("DV must be excluded from direct play", rangeCondition != null)
         assertFalse(rangeCondition!!.value.orEmpty().contains("DOVI"))
 

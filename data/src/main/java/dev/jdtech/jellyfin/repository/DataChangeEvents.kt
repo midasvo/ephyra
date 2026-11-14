@@ -28,7 +28,10 @@ class DataChangeEvents {
     }
 
     private val _synced =
-        MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        MutableSharedFlow<Unit>(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
 
     /**
      * CE (#633): emits when the sync has sent progress watched offline to the server. What the

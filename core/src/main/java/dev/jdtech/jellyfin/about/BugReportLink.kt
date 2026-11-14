@@ -46,18 +46,20 @@ object BugReportLink {
         }
 
     /** `3840×2160, 60 Hz, DOLBY_VISION/HDR10`. */
-    fun screenText(screen: ScreenSummary): String = buildList {
-            add("${screen.widthPx}×${screen.heightPx}")
-            add("${screen.refreshRateHz.toInt()} Hz")
-            if (screen.hdrTypes.isNotEmpty()) add(screen.hdrTypes.joinToString("/"))
-        }
-        .joinToString(", ")
-
-    private fun decodersText(info: AboutInfo): String = buildList {
-            addAll(info.videoDecoders)
-            if (info.dolbyVisionProfiles.isNotEmpty()) {
-                add("DV ${info.dolbyVisionProfiles.joinToString("/")}")
+    fun screenText(screen: ScreenSummary): String =
+        buildList {
+                add("${screen.widthPx}×${screen.heightPx}")
+                add("${screen.refreshRateHz.toInt()} Hz")
+                if (screen.hdrTypes.isNotEmpty()) add(screen.hdrTypes.joinToString("/"))
             }
-        }
-        .joinToString(", ")
+            .joinToString(", ")
+
+    private fun decodersText(info: AboutInfo): String =
+        buildList {
+                addAll(info.videoDecoders)
+                if (info.dolbyVisionProfiles.isNotEmpty()) {
+                    add("DV ${info.dolbyVisionProfiles.joinToString("/")}")
+                }
+            }
+            .joinToString(", ")
 }

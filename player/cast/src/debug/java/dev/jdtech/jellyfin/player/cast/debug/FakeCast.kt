@@ -45,8 +45,8 @@ import timber.log.Timber
  * The property is read again at each step, so a state can be asked for while the app runs:
  * `fake:none` finds no devices, `fake:connectfail` fails to connect, `fake:fail` fails the next
  * play, `fake:error` fails what plays now, `fake:drop` loses the receiver (set `fake` to get it
- * back), `fake:lost` ends the session, `fake:end` runs the item out, `fake:unavailable` is a
- * device without Google Play services. Nothing is reported to the server.
+ * back), `fake:lost` ends the session, `fake:end` runs the item out, `fake:unavailable` is a device
+ * without Google Play services. Nothing is reported to the server.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -143,27 +143,25 @@ internal class FakeCastSessionManager : CastSessionManager {
     override fun updateDiscovery(activeScan: Boolean) {
         if (!activeScan) return
         scanJob?.cancel()
-        scanJob =
-            scope.launch {
-                delay(2500)
-                _availableDevices.value = if (scenario() == "none") emptyList() else devices
-            }
+        scanJob = scope.launch {
+            delay(2500)
+            _availableDevices.value = if (scenario() == "none") emptyList() else devices
+        }
     }
 
     override fun connect(device: Device) {
         connectJob?.cancel()
         _connectedDevice.value = device
         _connectionState.value = CastConnectionState.CONNECTING
-        connectJob =
-            scope.launch {
-                delay(2000)
-                if (scenario() == "connectfail") {
-                    _connectedDevice.value = null
-                    _connectionState.value = CastConnectionState.DISCONNECTED
-                } else {
-                    _connectionState.value = CastConnectionState.CONNECTED
-                }
+        connectJob = scope.launch {
+            delay(2000)
+            if (scenario() == "connectfail") {
+                _connectedDevice.value = null
+                _connectionState.value = CastConnectionState.DISCONNECTED
+            } else {
+                _connectionState.value = CastConnectionState.CONNECTED
             }
+        }
     }
 
     override fun disconnect() {
@@ -255,63 +253,70 @@ internal class FakeCastPlayerController(
 
     private fun load(item: suspend () -> PlayerItem?) {
         playJob?.cancel()
-        playJob =
-            scope.launch {
-                _playerState.update { it.copy(status = CastPlaybackStatus.BUFFERING) }
-                val loaded =
-                    try {
-                        item()
-                    } catch (e: Exception) {
-                        Timber.e(e, "The stand-in could not load the item")
-                        null
-                    }
-                delay(1200)
-                if (loaded == null || scenario() == "fail") {
-                    fail()
-                    return@launch
+        playJob = scope.launch {
+            _playerState.update { it.copy(status = CastPlaybackStatus.BUFFERING) }
+            val loaded =
+                try {
+                    item()
+                } catch (e: Exception) {
+                    Timber.e(e, "The stand-in could not load the item")
+                    null
                 }
-                val duration =
-                    try {
-                        repository.getItem(loaded.itemId)?.runtimeTicks?.div(10_000L) ?: 0L
-                    } catch (_: Exception) {
-                        0L
-                    }
-                manager.setCurrentMediaItemIndex(loaded.itemId)
-                manager.loadQueue()
-                manager.setCurrentMediaItemIndex(loaded.itemId)
-                _currentItem.value =
-                    CastMediaItem(
-                        item = loaded,
-                        audioTracks =
-                            listOf(
-                                Track(1, "English", "eng", "aac", true, true, channelLayout = "stereo"),
-                                Track(2, "Nederlands", "nld", "eac3", false, true, channelLayout = "5.1"),
-                            ),
-                        subtitleTracks =
-                            listOf(
-                                Track(102, "English", "eng", "subrip", false, true, isExternal = true),
-                                Track(
-                                    103,
-                                    "English",
-                                    "eng",
-                                    "subrip",
-                                    false,
-                                    true,
-                                    isHearingImpaired = true,
-                                ),
-                                Track(104, "Nederlands", "nld", "pgssub", false, false),
-                            ),
-                    )
-                _playerState.update {
-                    it.copy(
-                        status = CastPlaybackStatus.PLAYING,
-                        currentPosition = loaded.playbackPosition.coerceAtLeast(0L),
-                        duration = duration,
-                        hasNextItem = loaded.seriesName != null,
-                        hasPreviousItem = (loaded.indexNumber ?: 1) > 1,
-                    )
-                }
+            delay(1200)
+            if (loaded == null || scenario() == "fail") {
+                fail()
+                return@launch
             }
+            val duration =
+                try {
+                    repository.getItem(loaded.itemId)?.runtimeTicks?.div(10_000L) ?: 0L
+                } catch (_: Exception) {
+                    0L
+                }
+            manager.setCurrentMediaItemIndex(loaded.itemId)
+            manager.loadQueue()
+            manager.setCurrentMediaItemIndex(loaded.itemId)
+            _currentItem.value =
+                CastMediaItem(
+                    item = loaded,
+                    audioTracks =
+                        listOf(
+                            Track(1, "English", "eng", "aac", true, true, channelLayout = "stereo"),
+                            Track(
+                                2,
+                                "Nederlands",
+                                "nld",
+                                "eac3",
+                                false,
+                                true,
+                                channelLayout = "5.1",
+                            ),
+                        ),
+                    subtitleTracks =
+                        listOf(
+                            Track(102, "English", "eng", "subrip", false, true, isExternal = true),
+                            Track(
+                                103,
+                                "English",
+                                "eng",
+                                "subrip",
+                                false,
+                                true,
+                                isHearingImpaired = true,
+                            ),
+                            Track(104, "Nederlands", "nld", "pgssub", false, false),
+                        ),
+                )
+            _playerState.update {
+                it.copy(
+                    status = CastPlaybackStatus.PLAYING,
+                    currentPosition = loaded.playbackPosition.coerceAtLeast(0L),
+                    duration = duration,
+                    hasNextItem = loaded.seriesName != null,
+                    hasPreviousItem = (loaded.indexNumber ?: 1) > 1,
+                )
+            }
+        }
     }
 
     override fun play() {
@@ -340,7 +345,9 @@ internal class FakeCastPlayerController(
 
     override fun setAudioTrack(track: Track?, itemId: UUID?) {
         _currentItem.update { item ->
-            item?.copy(audioTracks = item.audioTracks.map { it.copy(selected = it.id == track?.id) })
+            item?.copy(
+                audioTracks = item.audioTracks.map { it.copy(selected = it.id == track?.id) }
+            )
         }
     }
 

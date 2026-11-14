@@ -22,9 +22,9 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * #436: from medium width up the person page puts the photo beside the name, at the start
- * margin. It starts below the back and home buttons instead of under them, and the name and
- * biography column is never wider than 720 dp (docs/tablet/4-design.md rule 4, §8).
+ * #436: from medium width up the person page puts the photo beside the name, at the start margin.
+ * It starts below the back and home buttons instead of under them, and the name and biography
+ * column is never wider than 720 dp (docs/tablet/4-design.md rule 4, §8).
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)

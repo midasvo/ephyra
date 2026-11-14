@@ -34,8 +34,8 @@ private val BackgroundFadeStart = 120.dp
 private val BackgroundFadeEnd = 180.dp
 
 /**
- * [backgroundAlpha] fades in a solid background behind the buttons, so scrolled content doesn't
- * run through them. See [rememberTopBarBackgroundAlpha]. [overArtwork] is false when there is no
+ * [backgroundAlpha] fades in a solid background behind the buttons, so scrolled content doesn't run
+ * through them. See [rememberTopBarBackgroundAlpha]. [overArtwork] is false when there is no
  * artwork under the bar (a page without one, loading, an error): then the bar has no dark scrim
  * (#437).
  */
@@ -84,10 +84,7 @@ fun ItemTopBar(
                 Modifier.matchParentSize()
                     .graphicsLayer { alpha = backgroundAlpha() }
                     .background(
-                        Brush.verticalGradient(
-                            0.85f to backgroundColor,
-                            1f to Color.Transparent,
-                        )
+                        Brush.verticalGradient(0.85f to backgroundColor, 1f to Color.Transparent)
                     )
         )
         Row(

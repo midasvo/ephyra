@@ -49,8 +49,8 @@ object HomeRows {
 
     /**
      * The layout to use. With [libraries] known, Latest rows of libraries that are gone are left
-     * out, and new libraries are added at the end, visible. With [libraries] null (not loaded),
-     * the stored Latest rows stay as they are.
+     * out, and new libraries are added at the end, visible. With [libraries] null (not loaded), the
+     * stored Latest rows stay as they are.
      */
     fun resolve(
         stored: List<HomeRowConfig>?,
@@ -62,7 +62,9 @@ object HomeRows {
         val rows =
             stored
                 .distinctBy { it.key }
-                .filter { it.type != HomeRowType.LATEST || libraries == null || it.libraryId in libraries }
+                .filter {
+                    it.type != HomeRowType.LATEST || libraries == null || it.libraryId in libraries
+                }
                 .toMutableList()
         val keys = rows.mapTo(mutableSetOf()) { it.key }
         // A row type added in a later version, so a stored layout is never short of one.
@@ -76,8 +78,8 @@ object HomeRows {
     }
 
     /**
-     * Whether Home has to ask for the libraries: only to leave them all out does it not. That's
-     * the case for the old Latest switch turned off, as long as nothing is stored.
+     * Whether Home has to ask for the libraries: only to leave them all out does it not. That's the
+     * case for the old Latest switch turned off, as long as nothing is stored.
      */
     fun needsLibraries(stored: List<HomeRowConfig>?, legacy: LegacyHomeSwitches): Boolean =
         stored != null || legacy.latest
@@ -92,13 +94,13 @@ object HomeRows {
     }
 
     fun setVisible(rows: List<HomeRowConfig>, key: String, visible: Boolean): List<HomeRowConfig> =
-        rows.map { if (it.key == key) it.copy(visible = visible) else it }
+        rows.map {
+            if (it.key == key) it.copy(visible = visible) else it
+        }
 
     /** One row per entry, `type,libraryId,1`, entries split by `;`. Ids hold neither. */
     fun encode(rows: List<HomeRowConfig>): String =
-        rows.joinToString(";") {
-            "${it.type.id},${it.libraryId ?: ""},${if (it.visible) 1 else 0}"
-        }
+        rows.joinToString(";") { "${it.type.id},${it.libraryId ?: ""},${if (it.visible) 1 else 0}" }
 
     /** Null for nothing stored. Entries it can't read are skipped. */
     fun decode(value: String?): List<HomeRowConfig>? {
@@ -106,7 +108,8 @@ object HomeRows {
         return value.split(";").mapNotNull { entry ->
             val parts = entry.split(",")
             if (parts.size != 3) return@mapNotNull null
-            val type = HomeRowType.entries.firstOrNull { it.id == parts[0] } ?: return@mapNotNull null
+            val type =
+                HomeRowType.entries.firstOrNull { it.id == parts[0] } ?: return@mapNotNull null
             val libraryId =
                 if (parts[1].isEmpty()) null
                 else runCatching { UUID.fromString(parts[1]) }.getOrNull() ?: return@mapNotNull null

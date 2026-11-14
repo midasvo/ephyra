@@ -63,8 +63,7 @@ class LoginKeyboardTest {
         rule.waitForIdle()
     }
 
-    private fun assertReadOnly(matcher: SemanticsMatcher) =
-        rule.onNode(matcher).assert(!editable)
+    private fun assertReadOnly(matcher: SemanticsMatcher) = rule.onNode(matcher).assert(!editable)
 
     @Test
     fun `focus on a field doesn't make it editable, OK does`() {

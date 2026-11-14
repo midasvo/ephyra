@@ -6,18 +6,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.os.Build
-import android.os.Looper
-import android.os.SystemClock
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.Uri
+import android.os.Build
+import android.os.Looper
+import android.os.SystemClock
 import android.view.Window
-import dev.jdtech.jellyfin.player.local.domain.DisplayRefreshRateManager
 import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -30,8 +27,8 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Timeline
+import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import androidx.media3.common.text.CueGroup
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -41,10 +38,6 @@ import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.util.ArrayList
-import java.util.Collections
-import java.util.concurrent.atomic.AtomicLong
-import kotlin.math.abs
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.FindroidItem
@@ -63,24 +56,25 @@ import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.domain.AudioDecoderFallback
 import dev.jdtech.jellyfin.player.local.domain.AutoSyncSubtitleCueParser
 import dev.jdtech.jellyfin.player.local.domain.DebugSegments
+import dev.jdtech.jellyfin.player.local.domain.DisplayRefreshRateManager
 import dev.jdtech.jellyfin.player.local.domain.NetworkRecovery
 import dev.jdtech.jellyfin.player.local.domain.PlaybackStartGate
 import dev.jdtech.jellyfin.player.local.domain.PlaylistManager
 import dev.jdtech.jellyfin.player.local.domain.SegmentDecision
 import dev.jdtech.jellyfin.player.local.domain.SegmentTracker
+import dev.jdtech.jellyfin.player.local.domain.SessionTrackPicks
 import dev.jdtech.jellyfin.player.local.domain.SkipTarget
 import dev.jdtech.jellyfin.player.local.domain.SleepTimer
 import dev.jdtech.jellyfin.player.local.domain.SleepTimerOption
-import dev.jdtech.jellyfin.player.local.domain.StoredChoice
 import dev.jdtech.jellyfin.player.local.domain.StillWatchingTracker
-import dev.jdtech.jellyfin.player.local.domain.SessionTrackPicks
+import dev.jdtech.jellyfin.player.local.domain.StoredChoice
+import dev.jdtech.jellyfin.player.local.domain.TV_TRICKPLAY_WIDTH_DP
 import dev.jdtech.jellyfin.player.local.domain.TrackCandidate
 import dev.jdtech.jellyfin.player.local.domain.TrackChoices
 import dev.jdtech.jellyfin.player.local.domain.TrackPick
 import dev.jdtech.jellyfin.player.local.domain.TrickplayLoader
 import dev.jdtech.jellyfin.player.local.domain.TrickplayRegionLoader
 import dev.jdtech.jellyfin.player.local.domain.TrickplayTiles
-import dev.jdtech.jellyfin.player.local.domain.TV_TRICKPLAY_WIDTH_DP
 import dev.jdtech.jellyfin.player.local.domain.UpNextCountdown
 import dev.jdtech.jellyfin.player.local.domain.UpNextDecision
 import dev.jdtech.jellyfin.player.local.domain.autoPlayNextFollowsServer
@@ -102,10 +96,14 @@ import dev.jdtech.jellyfin.repository.PlaybackEvents
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.settings.domain.Constants
 import dev.jdtech.jellyfin.settings.presentation.enums.AppVariant
+import java.util.ArrayList
+import java.util.Collections
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.math.ceil
+import kotlin.coroutines.resume
+import kotlin.math.abs
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -120,14 +118,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.jellyfin.sdk.model.api.BaseItemKind
@@ -230,8 +226,8 @@ constructor(
         val stillWatchingTimeoutSeconds: Int,
         /**
          * CE (#367): when the still-watching prompt times out, in [SystemClock.elapsedRealtime]
-         * time. The dialog counts down to it, so it shows the time really left after the app was
-         * in the background.
+         * time. The dialog counts down to it, so it shows the time really left after the app was in
+         * the background.
          */
         val stillWatchingEndsAtMs: Long = 0L,
         /** CE (#131): the item in the player, for the TV overlay (series name, episode line). */
@@ -311,8 +307,8 @@ constructor(
     /**
      * The item whose audio and subtitle choice was last applied, and how many audio and subtitle
      * tracks it had then ([trackPreferenceKey]), so it happens once per set of tracks. CE (#596):
-     * mpv lists the subtitle files of an item after the tracks of the stream, and a choice for
-     * one of those found nothing to select when it was applied to the first list only.
+     * mpv lists the subtitle files of an item after the tracks of the stream, and a choice for one
+     * of those found nothing to select when it was applied to the first list only.
      */
     private var appliedTrackPreferenceItemId: String? = null
 
@@ -352,7 +348,10 @@ constructor(
 
     var playbackSpeed: Float = 1f
 
-    /** Bitrate cap in bits per second, 0 = original quality. Mirrors [AppPreferences.playerMaxBitrate]. */
+    /**
+     * Bitrate cap in bits per second, 0 = original quality. Mirrors
+     * [AppPreferences.playerMaxBitrate].
+     */
     var maxBitrate: Int = 0
         private set
 
@@ -411,24 +410,23 @@ constructor(
      * autoplay. Only affects what happens automatically: next/previous, the outro "Next episode"
      * button and remote controls always work, and the queue is the same either way.
      */
-    private val autoPlayNext: Deferred<Boolean> =
-        viewModelScope.async {
-            val pref = appPreferences.getValue(appPreferences.playerAutoPlayNext)
-            val server =
-                if (autoPlayNextFollowsServer(pref)) {
-                    try {
-                        repository.getUserConfiguration()?.enableNextEpisodeAutoPlay
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Timber.e(e, "Could not read the server's next episode autoplay setting")
-                        null
-                    }
-                } else {
+    private val autoPlayNext: Deferred<Boolean> = viewModelScope.async {
+        val pref = appPreferences.getValue(appPreferences.playerAutoPlayNext)
+        val server =
+            if (autoPlayNextFollowsServer(pref)) {
+                try {
+                    repository.getUserConfiguration()?.enableNextEpisodeAutoPlay
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Could not read the server's next episode autoplay setting")
                     null
                 }
-            resolveAutoPlayNext(pref, server).also { Timber.d("Autoplay next item: $it") }
-        }
+            } else {
+                null
+            }
+        resolveAutoPlayNext(pref, server).also { Timber.d("Autoplay next item: $it") }
+    }
 
     val subtitleOffsetUs = AtomicLong(0L)
 
@@ -475,9 +473,8 @@ constructor(
 
     /** CE (#619): Combined cues from parsed external file or observed live stream. */
     val activeCues: StateFlow<List<SubtitleSyncCue>> =
-        combine(_currentTrackCues, _liveTrackCues) { parsed, live ->
-            parsed.ifEmpty { live }
-        }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+        combine(_currentTrackCues, _liveTrackCues) { parsed, live -> parsed.ifEmpty { live } }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private var cueLoadingJob: Job? = null
 
@@ -524,9 +521,9 @@ constructor(
     }
 
     /**
-     * CE (#619): loads the dialogue cues of the subtitle track at [trackIndex] of
-     * [trackChoices], for the sync sheet. -1 (no subtitles) clears them. Asking again for the
-     * track whose cues are loaded or loading does nothing. Main thread only.
+     * CE (#619): loads the dialogue cues of the subtitle track at [trackIndex] of [trackChoices],
+     * for the sync sheet. -1 (no subtitles) clears them. Asking again for the track whose cues are
+     * loaded or loading does nothing. Main thread only.
      */
     fun loadCuesForActiveTrack(trackIndex: Int) {
         val format = textTrackFormat(trackIndex)
@@ -556,35 +553,34 @@ constructor(
         _isLoadingCues.value = true
         // Runs on the main thread, only the reading on IO, so the state is written in one place,
         // and a newer load cancels this one before it can publish anything.
-        cueLoadingJob =
-            viewModelScope.launch {
-                val parsed =
-                    try {
-                        withContext(Dispatchers.IO) {
-                            val text =
-                                if (uri.scheme == "file") {
-                                    val file = java.io.File(uri.path.orEmpty())
-                                    if (file.exists() && file.length() <= MAX_SUBTITLE_BYTES) {
-                                        file.readText()
-                                    } else ""
-                                } else {
-                                    fetchSubtitleTextSafely(subtitleUrl)
-                                }
-                            if (text.isBlank()) null
-                            else AutoSyncSubtitleCueParser.parse(text, subtitleUrl)
-                        }
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Timber.w(e, "Could not load subtitle cues for sync")
-                        null
+        cueLoadingJob = viewModelScope.launch {
+            val parsed =
+                try {
+                    withContext(Dispatchers.IO) {
+                        val text =
+                            if (uri.scheme == "file") {
+                                val file = java.io.File(uri.path.orEmpty())
+                                if (file.exists() && file.length() <= MAX_SUBTITLE_BYTES) {
+                                    file.readText()
+                                } else ""
+                            } else {
+                                fetchSubtitleTextSafely(subtitleUrl)
+                            }
+                        if (text.isBlank()) null
+                        else AutoSyncSubtitleCueParser.parse(text, subtitleUrl)
                     }
-                // Nothing loaded: the next request for this track tries again.
-                if (parsed.isNullOrEmpty()) loadedCueKey = null
-                _currentTrackCues.value = parsed.orEmpty()
-                _isLoadingCues.value = false
-                cueLoadingJob = null
-            }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.w(e, "Could not load subtitle cues for sync")
+                    null
+                }
+            // Nothing loaded: the next request for this track tries again.
+            if (parsed.isNullOrEmpty()) loadedCueKey = null
+            _currentTrackCues.value = parsed.orEmpty()
+            _isLoadingCues.value = false
+            cueLoadingJob = null
+        }
     }
 
     private suspend fun fetchSubtitleTextSafely(url: String): String =
@@ -657,8 +653,7 @@ constructor(
                 autoAdvanceThreshold =
                     if (enabled) episodes.coerceAtLeast(0) else StillWatchingTracker.OFF,
                 inactivityThresholdMs =
-                    if (!enabled || minutes <= 0) StillWatchingTracker.OFF_MS
-                    else minutes * 60_000L,
+                    if (!enabled || minutes <= 0) StillWatchingTracker.OFF_MS else minutes * 60_000L,
             )
         stillWatchingTracker.reset(nowMs = System.currentTimeMillis())
         stillWatchingPromptTimeoutSeconds =
@@ -683,13 +678,10 @@ constructor(
                         }
                         .toMap(),
                 buttonDurationMs =
-                    appPreferences.getValue(
-                        appPreferences.playerMediaSegmentsSkipButtonDuration
-                    ) * 1000L,
+                    appPreferences.getValue(appPreferences.playerMediaSegmentsSkipButtonDuration) *
+                        1000L,
                 nextEpisodeThresholdMs =
-                    appPreferences.getValue(
-                        appPreferences.playerMediaSegmentsNextEpisodeThreshold
-                    ),
+                    appPreferences.getValue(appPreferences.playerMediaSegmentsNextEpisodeThreshold),
                 autoSkipOnlyInPip =
                     appPreferences.getValue(appPreferences.playerMediaSegmentsAutoSkipMode) ==
                         Constants.PlayerMediaSegmentsAutoSkip.PIP,
@@ -713,93 +705,94 @@ constructor(
                 )
         )
 
-
         val playerBackend = appPreferences.getValue(appPreferences.playerBackend)
-        player = when (playerBackend) {
-            "exoplayer" -> {
-                // ON (not PREFER) so the platform MediaCodec decodes audio ahead of the
-                // bundled ffmpeg extension: only the platform pipeline does Atmos spatial
-                // audio and E-AC-3/Atmos passthrough over HDMI, and it costs less battery.
-                // ffmpeg always decodes to PCM. It picks up what no platform decoder
-                // handles, and what a broken one fails on, see AudioDecoderFallback.
-                val renderersFactory =
-                    object : DefaultRenderersFactory(application) {
-                        override fun buildTextRenderers(
-                            context: Context,
-                            output: TextOutput,
-                            outputLooper: Looper,
-                            extensionRendererMode: Int,
-                            out: ArrayList<Renderer>,
-                        ) {
-                            val startIndex = out.size
-                            super.buildTextRenderers(
-                                context,
-                                output,
-                                outputLooper,
-                                extensionRendererMode,
-                                out,
-                            )
-                            for (index in startIndex until out.size) {
-                                out[index] =
-                                    SubtitleOffsetRenderer(
-                                        baseRenderer = out[index],
-                                        subtitleDelayUsProvider = subtitleOffsetUs::get,
-                                        itemDurationUsProvider = itemDurationUs::get,
+        player =
+            when (playerBackend) {
+                "exoplayer" -> {
+                    // ON (not PREFER) so the platform MediaCodec decodes audio ahead of the
+                    // bundled ffmpeg extension: only the platform pipeline does Atmos spatial
+                    // audio and E-AC-3/Atmos passthrough over HDMI, and it costs less battery.
+                    // ffmpeg always decodes to PCM. It picks up what no platform decoder
+                    // handles, and what a broken one fails on, see AudioDecoderFallback.
+                    val renderersFactory =
+                        object : DefaultRenderersFactory(application) {
+                                override fun buildTextRenderers(
+                                    context: Context,
+                                    output: TextOutput,
+                                    outputLooper: Looper,
+                                    extensionRendererMode: Int,
+                                    out: ArrayList<Renderer>,
+                                ) {
+                                    val startIndex = out.size
+                                    super.buildTextRenderers(
+                                        context,
+                                        output,
+                                        outputLooper,
+                                        extensionRendererMode,
+                                        out,
                                     )
+                                    for (index in startIndex until out.size) {
+                                        out[index] =
+                                            SubtitleOffsetRenderer(
+                                                baseRenderer = out[index],
+                                                subtitleDelayUsProvider = subtitleOffsetUs::get,
+                                                itemDurationUsProvider = itemDurationUs::get,
+                                            )
+                                    }
+                                }
                             }
-                        }
-                    }
-                        .setExtensionRendererMode(
-                            DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
+                            .setExtensionRendererMode(
+                                DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
+                            )
+                            .setMediaCodecSelector(audioDecoderFallback)
+                    // Keep ExoPlayer's default frame rate strategy (ONLY_IF_SEAMLESS): it hints
+                    // the surface with the video frame rate so the OS can drop a 120Hz phone
+                    // panel to a multiple of 24fps, as upstream does. Forcing it OFF when the
+                    // TV-only "match refresh rate" setting is unset left phones at their
+                    // maximum rate for the whole playback (#338). The TV setting only drives
+                    // the non-seamless mode switch in DisplayRefreshRateManager.
+                    ExoPlayer.Builder(application, renderersFactory)
+                        .setAudioAttributes(audioAttributes, true)
+                        .setHandleAudioBecomingNoisy(true)
+                        .setMediaSourceFactory(
+                            buildMediaSourceFactory(application, jellyfinApi.httpClient)
                         )
-                        .setMediaCodecSelector(audioDecoderFallback)
-                // Keep ExoPlayer's default frame rate strategy (ONLY_IF_SEAMLESS): it hints
-                // the surface with the video frame rate so the OS can drop a 120Hz phone
-                // panel to a multiple of 24fps, as upstream does. Forcing it OFF when the
-                // TV-only "match refresh rate" setting is unset left phones at their
-                // maximum rate for the whole playback (#338). The TV setting only drives
-                // the non-seamless mode switch in DisplayRefreshRateManager.
-                ExoPlayer.Builder(application, renderersFactory)
-                    .setAudioAttributes(audioAttributes, true)
-                    .setHandleAudioBecomingNoisy(true)
-                    .setMediaSourceFactory(
-                        buildMediaSourceFactory(application, jellyfinApi.httpClient)
-                    )
-                    .setTrackSelector(trackSelector)
-                    .setSeekBackIncrementMs(
-                        appPreferences.getValue(appPreferences.playerSeekBackInc)
-                    )
-                    .setSeekForwardIncrementMs(
-                        appPreferences.getValue(appPreferences.playerSeekForwardInc)
-                    )
-                    .setPauseAtEndOfMediaItems(true)
-                    .build()
-            }
-            "mpv" -> {
-                MPVPlayer.Builder(application)
-                    .setAudioAttributes(audioAttributes, true)
-                    .setTrackSelectionParameters(trackSelector.parameters)
-                    .setSeekBackIncrementMs(
-                        appPreferences.getValue(appPreferences.playerSeekBackInc)
-                    )
-                    .setSeekForwardIncrementMs(
-                        appPreferences.getValue(appPreferences.playerSeekForwardInc)
-                    )
-                    .setPauseAtEndOfMediaItems(true)
-                    .setVideoOutput(appPreferences.getValue(appPreferences.playerMpvVo))
-                    .setAudioOutput(appPreferences.getValue(appPreferences.playerMpvAo))
-                    .setHwDec(appPreferences.getValue(appPreferences.playerMpvHwdec))
-                    .setMatchRefreshRate(
-                        appPreferences.getValue(appPreferences.playerTvMatchRefreshRate)
-                    )
-                    .setSubtitleOptions(appPreferences.mpvSubtitleOptions())
-                    .build()
+                        .setTrackSelector(trackSelector)
+                        .setSeekBackIncrementMs(
+                            appPreferences.getValue(appPreferences.playerSeekBackInc)
+                        )
+                        .setSeekForwardIncrementMs(
+                            appPreferences.getValue(appPreferences.playerSeekForwardInc)
+                        )
+                        .setPauseAtEndOfMediaItems(true)
+                        .build()
+                }
+                "mpv" -> {
+                    MPVPlayer.Builder(application)
+                        .setAudioAttributes(audioAttributes, true)
+                        .setTrackSelectionParameters(trackSelector.parameters)
+                        .setSeekBackIncrementMs(
+                            appPreferences.getValue(appPreferences.playerSeekBackInc)
+                        )
+                        .setSeekForwardIncrementMs(
+                            appPreferences.getValue(appPreferences.playerSeekForwardInc)
+                        )
+                        .setPauseAtEndOfMediaItems(true)
+                        .setVideoOutput(appPreferences.getValue(appPreferences.playerMpvVo))
+                        .setAudioOutput(appPreferences.getValue(appPreferences.playerMpvAo))
+                        .setHwDec(appPreferences.getValue(appPreferences.playerMpvHwdec))
+                        .setMatchRefreshRate(
+                            appPreferences.getValue(appPreferences.playerTvMatchRefreshRate)
+                        )
+                        .setSubtitleOptions(appPreferences.mpvSubtitleOptions())
+                        .build()
+                }
+
+                else -> throw RuntimeException("$playerBackend is not a valid player backend")
             }
 
-            else -> throw RuntimeException("$playerBackend is not a valid player backend")
-        }
-
-        // CE (#300, #308): mpv takes a subtitle setting changed while it plays (from the settings, with
+        // CE (#300, #308): mpv takes a subtitle setting changed while it plays (from the settings,
+        // with
         // the player in picture-in-picture). ExoPlayer's SubtitleView is styled when the player
         // screen opens.
         (player as? MPVPlayer)?.let { mpvPlayer ->
@@ -824,7 +817,10 @@ constructor(
                     application,
                     0,
                     Intent()
-                        .setClassName(application.packageName, "dev.jdtech.jellyfin.PlayerActivity"),
+                        .setClassName(
+                            application.packageName,
+                            "dev.jdtech.jellyfin.PlayerActivity",
+                        ),
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
             )
@@ -904,7 +900,8 @@ constructor(
                     playbackPosition
                 }
 
-            // Read the series' track choice alongside buffering, so it is there when the tracks are.
+            // Read the series' track choice alongside buffering, so it is there when the tracks
+            // are.
             startItem.seriesId?.let { seriesTrackPreferences(it) }
             player.setMediaItems(mediaItems, 0, startPosition)
             player.prepare()
@@ -918,33 +915,30 @@ constructor(
 
     private fun PlayerItem.toMediaItem(): MediaItem {
         val streamUrl = mediaSourceUri
-        val mediaSubtitles =
-            externalSubtitles.map { externalSubtitle ->
-                MediaItem.SubtitleConfiguration.Builder(externalSubtitle.uri)
-                    .setId(externalSubtitle.uri.toString())
-                    .setLabel(
-                        // CE (#597): a track of the file itself that the server delivers apart
-                        // (during a transcode) is named as it is when the stream carries it.
-                        if (externalSubtitle.embedded) {
-                            externalSubtitle.title.ifBlank { null }
-                        } else {
-                            externalSubtitle.title.ifBlank {
-                                application.getString(R.string.external)
-                            }
-                        }
-                    )
-                    .setMimeType(externalSubtitle.mimeType)
-                    .setLanguage(externalSubtitle.language)
-                    .setSelectionFlags(
-                        if (externalSubtitle.embedded) {
-                            (if (externalSubtitle.default) C.SELECTION_FLAG_DEFAULT else 0) or
-                                (if (externalSubtitle.forced) C.SELECTION_FLAG_FORCED else 0)
-                        } else {
-                            0
-                        }
-                    )
-                    .build()
-            }
+        val mediaSubtitles = externalSubtitles.map { externalSubtitle ->
+            MediaItem.SubtitleConfiguration.Builder(externalSubtitle.uri)
+                .setId(externalSubtitle.uri.toString())
+                .setLabel(
+                    // CE (#597): a track of the file itself that the server delivers apart
+                    // (during a transcode) is named as it is when the stream carries it.
+                    if (externalSubtitle.embedded) {
+                        externalSubtitle.title.ifBlank { null }
+                    } else {
+                        externalSubtitle.title.ifBlank { application.getString(R.string.external) }
+                    }
+                )
+                .setMimeType(externalSubtitle.mimeType)
+                .setLanguage(externalSubtitle.language)
+                .setSelectionFlags(
+                    if (externalSubtitle.embedded) {
+                        (if (externalSubtitle.default) C.SELECTION_FLAG_DEFAULT else 0) or
+                            (if (externalSubtitle.forced) C.SELECTION_FLAG_FORCED else 0)
+                    } else {
+                        0
+                    }
+                )
+                .build()
+        }
 
         Timber.d("Stream url: $streamUrl")
         val mediaItem =
@@ -1125,7 +1119,12 @@ constructor(
     private fun reportStopped(snapshot: PlayingSnapshot): Job? {
         val (itemId, position, duration, startJob, finished) = snapshot
         val report =
-            playbackStopReport(position, duration, startSent = startJob != null, finished = finished)
+            playbackStopReport(
+                position,
+                duration,
+                startSent = startJob != null,
+                finished = finished,
+            )
         if (report == null) {
             Timber.d("No playback stop for $itemId: neither loaded nor started")
             return null
@@ -1186,72 +1185,82 @@ constructor(
     }
 
     /**
-     * Inspect the player's current position and update the UI to reflect the
-     * configured action for any segment it has entered. Suspends rather than
-     * launching its own coroutine so the activity's per-second poll loop can
-     * call it directly without paying for an extra `viewModelScope.launch`
-     * each tick (PR #20 review). The decisions are [SegmentTracker]'s (#271).
+     * Inspect the player's current position and update the UI to reflect the configured action for
+     * any segment it has entered. Suspends rather than launching its own coroutine so the
+     * activity's per-second poll loop can call it directly without paying for an extra
+     * `viewModelScope.launch` each tick (PR #20 review). The decisions are [SegmentTracker]'s
+     * (#271).
      */
-    suspend fun updateCurrentSegment() = withContext(Dispatchers.Main) {
-        refreshPlayingSnapshot()
-        val decision =
-            segmentTracker.update(
-                positionMs = player.currentPosition,
-                durationMs = player.duration,
-                hasNextItem = player.hasNextMediaItem(),
-                inPictureInPicture = isInPictureInPictureMode,
-            )
-        when (decision) {
-            SegmentDecision.None -> {
-                if (_uiState.value.currentSegment != null) {
-                    _uiState.update { it.copy(currentSegment = null, skipButtonInWindow = false) }
-                }
-            }
-            is SegmentDecision.Ask -> {
-                Timber.tag("SegmentInfo").d("Asking to skip %s", decision.segment)
-                _uiState.update {
-                    it.copy(
-                        currentSegment = decision.segment,
-                        currentSkipButtonStringRes = skipButtonText(decision.segment, decision.target),
-                        skipButtonInWindow = decision.inButtonWindow,
-                    )
-                }
-            }
-            is SegmentDecision.AutoSkip -> {
-                // CE (#298): an outro skip to the next item is where the item ends for the timer.
-                if (decision.target == SkipTarget.NextItem && sleepTimer.stopsAtEndOfItem) {
-                    _uiState.update { it.copy(currentSegment = null, skipButtonInWindow = false) }
-                    fireSleepTimer()
-                    return@withContext
-                }
-                // CE (#272): an outro skip to the next item hands over to the "Up next" countdown,
-                // or ends the item if the card was cancelled.
-                if (decision.target == SkipTarget.NextItem) {
-                    updateUpNext()
-                    if (_upNext.value?.secondsLeft != null) {
-                        _uiState.update { it.copy(currentSegment = null, skipButtonInWindow = false) }
-                        return@withContext
-                    }
-                    if (upNextCountdown.isCancelled(player.currentMediaItem?.mediaId)) {
-                        skipTo(SkipTarget.EndItem)
-                        return@withContext
+    suspend fun updateCurrentSegment() =
+        withContext(Dispatchers.Main) {
+            refreshPlayingSnapshot()
+            val decision =
+                segmentTracker.update(
+                    positionMs = player.currentPosition,
+                    durationMs = player.duration,
+                    hasNextItem = player.hasNextMediaItem(),
+                    inPictureInPicture = isInPictureInPictureMode,
+                )
+            when (decision) {
+                SegmentDecision.None -> {
+                    if (_uiState.value.currentSegment != null) {
+                        _uiState.update {
+                            it.copy(currentSegment = null, skipButtonInWindow = false)
+                        }
                     }
                 }
-                Timber.tag("SegmentInfo").d("Skipping %s", decision.segment)
-                val target =
+                is SegmentDecision.Ask -> {
+                    Timber.tag("SegmentInfo").d("Asking to skip %s", decision.segment)
+                    _uiState.update {
+                        it.copy(
+                            currentSegment = decision.segment,
+                            currentSkipButtonStringRes =
+                                skipButtonText(decision.segment, decision.target),
+                            skipButtonInWindow = decision.inButtonWindow,
+                        )
+                    }
+                }
+                is SegmentDecision.AutoSkip -> {
+                    // CE (#298): an outro skip to the next item is where the item ends for the
+                    // timer.
+                    if (decision.target == SkipTarget.NextItem && sleepTimer.stopsAtEndOfItem) {
+                        _uiState.update {
+                            it.copy(currentSegment = null, skipButtonInWindow = false)
+                        }
+                        fireSleepTimer()
+                        return@withContext
+                    }
+                    // CE (#272): an outro skip to the next item hands over to the "Up next"
+                    // countdown,
+                    // or ends the item if the card was cancelled.
                     if (decision.target == SkipTarget.NextItem) {
-                        SegmentTracker.autoSkipTarget(decision.target, autoPlayNext.await())
-                    } else {
-                        decision.target
+                        updateUpNext()
+                        if (_upNext.value?.secondsLeft != null) {
+                            _uiState.update {
+                                it.copy(currentSegment = null, skipButtonInWindow = false)
+                            }
+                            return@withContext
+                        }
+                        if (upNextCountdown.isCancelled(player.currentMediaItem?.mediaId)) {
+                            skipTo(SkipTarget.EndItem)
+                            return@withContext
+                        }
                     }
-                skipTo(target)
+                    Timber.tag("SegmentInfo").d("Skipping %s", decision.segment)
+                    val target =
+                        if (decision.target == SkipTarget.NextItem) {
+                            SegmentTracker.autoSkipTarget(decision.target, autoPlayNext.await())
+                        } else {
+                            decision.target
+                        }
+                    skipTo(target)
+                }
             }
         }
-    }
 
     /**
-     * True if at least one segment type is set to skip or ask; used by the
-     * activity to decide whether to start the per-second segment poller.
+     * True if at least one segment type is set to skip or ask; used by the activity to decide
+     * whether to start the per-second segment poller.
      */
     fun shouldPollSegments(): Boolean = segmentTracker.isActive
 
@@ -1346,11 +1355,11 @@ constructor(
     /**
      * Tell the server that [item] started playing, and record the report on [playing] so that
      * leaving the item sends the stop this start is owed (#461). Until the duration is known the
-     * snapshot holds the position playback was asked to start at, so that stop keeps a saved
-     * resume position.
+     * snapshot holds the position playback was asked to start at, so that stop keeps a saved resume
+     * position.
      *
-     * Sent once the player has loaded the item ([startGate], #601): an item that never opens
-     * sends no start, no progress and no stop.
+     * Sent once the player has loaded the item ([startGate], #601): an item that never opens sends
+     * no start, no progress and no stop.
      *
      * The report runs in [GlobalScope] so that closing the player does not cut it off halfway;
      * [reportStopped] waits for it (with a time limit) to keep the stop behind it.
@@ -1372,14 +1381,13 @@ constructor(
                     Timber.e(e)
                 }
             }
-        playing =
-            playing?.let {
-                if (it.durationMs == C.TIME_UNSET) {
-                    it.copy(positionMs = item.playbackPosition, startJob = start)
-                } else {
-                    it.copy(startJob = start)
-                }
+        playing = playing?.let {
+            if (it.durationMs == C.TIME_UNSET) {
+                it.copy(positionMs = item.playbackPosition, startJob = start)
+            } else {
+                it.copy(startJob = start)
             }
+        }
         start.join()
     }
 
@@ -1584,8 +1592,8 @@ constructor(
     /**
      * Advance to the next item as part of automatic playback (end-of-item auto-advance or a
      * confirmed still-watching prompt). Arms [pendingAutoAdvanceSeek] so the resulting
-     * DISCONTINUITY_REASON_SEEK is not mistaken for a user interaction. The flag is only set when
-     * a next item actually exists — otherwise seekToNextMediaItem() is a no-op that fires no
+     * DISCONTINUITY_REASON_SEEK is not mistaken for a user interaction. The flag is only set when a
+     * next item actually exists — otherwise seekToNextMediaItem() is a no-op that fires no
      * discontinuity, and the flag would leak onto the next genuine user seek.
      */
     private fun autoAdvanceToNextItem() {
@@ -1626,15 +1634,14 @@ constructor(
         val endsAtMs = SystemClock.elapsedRealtime() + stillWatchingPromptTimeoutSeconds * 1000L
         _uiState.update { it.copy(showStillWatching = true, stillWatchingEndsAtMs = endsAtMs) }
         stillWatchingTimeoutJob?.cancel()
-        stillWatchingTimeoutJob =
-            viewModelScope.launch {
-                delay(endsAtMs - SystemClock.elapsedRealtime())
-                // Timeout: user is gone. Hide the dialog and leave the player paused. The current
-                // item's stop was already reported in onPlayWhenReadyChanged (with the actual
-                // position), so the season won't be marked watched.
-                _uiState.update { it.copy(showStillWatching = false) }
-                Timber.d("Still-watching prompt timed out — staying paused")
-            }
+        stillWatchingTimeoutJob = viewModelScope.launch {
+            delay(endsAtMs - SystemClock.elapsedRealtime())
+            // Timeout: user is gone. Hide the dialog and leave the player paused. The current
+            // item's stop was already reported in onPlayWhenReadyChanged (with the actual
+            // position), so the season won't be marked watched.
+            _uiState.update { it.copy(showStillWatching = false) }
+            Timber.d("Still-watching prompt timed out — staying paused")
+        }
     }
 
     /** Called when the user confirms the still-watching prompt. Resumes auto-advance. */
@@ -1664,17 +1671,16 @@ constructor(
         sleepTimerJob = null
         updateSleepTimerState()
         if (option == SleepTimerOption.Off) return
-        sleepTimerJob =
-            viewModelScope.launch {
-                while (sleepTimer.option != SleepTimerOption.Off) {
-                    if (sleepTimer.isDue(SystemClock.elapsedRealtime())) {
-                        fireSleepTimer()
-                        break
-                    }
-                    updateSleepTimerState()
-                    delay(SLEEP_TIMER_TICK_MS)
+        sleepTimerJob = viewModelScope.launch {
+            while (sleepTimer.option != SleepTimerOption.Off) {
+                if (sleepTimer.isDue(SystemClock.elapsedRealtime())) {
+                    fireSleepTimer()
+                    break
                 }
+                updateSleepTimerState()
+                delay(SLEEP_TIMER_TICK_MS)
             }
+        }
     }
 
     private fun updateSleepTimerState() {
@@ -1697,8 +1703,8 @@ constructor(
     }
 
     /**
-     * The sleep timer went off: pause, report the position as a pause does, and hold autoplay
-     * until the user resumes. The player stays open on the paused item.
+     * The sleep timer went off: pause, report the position as a pause does, and hold autoplay until
+     * the user resumes. The player stays open on the paused item.
      */
     private fun fireSleepTimer() {
         Timber.d("Sleep timer fired, pausing")
@@ -1729,8 +1735,8 @@ constructor(
     }
 
     /**
-     * Reset the still-watching counters. Call from every user-driven action — touches,
-     * gestures, button presses, dialog choices.
+     * Reset the still-watching counters. Call from every user-driven action — touches, gestures,
+     * button presses, dialog choices.
      */
     fun markUserInteraction() {
         stillWatchingTracker.onUserInteraction(nowMs = System.currentTimeMillis())
@@ -1802,13 +1808,12 @@ constructor(
             }
         }
         if (networkRetryJob == null) {
-            networkRetryJob =
-                viewModelScope.launch {
-                    while (true) {
-                        delay(NetworkRecovery.RETRY_INTERVAL_MS)
-                        retryAfterNetworkLoss(onlyWhenOnline = true)
-                    }
+            networkRetryJob = viewModelScope.launch {
+                while (true) {
+                    delay(NetworkRecovery.RETRY_INTERVAL_MS)
+                    retryAfterNetworkLoss(onlyWhenOnline = true)
                 }
+            }
         }
     }
 
@@ -1826,7 +1831,9 @@ constructor(
                 val error = lastNetworkError
                 endNetworkWait()
                 error?.let {
-                    eventsChannel.trySend(PlayerEvents.PlayerError.fromPlayer(it, player.currentMediaItem))
+                    eventsChannel.trySend(
+                        PlayerEvents.PlayerError.fromPlayer(it, player.currentMediaItem)
+                    )
                 }
             }
             NetworkRecovery.Check.STOPPED -> endNetworkWait()
@@ -1924,7 +1931,9 @@ constructor(
         viewModelScope.launch {
             delay(DISPLAY_RATE_LOG_DELAY_MS)
             val after = displayRefreshRateManager.describeDisplay() ?: return@launch
-            Timber.i("Video ${frameRate}fps, display $after after ${DISPLAY_RATE_LOG_DELAY_MS / 1000}s")
+            Timber.i(
+                "Video ${frameRate}fps, display $after after ${DISPLAY_RATE_LOG_DELAY_MS / 1000}s"
+            )
         }
     }
 
@@ -1965,8 +1974,9 @@ constructor(
         releasePlayer()
     }
 
-    private fun currentPlayerItem(): PlayerItem? =
-        items.firstOrNull { it.itemId.toString() == player.currentMediaItem?.mediaId }
+    private fun currentPlayerItem(): PlayerItem? = items.firstOrNull {
+        it.itemId.toString() == player.currentMediaItem?.mediaId
+    }
 
     private fun supportedGroups(trackType: @C.TrackType Int) =
         player.currentTracks.groups.filter { it.type == trackType && it.isSupported }
@@ -1988,9 +1998,9 @@ constructor(
 
     /**
      * Remembers the track at [index] of [candidates], picked by hand: for the rest of the series,
-     * or, in an item without a series (CE, #596), for as long as the player is open. Without that
-     * a movie fell back to its default tracks on every reload of the stream: a quality switch, or
-     * an audio switch while the server transcodes.
+     * or, in an item without a series (CE, #596), for as long as the player is open. Without that a
+     * movie fell back to its default tracks on every reload of the stream: a quality switch, or an
+     * audio switch while the server transcodes.
      */
     private fun rememberTrackChoice(
         trackType: @C.TrackType Int,
@@ -2056,7 +2066,8 @@ constructor(
         // not carry over.
         var parameters = player.trackSelectionParameters.buildUpon()
         for (trackType in listOf(C.TRACK_TYPE_AUDIO, C.TRACK_TYPE_TEXT)) {
-            parameters = parameters.clearOverridesOfType(trackType).setTrackTypeDisabled(trackType, false)
+            parameters =
+                parameters.clearOverridesOfType(trackType).setTrackTypeDisabled(trackType, false)
         }
         val reset = parameters.build()
 
@@ -2103,9 +2114,9 @@ constructor(
     }
 
     /**
-     * CE (#619): forgets the cues once another subtitle track plays (or none), whoever switched
-     * it: the sync sheet must not offer one track's lines for another. The new track's cues are
-     * loaded when the sheet asks for them, not on every item.
+     * CE (#619): forgets the cues once another subtitle track plays (or none), whoever switched it:
+     * the sync sheet must not offer one track's lines for another. The new track's cues are loaded
+     * when the sheet asks for them, not on every item.
      */
     private fun onTextTrackMaybeChanged() {
         val index = supportedGroups(C.TRACK_TYPE_TEXT).indexOfFirst { it.isSelected }
@@ -2127,8 +2138,14 @@ constructor(
                 val text = cue.text?.toString()?.trim()
                 if (!text.isNullOrBlank()) {
                     synchronized(_observedLiveCues) {
-                        if (_observedLiveCues.none { it.text == text && abs(it.startTimeMs - currentPos) < 2000L }) {
-                            _observedLiveCues.add(SubtitleSyncCue(startTimeMs = currentPos, text = text))
+                        if (
+                            _observedLiveCues.none {
+                                it.text == text && abs(it.startTimeMs - currentPos) < 2000L
+                            }
+                        ) {
+                            _observedLiveCues.add(
+                                SubtitleSyncCue(startTimeMs = currentPos, text = text)
+                            )
                             if (_observedLiveCues.size > 100) {
                                 _observedLiveCues.removeAt(0)
                             }
@@ -2138,14 +2155,15 @@ constructor(
                 }
             }
             if (addedAny && _currentTrackCues.value.isEmpty()) {
-                _liveTrackCues.value = synchronized(_observedLiveCues) { _observedLiveCues.toList() }
+                _liveTrackCues.value =
+                    synchronized(_observedLiveCues) { _observedLiveCues.toList() }
             }
         }
     }
 
     /**
-     * The saved choice for [seriesId], read on IO once per series and kept for its next items.
-     * Null without a logged-in user. A read error gives no choice, as if none was saved.
+     * The saved choice for [seriesId], read on IO once per series and kept for its next items. Null
+     * without a logged-in user. A read error gives no choice, as if none was saved.
      */
     private fun seriesTrackPreferences(seriesId: UUID): Deferred<List<SeriesTrackPreferenceDto>>? {
         trackPreferences?.let { (id, preferences) -> if (id == seriesId) return preferences }
@@ -2170,8 +2188,8 @@ constructor(
         }
 
     /**
-     * CE (#596): the file's audio streams when [trackType] is audio and the server transcodes
-     * the playing item, or null: then the player's own tracks are the ones to list and select.
+     * CE (#596): the file's audio streams when [trackType] is audio and the server transcodes the
+     * playing item, or null: then the player's own tracks are the ones to list and select.
      */
     private fun transcodeAudioTracks(trackType: @C.TrackType Int): List<ServerAudioTrack>? =
         currentPlayerItem()
@@ -2218,18 +2236,13 @@ constructor(
                     .setTrackTypeDisabled(trackType, true)
                     .build()
         } else {
-            val filteredGroups = player.currentTracks.groups
-                .filter { it.type == trackType && it.isSupported }
+            val filteredGroups =
+                player.currentTracks.groups.filter { it.type == trackType && it.isSupported }
             val group = filteredGroups.getOrNull(index) ?: return
             player.trackSelectionParameters =
                 player.trackSelectionParameters
                     .buildUpon()
-                    .setOverrideForType(
-                        TrackSelectionOverride(
-                            group.mediaTrackGroup,
-                            0,
-                        )
-                    )
+                    .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, 0))
                     .setTrackTypeDisabled(trackType, false)
                     .build()
         }
@@ -2238,8 +2251,8 @@ constructor(
 
     /**
      * CE (#596): plays the audio stream at [index] of [audioTracks] while the server transcodes.
-     * The transcode carries one track, so the server is asked for a new stream with the picked
-     * one, and the queue is reloaded at the same position, as on a quality switch.
+     * The transcode carries one track, so the server is asked for a new stream with the picked one,
+     * and the queue is reloaded at the same position, as on a quality switch.
      */
     private fun switchTranscodeAudio(audioTracks: List<ServerAudioTrack>, index: Int) {
         val item = currentPlayerItem() ?: return
@@ -2308,19 +2321,17 @@ constructor(
     }
 
     /**
-     * Change the max streaming bitrate (0 = original quality) and switch the
-     * running stream over to it. Every queued item's sources are re-resolved
-     * under the new cap — the server answers with a transcode URL for files
-     * above it — and the whole queue is swapped in place, preserving position
-     * and pause state. Works on both backends: ExoPlayer and MPVPlayer share
-     * the setMediaItems(items, index, position) + prepare() reload path.
+     * Change the max streaming bitrate (0 = original quality) and switch the running stream over to
+     * it. Every queued item's sources are re-resolved under the new cap — the server answers with a
+     * transcode URL for files above it — and the whole queue is swapped in place, preserving
+     * position and pause state. Works on both backends: ExoPlayer and MPVPlayer share the
+     * setMediaItems(items, index, position) + prepare() reload path.
      *
-     * The playlist rebuild is done here explicitly instead of relying on
-     * onMediaItemTransition: MPVPlayer only emits a transition when the media
-     * *id* changes, which it does not on an in-place quality switch.
-     * PlaylistManager's cache entries are replaced by recreatePlayerItem, so
-     * when ExoPlayer does fire the transition its prev/next re-add finds the
-     * items already queued and adds nothing.
+     * The playlist rebuild is done here explicitly instead of relying on onMediaItemTransition:
+     * MPVPlayer only emits a transition when the media *id* changes, which it does not on an
+     * in-place quality switch. PlaylistManager's cache entries are replaced by recreatePlayerItem,
+     * so when ExoPlayer does fire the transition its prev/next re-add finds the items already
+     * queued and adds nothing.
      */
     fun selectMaxBitrate(bitrate: Int) {
         markUserInteraction()
@@ -2611,18 +2622,17 @@ constructor(
     }
 
     /**
-     * Keeps reporting progress to the server while the session plays without a player screen,
-     * which is normally the screen's job. It stops by itself once playback stops.
+     * Keeps reporting progress to the server while the session plays without a player screen, which
+     * is normally the screen's job. It stops by itself once playback stops.
      */
     private fun startBackgroundProgressReports() {
         if (backgroundProgressJob?.isActive == true) return
-        backgroundProgressJob =
-            viewModelScope.launch {
-                while (player.isPlaying) {
-                    if (!sessionStore.isUiAttached) updatePlaybackProgress()
-                    delay(5000L)
-                }
+        backgroundProgressJob = viewModelScope.launch {
+            while (player.isPlaying) {
+                if (!sessionStore.isUiAttached) updatePlaybackProgress()
+                delay(5000L)
             }
+        }
     }
 
     private var backgroundProgressJob: Job? = null
@@ -2637,7 +2647,8 @@ constructor(
         // end up here). It ALSO fires for our own auto-advance: with pauseAtEndOfMediaItems the
         // app performs the transition to the next item via an explicit seekToNextMediaItem(), which
         // the player reports as a seek, not as an AUTO_TRANSITION. autoAdvanceToNextItem() arms
-        // pendingAutoAdvanceSeek before that call so we can tell the two apart here — a programmatic
+        // pendingAutoAdvanceSeek before that call so we can tell the two apart here — a
+        // programmatic
         // advance must not count as a user interaction (that would reset the still-watching counter
         // and refresh the inactivity timer, so the prompt could never fire).
         if (reason == Player.DISCONTINUITY_REASON_SEEK) {

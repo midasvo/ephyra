@@ -123,10 +123,11 @@ class ModeSwitchEntryStateTest {
 
     @Test
     fun theContentKeyIsTheOneTheEntriesUse() {
-        val provider = entryProvider<NavKey> {
-            entry<LoginRoute> {}
-            entry<UsersRoute> {}
-        }
+        val provider =
+            entryProvider<NavKey> {
+                entry<LoginRoute> {}
+                entry<UsersRoute> {}
+            }
         for (key in listOf(LoginRoute(), LoginRoute("demo"), UsersRoute)) {
             assertEquals(provider(key).contentKey, entryContentKey(key))
         }

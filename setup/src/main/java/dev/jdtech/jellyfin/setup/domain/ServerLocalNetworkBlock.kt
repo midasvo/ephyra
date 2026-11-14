@@ -29,8 +29,7 @@ class ServerLocalNetworkBlock(
     suspend fun refresh(): Boolean {
         val address = serverAddress()?.takeIf { it.isNotBlank() }
         val blocked = address != null && access.blocks(address, resolve)
-        val name =
-            if (blocked) _state.value.settingName ?: access.systemSettingName() else null
+        val name = if (blocked) _state.value.settingName ?: access.systemSettingName() else null
         _state.value = LocalNetworkBlockState(blocked = blocked, settingName = name)
         return blocked
     }

@@ -12,8 +12,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.BasePlayerActivity
+import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.domain.StillWatchingTracker
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
 import java.lang.IllegalStateException
@@ -21,14 +21,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * "Are you still watching?" dialog. Uses [MaterialAlertDialogBuilder] for visual consistency
- * with the existing player dialogs (track/speed selection).
+ * "Are you still watching?" dialog. Uses [MaterialAlertDialogBuilder] for visual consistency with
+ * the existing player dialogs (track/speed selection).
  *
- * The dialog renders a ticking countdown to
- * [PlayerViewModel.UiState.stillWatchingEndsAtMs]. The actual pause-and-stop logic
- * is owned by the ViewModel — once its timer elapses it clears `showStillWatching` and
- * the activity dismisses us. The dialog is non-cancelable for the back button /
- * outside-touch so the only paths out are the two explicit buttons or that timeout.
+ * The dialog renders a ticking countdown to [PlayerViewModel.UiState.stillWatchingEndsAtMs]. The
+ * actual pause-and-stop logic is owned by the ViewModel — once its timer elapses it clears
+ * `showStillWatching` and the activity dismisses us. The dialog is non-cancelable for the back
+ * button / outside-touch so the only paths out are the two explicit buttons or that timeout.
  */
 class StillWatchingDialogFragment : DialogFragment() {
     private val viewModel: PlayerViewModel

@@ -5,8 +5,8 @@ import java.util.UUID
 import org.jellyfin.sdk.model.api.BaseItemKind
 
 /**
- * CE (#626): where a Play button sends its item while a Cast receiver is connected. The screens
- * ask this first and open the local player only when it says no.
+ * CE (#626): where a Play button sends its item while a Cast receiver is connected. The screens ask
+ * this first and open the local player only when it says no.
  */
 fun interface CastPlayback {
     /**

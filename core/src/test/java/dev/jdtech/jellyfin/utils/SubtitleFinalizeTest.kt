@@ -67,7 +67,11 @@ class SubtitleFinalizeTest {
                         .protocol(Protocol.HTTP_1_1)
                         .code(code)
                         .message(if (code == 200) "OK" else "Not Found")
-                        .body(if (code == 200) "1\n00:00:00,000 --> 00:00:01,000\nHallo\n".toResponseBody() else "".toResponseBody())
+                        .body(
+                            if (code == 200)
+                                "1\n00:00:00,000 --> 00:00:01,000\nHallo\n".toResponseBody()
+                            else "".toResponseBody()
+                        )
                         .build()
                 }
                 .build(),
@@ -79,10 +83,11 @@ class SubtitleFinalizeTest {
         ShadowEnvironment.setExternalStorageState(Environment.MEDIA_MOUNTED)
         val external = context.getExternalFilesDirs(null).first()
         ShadowEnvironment.setExternalStorageState(external, Environment.MEDIA_MOUNTED)
-        root = File(external, "downloads").apply {
-            deleteRecursively()
-            mkdirs()
-        }
+        root =
+            File(external, "downloads").apply {
+                deleteRecursively()
+                mkdirs()
+            }
     }
 
     @After
@@ -312,7 +317,8 @@ class SubtitleFinalizeTest {
         return row
     }
 
-    private fun writeSubtitle(path: String) = File(path).writeText("1\n00:00:00,000 --> 00:00:01,000\nHallo\n")
+    private fun writeSubtitle(path: String) =
+        File(path).writeText("1\n00:00:00,000 --> 00:00:01,000\nHallo\n")
 
     private fun start(id: Long, path: String, dest: String) =
         engine.start(
@@ -325,7 +331,9 @@ class SubtitleFinalizeTest {
             )
         )
 
-    private fun awaitStatus(id: Long, status: Int) = awaitCondition { engine.snapshot(id)?.status == status }
+    private fun awaitStatus(id: Long, status: Int) = awaitCondition {
+        engine.snapshot(id)?.status == status
+    }
 
     private fun awaitCondition(condition: () -> Boolean) {
         val deadline = System.currentTimeMillis() + 5_000
@@ -342,10 +350,13 @@ class SubtitleFinalizeTest {
         ) { _, method, args ->
             when (method.name) {
                 "getSourceByDownloadId" -> sources.values.firstOrNull { it.downloadId == args[0] }
-                "getMediaStreamByDownloadId" -> streams.values.firstOrNull { it.downloadId == args[0] }
+                "getMediaStreamByDownloadId" ->
+                    streams.values.firstOrNull { it.downloadId == args[0] }
                 "setSourceDownloaded" -> {
                     val id = args[0] as String
-                    sources.computeIfPresent(id) { _, s -> s.copy(path = args[1] as String, downloadedAt = args[2] as Long) }
+                    sources.computeIfPresent(id) { _, s ->
+                        s.copy(path = args[1] as String, downloadedAt = args[2] as Long)
+                    }
                     Unit
                 }
                 "getMediaStreamsBySourceId" -> {
@@ -354,15 +365,19 @@ class SubtitleFinalizeTest {
                 }
                 "setMediaStreamPath" -> {
                     pathUpdates.incrementAndGet()
-                    streams.computeIfPresent(args[0] as UUID) { _, s -> s.copy(path = args[1] as String) }
+                    streams.computeIfPresent(args[0] as UUID) { _, s ->
+                        s.copy(path = args[1] as String)
+                    }
                     Unit
                 }
                 "deleteMediaStream" -> {
                     streams.remove(args[0] as UUID)
                     Unit
                 }
-                "getCompletedDownloadSources" -> sources.values.filter { !it.path.endsWith(".download") }
-                "getActiveDownloadSources" -> sources.values.filter { it.path.endsWith(".download") }
+                "getCompletedDownloadSources" ->
+                    sources.values.filter { !it.path.endsWith(".download") }
+                "getActiveDownloadSources" ->
+                    sources.values.filter { it.path.endsWith(".download") }
                 "getAllItemIds" -> listOf(itemId)
                 else -> throw NotImplementedError("ServerDatabaseDao.${method.name}")
             }
@@ -380,7 +395,8 @@ class SubtitleFinalizeTest {
                     else -> throw IllegalStateException("JellyfinRepository.${method.name}")
                 }
             } as JellyfinRepository
-        val preferences = context.getSharedPreferences("subtitle-finalize-test", Context.MODE_PRIVATE)
+        val preferences =
+            context.getSharedPreferences("subtitle-finalize-test", Context.MODE_PRIVATE)
         return DownloaderImpl(
             context,
             database(),

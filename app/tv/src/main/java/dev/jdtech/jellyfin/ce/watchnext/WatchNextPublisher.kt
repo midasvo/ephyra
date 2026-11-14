@@ -86,7 +86,11 @@ class WatchNextPublisher @Inject constructor(@ApplicationContext private val con
     /** Removes all of this app's programs. */
     fun clear() {
         try {
-            context.contentResolver.delete(TvContractCompat.WatchNextPrograms.CONTENT_URI, null, null)
+            context.contentResolver.delete(
+                TvContractCompat.WatchNextPrograms.CONTENT_URI,
+                null,
+                null,
+            )
         } catch (e: Exception) {
             Timber.w(e, "Watch Next: could not clear the programs")
         }
@@ -110,8 +114,10 @@ class WatchNextPublisher @Inject constructor(@ApplicationContext private val con
             WatchNextProgram.Builder()
                 .setWatchNextType(
                     when (kind) {
-                        WatchNextKind.CONTINUE -> TvContractCompat.WatchNextPrograms.WATCH_NEXT_TYPE_CONTINUE
-                        WatchNextKind.NEXT -> TvContractCompat.WatchNextPrograms.WATCH_NEXT_TYPE_NEXT
+                        WatchNextKind.CONTINUE ->
+                            TvContractCompat.WatchNextPrograms.WATCH_NEXT_TYPE_CONTINUE
+                        WatchNextKind.NEXT ->
+                            TvContractCompat.WatchNextPrograms.WATCH_NEXT_TYPE_NEXT
                     }
                 )
                 .setLastEngagementTimeUtcMillis(lastEngagementMs ?: System.currentTimeMillis())
@@ -126,7 +132,9 @@ class WatchNextPublisher @Inject constructor(@ApplicationContext private val con
                     )
                 )
                 .setInternalProviderId(itemId)
-        builder.setInternalProviderData(json.encodeToString(WatchNextEntry.serializer(), this).toByteArray())
+        builder.setInternalProviderData(
+            json.encodeToString(WatchNextEntry.serializer(), this).toByteArray()
+        )
         if (kind == WatchNextKind.CONTINUE) {
             builder.setLastPlaybackPositionMillis(positionMs.toIntMillis())
         }
@@ -139,7 +147,8 @@ class WatchNextPublisher @Inject constructor(@ApplicationContext private val con
                 )
         }
         when (itemType) {
-            WatchNextItemType.MOVIE -> builder.setType(TvContractCompat.PreviewProgramColumns.TYPE_MOVIE)
+            WatchNextItemType.MOVIE ->
+                builder.setType(TvContractCompat.PreviewProgramColumns.TYPE_MOVIE)
             WatchNextItemType.EPISODE -> {
                 builder.setType(TvContractCompat.PreviewProgramColumns.TYPE_TV_EPISODE)
                 episodeTitle?.let { builder.setEpisodeTitle(it) }
@@ -150,14 +159,13 @@ class WatchNextPublisher @Inject constructor(@ApplicationContext private val con
         return builder.build()
     }
 
-    private fun decode(data: ByteArray?): WatchNextEntry? =
-        data?.let {
-            try {
-                json.decodeFromString(WatchNextEntry.serializer(), it.decodeToString())
-            } catch (e: Exception) {
-                null
-            }
+    private fun decode(data: ByteArray?): WatchNextEntry? = data?.let {
+        try {
+            json.decodeFromString(WatchNextEntry.serializer(), it.decodeToString())
+        } catch (e: Exception) {
+            null
         }
+    }
 
     private fun Long.toIntMillis(): Int = coerceIn(0, Int.MAX_VALUE.toLong()).toInt()
 }

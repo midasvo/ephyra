@@ -16,11 +16,7 @@ class HomeRowsOrderTest {
         HomeItem.Section(HomeSection(UUID.randomUUID(), UiText.DynamicString(""), emptyList()))
 
     private val state =
-        HomeState(
-            suggestionsSection = suggestions,
-            resumeSection = resume,
-            nextUpSection = nextUp,
-        )
+        HomeState(suggestionsSection = suggestions, resumeSection = resume, nextUpSection = nextUp)
 
     @Test
     fun `without an order the rows keep the default order`() {

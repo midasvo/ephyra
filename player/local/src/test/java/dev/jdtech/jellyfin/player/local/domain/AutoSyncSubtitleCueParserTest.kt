@@ -1,22 +1,23 @@
 package dev.jdtech.jellyfin.player.local.domain
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AutoSyncSubtitleCueParserTest {
 
     @Test
     fun parseSrtFormat() {
-        val srt = """
+        val srt =
+            """
             1
             00:01:20,000 --> 00:01:23,450
             Hello, how are you?
-            
+
             2
             00:01:24,000 --> 00:01:27,000
             <i>I am doing well, thank you.</i>
-        """.trimIndent()
+            """
+                .trimIndent()
 
         val cues = AutoSyncSubtitleCueParser.parse(srt, "subs.srt")
         assertEquals(2, cues.size)
@@ -30,15 +31,17 @@ class AutoSyncSubtitleCueParserTest {
 
     @Test
     fun parseWebVttFormat() {
-        val vtt = """
+        val vtt =
+            """
             WEBVTT
-            
+
             00:00:15.500 --> 00:00:18.000
             Welcome to the show.
-            
+
             00:00:19.000 --> 00:00:22.000
             Enjoy your stay!
-        """.trimIndent()
+            """
+                .trimIndent()
 
         val cues = AutoSyncSubtitleCueParser.parse(vtt, "subs.vtt")
         assertEquals(2, cues.size)
@@ -50,14 +53,16 @@ class AutoSyncSubtitleCueParserTest {
 
     @Test
     fun parseAssFormat() {
-        val ass = """
+        val ass =
+            """
             [Script Info]
             Title: Test
-            
+
             [Events]
             Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             Dialogue: 0,0:02:10.50,0:02:13.20,Default,,0,0,0,,{\b1}Look out!{\b0}\NGet down!
-        """.trimIndent()
+            """
+                .trimIndent()
 
         val cues = AutoSyncSubtitleCueParser.parse(ass, "subs.ass")
         assertEquals(1, cues.size)
@@ -68,7 +73,8 @@ class AutoSyncSubtitleCueParserTest {
 
     @Test
     fun parseTtmlFormatWithOffsetTimesAndNamespacePrefixes() {
-        val ttml = """
+        val ttml =
+            """
             <tt xmlns="http://www.w3.org/ns/ttml" xmlns:tt="http://www.w3.org/ns/ttml">
               <body>
                 <div>
@@ -78,7 +84,8 @@ class AutoSyncSubtitleCueParserTest {
                 </div>
               </body>
             </tt>
-        """.trimIndent()
+            """
+                .trimIndent()
 
         val cues = AutoSyncSubtitleCueParser.parse(ttml, "subs.ttml")
         assertEquals(3, cues.size)

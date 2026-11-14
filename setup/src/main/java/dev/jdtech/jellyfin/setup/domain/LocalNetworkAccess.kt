@@ -152,7 +152,8 @@ class LocalNetworkAccessImpl(private val context: Context) : LocalNetworkAccess 
     override fun isDenied(): Boolean =
         localNetworkAccessDenied(Build.VERSION.SDK_INT, isPermissionGranted(context, permission))
 
-    override suspend fun systemSettingName(): String? = systemPermissionGroupLabel(context, permission.id)
+    override suspend fun systemSettingName(): String? =
+        systemPermissionGroupLabel(context, permission.id)
 }
 
 /**
@@ -174,9 +175,11 @@ suspend fun systemPermissionGroupLabel(context: Context, permissionId: String): 
                     }
                 }
             } ?: return null
-        packageManager.getPermissionGroupInfo(group, 0).loadLabel(packageManager).toString().takeIf {
-            it.isNotBlank()
-        }
+        packageManager
+            .getPermissionGroupInfo(group, 0)
+            .loadLabel(packageManager)
+            .toString()
+            .takeIf { it.isNotBlank() }
     } catch (e: Exception) {
         if (e is CancellationException) throw e
         null

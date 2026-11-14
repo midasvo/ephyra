@@ -28,9 +28,9 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * CE (#281): progress that could not reach the server asks for a sync when it is marked, not at
- * the next app start, and it survives its download being deleted until the sync has sent it. The
- * server here always fails: the API client has no address.
+ * CE (#281): progress that could not reach the server asks for a sync when it is marked, not at the
+ * next app start, and it survives its download being deleted until the sync has sent it. The server
+ * here always fails: the API client has no address.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)

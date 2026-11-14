@@ -4,8 +4,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Notices the server coming back from the app's own requests: after a request that did not reach
- * it, or that a proxy in front of it answered with a server error, the first answer from the
- * server itself. No request is made for this.
+ * it, or that a proxy in front of it answered with a server error, the first answer from the server
+ * itself. No request is made for this.
  */
 class ServerReturnDetector {
     private val failing = AtomicBoolean(false)

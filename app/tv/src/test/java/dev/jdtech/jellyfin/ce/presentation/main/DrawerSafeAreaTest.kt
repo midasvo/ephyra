@@ -102,9 +102,7 @@ class DrawerSafeAreaTest {
         // The avatar is the widest leading content: it sits on the edge.
         assertEquals(
             TvSafeArea.horizontal,
-            rule.onNodeWithTag("drawer_icon_profile", useUnmergedTree = true)
-                .getBoundsInRoot()
-                .left,
+            rule.onNodeWithTag("drawer_icon_profile", useUnmergedTree = true).getBoundsInRoot().left,
         )
     }
 
@@ -122,7 +120,8 @@ class DrawerSafeAreaTest {
         }
     }
 
-    private fun bounds(tag: String) = rule.onNodeWithTag(tag, useUnmergedTree = true).getBoundsInRoot()
+    private fun bounds(tag: String) =
+        rule.onNodeWithTag(tag, useUnmergedTree = true).getBoundsInRoot()
 
     /** #567: the user name and the server name, each on one line, inside the profile item. */
     private fun assertProfileLinesInsideTheItem() {
@@ -190,8 +189,8 @@ class DrawerSafeAreaTest {
 
     /**
      * The expanded drawer's items now end at 292 dp, right of a poster that starts at the page's
-     * 128 dp and is 150 dp wide (Favorites). A plain Right finds nothing right of the item there and
-     * left focus in the drawer.
+     * 128 dp and is 150 dp wide (Favorites). A plain Right finds nothing right of the item there
+     * and left focus in the drawer.
      */
     @Test
     fun rightFromTheDrawerReachesAPosterThatEndsBeforeTheDrawerItem() {
@@ -222,9 +221,6 @@ class DrawerSafeAreaTest {
     @Test
     fun pagesBesideTheDrawerStillStartAt80dp() {
         setUp()
-        assertEquals(
-            80.dp,
-            rule.onNodeWithTag("home_screen_content").getBoundsInRoot().left,
-        )
+        assertEquals(80.dp, rule.onNodeWithTag("home_screen_content").getBoundsInRoot().left)
     }
 }

@@ -125,7 +125,8 @@ class StillWatchingTrackerTest {
 
     @Test
     fun `wouldPromptOnAutoAdvance follows inactivity`() {
-        val tracker = StillWatchingTracker(autoAdvanceThreshold = 0, inactivityThresholdMs = 60_000L)
+        val tracker =
+            StillWatchingTracker(autoAdvanceThreshold = 0, inactivityThresholdMs = 60_000L)
         tracker.reset(nowMs = 0L)
         assertFalse(tracker.wouldPromptOnAutoAdvance(nowMs = 59_999L))
         assertTrue(tracker.wouldPromptOnAutoAdvance(nowMs = 60_000L))
