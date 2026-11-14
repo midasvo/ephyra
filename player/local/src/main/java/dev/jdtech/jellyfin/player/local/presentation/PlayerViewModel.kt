@@ -2688,14 +2688,15 @@ constructor(
     }
 
     /**
-     * Keeps reporting progress to the server while the session plays without a player screen, which
-     * is normally the screen's job. It stops by itself once playback stops.
+     * Keeps reporting progress to the server while the session plays without a started player
+     * screen, whose own loop reports otherwise: after Home as well as once the activity is gone
+     * (#677). It stops by itself once playback stops.
      */
     private fun startBackgroundProgressReports() {
         if (backgroundProgressJob?.isActive == true) return
         backgroundProgressJob = viewModelScope.launch {
             while (player.isPlaying) {
-                if (!sessionStore.isUiAttached) updatePlaybackProgress()
+                if (!sessionStore.isUiStarted) updatePlaybackProgress()
                 delay(5000L)
             }
         }

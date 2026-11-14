@@ -49,6 +49,11 @@ abstract class BasePlayerActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        sessionStore.onUiStarted()
+    }
+
     override fun onResume() {
         super.onResume()
 
@@ -90,6 +95,9 @@ abstract class BasePlayerActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        // CE (#677): the player's own progress loop stops with the activity, so the view model's
+        // background loop takes over, also while the activity is kept (after Home).
+        sessionStore.onUiStopped()
 
         if (wasPip) {
             if (viewModel.isBackgroundAudioEnabled && viewModel.player.isPlaying) {
