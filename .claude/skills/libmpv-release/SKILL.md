@@ -24,7 +24,9 @@ upstream's: we no longer wait for `dev.jdtech.mpv` releases (#654).
 - **Versions:** our own semver, from `1.1.0`. Minor for dependency bumps, patch for build or wrapper
   fixes, major for a breaking wrapper API change. Each GitHub release lists the component versions.
 - **Upstream changes** reach the fork through `sync-upstream.yaml` (every Monday) as a PR named
-  "Merge upstream main (…)". Merge it with a merge commit. Renovate does not run on the fork.
+  "Merge upstream main (…)". Merge it with a merge commit. Renovate also runs on the fork and
+  opens its own bump PRs; they build all four ABIs, so treat an mpv, FFmpeg or libplacebo bump
+  as a release candidate.
 - **In Ephyra:** `libmpv` in `gradle/libs.versions.toml`. Renovate opens the bump but never
   auto-merges it.
 
