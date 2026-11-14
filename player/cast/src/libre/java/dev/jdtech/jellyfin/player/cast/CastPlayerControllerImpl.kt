@@ -1,17 +1,17 @@
 package dev.jdtech.jellyfin.player.cast
 
+import dev.jdtech.jellyfin.player.cast.models.CastError
 import dev.jdtech.jellyfin.player.cast.models.CastMediaItem
 import dev.jdtech.jellyfin.player.cast.models.CastPlayerState
 import dev.jdtech.jellyfin.player.core.domain.models.Track
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
-import dev.jdtech.jellyfin.player.cast.models.CastError
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 
 @Singleton
 class CastPlayerControllerImpl @Inject constructor() : CastPlayerController {
@@ -28,6 +28,7 @@ class CastPlayerControllerImpl @Inject constructor() : CastPlayerController {
         itemKind: String,
         startFromBeginning: Boolean,
         mediaSourceId: String?,
+        shuffle: Boolean,
     ) {}
 
     override fun play() {}

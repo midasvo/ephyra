@@ -33,7 +33,10 @@ data class WatchNextEntry(
     val posterIsPortrait: Boolean = false,
     val durationMs: Long = 0,
     val positionMs: Long = 0,
-    /** When the user last watched it. Null when the server doesn't say (next up); see [planWatchNext]. */
+    /**
+     * When the user last watched it. Null when the server doesn't say (next up); see
+     * [planWatchNext].
+     */
     val lastEngagementMs: Long? = null,
 )
 
@@ -92,7 +95,9 @@ fun planWatchNext(
             .mapValues { (itemId, position) ->
                 if (position == UNKNOWN_POSITION) candidatePositions[itemId] else position
             }
-            .filter { (itemId, position) -> position != null && candidatePositions[itemId] == position }
+            .filter { (itemId, position) ->
+                position != null && candidatePositions[itemId] == position
+            }
             .mapValues { it.value!! }
 
     val wanted =
@@ -100,8 +105,9 @@ fun planWatchNext(
             .mapIndexed { rank, entry ->
                 val engagement =
                     entry.lastEngagementMs
-                        ?: publishedByItem[entry.itemId]
-                            ?.firstNotNullOfOrNull { it.entry?.lastEngagementMs }
+                        ?: publishedByItem[entry.itemId]?.firstNotNullOfOrNull {
+                            it.entry?.lastEngagementMs
+                        }
                         ?: (nowMs - rank)
                 entry.copy(lastEngagementMs = engagement)
             }

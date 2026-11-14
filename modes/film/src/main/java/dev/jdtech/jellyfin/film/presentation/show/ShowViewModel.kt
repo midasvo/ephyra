@@ -116,9 +116,10 @@ constructor(
                         if (downloadsOnly) null
                         else
                             serverOrStored(
-                                storedSeasonsAsync.await().takeIf { it.isNotEmpty() }?.let {
-                                    suspend { null }
-                                }
+                                storedSeasonsAsync
+                                    .await()
+                                    .takeIf { it.isNotEmpty() }
+                                    ?.let { suspend { null } }
                             ) {
                                 getNextUp(showId)
                             }
@@ -132,10 +133,9 @@ constructor(
                     }
                     // The download counts are extras: when they fail, the page still shows.
                     val localCountsAsync = async { optional { getLocalEpisodeCounts(showId) } }
-                    val serverTotalsAsync =
-                        async {
-                            if (downloadsOnly) null else optional { getServerEpisodeTotals(showId) }
-                        }
+                    val serverTotalsAsync = async {
+                        if (downloadsOnly) null else optional { getServerEpisodeTotals(showId) }
+                    }
 
                     val show = showAsync.await()
                     val displayCastAndCrew =
@@ -292,14 +292,13 @@ constructor(
                     }
                     .map { it.id }
                     .toSet()
-            val episodes =
-                seasonIds.flatMap { seasonId ->
-                    repository.getEpisodes(
-                        seriesId = showId,
-                        seasonId = seasonId,
-                        fields = showEpisodeFields,
-                    )
-                }
+            val episodes = seasonIds.flatMap { seasonId ->
+                repository.getEpisodes(
+                    seriesId = showId,
+                    seasonId = seasonId,
+                    fields = showEpisodeFields,
+                )
+            }
             val (toQueue, skipped) = selectEpisodesToDownload(episodes, liveQueuedIds)
             downloadQueue.enqueueAll(toQueue, maxBitrate)
             eventsChannel.send(ShowEvent.DownloadResult(toQueue.size, skipped, 0))
@@ -311,11 +310,7 @@ constructor(
         viewModelScope.launch(Dispatchers.IO) {
             for (season in _state.value.seasons) {
                 val episodes =
-                    repository.getEpisodes(
-                        seriesId = showId,
-                        seasonId = season.id,
-                        offline = true,
-                    )
+                    repository.getEpisodes(seriesId = showId, seasonId = season.id, offline = true)
                 for (episode in episodes) {
                     val localSource =
                         episode.sources.firstOrNull { it.type == FindroidSourceType.LOCAL }
@@ -360,7 +355,10 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, if (played) "Failed to mark as played" else "Failed to unmark as played")
+                Timber.e(
+                    e,
+                    if (played) "Failed to mark as played" else "Failed to unmark as played",
+                )
                 return@launch
             }
             reloadPolicy.changedHere()
@@ -368,8 +366,9 @@ constructor(
             try {
                 coroutineScope {
                     val nextUpAsync = async { if (downloadsOnly) null else getNextUp(showId) }
-                    val seasonsAsync =
-                        async { repository.getSeasons(showId, offline = downloadsOnly) }
+                    val seasonsAsync = async {
+                        repository.getSeasons(showId, offline = downloadsOnly)
+                    }
                     val nextUp = nextUpAsync.await()
                     val seasons = seasonsAsync.await()
                     _state.update { state -> state.copy(nextUp = nextUp, seasons = seasons) }

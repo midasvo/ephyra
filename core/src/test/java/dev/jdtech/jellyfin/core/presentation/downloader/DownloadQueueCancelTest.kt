@@ -166,8 +166,9 @@ class DownloadQueueCancelTest {
         override suspend fun getProgress(downloadId: Long?) =
             Downloader.Progress(progressStatus, 0, 0L, -1L)
 
-        override suspend fun getProgress(downloadIds: List<Long>) =
-            downloadIds.associateWith { Downloader.Progress(progressStatus, 0, 0L, -1L) }
+        override suspend fun getProgress(downloadIds: List<Long>) = downloadIds.associateWith {
+            Downloader.Progress(progressStatus, 0, 0L, -1L)
+        }
 
         override suspend fun getActiveDownloads() = active
 

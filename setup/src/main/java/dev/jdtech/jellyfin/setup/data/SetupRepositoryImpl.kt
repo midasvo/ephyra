@@ -45,20 +45,25 @@ class SetupRepositoryImpl(
     }
 
     override suspend fun getCurrentServer(): Server? {
-        return appPreferences.getValue(appPreferences.currentServer)?.let { id -> database.getServer(id) }
+        return appPreferences.getValue(appPreferences.currentServer)?.let { id ->
+            database.getServer(id)
+        }
     }
 
     override suspend fun deleteServer(serverId: String) {
         // CE (#334): the saved logins go with the server, so sign them out there too.
         coroutineScope {
-            database.getUsers(serverId).map { user -> async { endSessionOnServer(user) } }.awaitAll()
+            database
+                .getUsers(serverId)
+                .map { user -> async { endSessionOnServer(user) } }
+                .awaitAll()
         }
         database.deleteServer(serverId)
     }
 
     /**
-     * CE (#334): ends [user]'s session on their server and revokes the token. Removing a login
-     * used to leave both behind: the token stayed valid and the server kept listing the session.
+     * CE (#334): ends [user]'s session on their server and revokes the token. Removing a login used
+     * to leave both behind: the token stayed valid and the server kept listing the session.
      */
     private suspend fun endSessionOnServer(user: User) {
         val token = user.accessToken ?: return
@@ -67,7 +72,9 @@ class SetupRepositoryImpl(
     }
 
     override suspend fun getIsQuickConnectEnabled(): Boolean =
-        withContext(Dispatchers.IO) { jellyfinApi.authenticationApi.getQuickConnectEnabled().content }
+        withContext(Dispatchers.IO) {
+            jellyfinApi.authenticationApi.getQuickConnectEnabled().content
+        }
 
     override suspend fun initiateQuickConnect(): QuickConnectResult =
         withContext(Dispatchers.IO) { jellyfinApi.authenticationApi.initiateQuickConnect().content }
@@ -133,7 +140,9 @@ class SetupRepositoryImpl(
     }
 
     @VisibleForTesting
-    internal suspend fun saveServerInDatabase(recommendedServerInfo: RecommendedServerInfo): Server {
+    internal suspend fun saveServerInDatabase(
+        recommendedServerInfo: RecommendedServerInfo
+    ): Server {
         val serverInfo =
             recommendedServerInfo.systemInfo.getOrNull()
                 ?: throw ExceptionUiText(
@@ -197,7 +206,10 @@ class SetupRepositoryImpl(
         // that user's token. Clearing it signed the app out until a restart.
         val currentUser = serverInDatabase?.let { database.getServerCurrentUser(it.id) }
         jellyfinApi.apply {
-            api.update(baseUrl = recommendedServerInfo.address, accessToken = currentUser?.accessToken)
+            api.update(
+                baseUrl = recommendedServerInfo.address,
+                accessToken = currentUser?.accessToken,
+            )
             userId = currentUser?.id
         }
 

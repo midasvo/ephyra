@@ -57,8 +57,8 @@ import dev.jdtech.jellyfin.settings.R as SettingsR
 /**
  * CE (#142): Settings → Interface → Home rows on TV. Each row is a switch (OK shows or hides it)
  * with an up and a down button next to it. Moving a row keeps focus on the button that moved it, so
- * pressing OK again moves it further. The buttons stay focusable at the ends of the list, where they
- * do nothing, so focus never has to go somewhere else.
+ * pressing OK again moves it further. The buttons stay focusable at the ends of the list, where
+ * they do nothing, so focus never has to go somewhere else.
  */
 @Composable
 fun HomeRowsScreen(viewModel: HomeRowsViewModel = hiltViewModel()) {

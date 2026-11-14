@@ -15,7 +15,10 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class PlaybackEvents(private val dataChanges: DataChangeEvents = DataChangeEvents()) {
     private val _stopped =
-        MutableSharedFlow<UUID>(extraBufferCapacity = 8, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+        MutableSharedFlow<UUID>(
+            extraBufferCapacity = 8,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
     /** Emits the id of the item whose playback stop has been reported. */
     val stopped: SharedFlow<UUID> = _stopped.asSharedFlow()
 

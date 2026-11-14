@@ -8,14 +8,15 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.media3.common.C
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.BasePlayerActivity
+import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
 import java.lang.IllegalStateException
 
 class TrackSelectionDialogFragment : DialogFragment() {
     private val viewModel: PlayerViewModel
         get() = (requireActivity() as BasePlayerActivity).viewModel
+
     private val type: @C.TrackType Int
         get() = requireArguments().getInt(ARG_TYPE)
 

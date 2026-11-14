@@ -56,16 +56,25 @@ class FindroidImagesTest {
         val images =
             dto(BaseItemKind.EPISODE, listOf("bd", "bd2"), "lg").toFindroidImages(repository)
 
-        assertEquals(Uri.parse("$base/items/$seriesId/Images/Backdrop/0?tag=bd"), images.showBackdrop)
+        assertEquals(
+            Uri.parse("$base/items/$seriesId/Images/Backdrop/0?tag=bd"),
+            images.showBackdrop,
+        )
         assertEquals(Uri.parse("$base/items/$seriesId/Images/Logo?tag=lg"), images.showLogo)
-        assertEquals(Uri.parse("$base/items/$seriesId/Images/Primary?tag=poster"), images.showPrimary)
+        assertEquals(
+            Uri.parse("$base/items/$seriesId/Images/Primary?tag=poster"),
+            images.showPrimary,
+        )
     }
 
     @Test
     fun `season of a series with backdrop and logo uses the series own tags`() {
         val images = dto(BaseItemKind.SEASON, listOf("bd"), "lg").toFindroidImages(repository)
 
-        assertEquals(Uri.parse("$base/items/$seriesId/Images/Backdrop/0?tag=bd"), images.showBackdrop)
+        assertEquals(
+            Uri.parse("$base/items/$seriesId/Images/Backdrop/0?tag=bd"),
+            images.showBackdrop,
+        )
         assertEquals(Uri.parse("$base/items/$seriesId/Images/Logo?tag=lg"), images.showLogo)
     }
 
@@ -75,13 +84,17 @@ class FindroidImagesTest {
 
         assertNull(images.showBackdrop)
         assertNull(images.showLogo)
-        assertEquals(Uri.parse("$base/items/$seriesId/Images/Primary?tag=poster"), images.showPrimary)
+        assertEquals(
+            Uri.parse("$base/items/$seriesId/Images/Primary?tag=poster"),
+            images.showPrimary,
+        )
         assertEquals(Uri.parse("$base/items/$episodeId/Images/Primary?tag=own"), images.primary)
     }
 
     @Test
     fun `season of a series without backdrop or logo leaves them null despite a poster`() {
-        val images = dto(BaseItemKind.SEASON, backdropTags = emptyList()).toFindroidImages(repository)
+        val images =
+            dto(BaseItemKind.SEASON, backdropTags = emptyList()).toFindroidImages(repository)
 
         assertNull(images.showBackdrop)
         assertNull(images.showLogo)
@@ -90,10 +103,19 @@ class FindroidImagesTest {
     @Test
     fun `an image inherited from another item is addressed by its owner`() {
         val images =
-            dto(BaseItemKind.EPISODE, listOf("bd"), "lg", backdropItemId = otherId, logoItemId = otherId)
+            dto(
+                    BaseItemKind.EPISODE,
+                    listOf("bd"),
+                    "lg",
+                    backdropItemId = otherId,
+                    logoItemId = otherId,
+                )
                 .toFindroidImages(repository)
 
-        assertEquals(Uri.parse("$base/items/$otherId/Images/Backdrop/0?tag=bd"), images.showBackdrop)
+        assertEquals(
+            Uri.parse("$base/items/$otherId/Images/Backdrop/0?tag=bd"),
+            images.showBackdrop,
+        )
         assertEquals(Uri.parse("$base/items/$otherId/Images/Logo?tag=lg"), images.showLogo)
     }
 

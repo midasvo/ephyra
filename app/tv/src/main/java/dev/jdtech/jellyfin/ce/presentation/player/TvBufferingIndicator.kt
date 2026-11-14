@@ -25,10 +25,10 @@ import kotlinx.coroutines.delay
 
 /**
  * CE (#486): whether the TV player shows its buffering indicator: while the player buffers, and
- * while an item has not loaded yet (the first load, the next episode), which includes the wait
- * for the server before the player has anything to buffer. A pending seek (the trickplay
- * thumbnail), the error dialog and the still-watching prompt hide it. It shows while paused too:
- * a seek while paused loads, and the indicator goes once the player is ready.
+ * while an item has not loaded yet (the first load, the next episode), which includes the wait for
+ * the server before the player has anything to buffer. A pending seek (the trickplay thumbnail),
+ * the error dialog and the still-watching prompt hide it. It shows while paused too: a seek while
+ * paused loads, and the indicator goes once the player is ready.
  */
 internal fun bufferingShown(
     playbackState: Int,
@@ -44,8 +44,8 @@ internal fun bufferingShown(
 
 /**
  * CE (#486): a spinner in `primary` on a scrim circle, as the phone player shows. It appears only
- * after [BUFFERING_SHOW_DELAY_MS], so the short buffering of a seek within the cache does not
- * flash it, and goes as soon as [shown] is false.
+ * after [BUFFERING_SHOW_DELAY_MS], so the short buffering of a seek within the cache does not flash
+ * it, and goes as soon as [shown] is false.
  */
 @Composable
 internal fun TvBufferingIndicator(shown: Boolean, modifier: Modifier = Modifier) {
@@ -81,6 +81,4 @@ internal const val BUFFERING_SHOW_DELAY_MS = 1_000L
  * means to play (`isPlaying` is false then), so the button shows Pause and pauses.
  */
 internal fun showsPlayButton(playWhenReady: Boolean, playbackState: Int): Boolean =
-    !playWhenReady ||
-        playbackState == Player.STATE_IDLE ||
-        playbackState == Player.STATE_ENDED
+    !playWhenReady || playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED

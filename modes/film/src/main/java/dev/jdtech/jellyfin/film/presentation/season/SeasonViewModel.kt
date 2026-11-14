@@ -89,29 +89,28 @@ constructor(
                         }
                 }
                 .collect { entries ->
-                val episodes = _state.value.episodes
-                if (episodes.isEmpty()) return@collect
-                val progressMap = buildDownloadProgressMap(episodes, entries)
-                if (progressMap != _state.value.episodeDownloadProgress) {
-                    _state.update { it.copy(episodeDownloadProgress = progressMap) }
-                }
-                // Refresh season data once all of this season's downloads have settled,
-                // so episode.sources gets the new LOCAL entry. Firing per-episode would
-                // cause N network roundtrips.
-                val episodeIds = episodes.map { it.id }.toSet()
-                val isBusy =
-                    entries.any {
+                    val episodes = _state.value.episodes
+                    if (episodes.isEmpty()) return@collect
+                    val progressMap = buildDownloadProgressMap(episodes, entries)
+                    if (progressMap != _state.value.episodeDownloadProgress) {
+                        _state.update { it.copy(episodeDownloadProgress = progressMap) }
+                    }
+                    // Refresh season data once all of this season's downloads have settled,
+                    // so episode.sources gets the new LOCAL entry. Firing per-episode would
+                    // cause N network roundtrips.
+                    val episodeIds = episodes.map { it.id }.toSet()
+                    val isBusy = entries.any {
                         it.id in episodeIds &&
                             (it.state is DownloadQueue.EntryState.Downloading ||
                                 it.state is DownloadQueue.EntryState.Pending)
                     }
-                if (isBusy) {
-                    wasBusy = true
-                } else if (wasBusy && ::seasonId.isInitialized) {
-                    wasBusy = false
-                    loadSeason(seasonId)
+                    if (isBusy) {
+                        wasBusy = true
+                    } else if (wasBusy && ::seasonId.isInitialized) {
+                        wasBusy = false
+                        loadSeason(seasonId)
+                    }
                 }
-            }
         }
     }
 
@@ -210,9 +209,9 @@ constructor(
     }
 
     /**
-     * Marks the season played or unplayed and updates the season in place (#252) instead of
-     * loading the page again. Only the episodes are fetched again: the server marks them too, the
-     * offline repository doesn't, so their state has to come from the repository.
+     * Marks the season played or unplayed and updates the season in place (#252) instead of loading
+     * the page again. Only the episodes are fetched again: the server marks them too, the offline
+     * repository doesn't, so their state has to come from the repository.
      */
     private fun setPlayed(played: Boolean) {
         viewModelScope.launch {
@@ -222,12 +221,16 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, if (played) "Failed to mark as played" else "Failed to unmark as played")
+                Timber.e(
+                    e,
+                    if (played) "Failed to mark as played" else "Failed to unmark as played",
+                )
                 return@launch
             }
             reloadPolicy.changedHere()
             _state.update { state -> state.copy(season = state.season?.copy(played = played)) }
-            val seriesId = _state.value.season?.takeIf { it.id == seasonId }?.seriesId ?: return@launch
+            val seriesId =
+                _state.value.season?.takeIf { it.id == seasonId }?.seriesId ?: return@launch
             try {
                 val episodes =
                     repository.getEpisodes(
@@ -335,7 +338,8 @@ constructor(
                             status = DownloadStatus.PAUSED,
                             progress = entry.progress / 100f,
                         )
-                    is DownloadQueue.EntryState.Failed -> DownloadProgress(status = DownloadStatus.FAILED)
+                    is DownloadQueue.EntryState.Failed ->
+                        DownloadProgress(status = DownloadStatus.FAILED)
                     is DownloadQueue.EntryState.Completed ->
                         DownloadProgress(status = DownloadStatus.COMPLETED, progress = 1f)
                     null ->

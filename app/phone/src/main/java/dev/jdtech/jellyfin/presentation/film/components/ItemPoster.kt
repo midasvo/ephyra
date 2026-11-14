@@ -65,11 +65,7 @@ internal fun posterSources(
                     }
                 is FindroidEpisode ->
                     if (preferThumb) {
-                        listOf(
-                            item.images.showThumb,
-                            item.images.showBackdrop,
-                            item.images.primary,
-                        )
+                        listOf(item.images.showThumb, item.images.showBackdrop, item.images.primary)
                     } else {
                         listOf(item.images.primary, item.images.showBackdrop)
                     }

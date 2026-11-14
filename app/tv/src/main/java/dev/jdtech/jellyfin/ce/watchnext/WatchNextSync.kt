@@ -40,10 +40,7 @@ import timber.log.Timber
 @Singleton
 class WatchNextSync
 @Inject
-constructor(
-    private val workManager: WorkManager,
-    private val playbackEvents: PlaybackEvents,
-) {
+constructor(private val workManager: WorkManager, private val playbackEvents: PlaybackEvents) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var started = false
 
@@ -67,7 +64,9 @@ constructor(
         workManager.enqueueUniqueWork(
             WORK_NAME,
             ExistingWorkPolicy.APPEND_OR_REPLACE,
-            OneTimeWorkRequestBuilder<WatchNextSyncWorker>().setConstraints(networkConstraints).build(),
+            OneTimeWorkRequestBuilder<WatchNextSyncWorker>()
+                .setConstraints(networkConstraints)
+                .build(),
         )
     }
 
@@ -114,7 +113,10 @@ constructor(
         val candidates =
             try {
                 val repository = repositoryProvider.get()
-                watchNextCandidates(resume = repository.getResumeItems(), nextUp = repository.getNextUp())
+                watchNextCandidates(
+                    resume = repository.getResumeItems(),
+                    nextUp = repository.getNextUp(),
+                )
             } catch (e: Exception) {
                 Timber.w(e, "Watch Next: could not load the items")
                 return if (runAttemptCount < MAX_RETRIES) Result.retry() else Result.success()

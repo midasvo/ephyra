@@ -6,14 +6,15 @@ import kotlin.math.ceil
  * CE (#272): when the "Up next" card shows at the end of an episode, and when its countdown runs
  * out.
  *
- * Pure: no Android, no player. [PlayerViewModel][dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel]
- * calls [update] a few times a second with the player's position and acts on the [UpNextDecision].
+ * Pure: no Android, no player.
+ * [PlayerViewModel][dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel] calls [update] a
+ * few times a second with the player's position and acts on the [UpNextDecision].
  *
  * - The card's window opens [countdownMs] before the end of the item, or at the start of an outro
  *   that runs to the end ([update]'s `outroStartMs`) when that comes earlier.
- * - The countdown is [countdownMs] of playback from where the card first showed, never past the
- *   end of the item. It follows the position, so it stands still while paused, and seeking back
- *   inside the window starts it again from there. Seeking back out of the window hides the card.
+ * - The countdown is [countdownMs] of playback from where the card first showed, never past the end
+ *   of the item. It follows the position, so it stands still while paused, and seeking back inside
+ *   the window starts it again from there. Seeking back out of the window hides the card.
  * - When the countdown ends before the item does (an outro), [update] returns
  *   [UpNextDecision.Advance] once. When it ends with the item, the player's own end of item does
  *   the advance, so nothing is returned for it.
@@ -38,8 +39,8 @@ class UpNextCountdown(private val countdownMs: Long = DEFAULT_COUNTDOWN_MS) {
     /**
      * What to show at [positionMs] of [itemId], which runs [durationMs] (0 or less when unknown).
      * [eligible] is false when no card can show at all (not an episode, no next item, the sleep
-     * timer or the still-watching prompt takes the end of the item). [speed] is the playback
-     * speed, so the seconds shown are real ones.
+     * timer or the still-watching prompt takes the end of the item). [speed] is the playback speed,
+     * so the seconds shown are real ones.
      */
     fun update(
         itemId: String?,

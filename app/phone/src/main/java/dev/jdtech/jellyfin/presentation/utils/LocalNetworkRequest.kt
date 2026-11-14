@@ -26,9 +26,9 @@ import dev.jdtech.jellyfin.utils.openAppSettings
 import dev.jdtech.jellyfin.utils.shouldShowPermissionRationale
 
 /**
- * CE (#376): the request for local network access behind an "Allow access" button. The system
- * shows no dialog once the permission was denied twice; only then the button opens the system
- * settings. [onGranted] runs when the dialog was answered with yes.
+ * CE (#376): the request for local network access behind an "Allow access" button. The system shows
+ * no dialog once the permission was denied twice; only then the button opens the system settings.
+ * [onGranted] runs when the dialog was answered with yes.
  */
 @Composable
 fun rememberLocalNetworkRequest(onGranted: () -> Unit): () -> Unit {

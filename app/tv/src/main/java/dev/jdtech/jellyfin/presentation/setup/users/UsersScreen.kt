@@ -179,8 +179,7 @@ internal fun UsersScreenLayout(
                                 onAction(UsersAction.OnPublicUserClick(username = it.name))
                             },
                             // CE (#541)
-                            focusRequester =
-                                publicRequesters.getOrPut(user.id) { FocusRequester() },
+                            focusRequester = publicRequesters.getOrPut(user.id) { FocusRequester() },
                         )
                     }
                 }
@@ -298,8 +297,14 @@ private fun RemoveUserDialog(userName: String, onConfirm: () -> Unit, onDismiss:
 
 private val previewUsers =
     listOf(
-        dummyUser.copy(id = UUID.fromString("00000000-0000-0000-0000-000000000001"), name = "Midas"),
-        dummyUser.copy(id = UUID.fromString("00000000-0000-0000-0000-000000000002"), name = "Kiddos"),
+        dummyUser.copy(
+            id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
+            name = "Midas",
+        ),
+        dummyUser.copy(
+            id = UUID.fromString("00000000-0000-0000-0000-000000000002"),
+            name = "Kiddos",
+        ),
     )
 
 @Preview(device = "id:tv_1080p")

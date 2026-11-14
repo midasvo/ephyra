@@ -8,9 +8,11 @@ import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.sqlite.execSQL
 import androidx.test.platform.app.InstrumentationRegistry
 import java.util.UUID
+import kotlin.math.abs
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,6 +29,8 @@ import org.robolectric.annotation.Config
  * no migration fails every test here with "no migration path"; in the app it would hit
  * `fallbackToDestructiveMigration` and silently wipe the database instead.
  *
+ * CE (#633): the offline position's row also gets a last played time when it waits to be sent.
+ *
  * Released schemas: 12 (v1.2.0-ce.0 to ce.3), 14 (v1.2.0-ce.4 to 2.1.0), 16 (2.2.0), 18 (2.3.0,
  * 2.4.0).
  */
@@ -40,10 +44,7 @@ class ServerDatabaseMigrationTest {
     @get:Rule val helper = helper(dbFile)
 
     private val latest: Int =
-        context.assets
-            .list(SCHEMA_DIR)!!
-            .map { it.removeSuffix(".json").toInt() }
-            .max()
+        context.assets.list(SCHEMA_DIR)!!.map { it.removeSuffix(".json").toInt() }.max()
 
     @Test fun `schema 12 migrates with its data`() = migratesWithData(12)
 
@@ -120,7 +121,10 @@ class ServerDatabaseMigrationTest {
             assertEquals(POSITION, dao.getUserData(uuid(MOVIE), uuid(USER))!!.playbackPositionTicks)
             assertEquals(uuid(EPISODE), dao.getPendingDownloads().single().itemId)
             if (from >= 14) {
-                assertEquals("eng", dao.getSeriesTrackPreferences(uuid(USER), uuid(SHOW)).single().language)
+                assertEquals(
+                    "eng",
+                    dao.getSeriesTrackPreferences(uuid(USER), uuid(SHOW)).single().language,
+                )
             }
         } finally {
             database.close()
@@ -129,8 +133,12 @@ class ServerDatabaseMigrationTest {
 
     /** Rows in the columns schema 12 has; later schemas only add columns with defaults. */
     private fun SQLiteConnection.insertRows(version: Int) {
-        execSQL("INSERT INTO servers (id, name, currentServerAddressId, currentUserId) VALUES ('$SERVER', 'Home', '$ADDRESS_ID', '$USER')")
-        execSQL("INSERT INTO serverAddresses (id, serverId, address) VALUES ('$ADDRESS_ID', '$SERVER', '$ADDRESS')")
+        execSQL(
+            "INSERT INTO servers (id, name, currentServerAddressId, currentUserId) VALUES ('$SERVER', 'Home', '$ADDRESS_ID', '$USER')"
+        )
+        execSQL(
+            "INSERT INTO serverAddresses (id, serverId, address) VALUES ('$ADDRESS_ID', '$SERVER', '$ADDRESS')"
+        )
         execSQL(
             "INSERT INTO users (id, name, serverId, accessToken) VALUES ('$USER', 'Alice', '$SERVER', '$TOKEN')"
         )
@@ -152,7 +160,9 @@ class ServerDatabaseMigrationTest {
         execSQL(
             "INSERT INTO mediastreams (id, sourceId, title, language, type, codec, isExternal, path) VALUES ('stream', 'source', 'English', 'eng', 'AUDIO', 'aac', 0, '$PATH')"
         )
-        execSQL("INSERT INTO userdata (userId, itemId, played, favorite, playbackPositionTicks, toBeSynced) VALUES ('$USER', '$MOVIE', 0, 1, $POSITION, 1)")
+        execSQL(
+            "INSERT INTO userdata (userId, itemId, played, favorite, playbackPositionTicks, toBeSynced) VALUES ('$USER', '$MOVIE', 0, 1, $POSITION, 1)"
+        )
         execSQL(
             "INSERT INTO pending_downloads (itemId, itemKind, addedAt) VALUES ('$EPISODE', 'Episode', 1700000000)"
         )
@@ -181,6 +191,12 @@ class ServerDatabaseMigrationTest {
         assertEquals(1L, long("SELECT COUNT(*) FROM mediastreams WHERE sourceId = 'source'"))
         assertEquals(POSITION, long("SELECT playbackPositionTicks FROM userdata"))
         assertEquals(1L, long("SELECT toBeSynced FROM userdata"))
+        // CE (#633): progress waiting to be sent gets the time of the upgrade as its last play.
+        val lastPlayed = long("SELECT lastPlayedDate FROM userdata")
+        assertTrue(
+            "lastPlayedDate $lastPlayed is not about now",
+            abs(System.currentTimeMillis() - lastPlayed) < 60_000L,
+        )
         assertEquals(EPISODE, text("SELECT itemId FROM pending_downloads"))
         assertEquals(0L, long("SELECT smartQueued FROM sources"))
         if (from >= 14) {
@@ -194,10 +210,7 @@ class ServerDatabaseMigrationTest {
             assertNull(text("SELECT pinHash FROM users"))
             assertEquals(1L, long("SELECT pinOnStart FROM users"))
         }
-        assertEquals(
-            if (from >= 18) "pattern" else "pin",
-            text("SELECT lockType FROM users"),
-        )
+        assertEquals(if (from >= 18) "pattern" else "pin", text("SELECT lockType FROM users"))
     }
 
     private fun SQLiteConnection.text(sql: String): String? =

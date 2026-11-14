@@ -38,8 +38,7 @@ data class CollectionRoute(val collectionId: String, val collectionName: String)
 
 @Serializable data class MovieRoute(val movieId: String) : NavKey
 
-@Serializable
-data class ShowRoute(val showId: String, val downloadsOnly: Boolean = false) : NavKey
+@Serializable data class ShowRoute(val showId: String, val downloadsOnly: Boolean = false) : NavKey
 
 @Serializable data class EpisodeRoute(val episodeId: String) : NavKey
 

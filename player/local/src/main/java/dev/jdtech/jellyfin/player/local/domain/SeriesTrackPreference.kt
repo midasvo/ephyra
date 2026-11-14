@@ -41,8 +41,8 @@ private val BIBLIOGRAPHIC_CODES =
 
 /**
  * Normalizes a language code to ISO 639-2/T, so the "en" ExoPlayer reports and the "eng" mpv
- * reports compare equal, and so do the "dut" mpv reads from a file and the "nld" ExoPlayer and
- * the server make of it (#580). Blank and undetermined codes give null.
+ * reports compare equal, and so do the "dut" mpv reads from a file and the "nld" ExoPlayer and the
+ * server make of it (#580). Blank and undetermined codes give null.
  */
 fun normalizeLanguage(code: String?): String? {
     val base = code?.trim()?.lowercase()?.split('-', '_')?.firstOrNull().orEmpty()
@@ -65,8 +65,8 @@ private fun sameTitle(a: String?, b: String?): Boolean {
 
 /**
  * Finds the track in [candidates] that best matches [stored], or null when none does. In order of
- * preference: same language and title, same language and position within that language, first
- * track of the same language.
+ * preference: same language and title, same language and position within that language, first track
+ * of the same language.
  */
 fun matchSeriesTrack(stored: StoredChoice, candidates: List<TrackCandidate>): Int? {
     val language = normalizeLanguage(stored.language)
@@ -96,16 +96,17 @@ fun seriesTrackChoice(candidates: List<TrackCandidate>, index: Int): StoredChoic
     val language = normalizeLanguage(candidate.language)
     val title = candidate.title?.trim()?.ifEmpty { null }
     if (language == null && title == null) return null
-    val position =
-        language?.let { candidates.take(index).count { normalizeLanguage(it.language) == language } }
+    val position = language?.let {
+        candidates.take(index).count { normalizeLanguage(it.language) == language }
+    }
     return StoredChoice(language, title, position)
 }
 
 /**
- * CE (#580): the server's index of the audio stream in [streams] that [choice] names, or null
- * when none matches. A transcode carries one audio track, so the choice has to go to the server
- * with the request; the player cannot select it afterwards. External audio is left out: the
- * server's transcode is of the file's own streams.
+ * CE (#580): the server's index of the audio stream in [streams] that [choice] names, or null when
+ * none matches. A transcode carries one audio track, so the choice has to go to the server with the
+ * request; the player cannot select it afterwards. External audio is left out: the server's
+ * transcode is of the file's own streams.
  */
 fun audioStreamIndex(choice: StoredChoice, streams: List<FindroidMediaStream>): Int? {
     val audio = serverAudioTracks(streams)

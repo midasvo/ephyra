@@ -18,17 +18,18 @@ import coil3.request.crossfade
 import coil3.request.transformations
 import coil3.transform.RoundedCornersTransformation
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import dev.jdtech.jellyfin.BasePlayerActivity
 import dev.jdtech.jellyfin.R
 import dev.jdtech.jellyfin.player.core.domain.models.PlayerChapter
 import dev.jdtech.jellyfin.player.core.domain.models.formatStartTimestamp
 import dev.jdtech.jellyfin.player.local.R as PlayerR
 import dev.jdtech.jellyfin.player.local.presentation.PlayerAction
-import dev.jdtech.jellyfin.BasePlayerActivity
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
 
 /**
  * Phone chapter list overlay. Shows each chapter with its server-extracted thumbnail (when
- * available), title, and timestamp. Tapping a row seeks to the chapter via [PlayerAction.JumpToChapter].
+ * available), title, and timestamp. Tapping a row seeks to the chapter via
+ * [PlayerAction.JumpToChapter].
  *
  * Implemented as a [DialogFragment] (rather than a Compose bottom sheet) for consistency with the
  * existing [TrackSelectionDialogFragment] and [SpeedSelectionDialogFragment] in this module, which
@@ -77,8 +78,7 @@ class ChapterListDialogFragment : DialogFragment() {
     ) : RecyclerView.Adapter<ChapterViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChapterViewHolder {
             val view =
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_chapter, parent, false)
+                LayoutInflater.from(parent.context).inflate(R.layout.item_chapter, parent, false)
             return ChapterViewHolder(view)
         }
 

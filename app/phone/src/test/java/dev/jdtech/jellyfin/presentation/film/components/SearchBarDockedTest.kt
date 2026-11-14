@@ -27,9 +27,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * #439: on a tablet or an unfolded fold the open search stays docked: the field keeps the
- * collapsed bar's place and at most 720 dp (docs/tablet/4-design.md §3 and §5), the results use
- * the whole width beside it. A phone keeps the full-screen search in both orientations.
+ * #439: on a tablet or an unfolded fold the open search stays docked: the field keeps the collapsed
+ * bar's place and at most 720 dp (docs/tablet/4-design.md §3 and §5), the results use the whole
+ * width beside it. A phone keeps the full-screen search in both orientations.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
@@ -86,9 +86,7 @@ class SearchBarDockedTest {
     private fun assertDocked(expected: Boolean) {
         var docked: Boolean? = null
         rule.setContent { docked = useDockedSearch() }
-        rule.runOnIdle {
-            if (expected) assertTrue(docked == true) else assertFalse(docked == true)
-        }
+        rule.runOnIdle { if (expected) assertTrue(docked == true) else assertFalse(docked == true) }
     }
 
     private fun show(docked: Boolean) {

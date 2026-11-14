@@ -25,8 +25,8 @@ private val IMAGE_TAG = Regex("""[?&]tag=[^&]""", RegexOption.IGNORE_CASE)
  * did not load at all.
  *
  * So:
- * - An image URL with a `tag` is served from the cache, whatever the headers say. The tag names
- *   the image's content: when the artwork changes, the server hands out a new tag and so a new URL.
+ * - An image URL with a `tag` is served from the cache, whatever the headers say. The tag names the
+ *   image's content: when the artwork changes, the server hands out a new tag and so a new URL.
  * - Anything else follows the server's `Cache-Control`, with `Age` left out of it.
  */
 @OptIn(ExperimentalCoilApi::class, ExperimentalTime::class)

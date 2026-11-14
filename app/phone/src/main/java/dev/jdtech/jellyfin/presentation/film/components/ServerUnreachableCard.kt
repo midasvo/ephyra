@@ -143,8 +143,8 @@ fun showsServerOrErrorCard(error: Throwable?): Boolean = error != null || showsS
 /**
  * The card under a screen's header: the unreachable banner while the server does not answer, the
  * error card for any other failed load ([error]), nothing otherwise. The banner stands in for the
- * error card when the error is the server not answering, so one thing says it. Both load again
- * with [onRetryClick], and by themselves when the server is back.
+ * error card when the error is the server not answering, so one thing says it. Both load again with
+ * [onRetryClick], and by themselves when the server is back.
  *
  * [modifier] carries the screen's padding. The width is set here: the error card fills it, the
  * banner stops at the width of a text column (docs/tablet/4-design.md).

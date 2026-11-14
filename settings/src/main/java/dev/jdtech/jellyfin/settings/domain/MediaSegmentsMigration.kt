@@ -1,9 +1,8 @@
 package dev.jdtech.jellyfin.settings.domain
 
 /**
- * CE (#271): maps the old global media segment switches onto one action per segment type. Pure,
- * so it is tested without SharedPreferences; [AppPreferences.migrateMediaSegmentActions] runs it
- * once.
+ * CE (#271): maps the old global media segment switches onto one action per segment type. Pure, so
+ * it is tested without SharedPreferences; [AppPreferences.migrateMediaSegmentActions] runs it once.
  *
  * The values are the names of `dev.jdtech.jellyfin.models.MediaSegmentAction` and
  * `FindroidSegmentType`, which live in the data module, a module this one can't see.
@@ -35,8 +34,7 @@ object MediaSegmentsMigration {
      * 3. otherwise [skipButton] on with the type in [skipButtonTypes] gives [ASK];
      * 4. otherwise [IGNORE].
      *
-     * With the old defaults (skip button on for Intro and Outro, auto skip off) that is
-     * [DEFAULTS].
+     * With the old defaults (skip button on for Intro and Outro, auto skip off) that is [DEFAULTS].
      */
     fun actions(
         explicit: Map<String, String?>,
@@ -44,16 +42,16 @@ object MediaSegmentsMigration {
         autoSkipTypes: Set<String>,
         skipButton: Boolean,
         skipButtonTypes: Set<String>,
-    ): Map<String, String> =
-        TYPES.associateWith { type ->
-            explicit[type]?.let(::parse)
-                ?: when {
-                    autoSkip && type in autoSkipTypes -> SKIP
-                    skipButton && type in skipButtonTypes -> ASK
-                    else -> IGNORE
-                }
-        }
+    ): Map<String, String> = TYPES.associateWith { type ->
+        explicit[type]?.let(::parse)
+            ?: when {
+                autoSkip && type in autoSkipTypes -> SKIP
+                skipButton && type in skipButtonTypes -> ASK
+                else -> IGNORE
+            }
+    }
 
-    private fun parse(value: String): String? =
-        ACTIONS.firstOrNull { it.equals(value.trim(), ignoreCase = true) }
+    private fun parse(value: String): String? = ACTIONS.firstOrNull {
+        it.equals(value.trim(), ignoreCase = true)
+    }
 }

@@ -1,7 +1,11 @@
 package dev.jdtech.jellyfin.repository
 
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -21,5 +25,23 @@ class DataChangeEvents {
 
     fun onChanged() {
         _version.update { it + 1 }
+    }
+
+    private val _synced =
+        MutableSharedFlow<Unit>(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+
+    /**
+     * CE (#633): emits when the sync has sent progress watched offline to the server. What the
+     * server shows (Continue Watching, Next Up, positions) changed without this screen knowing, so
+     * the screen on display reloads, as it does after a playback stop.
+     */
+    val synced: SharedFlow<Unit> = _synced.asSharedFlow()
+
+    fun onSynced() {
+        onChanged()
+        _synced.tryEmit(Unit)
     }
 }

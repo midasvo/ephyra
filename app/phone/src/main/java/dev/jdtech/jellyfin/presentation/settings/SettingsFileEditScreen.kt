@@ -121,11 +121,7 @@ private fun SettingsFileEditScreenLayout(
         TextField(
             state = textFieldState,
             modifier = Modifier.fillMaxSize().padding(innerPadding).focusRequester(focusRequester),
-            textStyle =
-                TextStyle(
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace,
-                ),
+            textStyle = TextStyle(fontSize = 14.sp, fontFamily = FontFamily.Monospace),
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
             colors =
                 TextFieldDefaults.colors(

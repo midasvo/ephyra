@@ -39,11 +39,11 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.ErrorCardInitialHeight
-import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
-import dev.jdtech.jellyfin.presentation.film.components.showsServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.FilmSearchBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemCard
+import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.TopContentScrim
+import dev.jdtech.jellyfin.presentation.film.components.showsServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.GridCellsAdaptiveWithMinColumns

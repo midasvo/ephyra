@@ -13,7 +13,9 @@ import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** The caches the settings' Clear cache row empties: Coil's memory and disk caches, and Home's rows. */
+/**
+ * The caches the settings' Clear cache row empties: Coil's memory and disk caches, and Home's rows.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object AppCachesModule {

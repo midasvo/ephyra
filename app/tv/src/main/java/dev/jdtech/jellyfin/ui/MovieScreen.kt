@@ -70,7 +70,9 @@ fun MovieScreen(
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(true) { if (viewModel.shouldReload(movieId)) viewModel.loadMovie(movieId = movieId) }
+    LaunchedEffect(true) {
+        if (viewModel.shouldReload(movieId)) viewModel.loadMovie(movieId = movieId)
+    }
 
     MovieScreenLayout(
         state = state,
@@ -231,7 +233,9 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                             Icon(
                                 painter = painterResource(id = CoreR.drawable.ic_check),
                                 contentDescription = null,
-                                tint = if (movie.played) MaterialTheme.colorScheme.tertiary else LocalContentColor.current,
+                                tint =
+                                    if (movie.played) MaterialTheme.colorScheme.tertiary
+                                    else LocalContentColor.current,
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
@@ -259,7 +263,9 @@ private fun MovieScreenLayout(state: MovieState, onAction: (MovieAction) -> Unit
                                             else CoreR.drawable.ic_heart
                                     ),
                                 contentDescription = null,
-                                tint = if (movie.favorite) MaterialTheme.colorScheme.tertiary else LocalContentColor.current,
+                                tint =
+                                    if (movie.favorite) MaterialTheme.colorScheme.tertiary
+                                    else LocalContentColor.current,
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(

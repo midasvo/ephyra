@@ -32,11 +32,15 @@ kotlin = "2.4.21"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.13.0"
 ksp = "2.3.13"
-# CE-owned: pinned to 0.26.0 (ktfmt 0.62). Upstream's bump to 0.27.0 (ktfmt 0.64) changes
-# formatting tree-wide and left their own main red on Lint — the bump PR only touched this
-# file, and lint.yaml's path filter (**.kt/**.kts) meant Lint never ran on it. Unpin once
-# upstream reformats against 0.64.
-ktfmt = "0.26.0"
+# The ktfmt Gradle plugin. 0.27.0 is the first version that finds the Kotlin sources under
+# AGP 9's built-in Kotlin: 0.26.0 checked only the .gradle.kts scripts (#661).
+ktfmt = "0.27.0"
+# CE-owned: the formatter itself stays on ktfmt 0.62, set through the plugin's `ktfmt`
+# configuration in the root build.gradle.kts. The plugin's default, 0.64, formats differently
+# across the whole tree (trailing commas, call chains); upstream took it without reformatting and
+# left their own main red on the format check. Move to 0.64 only together with a tree-wide
+# ktfmtFormat. Plugin 0.28.0 moves to ktfmt 0.65's new coordinates and can't run 0.62.
+ktfmt-formatter = "0.62"
 libmpv = "1.1.0"
 material = "1.14.0"
 media3-ffmpeg-decoder = "1.9.0+1"
@@ -105,6 +109,7 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 jellyfin-core = { group = "org.jellyfin.sdk", name = "jellyfin-core", version.ref = "jellyfin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+ktfmt-formatter = { group = "com.facebook", name = "ktfmt", version.ref = "ktfmt-formatter" }
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4", version.ref = "androidx-compose" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest", version.ref = "androidx-compose" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }

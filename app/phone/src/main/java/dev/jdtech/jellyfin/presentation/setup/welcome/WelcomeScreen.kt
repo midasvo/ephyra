@@ -56,7 +56,8 @@ private fun WelcomeScreenLayout(onAction: (WelcomeAction) -> Unit) {
             // CE (#220): a still primary halo behind it, 1.6 × the mark across, fainter in light.
             val halo =
                 MaterialTheme.colorScheme.primary.copy(
-                    alpha = if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) 0.10f else 0.22f
+                    alpha =
+                        if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) 0.10f else 0.22f
                 )
             SwimmingJellyfish(
                 logoSize = 120.dp,
@@ -64,7 +65,10 @@ private fun WelcomeScreenLayout(onAction: (WelcomeAction) -> Unit) {
                     Modifier.drawBehind {
                         val radius = 0.8f * 120.dp.toPx()
                         drawCircle(
-                            Brush.radialGradient(listOf(halo, halo.copy(alpha = 0f)), radius = radius),
+                            Brush.radialGradient(
+                                listOf(halo, halo.copy(alpha = 0f)),
+                                radius = radius,
+                            ),
                             radius = radius,
                         )
                     },

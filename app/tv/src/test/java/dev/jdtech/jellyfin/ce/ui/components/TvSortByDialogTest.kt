@@ -52,7 +52,8 @@ class TvSortByDialogTest {
     fun eachOptionIsOneFocusStop() {
         setUp()
         // The radio button inside a row is not a focus stop of its own.
-        rule.onAllNodes(focusableInside(sortOptionTag(SortBy.NAME)), useUnmergedTree = true)
+        rule
+            .onAllNodes(focusableInside(sortOptionTag(SortBy.NAME)), useUnmergedTree = true)
             .assertCountEquals(0)
 
         rule.onNodeWithTag(sortOptionTag(SortBy.NAME)).requestFocus()

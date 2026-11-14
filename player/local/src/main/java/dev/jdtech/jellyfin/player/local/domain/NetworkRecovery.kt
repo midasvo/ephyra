@@ -3,18 +3,18 @@ package dev.jdtech.jellyfin.player.local.domain
 import androidx.media3.common.PlaybackException
 
 /**
- * CE (#450): what the player does when a stream breaks because the connection went. ExoPlayer
- * stops with a network error once its buffer runs out and stays stopped; this waits for the
- * network and tells the player to load again, at the same position and with the same play/pause
- * state, as pressing Play would.
+ * CE (#450): what the player does when a stream breaks because the connection went. ExoPlayer stops
+ * with a network error once its buffer runs out and stays stopped; this waits for the network and
+ * tells the player to load again, at the same position and with the same play/pause state, as
+ * pressing Play would.
  *
  * Only for a player that can load again with `prepare()` (`COMMAND_PREPARE`): ExoPlayer, and mpv
  * since #474.
  *
  * The caller retries when a network with internet access becomes available, and every
- * [RETRY_INTERVAL_MS] while one is up but loading still fails. After [GIVE_UP_MS] without
- * success the normal error stays, with Play as the manual retry. An item change, leaving the
- * player or playback picking up again ends the wait.
+ * [RETRY_INTERVAL_MS] while one is up but loading still fails. After [GIVE_UP_MS] without success
+ * the normal error stays, with Play as the manual retry. An item change, leaving the player or
+ * playback picking up again ends the wait.
  */
 class NetworkRecovery(private val nowMs: () -> Long) {
 

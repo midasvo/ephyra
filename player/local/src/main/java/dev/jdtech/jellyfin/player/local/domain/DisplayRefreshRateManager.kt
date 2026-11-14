@@ -16,17 +16,10 @@ data class DisplayModeCandidate(
 ) {
     constructor(
         mode: Display.Mode
-    ) : this(
-        mode.modeId,
-        mode.physicalWidth,
-        mode.physicalHeight,
-        mode.refreshRate,
-    )
+    ) : this(mode.modeId, mode.physicalWidth, mode.physicalHeight, mode.refreshRate)
 }
 
-class DisplayRefreshRateManager(
-    private val appPreferences: AppPreferences,
-) {
+class DisplayRefreshRateManager(private val appPreferences: AppPreferences) {
     private var attachedWindow: WeakReference<Window>? = null
     private var lastDetectedFrameRate: Float? = null
     private var appliedModeId: Int? = null
@@ -54,9 +47,9 @@ class DisplayRefreshRateManager(
 
     /**
      * "60.0Hz of [60.0, 90.0]": the display's current mode and the rates it supports, for the
-     * playback log. On Android 11+ the current rate also reflects a seamless switch the OS made
-     * for the surface's frame rate hint, so a 120Hz phone playing 24fps should read 48.0 or 24.0
-     * here a few seconds in (#338).
+     * playback log. On Android 11+ the current rate also reflects a seamless switch the OS made for
+     * the surface's frame rate hint, so a 120Hz phone playing 24fps should read 48.0 or 24.0 here a
+     * few seconds in (#338).
      */
     fun describeDisplay(): String? {
         val window = attachedWindow?.get() ?: return null
@@ -121,36 +114,34 @@ class DisplayRefreshRateManager(
             if (targetFrameRate <= 0f || targetFrameRate.isNaN() || modes.isEmpty()) return null
 
             // Prioritize modes matching current display resolution to avoid downscaling/upscaling
-            val sameResolutionModes =
-                modes.filter {
-                    it.physicalWidth == currentMode.physicalWidth &&
-                        it.physicalHeight == currentMode.physicalHeight
-                }
+            val sameResolutionModes = modes.filter {
+                it.physicalWidth == currentMode.physicalWidth &&
+                    it.physicalHeight == currentMode.physicalHeight
+            }
             val candidates = if (sameResolutionModes.isNotEmpty()) sameResolutionModes else modes
 
-            val matchingModes =
-                candidates.mapNotNull { candidate ->
-                    val ratio = candidate.refreshRate / targetFrameRate
-                    val roundedRatio = Math.round(ratio)
-                    if (roundedRatio < 1) return@mapNotNull null
+            val matchingModes = candidates.mapNotNull { candidate ->
+                val ratio = candidate.refreshRate / targetFrameRate
+                val roundedRatio = Math.round(ratio)
+                if (roundedRatio < 1) return@mapNotNull null
 
-                    val idealRate = targetFrameRate * roundedRatio
-                    val diff = Math.abs(candidate.refreshRate - idealRate)
-                    val normalizedDiff = diff / roundedRatio
+                val idealRate = targetFrameRate * roundedRatio
+                val diff = Math.abs(candidate.refreshRate - idealRate)
+                val normalizedDiff = diff / roundedRatio
 
-                    // Only consider rates within 0.08 normalized difference
-                    if (normalizedDiff < 0.08f) {
-                        val isExact = normalizedDiff < 0.005f
-                        val isCurrent = candidate.modeId == currentMode.modeId
-                        MatchedMode(
-                            candidate = candidate,
-                            isExact = isExact,
-                            normalizedDiff = normalizedDiff,
-                            roundedRatio = roundedRatio,
-                            isCurrent = isCurrent,
-                        )
-                    } else null
-                }
+                // Only consider rates within 0.08 normalized difference
+                if (normalizedDiff < 0.08f) {
+                    val isExact = normalizedDiff < 0.005f
+                    val isCurrent = candidate.modeId == currentMode.modeId
+                    MatchedMode(
+                        candidate = candidate,
+                        isExact = isExact,
+                        normalizedDiff = normalizedDiff,
+                        roundedRatio = roundedRatio,
+                        isCurrent = isCurrent,
+                    )
+                } else null
+            }
 
             return matchingModes
                 .sortedWith(

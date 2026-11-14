@@ -23,11 +23,7 @@ import org.jellyfin.sdk.api.client.exception.InvalidStatusException
  * dialog and does what the screen's own retry does.
  */
 @Composable
-fun ErrorDialog(
-    exception: Throwable,
-    onDismissRequest: () -> Unit,
-    onRetry: (() -> Unit)? = null,
-) {
+fun ErrorDialog(exception: Throwable, onDismissRequest: () -> Unit, onRetry: (() -> Unit)? = null) {
     val context = LocalContext.current
     // CE (#571): a server out of reach because local network access is denied says so, and the
     // dialog offers to allow it. The screen under the dialog loads again when access is back.

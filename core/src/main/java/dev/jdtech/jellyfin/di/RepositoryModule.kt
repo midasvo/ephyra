@@ -8,10 +8,10 @@ import dagger.hilt.components.SingletonComponent
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.player.DeviceProfileBuilder
+import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.repository.JellyfinRepositoryImpl
 import dev.jdtech.jellyfin.repository.JellyfinRepositoryOfflineImpl
-import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.PlaybackEvents
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.utils.useOfflineRepository
@@ -27,9 +27,7 @@ object RepositoryModule {
     fun provideDeviceProfileBuilder(application: Application): DeviceProfileBuilder =
         DeviceProfileBuilder(application)
 
-    @Singleton
-    @Provides
-    fun provideDataChangeEvents(): DataChangeEvents = DataChangeEvents()
+    @Singleton @Provides fun provideDataChangeEvents(): DataChangeEvents = DataChangeEvents()
 
     @Singleton
     @Provides

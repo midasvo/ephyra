@@ -37,12 +37,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.core.R as CoreR
-import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.player.cast.models.CastPlaybackStatus
 import dev.jdtech.jellyfin.player.cast.presentation.CastNowPlaying
 import dev.jdtech.jellyfin.player.cast.presentation.CastUiState
-import dev.jdtech.jellyfin.player.local.R as PlayerR
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.theme.spacings
 import org.jellyfin.sdk.model.api.BaseItemKind
 
 const val CAST_MINI_PLAYER_TAG = "cast_mini_player"
@@ -52,8 +51,8 @@ private val MiniPlayerMaxWidth = 640.dp
 
 /**
  * CE (#626): the session, docked at the bottom of every screen while a receiver is connected. It
- * takes its own room below the content instead of floating over it. Tapping it opens the player,
- * or the device sheet while nothing plays.
+ * takes its own room below the content instead of floating over it. Tapping it opens the player, or
+ * the device sheet while nothing plays.
  */
 @Composable
 fun CastMiniPlayer(
@@ -76,7 +75,9 @@ fun CastMiniPlayer(
             // Nothing to control yet while idle or starting: the bar leads to the receiver.
             onClick = if (idle || starting) onOpenDevices else onOpenPlayer,
             modifier =
-                Modifier.widthIn(max = MiniPlayerMaxWidth).fillMaxWidth().testTag(CAST_MINI_PLAYER_TAG),
+                Modifier.widthIn(max = MiniPlayerMaxWidth)
+                    .fillMaxWidth()
+                    .testTag(CAST_MINI_PLAYER_TAG),
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
@@ -103,7 +104,11 @@ fun CastMiniPlayer(
                                 )
                             }
                             Lines(
-                                title = stringResource(CoreR.string.ce_cast_playback_failed, deviceName),
+                                title =
+                                    stringResource(
+                                        CoreR.string.ce_cast_playback_failed,
+                                        deviceName,
+                                    ),
                                 subtitle = (playing ?: state.failedItem)?.title,
                                 modifier =
                                     Modifier.weight(1f).semantics {
@@ -126,7 +131,10 @@ fun CastMiniPlayer(
                                 Lines(
                                     title = playing.seriesName ?: playing.title,
                                     subtitle =
-                                        stringResource(CoreR.string.ce_cast_reconnecting_to, deviceName),
+                                        stringResource(
+                                            CoreR.string.ce_cast_reconnecting_to,
+                                            deviceName,
+                                        ),
                                     modifier = Modifier.weight(1f),
                                 )
                                 Spinner()
@@ -138,7 +146,8 @@ fun CastMiniPlayer(
                         starting -> {
                             LeadingIcon { CastIcon(CastButtonState.CONNECTED) }
                             Lines(
-                                title = stringResource(CoreR.string.ce_cast_starting_on, deviceName),
+                                title =
+                                    stringResource(CoreR.string.ce_cast_starting_on, deviceName),
                                 subtitle = null,
                                 modifier = Modifier.weight(1f),
                                 titleLines = 2,
@@ -163,9 +172,11 @@ fun CastMiniPlayer(
                         else -> {
                             LeadingIcon { CastIcon(CastButtonState.CONNECTED) }
                             Lines(
-                                title = stringResource(CoreR.string.ce_cast_connected_to, deviceName),
+                                title =
+                                    stringResource(CoreR.string.ce_cast_connected_to, deviceName),
                                 subtitle = stringResource(CoreR.string.ce_cast_pick_something),
-                                modifier = Modifier.weight(1f).padding(end = MaterialTheme.spacings.small),
+                                modifier =
+                                    Modifier.weight(1f).padding(end = MaterialTheme.spacings.small),
                                 titleLines = 2,
                             )
                         }
@@ -219,9 +230,7 @@ private fun PlayPause(status: CastPlaybackStatus, onTogglePlay: () -> Unit) {
             painter =
                 painterResource(if (isPlaying) CoreR.drawable.ic_pause else CoreR.drawable.ic_play),
             contentDescription =
-                stringResource(
-                    if (isPlaying) CoreR.string.ce_cast_pause else CoreR.string.play
-                ),
+                stringResource(if (isPlaying) CoreR.string.ce_cast_pause else CoreR.string.play),
             tint = MaterialTheme.colorScheme.onSurface,
         )
     }
@@ -296,7 +305,9 @@ internal class CastMiniStateProvider : PreviewParameterProvider<CastUiState> {
 @Preview(showBackground = true, widthDp = 380)
 @Preview(showBackground = true, widthDp = 380, fontScale = 2f)
 @Composable
-private fun CastMiniPlayerPreview(@PreviewParameter(CastMiniStateProvider::class) state: CastUiState) {
+private fun CastMiniPlayerPreview(
+    @PreviewParameter(CastMiniStateProvider::class) state: CastUiState
+) {
     FindroidTheme {
         CastMiniPlayer(
             state = state,

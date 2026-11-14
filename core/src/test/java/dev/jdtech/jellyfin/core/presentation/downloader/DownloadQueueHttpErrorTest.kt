@@ -178,8 +178,9 @@ class DownloadQueueHttpErrorTest {
 
         override suspend fun getProgress(downloadId: Long?) = progress
 
-        override suspend fun getProgress(downloadIds: List<Long>) =
-            downloadIds.associateWith { progress }
+        override suspend fun getProgress(downloadIds: List<Long>) = downloadIds.associateWith {
+            progress
+        }
 
         override suspend fun getActiveDownloads() = emptyList<Downloader.ActiveDownload>()
 

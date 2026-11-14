@@ -12,8 +12,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Dp
 
 /**
- * The bioluminescent halo (docs/identity/VISION.md §6). Draws a blurred copy of [shape] in
- * [color] behind the content. [enabled] false draws nothing, for light theme and reduced motion.
+ * The bioluminescent halo (docs/identity/VISION.md §6). Draws a blurred copy of [shape] in [color]
+ * behind the content. [enabled] false draws nothing, for light theme and reduced motion.
  *
  * The halo extends outside the element's bounds, so nothing between it and the screen may clip.
  * Pass `MaterialTheme.colorScheme.primary.copy(alpha = …)` as [color], so dynamic colour is

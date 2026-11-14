@@ -34,8 +34,8 @@ import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.ephyra.EphyraMotion
 import dev.jdtech.jellyfin.models.User
-import dev.jdtech.jellyfin.presentation.components.UserAvatar
 import dev.jdtech.jellyfin.presentation.cast.CastHeaderButton
+import dev.jdtech.jellyfin.presentation.components.UserAvatar
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
@@ -149,7 +149,11 @@ fun HomeHeader(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    val fade = tween<Float>(EphyraMotion.DURATION_MEDIUM, easing = EphyraMotion.EasingEnter)
+                    val fade =
+                        tween<Float>(
+                            EphyraMotion.DURATION_MEDIUM,
+                            easing = EphyraMotion.EasingEnter,
+                        )
                     AnimatedContent(
                         targetState = user,
                         transitionSpec = { fadeIn(fade) togetherWith fadeOut(fade) },

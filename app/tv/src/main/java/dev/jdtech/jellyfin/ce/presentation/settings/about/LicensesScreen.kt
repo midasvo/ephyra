@@ -63,8 +63,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * CE (#211): the open-source libraries in the TV app, from the same AboutLibraries data as the phone
- * app. Opening one shows its license.
+ * CE (#211): the open-source libraries in the TV app, from the same AboutLibraries data as the
+ * phone app. Opening one shows its license.
  */
 @Composable
 fun LicensesScreen(navigateToLicense: (uniqueId: String) -> Unit) {
@@ -86,7 +86,11 @@ internal fun LicensesLayout(
     Column(
         modifier =
             Modifier.fillMaxSize()
-                .padding(start = TvSafeArea.horizontal, top = TvSafeArea.vertical, end = TvSafeArea.horizontal)
+                .padding(
+                    start = TvSafeArea.horizontal,
+                    top = TvSafeArea.vertical,
+                    end = TvSafeArea.horizontal,
+                )
     ) {
         Text(
             text = stringResource(SettingsR.string.about_licenses),
@@ -102,7 +106,10 @@ internal fun LicensesLayout(
                 state = listState,
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
                 contentPadding =
-                    PaddingValues(top = MaterialTheme.spacings.default, bottom = TvSafeArea.vertical),
+                    PaddingValues(
+                        top = MaterialTheme.spacings.default,
+                        bottom = TvSafeArea.vertical,
+                    ),
             ) {
                 itemsIndexed(list, key = { _, library -> library.uniqueId }) { index, library ->
                     FocusableCard(
@@ -226,8 +233,6 @@ private fun rememberLibraries(): State<List<Library>?> {
 }
 
 private fun loadLibraries(context: Context): List<Library> =
-    Libs.Builder()
-        .withJson(context, R.raw.aboutlibraries)
-        .build()
-        .libraries
-        .sortedBy { it.name.lowercase() }
+    Libs.Builder().withJson(context, R.raw.aboutlibraries).build().libraries.sortedBy {
+        it.name.lowercase()
+    }

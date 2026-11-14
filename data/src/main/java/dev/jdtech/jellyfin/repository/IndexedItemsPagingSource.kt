@@ -134,7 +134,8 @@ internal class IndexedItemsPagingSource(
                 val start =
                     (key - params.loadSize / 2).coerceIn(
                         0,
-                        if (total != null) (total - params.loadSize).coerceAtLeast(0) else Int.MAX_VALUE,
+                        if (total != null) (total - params.loadSize).coerceAtLeast(0)
+                        else Int.MAX_VALUE,
                     )
                 start to (start.toLong() + params.loadSize).coerceAtMost(max.toLong()).toInt()
             }

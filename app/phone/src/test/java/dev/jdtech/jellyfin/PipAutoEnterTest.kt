@@ -6,8 +6,8 @@ import org.junit.Test
 
 /**
  * #447: the PiP button passes its params to enterPictureInPictureMode, and the system keeps them.
- * With auto-enter on in those params, Home entered PiP for the rest of the session although the
- * PiP home gesture was off.
+ * With auto-enter on in those params, Home entered PiP for the rest of the session although the PiP
+ * home gesture was off.
  */
 class PipAutoEnterTest {
     @Test

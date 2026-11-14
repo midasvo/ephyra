@@ -28,7 +28,9 @@ class ScreensaverSettingsScreenTest {
         val appPreferences =
             AppPreferences(context.getSharedPreferences("screensaver_test", Context.MODE_PRIVATE))
         rule.setContent {
-            FindroidTheme { ScreensaverSettingsScreen(appPreferences = appPreferences, onBack = {}) }
+            FindroidTheme {
+                ScreensaverSettingsScreen(appPreferences = appPreferences, onBack = {})
+            }
         }
         rule.waitForIdle()
 

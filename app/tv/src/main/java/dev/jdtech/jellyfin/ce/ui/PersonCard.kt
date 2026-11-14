@@ -43,11 +43,7 @@ import java.util.UUID
 internal fun personCardTag(id: UUID) = "ce_person_card_$id"
 
 @Composable
-fun PersonCard(
-    person: FindroidItemPerson,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun PersonCard(person: FindroidItemPerson, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.width(150.dp).testTag(personCardTag(person.id))) {
         Surface(
             onClick = onClick,

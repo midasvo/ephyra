@@ -15,8 +15,8 @@ import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import java.lang.reflect.Proxy
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -24,13 +24,13 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
+import org.jellyfin.sdk.model.api.ItemFields
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.jellyfin.sdk.model.api.ItemFields
 
 /**
  * CE (#252): the show page asks for the series' episodes once, not once per season, and takes the
@@ -64,11 +64,18 @@ class ShowLoadingTest {
     fun `download counts come from one series request and Room`() = runBlocking {
         val viewModel = viewModel(SeasonEpisodeCounts(season1, total = 1, downloaded = 1))
         viewModel.loadShow(showId)
-        val state = withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
+        val state =
+            withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
 
         assertEquals(listOf<UUID?>(null), episodeSeasonIds)
-        assertEquals(SeasonDownloadInfo(downloadedCount = 1, totalCount = 3, canDownload = true), state.seasonDownloadInfo[season1])
-        assertEquals(SeasonDownloadInfo(downloadedCount = 0, totalCount = 2, canDownload = true), state.seasonDownloadInfo[season2])
+        assertEquals(
+            SeasonDownloadInfo(downloadedCount = 1, totalCount = 3, canDownload = true),
+            state.seasonDownloadInfo[season1],
+        )
+        assertEquals(
+            SeasonDownloadInfo(downloadedCount = 0, totalCount = 2, canDownload = true),
+            state.seasonDownloadInfo[season2],
+        )
         assertTrue(state.hasDownloads)
         assertNull(state.error)
     }
@@ -77,7 +84,8 @@ class ShowLoadingTest {
     fun `nothing downloaded`() = runBlocking {
         val viewModel = viewModel()
         viewModel.loadShow(showId)
-        val state = withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
+        val state =
+            withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
 
         assertEquals(false, state.hasDownloads)
         assertEquals(0, state.seasonDownloadInfo[season1]?.downloadedCount)
@@ -111,7 +119,8 @@ class ShowLoadingTest {
     fun `all allowed offers Download for every season`() = runBlocking {
         val viewModel = viewModel()
         viewModel.loadShow(showId)
-        val state = withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
+        val state =
+            withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
 
         assertTrue(state.canDownload)
         assertEquals(listOf(season1, season2), state.downloadableSeasons.map { it.id })
@@ -138,7 +147,8 @@ class ShowLoadingTest {
         season1CanDownload = false
         val viewModel = viewModel()
         viewModel.loadShow(showId)
-        val state = withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
+        val state =
+            withTimeout(5_000) { viewModel.state.first { it.seasonDownloadInfo.isNotEmpty() } }
 
         assertTrue(state.canDownload)
         assertEquals(listOf(season2), state.downloadableSeasons.map { it.id })
@@ -170,9 +180,7 @@ class ShowLoadingTest {
         calls.clear()
 
         viewModel.loadShow(showId)
-        withTimeout(5_000) {
-            while (synchronized(calls) { "getEpisodes" !in calls }) delay(10)
-        }
+        withTimeout(5_000) { while (synchronized(calls) { "getEpisodes" !in calls }) delay(10) }
         delay(100)
         collector.cancel()
 

@@ -236,7 +236,8 @@ class PlaylistManagerAudioChoiceTest {
             type = FindroidSourceType.REMOTE,
             path = path(audio),
             size = 0L,
-            mediaStreams = listOf(audio(ENGLISH, "eng", "English"), audio(DUTCH, "dut", "Nederlands")),
+            mediaStreams =
+                listOf(audio(ENGLISH, "eng", "English"), audio(DUTCH, "dut", "Nederlands")),
             transcoded = transcodes,
             defaultAudioStreamIndex = audio ?: ENGLISH,
         )

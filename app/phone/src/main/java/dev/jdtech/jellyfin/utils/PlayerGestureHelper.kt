@@ -108,7 +108,7 @@ class PlayerGestureHelper(
                     when (appPreferences.getValue(appPreferences.playerGesturesHold)) {
                         "chapter" -> handleChapterSkip(e)
                         "speed" -> enableSpeedIncrease()
-                        // "disabled" -> do nothing
+                    // "disabled" -> do nothing
                     }
                 }
 
@@ -542,9 +542,10 @@ class PlayerGestureHelper(
     /**
      * CE (R6, T6, upstream #1144): whether [firstEvent] is too far from both side edges for a
      * brightness or volume swipe. Only on a player at least
-     * [Constants.GESTURE_EDGE_ZONE_MIN_PLAYER_WIDTH] by [Constants.GESTURE_EDGE_ZONE_MIN_PLAYER_HEIGHT]
-     * dp (a tablet or an unfolded foldable); anything smaller keeps the left and right halves.
-     * Reads the view's size at gesture time for the same reason as [inExclusionArea].
+     * [Constants.GESTURE_EDGE_ZONE_MIN_PLAYER_WIDTH] by
+     * [Constants.GESTURE_EDGE_ZONE_MIN_PLAYER_HEIGHT] dp (a tablet or an unfolded foldable);
+     * anything smaller keeps the left and right halves. Reads the view's size at gesture time for
+     * the same reason as [inExclusionArea].
      */
     private fun outsideVerticalGestureEdgeZones(firstEvent: MotionEvent): Boolean {
         val density = playerView.resources.displayMetrics.density
@@ -568,10 +569,10 @@ class PlayerGestureHelper(
      * Check if [firstEvent] is in the gesture exclusion area.
      *
      * Bounds come from [playerView], not from the display: [firstEvent] is delivered by a touch
-     * listener on that view, so its coordinates are view-local. Measuring them against the
-     * physical display only agrees when the player happens to fill the screen, which stops being
-     * true in split-screen and in freeform/desktop windows. Reading the view every time also keeps
-     * this correct across resizes — PlayerActivity swallows screenSize/screenLayout/orientation in
+     * listener on that view, so its coordinates are view-local. Measuring them against the physical
+     * display only agrees when the player happens to fill the screen, which stops being true in
+     * split-screen and in freeform/desktop windows. Reading the view every time also keeps this
+     * correct across resizes — PlayerActivity swallows screenSize/screenLayout/orientation in
      * configChanges, so this helper is never rebuilt.
      */
     private fun inExclusionArea(firstEvent: MotionEvent): Boolean {

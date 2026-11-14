@@ -21,10 +21,9 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
- * Lazily decodes trickplay sprite-sheets on demand and crops out the right cell for the
- * requested playback position. Sprite-sheets are decoded once and held in an LRU cache,
- * keyed by sheet index, so seeks within a sheet are essentially free and seeks across
- * sheets only re-decode once.
+ * Lazily decodes trickplay sprite-sheets on demand and crops out the right cell for the requested
+ * playback position. Sprite-sheets are decoded once and held in an LRU cache, keyed by sheet index,
+ * so seeks within a sheet are essentially free and seeks across sheets only re-decode once.
  *
  * The cache is three sheets: the one being scrubbed and the one on either side, which are loaded
  * ahead so crossing a sheet boundary doesn't wait for the network (#615). Sheets are decoded as
@@ -79,7 +78,7 @@ class TrickplayLoader(
         if (offsetX + width > sheet.width || offsetY + height > sheet.height) {
             Timber.w(
                 "Trickplay tile out of bounds: sheet=$sheetIndex tile=${location.index} " +
-                    "offset=($offsetX,$offsetY) sheet=${sheet.width}x${sheet.height}",
+                    "offset=($offsetX,$offsetY) sheet=${sheet.width}x${sheet.height}"
             )
             return null
         }
@@ -102,7 +101,12 @@ class TrickplayLoader(
     }
 
     private suspend fun loadSheet(sheetIndex: Int): Bitmap? {
-        sheetCache.get(sheetIndex)?.takeIf { !it.isRecycled }?.let { return it }
+        sheetCache
+            .get(sheetIndex)
+            ?.takeIf { !it.isRecycled }
+            ?.let {
+                return it
+            }
         if (sheetIndex < 0 || sheetIndex >= tiles.sheetCount) return null
         return try {
             sheetLoad(sheetIndex).await()

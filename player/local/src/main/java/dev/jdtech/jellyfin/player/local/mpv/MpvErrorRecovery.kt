@@ -45,8 +45,8 @@ internal class MpvErrorRecovery {
     }
 
     /**
-     * prepare() was called on a playlist of [itemCount] items. Returns the index of the item to load
-     * again after an error, or null for a normal prepare.
+     * prepare() was called on a playlist of [itemCount] items. Returns the index of the item to
+     * load again after an error, or null for a normal prepare.
      */
     fun onPrepare(itemCount: Int): Int? {
         val index = failedIndex?.takeIf { it in 0 until itemCount }

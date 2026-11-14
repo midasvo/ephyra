@@ -8,7 +8,8 @@ import org.junit.Test
 /** Which video track's frame rate [selectedVideoFrameRate] hints the display with. */
 class SelectedVideoFrameRateTest {
 
-    private fun video(frameRate: Float, selected: Boolean) = VideoTrackCandidate(selected, frameRate)
+    private fun video(frameRate: Float, selected: Boolean) =
+        VideoTrackCandidate(selected, frameRate)
 
     @Test
     fun `the selected video track wins over an attached picture listed after it`() {
@@ -34,6 +35,8 @@ class SelectedVideoFrameRateTest {
     @Test
     fun `no video track or an unknown frame rate gives nothing to hint`() {
         assertNull(selectedVideoFrameRate(emptyList()))
-        assertNull(selectedVideoFrameRate(listOf(video(Format.NO_VALUE.toFloat(), selected = true))))
+        assertNull(
+            selectedVideoFrameRate(listOf(video(Format.NO_VALUE.toFloat(), selected = true)))
+        )
     }
 }

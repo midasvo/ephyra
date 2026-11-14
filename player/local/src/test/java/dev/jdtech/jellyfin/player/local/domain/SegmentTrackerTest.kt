@@ -26,7 +26,13 @@ class SegmentTrackerTest {
 
     private fun tracker(
         actions: Map<FindroidSegmentType, MediaSegmentAction> =
-            mapOf(INTRO to ASK, OUTRO to ASK, RECAP to IGNORE, PREVIEW to IGNORE, COMMERCIAL to IGNORE),
+            mapOf(
+                INTRO to ASK,
+                OUTRO to ASK,
+                RECAP to IGNORE,
+                PREVIEW to IGNORE,
+                COMMERCIAL to IGNORE,
+            ),
         buttonDurationMs: Long = 5_000L,
         thresholdMs: Long = 5_000L,
         onlyInPip: Boolean = false,
@@ -65,7 +71,8 @@ class SegmentTrackerTest {
     fun `back-to-back segments hand over at the boundary`() {
         val first = FindroidSegment(RECAP, 0L, 20_000L)
         val second = FindroidSegment(INTRO, 20_000L, 50_000L)
-        val t = tracker(actions = mapOf(RECAP to ASK, INTRO to ASK), segments = listOf(first, second))
+        val t =
+            tracker(actions = mapOf(RECAP to ASK, INTRO to ASK), segments = listOf(first, second))
         assertEquals(first, (t.at(19_000L) as SegmentDecision.Ask).segment)
         val next = t.at(20_000L) as SegmentDecision.Ask
         assertEquals(second, next.segment)
@@ -84,7 +91,9 @@ class SegmentTrackerTest {
     @Test
     fun `isActive is false only when every type is ignored`() {
         assertTrue(tracker().isActive)
-        assertFalse(tracker(actions = FindroidSegmentType.entries.associateWith { IGNORE }).isActive)
+        assertFalse(
+            tracker(actions = FindroidSegmentType.entries.associateWith { IGNORE }).isActive
+        )
         assertFalse(tracker(actions = emptyMap()).isActive)
     }
 
@@ -146,10 +155,7 @@ class SegmentTrackerTest {
     @Test
     fun `auto-skip fires once per entry`() {
         val t = tracker(actions = mapOf(INTRO to SKIP))
-        assertEquals(
-            SegmentDecision.AutoSkip(intro, SkipTarget.SeekTo(150_000L)),
-            t.at(60_500L),
-        )
+        assertEquals(SegmentDecision.AutoSkip(intro, SkipTarget.SeekTo(150_000L)), t.at(60_500L))
         assertEquals("the seek has not landed yet", SegmentDecision.None, t.at(61_500L))
         t.at(200_000L)
         assertTrue("seeking back in skips again", t.at(70_000L) is SegmentDecision.AutoSkip)
@@ -186,7 +192,10 @@ class SegmentTrackerTest {
     fun `an outro followed by more than the threshold lands at its end`() {
         val t = tracker()
         val early = FindroidSegment(OUTRO, 1_300_000L, 1_390_000L) // 10 s before the end
-        assertEquals(SkipTarget.SeekTo(1_390_000L), t.skipTarget(early, duration, hasNextItem = true))
+        assertEquals(
+            SkipTarget.SeekTo(1_390_000L),
+            t.skipTarget(early, duration, hasNextItem = true),
+        )
         val closing = FindroidSegment(OUTRO, 1_300_000L, 1_395_001L)
         assertEquals(SkipTarget.NextItem, t.skipTarget(closing, duration, hasNextItem = true))
     }

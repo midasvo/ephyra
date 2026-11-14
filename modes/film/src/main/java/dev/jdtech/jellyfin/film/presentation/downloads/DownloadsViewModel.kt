@@ -18,11 +18,11 @@ import dev.jdtech.jellyfin.models.FindroidEpisodeDto
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidShow
-import dev.jdtech.jellyfin.models.toFindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidSource
 import dev.jdtech.jellyfin.models.FindroidSourceType
-import dev.jdtech.jellyfin.models.getLocalSourcesForItems
 import dev.jdtech.jellyfin.models.UiText
+import dev.jdtech.jellyfin.models.getLocalSourcesForItems
+import dev.jdtech.jellyfin.models.toFindroidEpisode
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.utils.Downloader
@@ -113,11 +113,9 @@ constructor(
                 // show up there, and drop the queue entry once its row has had a moment
                 // to show the check mark.
                 handledCompletions.retainAll(entries.map { it.id }.toSet())
-                val newlyCompleted =
-                    entries.filter {
-                        it.state is DownloadQueue.EntryState.Completed &&
-                            handledCompletions.add(it.id)
-                    }
+                val newlyCompleted = entries.filter {
+                    it.state is DownloadQueue.EntryState.Completed && handledCompletions.add(it.id)
+                }
                 if (newlyCompleted.isNotEmpty()) {
                     storageDirty = true
                     scheduleReload()
@@ -130,12 +128,11 @@ constructor(
                 // completed items appear and removed shows disappear. The pump now
                 // finalizes downloads (rename + DB update) before flipping to
                 // Completed, so a single reload is enough — no race window.
-                val isBusy =
-                    entries.any {
-                        it.state is DownloadQueue.EntryState.Downloading ||
-                            it.state is DownloadQueue.EntryState.Pending ||
-                            it.state is DownloadQueue.EntryState.Paused
-                    }
+                val isBusy = entries.any {
+                    it.state is DownloadQueue.EntryState.Downloading ||
+                        it.state is DownloadQueue.EntryState.Pending ||
+                        it.state is DownloadQueue.EntryState.Paused
+                }
                 if (isBusy) {
                     wasBusy = true
                 } else if (wasBusy) {
@@ -148,48 +145,46 @@ constructor(
     }
 
     /**
-     * Reload requested by the queue. A completion and the busy-to-idle transition arrive
-     * together, so wait a moment and run one load for both.
+     * Reload requested by the queue. A completion and the busy-to-idle transition arrive together,
+     * so wait a moment and run one load for both.
      */
     private fun scheduleReload() {
         reloadJob?.cancel()
-        reloadJob =
-            viewModelScope.launch {
-                delay(RELOAD_DEBOUNCE_MS)
-                loadItems()
-            }
+        reloadJob = viewModelScope.launch {
+            delay(RELOAD_DEBOUNCE_MS)
+            loadItems()
+        }
     }
 
     fun loadItems() {
         loadJob?.cancel()
-        loadJob =
-            viewModelScope.launch {
-                // Only the very first load shows the spinner; later ones refresh in place.
-                _state.update { it.copy(isLoading = loaded == null, error = null) }
-                try {
-                    reconcileStuckDownloads()
-                    val library = readLibrary()
-                    loaded = library
-                    val sections =
-                        withContext(Dispatchers.IO) { buildSections(library, _state.value.sortOrder) }
-                    _state.update { it.withLibrary(library, sections) }
+        loadJob = viewModelScope.launch {
+            // Only the very first load shows the spinner; later ones refresh in place.
+            _state.update { it.copy(isLoading = loaded == null, error = null) }
+            try {
+                reconcileStuckDownloads()
+                val library = readLibrary()
+                loaded = library
+                val sections =
+                    withContext(Dispatchers.IO) { buildSections(library, _state.value.sortOrder) }
+                _state.update { it.withLibrary(library, sections) }
 
-                    // The directory walk is the slow part, so the list goes out first.
-                    val storageInfo = calculateStorageInfo(library.sizeSignature)
-                    _state.update {
-                        it.copy(
-                            storageUsedBytes = storageInfo.usedBytes,
-                            storageFreeBytes = storageInfo.freeBytes,
-                            storageTotalBytes = storageInfo.totalBytes,
-                            storageIsExternal = storageInfo.isExternal,
-                        )
-                    }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    _state.update { it.copy(isLoading = false, error = e) }
+                // The directory walk is the slow part, so the list goes out first.
+                val storageInfo = calculateStorageInfo(library.sizeSignature)
+                _state.update {
+                    it.copy(
+                        storageUsedBytes = storageInfo.usedBytes,
+                        storageFreeBytes = storageInfo.freeBytes,
+                        storageTotalBytes = storageInfo.totalBytes,
+                        storageIsExternal = storageInfo.isExternal,
+                    )
                 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, error = e) }
             }
+        }
     }
 
     private fun DownloadsState.withLibrary(
@@ -210,22 +205,22 @@ constructor(
     }
 
     /**
-     * Self-heal pass: any source still tagged `.download` in the DB whose final
-     * file is already on disk gets fixed up. This rescues items left stuck by
-     * older buggy builds, missed broadcasts, or process death between rename
-     * and DB write — without it, those items would never appear in the Library
-     * tab again, even after restart.
+     * Self-heal pass: any source still tagged `.download` in the DB whose final file is already on
+     * disk gets fixed up. This rescues items left stuck by older buggy builds, missed broadcasts,
+     * or process death between rename and DB write — without it, those items would never appear in
+     * the Library tab again, even after restart.
      */
-    private suspend fun reconcileStuckDownloads() = withContext(Dispatchers.IO) {
-        for (src in database.getActiveDownloadSources()) {
-            val finalPath = src.path.removeSuffix(".download")
-            val finalFile = File(finalPath)
-            if (finalFile.exists() && finalFile.length() > 0) {
-                database.setSourceDownloaded(src.id, finalPath, System.currentTimeMillis())
-                File(src.path).takeIf { it.exists() }?.delete()
+    private suspend fun reconcileStuckDownloads() =
+        withContext(Dispatchers.IO) {
+            for (src in database.getActiveDownloadSources()) {
+                val finalPath = src.path.removeSuffix(".download")
+                val finalFile = File(finalPath)
+                if (finalFile.exists() && finalFile.length() > 0) {
+                    database.setSourceDownloaded(src.id, finalPath, System.currentTimeMillis())
+                    File(src.path).takeIf { it.exists() }?.delete()
+                }
             }
         }
-    }
 
     fun cancelDownload(activeDownload: ActiveDownload) {
         downloadQueue.remove(activeDownload.item.id)
@@ -241,7 +236,6 @@ constructor(
     fun retryDownload(activeDownload: ActiveDownload) {
         downloadQueue.retry(activeDownload.item.id)
     }
-
 
     fun setSortOrder(order: DownloadSortOrder) {
         _state.update { it.copy(sortOrder = order) }
@@ -309,8 +303,7 @@ constructor(
             }
         return ActiveDownload(
             item = item,
-            progress =
-                DownloadProgress(status = downloadStatus, progress = progress / 100f),
+            progress = DownloadProgress(status = downloadStatus, progress = progress / 100f),
             downloadId = downloadId,
             bytesDownloaded = bytesDownloaded,
             totalBytes = totalBytes,
@@ -385,11 +378,11 @@ constructor(
                 sourcesByItem[id].orEmpty().any { !it.path.endsWith(".download") }
             // A movie/show with ONLY a .download source is still being downloaded
             // and belongs in the Queue tab, not the Library tab.
-            val movies = items.filterIsInstance<FindroidMovie>().filter { hasCompletedSource(it.id) }
-            val episodeCounts =
-                shows.associate { show ->
-                    show.id to episodesByShow.getValue(show.id).count { hasCompletedSource(it.id) }
-                }
+            val movies =
+                items.filterIsInstance<FindroidMovie>().filter { hasCompletedSource(it.id) }
+            val episodeCounts = shows.associate { show ->
+                show.id to episodesByShow.getValue(show.id).count { hasCompletedSource(it.id) }
+            }
             LoadedLibrary(
                 movies = movies,
                 shows = shows.filter { episodeCounts.getValue(it.id) > 0 },

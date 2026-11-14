@@ -55,12 +55,9 @@ constructor(
     private val uiTextNextUp = UiText.StringResource(FilmR.string.next_up)
 
     companion object {
-        private val UUID_SUGGESTIONS =
-            UUID.fromString("31e47044-9b79-4bb0-99d0-0e477ed65420")
-        private val UUID_CONTINUE_WATCHING =
-            UUID.fromString("44845958-8326-4e83-beb4-c4f42e9eeb95")
-        private val UUID_NEXT_UP =
-            UUID.fromString("18bfced5-f237-4d42-aa72-d9d7fed19279")
+        private val UUID_SUGGESTIONS = UUID.fromString("31e47044-9b79-4bb0-99d0-0e477ed65420")
+        private val UUID_CONTINUE_WATCHING = UUID.fromString("44845958-8326-4e83-beb4-c4f42e9eeb95")
+        private val UUID_NEXT_UP = UUID.fromString("18bfced5-f237-4d42-aa72-d9d7fed19279")
     }
 
     private val homeRowsStore = HomeRowsStore(appPreferences, database)
@@ -89,9 +86,9 @@ constructor(
 
     /**
      * With [silent] the refresh indicator stays hidden, for reloads the user didn't ask for. The
-     * returned job ends once every row has loaded, for screens that wait for that (TV Home puts focus
-     * back only then, so it lands on the item in its new place). A load that starts while another
-     * is running replaces it (#251).
+     * returned job ends once every row has loaded, for screens that wait for that (TV Home puts
+     * focus back only then, so it lands on the item in its new place). A load that starts while
+     * another is running replaces it (#251).
      */
     fun loadData(silent: Boolean = false): Job {
         Timber.i("Loading data")
@@ -142,35 +139,34 @@ constructor(
             // and crashes the app, even with this try/catch around awaitAll.
             // See BUGREPORT_ANALYSIS.md. Each row catches its own failures, so one
             // row can't cancel the others; this stays for whatever gets past that.
-            val rows =
-                coroutineScope {
-                    // The user image only feeds the avatar: it must not hold the rows back.
-                    val avatar = server?.let { s -> async { refreshUserImage(s.id) } }
-                    // CE (#543): neither does the server's name.
-                    val name = server?.let { s -> async { refreshServerName(s) } }
-                    val results =
-                        awaitAll(
-                            async {
-                                logFailure("suggestions") {
-                                    loadSuggestions(show(HomeRowType.SUGGESTIONS))
-                                }
-                            },
-                            async {
-                                logFailure("resume items") {
-                                    loadResumeItems(show(HomeRowType.CONTINUE_WATCHING))
-                                }
-                            },
-                            async {
-                                logFailure("next up items") {
-                                    loadNextUpItems(show(HomeRowType.NEXT_UP))
-                                }
-                            },
-                            async { logFailure("views") { loadViews(stored, legacy) } },
-                        )
-                    avatar?.await()
-                    name?.await()
-                    results
-                }
+            val rows = coroutineScope {
+                // The user image only feeds the avatar: it must not hold the rows back.
+                val avatar = server?.let { s -> async { refreshUserImage(s.id) } }
+                // CE (#543): neither does the server's name.
+                val name = server?.let { s -> async { refreshServerName(s) } }
+                val results =
+                    awaitAll(
+                        async {
+                            logFailure("suggestions") {
+                                loadSuggestions(show(HomeRowType.SUGGESTIONS))
+                            }
+                        },
+                        async {
+                            logFailure("resume items") {
+                                loadResumeItems(show(HomeRowType.CONTINUE_WATCHING))
+                            }
+                        },
+                        async {
+                            logFailure("next up items") {
+                                loadNextUpItems(show(HomeRowType.NEXT_UP))
+                            }
+                        },
+                        async { logFailure("views") { loadViews(stored, legacy) } },
+                    )
+                avatar?.await()
+                name?.await()
+                results
+            }
             val error = errorIfAllFailed(rows)
             _state.update { it.copy(error = error) }
             loaded = error == null
@@ -432,7 +428,6 @@ constructor(
             throw results.first()!!.exceptionOrNull()!!
         }
     }
-
 
     fun onAction(action: HomeAction) {
         when (action) {

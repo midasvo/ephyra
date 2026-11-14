@@ -31,8 +31,8 @@ class TvPlayerKeyHandler(
 
     /**
      * The OK key whose down showed the controls, until its up. Cleared by any other key-down, by
-     * [forgetOkPress], and ignored once the controls are hidden again, so an OK-up whose down
-     * went elsewhere is never swallowed.
+     * [forgetOkPress], and ignored once the controls are hidden again, so an OK-up whose down went
+     * elsewhere is never swallowed.
      */
     private var okDown: Int? = null
 
@@ -131,8 +131,12 @@ class TvPlayerKeyHandler(
             KeyEvent.KEYCODE_HEADSETHOOK -> once { controls.togglePlayPause() }
             KeyEvent.KEYCODE_MEDIA_PLAY -> once { controls.play() }
             KeyEvent.KEYCODE_MEDIA_PAUSE -> once { controls.pause() }
-            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { r -> seek(forward = true, r, keyCode) }
-            KeyEvent.KEYCODE_MEDIA_REWIND -> { r -> seek(forward = false, r, keyCode) }
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { r ->
+                seek(forward = true, r, keyCode)
+            }
+            KeyEvent.KEYCODE_MEDIA_REWIND -> { r ->
+                seek(forward = false, r, keyCode)
+            }
             KeyEvent.KEYCODE_MEDIA_NEXT -> once { controls.next() }
             KeyEvent.KEYCODE_MEDIA_PREVIOUS -> once { controls.previous() }
             KeyEvent.KEYCODE_MEDIA_STOP -> once { controls.stop() }
@@ -148,8 +152,7 @@ class TvPlayerKeyHandler(
     private fun seek(
         forward: Boolean,
         repeatCount: Int,
-        keyCode: Int =
-            if (forward) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT,
+        keyCode: Int = if (forward) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT,
     ) {
         val step = settings().let { if (forward) it.forwardMs else it.backMs }
         val duration = controls.durationMs
@@ -165,7 +168,13 @@ class TvPlayerKeyHandler(
             return
         }
 
-        val delta = holdSeekMs(step, duration, heldMs = time - current.startedAt, sinceLastMs = time - current.lastAt)
+        val delta =
+            holdSeekMs(
+                step,
+                duration,
+                heldMs = time - current.startedAt,
+                sinceLastMs = time - current.lastAt,
+            )
         val target = clamp(current.targetMs + if (forward) delta else -delta, duration)
         hold = current.copy(lastAt = time, targetMs = target, repeated = true)
         controls.showSeekIndicator(target, forward)

@@ -3,8 +3,6 @@ package dev.jdtech.jellyfin.presentation.film
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -60,8 +60,8 @@ import dev.jdtech.jellyfin.presentation.film.components.HomeView
 import dev.jdtech.jellyfin.presentation.film.components.ProfileBottomSheet
 import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.ServerSelectionBottomSheet
-import dev.jdtech.jellyfin.presentation.film.components.showsServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.TopContentScrim
+import dev.jdtech.jellyfin.presentation.film.components.showsServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.ReloadOnResume
@@ -83,7 +83,9 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    ReloadOnResume(shouldReload = { viewModel.shouldReload(stopEventFollows = true) }) { viewModel.loadData(silent = true) }
+    ReloadOnResume(shouldReload = { viewModel.shouldReload(stopEventFollows = true) }) {
+        viewModel.loadData(silent = true)
+    }
 
     HomeScreenLayout(
         state = state,
@@ -175,8 +177,14 @@ internal fun HomeScreenLayout(
             shownUserId = state.user?.id
         } else if (state.user?.id != shownUserId) {
             shownUserId = state.user?.id
-            userFade.animateTo(0f, tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingExit))
-            userFade.animateTo(1f, tween(EphyraMotion.DURATION_MEDIUM, easing = EphyraMotion.EasingEnter))
+            userFade.animateTo(
+                0f,
+                tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingExit),
+            )
+            userFade.animateTo(
+                1f,
+                tween(EphyraMotion.DURATION_MEDIUM, easing = EphyraMotion.EasingEnter),
+            )
         }
     }
 
@@ -187,7 +195,10 @@ internal fun HomeScreenLayout(
     val listState = rememberLazyListStateAtStart(firstKey = rows.firstOrNull()?.id)
 
     Box(modifier = Modifier.fillMaxSize().semantics { isTraversalGroup = true }) {
-        PullToRefreshBox(isRefreshing = state.isLoading, onRefresh = { onAction(HomeAction.OnRetryClick) }) {
+        PullToRefreshBox(
+            isRefreshing = state.isLoading,
+            onRefresh = { onAction(HomeAction.OnRetryClick) },
+        ) {
             LazyColumn(
                 modifier =
                     Modifier.fillMaxSize()

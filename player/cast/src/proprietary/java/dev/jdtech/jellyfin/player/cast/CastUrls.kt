@@ -47,9 +47,9 @@ private fun originOf(url: String): Origin? {
 }
 
 /**
- * [url] as the receiver can fetch it: a path on the server, or an absolute URL on the server
- * itself (same scheme, host and port as [baseUrl]). The receiver sits on the user's network and
- * fetches whatever it is given, so a URL that points anywhere else is not passed on.
+ * [url] as the receiver can fetch it: a path on the server, or an absolute URL on the server itself
+ * (same scheme, host and port as [baseUrl]). The receiver sits on the user's network and fetches
+ * whatever it is given, so a URL that points anywhere else is not passed on.
  */
 internal fun receiverUrl(baseUrl: String, url: String): String? {
     if (url.isEmpty()) return null

@@ -56,11 +56,11 @@ import dev.jdtech.jellyfin.utils.ObserveAsEvents
 /**
  * CE (#626): everything Cast adds around the app's screens. [content] is the navigation display.
  * Around it this puts the mini player (below it, in room of its own) and, at expanded width, the
- * player as a side panel; it owns the device sheet and the player sheet, and tells the screens
- * what their Cast button shows ([LocalCastEntry]) and where Play goes ([LocalCastPlayback]).
+ * player as a side panel; it owns the device sheet and the player sheet, and tells the screens what
+ * their Cast button shows ([LocalCastEntry]) and where Play goes ([LocalCastPlayback]).
  *
- * In a build without Cast it is [content] and nothing else. [route] is the screen on top: what
- * Cast can do is read again whenever it changes, since the settings are one of the screens.
+ * In a build without Cast it is [content] and nothing else. [route] is the screen on top: what Cast
+ * can do is read again whenever it changes, since the settings are one of the screens.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

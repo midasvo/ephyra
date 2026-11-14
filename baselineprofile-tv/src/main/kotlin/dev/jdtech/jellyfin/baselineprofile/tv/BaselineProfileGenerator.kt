@@ -7,8 +7,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Records the baseline profile for app/tv. Run through
- * `./gradlew :app:tv:generateLibreReleaseBaselineProfile`; see README.md.
+ * Records the baseline profile for app/tv. Run through `./gradlew
+ * :app:tv:generateLibreReleaseBaselineProfile`; see README.md.
  */
 @RunWith(AndroidJUnit4::class)
 class BaselineProfileGenerator {

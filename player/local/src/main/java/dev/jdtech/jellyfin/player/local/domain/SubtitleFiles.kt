@@ -30,14 +30,14 @@ data class SubtitleFile(
  * track that stays muxed inside the downloaded video), so every row on a LOCAL source is a real
  * external file on disk, regardless of `isExternal`.
  *
- * CE (#597): a transcode does not carry the tracks inside the file. The server extracts the ones
- * it can and lists each with a delivery URL of its own, so the text tracks among those are loaded
- * as files too, before the external ones, which is the order of a stream that plays directly.
- * Left out are a track the server lists without a URL, and an image track (PGS, VobSub, DVB) even
- * when it has one: ExoPlayer lists such a file and then draws nothing from it (seen with the PGS
- * track of the test server's "Image Subs Movie"), and a track that shows nothing is worse than a
- * track that is not offered. Only for a transcode: for a stream that plays directly the server
- * can list the same URLs (it does for mpv's profile), and the track would then be there twice.
+ * CE (#597): a transcode does not carry the tracks inside the file. The server extracts the ones it
+ * can and lists each with a delivery URL of its own, so the text tracks among those are loaded as
+ * files too, before the external ones, which is the order of a stream that plays directly. Left out
+ * are a track the server lists without a URL, and an image track (PGS, VobSub, DVB) even when it
+ * has one: ExoPlayer lists such a file and then draws nothing from it (seen with the PGS track of
+ * the test server's "Image Subs Movie"), and a track that shows nothing is worse than a track that
+ * is not offered. Only for a transcode: for a stream that plays directly the server can list the
+ * same URLs (it does for mpv's profile), and the track would then be there twice.
  */
 fun subtitleFiles(source: FindroidSource): List<SubtitleFile> {
     val local = source.type == FindroidSourceType.LOCAL
@@ -83,9 +83,9 @@ private fun FindroidMediaStream.toSubtitleFile(embedded: Boolean, local: Boolean
 
 /**
  * The MIME type of a subtitle file. The format in the server's delivery [url]
- * (".../Stream.srt?...") comes first: the server converts a text track it cannot deliver as it
- * is, and the stream's [codec] is then that of the file's track, not of what is delivered. Without
- * a format in the URL the codec decides.
+ * (".../Stream.srt?...") comes first: the server converts a text track it cannot deliver as it is,
+ * and the stream's [codec] is then that of the file's track, not of what is delivered. Without a
+ * format in the URL the codec decides.
  */
 fun subtitleMimeType(codec: String, url: String?): String {
     val format =
@@ -101,15 +101,20 @@ fun subtitleMimeType(codec: String, url: String?): String {
 
 private fun mimeTypeOfSubtitleFormat(format: String): String? =
     when (format) {
-        "subrip", "srt" -> MimeTypes.APPLICATION_SUBRIP
-        "webvtt", "vtt" -> MimeTypes.TEXT_VTT
-        "ass", "ssa" -> MimeTypes.TEXT_SSA
+        "subrip",
+        "srt" -> MimeTypes.APPLICATION_SUBRIP
+        "webvtt",
+        "vtt" -> MimeTypes.TEXT_VTT
+        "ass",
+        "ssa" -> MimeTypes.TEXT_SSA
         "ttml" -> MimeTypes.APPLICATION_TTML
         // Image-based subtitle sidecars. media3 ships native parsers
         // for these, so advertising the correct MIME lets the renderer
         // actually draw the bitmaps instead of dropping the track.
-        "pgssub", "sup" -> MimeTypes.APPLICATION_PGS
-        "dvdsub", "idx" -> MimeTypes.APPLICATION_VOBSUB
+        "pgssub",
+        "sup" -> MimeTypes.APPLICATION_PGS
+        "dvdsub",
+        "idx" -> MimeTypes.APPLICATION_VOBSUB
         "dvbsub" -> MimeTypes.APPLICATION_DVBSUBS
         else -> null
     }

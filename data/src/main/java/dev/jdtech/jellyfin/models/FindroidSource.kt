@@ -16,9 +16,9 @@ data class FindroidSource(
     val mediaStreams: List<FindroidMediaStream>,
     val downloadId: Long? = null,
     /**
-     * True when [path] points at a server-side transcode rather than the original
-     * file: an HLS manifest on the playback path, or a progressive stream on the
-     * download path (Dolby Vision conversion or a user-picked quality cap).
+     * True when [path] points at a server-side transcode rather than the original file: an HLS
+     * manifest on the playback path, or a progressive stream on the download path (Dolby Vision
+     * conversion or a user-picked quality cap).
      */
     val transcoded: Boolean = false,
     /** CE (#510): for the media info sheet. A downloaded source has neither. */

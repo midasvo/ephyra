@@ -33,8 +33,8 @@ import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 private class StorageSegment(val label: String, val bytes: Long, val color: Color)
 
 /**
- * Storage card for the top of the Downloads screen: one segmented bar (movies, shows,
- * everything else, free space) and a single line saying how much downloads take.
+ * Storage card for the top of the Downloads screen: one segmented bar (movies, shows, everything
+ * else, free space) and a single line saying how much downloads take.
  */
 @Composable
 fun StorageSummary(

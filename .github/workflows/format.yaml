@@ -7,10 +7,12 @@ on:
     paths:
       - '**.kt'
       - '**.kts'
+      - 'gradle/libs.versions.toml'
   pull_request:
     paths:
       - '**.kt'
       - '**.kts'
+      - 'gradle/libs.versions.toml'
 
 # actions: write is for the "Cancel superseded runs" step, which stops the runs of older commits
 # of the same PR. It compares commits, which a concurrency group does not do.

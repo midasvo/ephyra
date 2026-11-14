@@ -44,8 +44,9 @@ import timber.log.Timber
  * or paused, or one that waits for a free slot, its retry or the network. The pump runs for as long
  * as this holds, and the download service runs for as long as the pump does.
  */
-internal fun hasDownloadWork(entries: List<DownloadQueue.Entry>): Boolean =
-    entries.any { it.isDownloadWork() }
+internal fun hasDownloadWork(entries: List<DownloadQueue.Entry>): Boolean = entries.any {
+    it.isDownloadWork()
+}
 
 internal fun DownloadQueue.Entry.isDownloadWork(): Boolean =
     state is DownloadQueue.EntryState.Downloading ||
@@ -53,9 +54,9 @@ internal fun DownloadQueue.Entry.isDownloadWork(): Boolean =
         state is DownloadQueue.EntryState.Paused
 
 /**
- * Central download scheduler. Holds a list of queued/active downloads, respects the
- * user's max-concurrent-downloads setting, and drives Downloader.downloadItem() as
- * slots open up. Single source of truth for download state across the app.
+ * Central download scheduler. Holds a list of queued/active downloads, respects the user's
+ * max-concurrent-downloads setting, and drives Downloader.downloadItem() as slots open up. Single
+ * source of truth for download state across the app.
  */
 @Singleton
 class DownloadQueue
@@ -100,21 +101,21 @@ constructor(
         /** Total bytes, -1 if unknown. */
         val totalBytes: Long = -1L,
         /**
-         * True when [totalBytes] is an estimate rather than a figure from
-         * the download engine — happens for transcodes, whose length is not known
-         * up front so we fall back to the item's original file size.
+         * True when [totalBytes] is an estimate rather than a figure from the download engine —
+         * happens for transcodes, whose length is not known up front so we fall back to the item's
+         * original file size.
          */
         val totalBytesEstimated: Boolean = false,
         /** True when the server is transcoding this download (e.g. Dolby Vision). */
         val isTranscode: Boolean = false,
         /**
-         * User-selected download quality cap (bits/sec) for this entry, or null
-         * for original quality. Carried through retries.
+         * User-selected download quality cap (bits/sec) for this entry, or null for original
+         * quality. Carried through retries.
          */
         val maxBitrate: Int? = null,
         /**
-         * True when Smart Downloads queued this entry, which is what lets it remove the
-         * download once the episode has been watched.
+         * True when Smart Downloads queued this entry, which is what lets it remove the download
+         * once the episode has been watched.
          */
         val smartQueued: Boolean = false,
         /** Moving-average bytes/sec, or 0 if not computed yet. */
@@ -153,11 +154,7 @@ constructor(
     /** Previous bytes + wall-clock (ms) sample per downloadId, for speed calc. */
     private val lastSamples = mutableMapOf<Long, Pair<Long, Long>>()
 
-    suspend fun enqueue(
-        item: FindroidItem,
-        maxBitrate: Int? = null,
-        smartQueued: Boolean = false,
-    ) {
+    suspend fun enqueue(item: FindroidItem, maxBitrate: Int? = null, smartQueued: Boolean = false) {
         var persisted = false
         var claimed = false
         mutex.withLock {
@@ -214,8 +211,8 @@ constructor(
     }
 
     /**
-     * Re-attaches an in-flight download started in a previous app session. No-op if
-     * the item is already tracked.
+     * Re-attaches an in-flight download started in a previous app session. No-op if the item is
+     * already tracked.
      */
     suspend fun restore(item: FindroidItem, downloadId: Long) {
         mutex.withLock {
@@ -246,13 +243,12 @@ constructor(
     }
 
     /**
-     * Re-attaches every in-flight download from the DB. Call on app startup to
-     * recover queue state after process death. Unlike the old DownloadManager model
-     * (where DM continued running independently), the OkHttp engine is in-process and
-     * does NOT survive process death. So restored active partials are added as
-     * [EntryState.Pending] rather than Downloading, causing the pump to call
-     * startDownload -> downloadItem, which detects the existing source row and resumes
-     * from the partial file via Range. Ordering: restored actives sort before fresh
+     * Re-attaches every in-flight download from the DB. Call on app startup to recover queue state
+     * after process death. Unlike the old DownloadManager model (where DM continued running
+     * independently), the OkHttp engine is in-process and does NOT survive process death. So
+     * restored active partials are added as [EntryState.Pending] rather than Downloading, causing
+     * the pump to call startDownload -> downloadItem, which detects the existing source row and
+     * resumes from the partial file via Range. Ordering: restored actives sort before fresh
      * pendings via their addedAt timestamp.
      */
     suspend fun restoreAll() {
@@ -284,16 +280,18 @@ constructor(
             // through downloadItem (which detects the existing source row and does Range resume).
             // Use addedAt = now - 1 so they sort before brand-new pending entries.
             val addedActive =
-                active.filter { it.item.id !in known }.map { restored ->
-                    Entry(
-                        id = restored.item.id,
-                        item = restored.item,
-                        addedAt = now - 1,
-                        state = EntryState.Pending,
-                        maxBitrate = restored.maxBitrate,
-                        smartQueued = restored.smartQueued,
-                    )
-                }
+                active
+                    .filter { it.item.id !in known }
+                    .map { restored ->
+                        Entry(
+                            id = restored.item.id,
+                            item = restored.item,
+                            addedAt = now - 1,
+                            state = EntryState.Pending,
+                            maxBitrate = restored.maxBitrate,
+                            smartQueued = restored.smartQueued,
+                        )
+                    }
             // Pending items entered after active downloads so they don't cut in line.
             val activeIds = addedActive.map { it.id }.toSet()
             val addedPending =
@@ -328,7 +326,8 @@ constructor(
                     .toSet()
             val itemIds = items.map { it.id }.toSet()
             _entries.value.forEach {
-                if (it.smartQueued && it.id in existingIds && it.id in itemIds) claimedIds.add(it.id)
+                if (it.smartQueued && it.id in existingIds && it.id in itemIds)
+                    claimedIds.add(it.id)
             }
             if (claimedIds.isNotEmpty()) {
                 _entries.value =
@@ -399,10 +398,10 @@ constructor(
     }
 
     /**
-     * The downloads to cancel for [entry]. Not only a running or paused one: a download waiting
-     * for its auto-retry, a failed one and one restored at start have no downloadId on the entry
-     * but keep their source row and partial file, which would bring them back at the next start
-     * (#426). Their ids are on the source rows.
+     * The downloads to cancel for [entry]. Not only a running or paused one: a download waiting for
+     * its auto-retry, a failed one and one restored at start have no downloadId on the entry but
+     * keep their source row and partial file, which would bring them back at the next start (#426).
+     * Their ids are on the source rows.
      */
     private suspend fun unfinishedDownloadIds(entry: Entry): List<Long> {
         val fromRows =
@@ -464,9 +463,8 @@ constructor(
     }
 
     /**
-     * True when the item has a Dolby Vision video stream. Those downloads are
-     * transcoded server-side (so they play offline), which makes their final
-     * size unknown while in flight.
+     * True when the item has a Dolby Vision video stream. Those downloads are transcoded
+     * server-side (so they play offline), which makes their final size unknown while in flight.
      */
     private fun FindroidItem.hasDolbyVision(): Boolean =
         (this as? FindroidSources)?.sources?.any { source ->
@@ -494,17 +492,16 @@ constructor(
             // stops itself once the pump is no longer active.
             _pumpActive.value = true
             DownloadPumpService.start(context)
-            pumpJob =
-                scope.launch {
-                    try {
-                        pump()
-                    } catch (e: Exception) {
-                        Timber.e(e, "DownloadQueue pump crashed")
-                        // Nothing pumps any more: let the service go. The next ensurePump()
-                        // starts both again.
-                        _pumpActive.value = false
-                    }
+            pumpJob = scope.launch {
+                try {
+                    pump()
+                } catch (e: Exception) {
+                    Timber.e(e, "DownloadQueue pump crashed")
+                    // Nothing pumps any more: let the service go. The next ensurePump()
+                    // starts both again.
+                    _pumpActive.value = false
                 }
+            }
         }
     }
 
@@ -534,13 +531,7 @@ constructor(
                 for (entry in active) {
                     val dlId = entry.downloadId ?: continue
                     val snapshot =
-                        snapshots[dlId]
-                            ?: Downloader.Progress(
-                                DownloadStatus.FAILED,
-                                0,
-                                -1L,
-                                -1L,
-                            )
+                        snapshots[dlId] ?: Downloader.Progress(DownloadStatus.FAILED, 0, -1L, -1L)
                     val newState: EntryState? =
                         when (snapshot.status) {
                             DownloadStatus.PENDING,
@@ -550,8 +541,7 @@ constructor(
                                 if (entry.state is EntryState.Paused) EntryState.Downloading
                                 else null
                             DownloadStatus.PAUSED ->
-                                if (entry.state is EntryState.Paused) null
-                                else EntryState.Paused
+                                if (entry.state is EntryState.Paused) null else EntryState.Paused
                             DownloadStatus.SUCCESSFUL -> EntryState.Completed
                             DownloadStatus.FAILED -> {
                                 val httpStatus = snapshot.httpStatus
@@ -573,9 +563,9 @@ constructor(
                     // A quality-capped transcode is far smaller than the original, so
                     // estimate it from the cap instead (never above the original size).
                     val cappedSize =
-                        entry.maxBitrate
-                            ?.let { estimateCappedDownloadSize(entry.item.runtimeTicks, it) }
-                            ?: 0L
+                        entry.maxBitrate?.let {
+                            estimateCappedDownloadSize(entry.item.runtimeTicks, it)
+                        } ?: 0L
                     val estimatedSize =
                         when {
                             cappedSize <= 0L -> originalSize
@@ -586,8 +576,7 @@ constructor(
                         snapshot.totalBytes <= 0L &&
                             estimatedSize > 0L &&
                             snapshot.bytesDownloaded in 0 until estimatedSize
-                    val effectiveTotal =
-                        if (estimating) estimatedSize else snapshot.totalBytes
+                    val effectiveTotal = if (estimating) estimatedSize else snapshot.totalBytes
                     // External subtitle/media-stream downloads have no retry/backoff of
                     // their own (unlike this entry's video downloadId, tracked above) — a
                     // transient failure otherwise permanently drops that subtitle track
@@ -612,9 +601,7 @@ constructor(
                         if (estimating) {
                             // Cap at 99: the estimate may undershoot, and we only want
                             // to show 100% once the download has genuinely completed.
-                            (snapshot.bytesDownloaded * 100 / estimatedSize)
-                                .toInt()
-                                .coerceIn(0, 99)
+                            (snapshot.bytesDownloaded * 100 / estimatedSize).toInt().coerceIn(0, 99)
                         } else {
                             snapshot.progress.coerceAtLeast(0).coerceAtMost(100)
                         }
@@ -643,7 +630,8 @@ constructor(
                         updates[entry.id] =
                             entry.copy(
                                 state = newState ?: entry.state,
-                                progress = if (newState == EntryState.Completed) 100 else newProgress,
+                                progress =
+                                    if (newState == EntryState.Completed) 100 else newProgress,
                                 bytesDownloaded = snapshot.bytesDownloaded,
                                 totalBytes = effectiveTotal,
                                 totalBytesEstimated = estimating,
@@ -658,24 +646,19 @@ constructor(
                     // DownloadsViewModel reacts to busy→idle by reloading the
                     // library — if we push first, that reload races the rename
                     // and the library tab comes up empty.
-                    val completedNow =
-                        updates.values.filter { it.state is EntryState.Completed }
+                    val completedNow = updates.values.filter { it.state is EntryState.Completed }
                     for (entry in completedNow) {
                         val dlId = entry.downloadId ?: continue
                         try {
                             downloader.finalizeDownload(dlId)
                         } catch (e: Exception) {
-                            Timber.e(
-                                e,
-                                "finalizeDownload failed for ${entry.item.name} (id=$dlId)",
-                            )
+                            Timber.e(e, "finalizeDownload failed for ${entry.item.name} (id=$dlId)")
                         }
                     }
                     // A failed entry keeps its partial .download file and source row so
                     // the next attempt (auto-retry or manual retry) can resume from where
                     // it left off via Range. We only clear the speed sample — no file/row cleanup.
-                    val failedEntries =
-                        updates.values.filter { it.state is EntryState.Failed }
+                    val failedEntries = updates.values.filter { it.state is EntryState.Failed }
                     for (failed in failedEntries) {
                         val dlId = failed.downloadId ?: continue
                         lastSamples.remove(dlId)
@@ -693,7 +676,9 @@ constructor(
                             )
                         if (next.state is EntryState.Pending) {
                             updates[failed.id] = next
-                            Timber.i("Auto-retry #${next.retryCount} for ${failed.item.name} in ${retryBackoffMs(failed.retryCount) / 1000}s")
+                            Timber.i(
+                                "Auto-retry #${next.retryCount} for ${failed.item.name} in ${retryBackoffMs(failed.retryCount) / 1000}s"
+                            )
                             try {
                                 downloader.savePendingDownload(
                                     failed.item,
@@ -701,15 +686,17 @@ constructor(
                                     failed.smartQueued,
                                 )
                             } catch (e: Exception) {
-                                Timber.e(e, "Failed to re-persist auto-retried download ${failed.item.name}")
+                                Timber.e(
+                                    e,
+                                    "Failed to re-persist auto-retried download ${failed.item.name}",
+                                )
                             }
                         } else {
                             exhausted.add(failed)
                         }
                     }
                     mutex.withLock {
-                        _entries.value =
-                            sort(_entries.value.map { updates[it.id] ?: it })
+                        _entries.value = sort(_entries.value.map { updates[it.id] ?: it })
                     }
                     // A finished download changes what the screens show (#251).
                     if (completedNow.isNotEmpty()) dataChanges.onChanged()
@@ -735,9 +722,13 @@ constructor(
             val freeSlots = (maxConcurrent - currentlyActive).coerceAtLeast(0)
             if (online && freeSlots > 0) {
                 val now = System.currentTimeMillis()
-                val pending = _entries.value.filter {
-                    it.state is EntryState.Pending && (it.retryAt == null || it.retryAt <= now)
-                }.take(freeSlots)
+                val pending =
+                    _entries.value
+                        .filter {
+                            it.state is EntryState.Pending &&
+                                (it.retryAt == null || it.retryAt <= now)
+                        }
+                        .take(freeSlots)
                 for (entry in pending) {
                     startDownload(entry)
                 }
@@ -746,16 +737,15 @@ constructor(
             // 3. Decide whether to keep pumping (under mutex to avoid starvation race
             //    with enqueue calling ensurePump between our check and our nulling of
             //    pumpJob).
-            val shouldExit =
-                mutex.withLock {
-                    if (!hasDownloadWork(_entries.value)) {
-                        pumpJob = null
-                        _pumpActive.value = false
-                        true
-                    } else {
-                        false
-                    }
+            val shouldExit = mutex.withLock {
+                if (!hasDownloadWork(_entries.value)) {
+                    pumpJob = null
+                    _pumpActive.value = false
+                    true
+                } else {
+                    false
                 }
+            }
             if (shouldExit) return
             delay(pollIntervalMs(_entries.value.count { it.state is EntryState.Downloading }))
         }
@@ -865,7 +855,10 @@ constructor(
 
     private fun notifyFailure(item: FindroidItem) {
         val nm = context.getSystemService<NotificationManager>() ?: return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && nm.getNotificationChannel(FAILURE_CHANNEL_ID) == null) {
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                nm.getNotificationChannel(FAILURE_CHANNEL_ID) == null
+        ) {
             nm.createNotificationChannel(
                 NotificationChannel(
                     FAILURE_CHANNEL_ID,
@@ -874,18 +867,20 @@ constructor(
                 )
             )
         }
-        val title = if (item is FindroidEpisode) {
-            "${item.seriesName} · S%02dE%02d".format(item.parentIndexNumber, item.indexNumber)
-        } else {
-            item.name
-        }
-        val notification = NotificationCompat.Builder(context, FAILURE_CHANNEL_ID)
-            .setSmallIcon(CoreR.drawable.ic_x)
-            .setContentTitle(context.getString(CoreR.string.download_failed))
-            .setContentText(title)
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .build()
+        val title =
+            if (item is FindroidEpisode) {
+                "${item.seriesName} · S%02dE%02d".format(item.parentIndexNumber, item.indexNumber)
+            } else {
+                item.name
+            }
+        val notification =
+            NotificationCompat.Builder(context, FAILURE_CHANNEL_ID)
+                .setSmallIcon(CoreR.drawable.ic_x)
+                .setContentTitle(context.getString(CoreR.string.download_failed))
+                .setContentText(title)
+                .setAutoCancel(true)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .build()
         // Use item hashCode as id so each failed item gets its own notification.
         nm.notify(item.id.hashCode(), notification)
     }

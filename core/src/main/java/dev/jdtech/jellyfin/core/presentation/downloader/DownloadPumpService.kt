@@ -25,10 +25,10 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
- * Foreground service that keeps the app process alive while the DownloadQueue has
- * work to do. The OkHttp download engine runs in-process, so closing the app would
- * stall any active or pending transfers until the user reopens the app. This service
- * keeps the process alive while work remains.
+ * Foreground service that keeps the app process alive while the DownloadQueue has work to do. The
+ * OkHttp download engine runs in-process, so closing the app would stall any active or pending
+ * transfers until the user reopens the app. This service keeps the process alive while work
+ * remains.
  *
  * CE (#560): the service does not decide by itself when it is done. It runs for as long as the
  * queue's pump is active ([DownloadQueue.pumpActive]) and its notification is only ever posted by
@@ -92,26 +92,25 @@ class DownloadPumpService : Service() {
 
     private fun observeQueue() {
         observeJob?.cancel()
-        observeJob =
-            scope.launch {
-                combine(downloadQueue.pumpActive, downloadQueue.entries) { active, entries ->
-                        active to entries
+        observeJob = scope.launch {
+            combine(downloadQueue.pumpActive, downloadQueue.entries) { active, entries ->
+                    active to entries
+                }
+                .collect { (active, entries) ->
+                    if (stopped) return@collect
+                    if (!active) {
+                        stopWhenPumpIdle()
+                        return@collect
                     }
-                    .collect { (active, entries) ->
-                        if (stopped) return@collect
-                        if (!active) {
-                            stopWhenPumpIdle()
-                            return@collect
-                        }
-                        awaitingRestore = false
-                        val next = downloadPumpNotice(entries) ?: return@collect
-                        if (next != notice) {
-                            notice = next
-                            getSystemService<NotificationManager>()
-                                ?.notify(NOTIFICATION_ID, buildNotification())
-                        }
+                    awaitingRestore = false
+                    val next = downloadPumpNotice(entries) ?: return@collect
+                    if (next != notice) {
+                        notice = next
+                        getSystemService<NotificationManager>()
+                            ?.notify(NOTIFICATION_ID, buildNotification())
                     }
-            }
+                }
+        }
     }
 
     /**
@@ -159,9 +158,10 @@ class DownloadPumpService : Service() {
                     getString(CoreR.string.download_waiting_for_network)
                 DownloadPumpNotice.Waiting -> getString(CoreR.string.download_queued)
             }
-        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
-            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+        val launchIntent =
+            packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
         val pendingIntent = launchIntent?.let {
             PendingIntent.getActivity(
                 this,

@@ -10,7 +10,5 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppVariantModule {
-    @Provides
-    @Singleton
-    fun provideAppVariant(): AppVariant = AppVariant.PHONE
+    @Provides @Singleton fun provideAppVariant(): AppVariant = AppVariant.PHONE
 }

@@ -28,9 +28,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/**
- * CE (#505): the season page can tell a season without episodes from one that is still loading.
- */
+/** CE (#505): the season page can tell a season without episodes from one that is still loading. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SeasonLoadingTest {
     private val seriesId = UUID.fromString("11111111-1111-1111-1111-111111111111")

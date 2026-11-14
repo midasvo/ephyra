@@ -10,8 +10,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 
 /**
  * CE (#299): a short sideways shake each time [trigger] goes up, for a rejected PIN. It settles
- * back to rest with shrinking swings and no overshoot past the first one. Off under [reducedMotion];
- * the error text next to it carries the state either way.
+ * back to rest with shrinking swings and no overshoot past the first one. Off under
+ * [reducedMotion]; the error text next to it carries the state either way.
  */
 @Composable
 fun Modifier.errorShake(trigger: Int): Modifier {

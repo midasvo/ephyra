@@ -6,6 +6,9 @@ import java.util.UUID
 sealed interface SeasonAction {
     data class Play(val startFromBeginning: Boolean = false) : SeasonAction
 
+    /** CE (#638): plays the season's episodes in random order. */
+    data object Shuffle : SeasonAction
+
     data object MarkAsPlayed : SeasonAction
 
     data object UnmarkAsPlayed : SeasonAction

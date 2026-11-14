@@ -6,7 +6,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** Unit tests for matching a remembered series audio or subtitle choice to another file's tracks. */
+/**
+ * Unit tests for matching a remembered series audio or subtitle choice to another file's tracks.
+ */
 class SeriesTrackPreferenceTest {
 
     private fun track(language: String?, title: String? = null) = TrackCandidate(language, title)
@@ -151,15 +153,20 @@ class SeriesTrackPreferenceTest {
     @Test
     fun `a pick made in the audio dialog of a transcode is found among the player's tracks`() {
         // #596: the server says "nld", ExoPlayer "nl", mpv "dut".
-        val server = serverAudioTracks(listOf(stream(1, "eng", "English"), stream(2, "nld", "Dutch")))
+        val server =
+            serverAudioTracks(listOf(stream(1, "eng", "English"), stream(2, "nld", "Dutch")))
         val pick = seriesTrackChoice(server.map { TrackCandidate(it.language, it.title) }, 1)!!
-        assertEquals(1, matchSeriesTrack(pick, listOf(track("en", "English"), track("nl", "Dutch"))))
+        assertEquals(
+            1,
+            matchSeriesTrack(pick, listOf(track("en", "English"), track("nl", "Dutch"))),
+        )
         assertEquals(1, matchSeriesTrack(pick, listOf(track("eng"), track("dut"))))
     }
 
     @Test
     fun `external audio and streams without an index are not requested`() {
-        val streams = listOf(stream(1, "eng"), stream(2, "nld", external = true), stream(null, "deu"))
+        val streams =
+            listOf(stream(1, "eng"), stream(2, "nld", external = true), stream(null, "deu"))
         assertNull(audioStreamIndex(StoredChoice("nld", null, 0), streams))
         assertNull(audioStreamIndex(StoredChoice("deu", null, 0), streams))
         assertEquals(1, audioStreamIndex(StoredChoice("eng", null, 0), streams))

@@ -168,7 +168,13 @@ class CastUrlsTest {
         )
         assertEquals(
             "https://example.org/jellyfin/videos/1/master.m3u8",
-            castStreamUrl("https://example.org/jellyfin", itemId, "abc", "videos/1/master.m3u8", null),
+            castStreamUrl(
+                "https://example.org/jellyfin",
+                itemId,
+                "abc",
+                "videos/1/master.m3u8",
+                null,
+            ),
         )
     }
 

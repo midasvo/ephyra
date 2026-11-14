@@ -12,8 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 
 /**
- * Fades scrolling content out behind the status bar and a floating header, so it can't run
- * through them. Blends into the background, so it stays invisible until content scrolls under it.
+ * Fades scrolling content out behind the status bar and a floating header, so it can't run through
+ * them. Blends into the background, so it stays invisible until content scrolls under it.
  */
 @Composable
 fun TopContentScrim(height: Dp, modifier: Modifier = Modifier) {

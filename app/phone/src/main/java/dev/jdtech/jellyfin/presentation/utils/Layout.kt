@@ -7,8 +7,8 @@ import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 
 /**
- * Window width class, the only thing layout decisions key on. See docs/tablet/4-design.md §1:
- * never device type, never `smallestScreenWidthDp`.
+ * Window width class, the only thing layout decisions key on. See docs/tablet/4-design.md §1: never
+ * device type, never `smallestScreenWidthDp`.
  *
  * Compact is below 600 dp (phones in portrait), Medium is 600–839 dp (tablets in portrait, phones
  * in landscape, split-screen halves), Expanded is 840 dp and up (tablets in landscape, desktop).
@@ -42,8 +42,8 @@ fun isCompactHeight(): Boolean =
         .isHeightAtLeastBreakpoint(WindowSizeClass.HEIGHT_DP_MEDIUM_LOWER_BOUND)
 
 /**
- * Layout tokens per width class (docs/tablet/4-design.md §2). Values that don't depend on the
- * class are plain properties; the rest take the class so a caller can't forget it.
+ * Layout tokens per width class (docs/tablet/4-design.md §2). Values that don't depend on the class
+ * are plain properties; the rest take the class so a caller can't forget it.
  */
 object Layout {
     /** Any column of running text: about 75 characters of bodyMedium. */
@@ -116,8 +116,8 @@ object Layout {
 }
 
 /**
- * True when an item page (Movie, Show, Episode) should use its wide hero layout: Medium or
- * Expanded width with room in height. A phone in landscape keeps the compact layout.
+ * True when an item page (Movie, Show, Episode) should use its wide hero layout: Medium or Expanded
+ * width with room in height. A phone in landscape keeps the compact layout.
  */
 @Composable
 fun useWideItemLayout(): Boolean = currentWidthClass() != WidthClass.Compact && !isCompactHeight()
@@ -137,4 +137,5 @@ fun useDockedSearch(): Boolean = currentWidthClass() != WidthClass.Compact && !i
  * landscape keep the single-column page.
  */
 @Composable
-fun useSeasonListDetail(): Boolean = currentWidthClass() == WidthClass.Expanded && !isCompactHeight()
+fun useSeasonListDetail(): Boolean =
+    currentWidthClass() == WidthClass.Expanded && !isCompactHeight()

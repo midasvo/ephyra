@@ -32,9 +32,9 @@ const val INFO_CREDIT_TAG = "info_credit"
  * What an item is and who made it, under its overview.
  *
  * CE (#510): the genres are one quiet line ("Animation · Comedy · Family"), which needs no label.
- * The credits are a small table: muted labels in a column as wide as the longest of them, the
- * names beside them. Before, the four were body lines of "Label: value" that read as a second
- * paragraph next to the overview.
+ * The credits are a small table: muted labels in a column as wide as the longest of them, the names
+ * beside them. Before, the four were body lines of "Label: value" that read as a second paragraph
+ * next to the overview.
  */
 @Composable
 fun InfoText(

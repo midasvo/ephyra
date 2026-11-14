@@ -17,9 +17,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.res.stringResource
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
 import dev.jdtech.jellyfin.film.presentation.home.HomeAction
@@ -52,7 +52,7 @@ fun HomeCarouselItem(
                 .clip(MaterialTheme.shapes.large)
                 .copyOnLongClick(
                     text = item.name,
-                    onClick = { onAction(HomeAction.OnItemClick(item)) }
+                    onClick = { onAction(HomeAction.OnItemClick(item)) },
                 )
     ) {
         // CE (#433): the poster stands in for a missing backdrop. With neither, the card is plain
@@ -105,7 +105,8 @@ fun HomeCarouselItem(
             Text(
                 text = item.name,
                 modifier = Modifier,
-                color = if (artwork.hasArtwork) Color.White else MaterialTheme.colorScheme.onSurface,
+                color =
+                    if (artwork.hasArtwork) Color.White else MaterialTheme.colorScheme.onSurface,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 2,
                 style = MaterialTheme.typography.titleLarge,

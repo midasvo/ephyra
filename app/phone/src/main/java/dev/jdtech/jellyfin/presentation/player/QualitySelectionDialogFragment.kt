@@ -7,8 +7,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.BasePlayerActivity
+import dev.jdtech.jellyfin.player.local.R
 import dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel
 import dev.jdtech.jellyfin.presentation.utils.VideoQualities
 import java.lang.IllegalStateException

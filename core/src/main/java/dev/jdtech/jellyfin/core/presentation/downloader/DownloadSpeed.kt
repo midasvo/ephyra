@@ -13,11 +13,10 @@ internal data class SpeedSample(
 /**
  * Computes the download speed for one poll tick.
  *
- * The engine's byte counter may update less often than the queue polls (~1 s), so some
- * polls see the exact same byte count. A naive delta/elapsed then yields 0 on those polls,
- * which makes the speed + ETA flash in the UI. This keeps the last known speed across flat
- * polls and only advances the sample clock on real progress, so the next delta is measured
- * over the true interval.
+ * The engine's byte counter may update less often than the queue polls (~1 s), so some polls see
+ * the exact same byte count. A naive delta/elapsed then yields 0 on those polls, which makes the
+ * speed + ETA flash in the UI. This keeps the last known speed across flat polls and only advances
+ * the sample clock on real progress, so the next delta is measured over the true interval.
  */
 internal fun nextDownloadSpeed(
     prevSample: Pair<Long, Long>?,
@@ -43,10 +42,10 @@ internal fun nextDownloadSpeed(
 private const val SPEED_EMIT_PERCENT = 10L
 
 /**
- * Whether a new speed differs enough from the displayed one to justify re-emitting the queue
- * when nothing else (state, progress, bytes) changed. The speed is shown in the UI, so it is
- * never frozen: any change of at least 10%, or to/from zero, is emitted, and the latest speed
- * rides along with every other emission.
+ * Whether a new speed differs enough from the displayed one to justify re-emitting the queue when
+ * nothing else (state, progress, bytes) changed. The speed is shown in the UI, so it is never
+ * frozen: any change of at least 10%, or to/from zero, is emitted, and the latest speed rides along
+ * with every other emission.
  */
 internal fun isSignificantSpeedChange(previous: Long, current: Long): Boolean {
     if (previous == current) return false

@@ -137,8 +137,7 @@ internal fun CastIcon(
                     else CoreR.drawable.ic_cast
                 ),
             contentDescription = null,
-            tint =
-                if (state == CastButtonState.CONNECTED) connectedTint else restingTint,
+            tint = if (state == CastButtonState.CONNECTED) connectedTint else restingTint,
         )
     }
 }

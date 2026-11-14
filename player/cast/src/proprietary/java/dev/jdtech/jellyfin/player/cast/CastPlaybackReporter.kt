@@ -10,8 +10,7 @@ internal sealed interface CastReport {
 
     data class Progress(val itemId: UUID, val positionMs: Long, val isPaused: Boolean) : CastReport
 
-    data class Stop(val itemId: UUID, val positionMs: Long, val playedPercentage: Int?) :
-        CastReport
+    data class Stop(val itemId: UUID, val positionMs: Long, val playedPercentage: Int?) : CastReport
 }
 
 /** What the receiver and the controller say at one moment. */
@@ -36,9 +35,9 @@ internal data class CastReceiverState(
  * - playing became paused or the other way round. Buffering is neither: it keeps the last flag.
  * - the position jumped: it is more than [SEEK_TOLERANCE_MS] away from where the clock puts it
  *   since the last time the receiver was heard from.
- * - on a [tick], when not paused and [intervalMs] has passed since the last report of any kind
- *   (the start included). A tick that comes sooner is dropped, so a report for a change of state
- *   pushes the next interval report back.
+ * - on a [tick], when not paused and [intervalMs] has passed since the last report of any kind (the
+ *   start included). A tick that comes sooner is dropped, so a report for a change of state pushes
+ *   the next interval report back.
  *
  * The receiver sends many status updates that change none of this, and they lead to no report.
  */
@@ -83,8 +82,8 @@ internal class CastPlaybackReporter(
         if (state.status == CastPlaybackStatus.PLAYING) playing(state) else emptyList()
 
     /**
-     * The receiver's queue changed. If it moved on, the item that was playing is done, wherever
-     * the reports for the new one stand.
+     * The receiver's queue changed. If it moved on, the item that was playing is done, wherever the
+     * reports for the new one stand.
      */
     fun queueChanged(receiverItemId: UUID?): List<CastReport> =
         if (reportingItemId != null && receiverItemId != reportingItemId) stop() else emptyList()
@@ -150,7 +149,9 @@ internal class CastPlaybackReporter(
         // is not a seek back to the start, and the stop that follows must not say it was.
         val duration = durations[itemId]
         val ranOut =
-            duration != null && positionMs >= duration - END_WINDOW_MS && position < SEEK_TOLERANCE_MS
+            duration != null &&
+                positionMs >= duration - END_WINDOW_MS &&
+                position < SEEK_TOLERANCE_MS
         if (ranOut) return emptyList()
         val isPaused =
             when (state.status) {

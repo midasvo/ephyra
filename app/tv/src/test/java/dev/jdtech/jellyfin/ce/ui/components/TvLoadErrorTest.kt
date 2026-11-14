@@ -56,8 +56,11 @@ class TvLoadErrorTest {
         }
         rule.waitForIdle()
 
-        rule.onNode(hasText("Can't reach the Jellyfin server", substring = true)).assertIsDisplayed()
-        rule.onNode(hasText("Check your connection and try again.", substring = true))
+        rule
+            .onNode(hasText("Can't reach the Jellyfin server", substring = true))
+            .assertIsDisplayed()
+        rule
+            .onNode(hasText("Check your connection and try again.", substring = true))
             .assertIsDisplayed()
         // Never the exception's own text.
         rule.onNode(hasText("10.0.2.2", substring = true)).assertDoesNotExist()
@@ -91,12 +94,9 @@ class TvLoadErrorTest {
     @Test
     fun favoritesFocusesTheFirstCardAfterASuccessfulRetry() {
         val movies = (0 until 3).map { dummyMovie.copy(id = UUID(0, it.toLong())) }
-        var state by
-            mutableStateOf(CollectionState(isLoading = false, error = unreachable))
+        var state by mutableStateOf(CollectionState(isLoading = false, error = unreachable))
         rule.setContent {
-            FindroidTheme {
-                FavoritesScreenLayout(state = state, onItemClick = {}, onRetry = {})
-            }
+            FindroidTheme { FavoritesScreenLayout(state = state, onItemClick = {}, onRetry = {}) }
         }
         rule.waitForIdle()
         rule.onNodeWithTag(TV_LOAD_ERROR_TAG).assertIsDisplayed()
@@ -118,7 +118,8 @@ class TvLoadErrorTest {
             )
         rule.waitForIdle()
 
-        rule.onNode(hasAnyAncestor(hasTestTag(favoritesCardTag(movies[0].id))) and isFocusable())
+        rule
+            .onNode(hasAnyAncestor(hasTestTag(favoritesCardTag(movies[0].id))) and isFocusable())
             .assertIsFocused()
     }
 }

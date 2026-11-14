@@ -31,7 +31,10 @@ data class User(
      */
     val pinHash: String? = null,
     val pinSalt: String? = null,
-    /** Whether a profile with a PIN also asks for it when the app starts in it (not only on a switch). */
+    /**
+     * Whether a profile with a PIN also asks for it when the app starts in it (not only on a
+     * switch).
+     */
     @ColumnInfo(defaultValue = "1") val pinOnStart: Boolean = true,
     /**
      * CE (#330): what [pinHash] is the hash of, [ProfileLockType.value]: `pin` (digits) or

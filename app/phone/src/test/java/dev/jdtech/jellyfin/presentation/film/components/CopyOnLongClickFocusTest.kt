@@ -34,9 +34,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * #442: a text that can only be copied is not a Tab stop, so Tab on an item page moves between
- * the controls. It is still copied by a long press, and a screen reader still finds it with its
- * copy action. A text that also does something on a click (the overview that expands) stays one.
+ * #442: a text that can only be copied is not a Tab stop, so Tab on an item page moves between the
+ * controls. It is still copied by a long press, and a screen reader still finds it with its copy
+ * action. A text that also does something on a click (the overview that expands) stays one.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)

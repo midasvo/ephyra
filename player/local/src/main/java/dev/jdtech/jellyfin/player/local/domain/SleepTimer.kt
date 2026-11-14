@@ -50,7 +50,8 @@ class SleepTimer {
     fun set(option: SleepTimerOption, nowMs: Long, itemId: String?) {
         this.option = option
         this.itemId = itemId
-        deadlineMs = if (option is SleepTimerOption.Duration) nowMs + option.minutes * 60_000L else 0L
+        deadlineMs =
+            if (option is SleepTimerOption.Duration) nowMs + option.minutes * 60_000L else 0L
     }
 
     fun clear() {

@@ -6,8 +6,9 @@ import dev.jdtech.jellyfin.settings.domain.Constants
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import kotlin.time.DurationUnit
+import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +16,6 @@ import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -63,8 +63,8 @@ class JellyfinApi(
 ) {
     /**
      * CE (#296): the SDK builds its client from this one with `newBuilder()`, so both share one
-     * connection pool. The player streams media over it ([httpClient]) and so reuses the
-     * connection the API calls before playback left open.
+     * connection pool. The player streams media over it ([httpClient]) and so reuses the connection
+     * the API calls before playback left open.
      */
     private val okHttpFactory =
         OkHttpFactory(base = OkHttpClient.Builder().addInterceptor(::watchResponses).build())
@@ -117,8 +117,8 @@ class JellyfinApi(
 
     /**
      * CE (#281): asks the server in use for its public info, the smallest request it answers
-     * without a token. True when it answered, false when it did not within [PROBE_TIMEOUT_MS] or
-     * a proxy answered for it, null when no server is set.
+     * without a token. True when it answered, false when it did not within [PROBE_TIMEOUT_MS] or a
+     * proxy answered for it, null when no server is set.
      */
     suspend fun probeServer(): Boolean? {
         val baseUrl = api.baseUrl?.trimEnd('/')?.takeIf { it.isNotEmpty() } ?: return null

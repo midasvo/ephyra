@@ -30,10 +30,10 @@ data class ServerReachabilityState(
 /**
  * CE (#281): the rules of server reachability, without Android or coroutines.
  *
- * The app's own requests carry most of it: an answered one means reachable, with no request made
- * to find that out. A probe is only asked for when something suggests a change (a request that
- * failed or stays unanswered, a network change, the app coming to the foreground, the user's
- * Retry), and while the server is unreachable, in growing steps.
+ * The app's own requests carry most of it: an answered one means reachable, with no request made to
+ * find that out. A probe is only asked for when something suggests a change (a request that failed
+ * or stays unanswered, a network change, the app coming to the foreground, the user's Retry), and
+ * while the server is unreachable, in growing steps.
  *
  * Not thread-safe: the caller serialises the calls.
  */

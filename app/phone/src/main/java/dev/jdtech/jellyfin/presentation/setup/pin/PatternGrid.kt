@@ -92,8 +92,10 @@ fun PatternGrid(
     val lineColor by
         animateColorAsState(
             targetValue =
-                if (rejected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-            animationSpec = tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingStandard),
+                if (rejected) MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.primary,
+            animationSpec =
+                tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingStandard),
             label = "patternColor",
         )
     val restColor = MaterialTheme.colorScheme.onSurfaceVariant

@@ -8,8 +8,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 /**
- * The launcher tells the app when the user removes one of its programs from the Watch Next row.
- * The item is remembered as dismissed, so the next sync doesn't add it back (see [planWatchNext]).
+ * The launcher tells the app when the user removes one of its programs from the Watch Next row. The
+ * item is remembered as dismissed, so the next sync doesn't add it back (see [planWatchNext]).
  */
 @AndroidEntryPoint
 class WatchNextRemovedReceiver : BroadcastReceiver() {

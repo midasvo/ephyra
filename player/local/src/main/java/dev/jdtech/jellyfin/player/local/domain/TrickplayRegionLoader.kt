@@ -74,28 +74,28 @@ class TrickplayRegionLoader(
             }
             val decoder = decoderFor(location.sheetIndex) ?: return@withLock null
             withContext(Dispatchers.Default) {
-                val rect =
-                    Rect(
-                        location.offsetX,
-                        location.offsetY,
-                        location.offsetX + tiles.width,
-                        location.offsetY + tiles.height,
-                    )
-                if (rect.right > decoder.width || rect.bottom > decoder.height) {
-                    Timber.w(
-                        "Trickplay tile out of bounds: sheet=${location.sheetIndex} " +
-                            "tile=${location.index} rect=$rect " +
-                            "sheet=${decoder.width}x${decoder.height}"
-                    )
-                    return@withContext null
+                    val rect =
+                        Rect(
+                            location.offsetX,
+                            location.offsetY,
+                            location.offsetX + tiles.width,
+                            location.offsetY + tiles.height,
+                        )
+                    if (rect.right > decoder.width || rect.bottom > decoder.height) {
+                        Timber.w(
+                            "Trickplay tile out of bounds: sheet=${location.sheetIndex} " +
+                                "tile=${location.index} rect=$rect " +
+                                "sheet=${decoder.width}x${decoder.height}"
+                        )
+                        return@withContext null
+                    }
+                    try {
+                        decoder.decodeRegion(rect, options)
+                    } catch (e: Exception) {
+                        Timber.e(e, "Failed to decode trickplay tile ${location.index}")
+                        null
+                    }
                 }
-                try {
-                    decoder.decodeRegion(rect, options)
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to decode trickplay tile ${location.index}")
-                    null
-                }
-            }
                 ?.also { thumbnails.put(location.index, it) }
         }
     }
@@ -148,7 +148,8 @@ class TrickplayRegionLoader(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 BitmapRegionDecoder.newInstance(bytes, 0, bytes.size)
             } else {
-                @Suppress("DEPRECATION") BitmapRegionDecoder.newInstance(bytes, 0, bytes.size, false)
+                @Suppress("DEPRECATION")
+                BitmapRegionDecoder.newInstance(bytes, 0, bytes.size, false)
             }
     }
 }

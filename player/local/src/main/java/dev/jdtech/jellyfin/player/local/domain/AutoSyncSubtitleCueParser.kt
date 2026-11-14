@@ -1,11 +1,10 @@
 package dev.jdtech.jellyfin.player.local.domain
 
 import dev.jdtech.jellyfin.player.core.domain.models.SubtitleSyncCue
-import kotlin.math.max
 
 /**
- * CE (#619): Parser for subtitle files (SRT, WebVTT, ASS/SSA, TTML) to extract timestamped
- * dialogue cues for smart subtitle synchronization.
+ * CE (#619): Parser for subtitle files (SRT, WebVTT, ASS/SSA, TTML) to extract timestamped dialogue
+ * cues for smart subtitle synchronization.
  */
 object AutoSyncSubtitleCueParser {
     private val timestampRegex = Regex("""(?:(\d+):)?(\d{1,2}):(\d{2})([.,](\d+))?""")
@@ -25,10 +24,7 @@ object AutoSyncSubtitleCueParser {
     }
 
     private fun cleanText(rawText: String): String =
-        rawText
-            .replace("\uFEFF", "")
-            .replace("\r\n", "\n")
-            .replace('\r', '\n')
+        rawText.replace("\uFEFF", "").replace("\r\n", "\n").replace('\r', '\n')
 
     private enum class SubtitleFormatHint {
         Srt,
@@ -39,11 +35,7 @@ object AutoSyncSubtitleCueParser {
 
     private fun detectSubtitleFormat(sourceUrl: String?, text: String): SubtitleFormatHint {
         val sourcePath =
-            sourceUrl
-                ?.substringBefore('?')
-                ?.substringBefore('#')
-                ?.lowercase()
-                .orEmpty()
+            sourceUrl?.substringBefore('?')?.substringBefore('#')?.lowercase().orEmpty()
 
         return when {
             sourcePath.endsWith(".vtt") ||
@@ -65,11 +57,7 @@ object AutoSyncSubtitleCueParser {
         val blocks = text.split(Regex("""\n\s*\n"""))
         val cues = mutableListOf<SubtitleSyncCue>()
         for (block in blocks) {
-            val lines =
-                block
-                    .lines()
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() }
+            val lines = block.lines().map { it.trim() }.filter { it.isNotEmpty() }
             if (lines.isEmpty()) continue
 
             var index = 0
@@ -83,7 +71,12 @@ object AutoSyncSubtitleCueParser {
             val textLines = lines.drop(index + 1)
             val cueText = normalizeCueText(textLines.joinToString("\n"))
             if (cueText.isNotBlank()) {
-                cues += SubtitleSyncCue(startTimeMs = startTimeMs, endTimeMs = endTimeMs, text = cueText)
+                cues +=
+                    SubtitleSyncCue(
+                        startTimeMs = startTimeMs,
+                        endTimeMs = endTimeMs,
+                        text = cueText,
+                    )
             }
         }
         return cues
@@ -119,10 +112,12 @@ object AutoSyncSubtitleCueParser {
                 continue
             }
 
-            val (startTimeMs, endTimeMs) = parseStartEndTimeMs(timingLine) ?: run {
-                cursor++
-                continue
-            }
+            val (startTimeMs, endTimeMs) =
+                parseStartEndTimeMs(timingLine)
+                    ?: run {
+                        cursor++
+                        continue
+                    }
             if (endTimeMs - startTimeMs <= 0) {
                 cursor++
                 continue
@@ -136,7 +131,12 @@ object AutoSyncSubtitleCueParser {
             }
             val cueText = normalizeCueText(textParts.joinToString("\n"))
             if (cueText.isNotBlank()) {
-                cues += SubtitleSyncCue(startTimeMs = startTimeMs, endTimeMs = endTimeMs, text = cueText)
+                cues +=
+                    SubtitleSyncCue(
+                        startTimeMs = startTimeMs,
+                        endTimeMs = endTimeMs,
+                        text = cueText,
+                    )
             }
             cursor = i + 1
         }
@@ -164,7 +164,20 @@ object AutoSyncSubtitleCueParser {
 
             if (line.startsWith("Dialogue:", ignoreCase = true)) {
                 val payload = line.substringAfter(':')
-                val fields = formatFields ?: listOf("layer", "start", "end", "style", "name", "marginl", "marginr", "marginv", "effect", "text")
+                val fields =
+                    formatFields
+                        ?: listOf(
+                            "layer",
+                            "start",
+                            "end",
+                            "style",
+                            "name",
+                            "marginl",
+                            "marginr",
+                            "marginv",
+                            "effect",
+                            "text",
+                        )
                 val parts = payload.split(',', limit = fields.size).map { it.trim() }
 
                 val startIndex = fields.indexOf("start").takeIf { it >= 0 } ?: 1
@@ -199,11 +212,13 @@ object AutoSyncSubtitleCueParser {
                 .mapNotNull { match ->
                     val attrs = match.groupValues[1]
                     val startRaw =
-                        Regex("""\b(?:begin|start)\s*=\s*["']([^"']+)["']""", RegexOption.IGNORE_CASE)
+                        Regex(
+                                """\b(?:begin|start)\s*=\s*["']([^"']+)["']""",
+                                RegexOption.IGNORE_CASE,
+                            )
                             .find(attrs)
                             ?.groupValues
-                            ?.getOrNull(1)
-                            ?: return@mapNotNull null
+                            ?.getOrNull(1) ?: return@mapNotNull null
                     val endRaw =
                         Regex("""\bend\s*=\s*["']([^"']+)["']""", RegexOption.IGNORE_CASE)
                             .find(attrs)
@@ -213,7 +228,10 @@ object AutoSyncSubtitleCueParser {
                     val end = endRaw?.let { parseTimestampMs(it) } ?: (start + 3000L)
                     val body =
                         normalizeCueText(
-                            match.groupValues[2].replace(Regex("""<br\s*/?>""", RegexOption.IGNORE_CASE), "\n")
+                            match.groupValues[2].replace(
+                                Regex("""<br\s*/?>""", RegexOption.IGNORE_CASE),
+                                "\n",
+                            )
                         )
                     if (body.isBlank()) null
                     else SubtitleSyncCue(startTimeMs = start, endTimeMs = end, text = body)

@@ -75,7 +75,8 @@ private fun Uri.sized(portrait: Boolean): String =
         .toString()
 
 /** The Jellyfin SDK reads dates into the device's time zone. */
-private fun LocalDateTime.toEpochMs(): Long = atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+private fun LocalDateTime.toEpochMs(): Long =
+    atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
 private const val TICKS_PER_MS = 10_000L
 private const val MAX_DESCRIPTION_LENGTH = 300

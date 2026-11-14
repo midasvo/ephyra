@@ -91,8 +91,8 @@ fun ItemPoster(
 
 /**
  * The artwork a card tries, in order: a horizontal movie its backdrop, a vertical episode its
- * show's poster, a vertical season its own poster and then its show's (#416), anything else its
- * own poster.
+ * show's poster, a vertical season its own poster and then its show's (#416), anything else its own
+ * poster.
  *
  * With [preferThumb] (#608) a horizontal card starts with the thumb, the wide art with the title on
  * it, of the movie or of the episode's series, then the backdrop. An episode's own image, a frame
@@ -111,11 +111,7 @@ internal fun posterSources(
                     else listOf(item.images.backdrop)
                 is FindroidEpisode ->
                     if (preferThumb) {
-                        listOf(
-                            item.images.showThumb,
-                            item.images.showBackdrop,
-                            item.images.primary,
-                        )
+                        listOf(item.images.showThumb, item.images.showBackdrop, item.images.primary)
                     } else {
                         listOf(item.images.primary)
                     }
@@ -142,7 +138,8 @@ private fun PosterPlaceholder(item: FindroidItem, title: String, modifier: Modif
         }
     Column(
         modifier = modifier.padding(MaterialTheme.spacings.small),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small, Alignment.CenterVertically),
+        verticalArrangement =
+            Arrangement.spacedBy(MaterialTheme.spacings.small, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(

@@ -65,7 +65,9 @@ private fun TvProfilePinGateLayout(
     val prompt = state.prompt ?: return
     val pin = rememberTvPinState(prompt)
 
-    Box(modifier = Modifier.fillMaxSize().padding(TvSafeArea.paddingValues).testTag("ce_pin_gate")) {
+    Box(
+        modifier = Modifier.fillMaxSize().padding(TvSafeArea.paddingValues).testTag("ce_pin_gate")
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,

@@ -5,11 +5,11 @@ import dev.jdtech.jellyfin.settings.domain.Constants
 /**
  * Whether the player moves on to the next item by itself when an item ends.
  *
- * Pure: the caller reads the preference and the server value, so this can be tested without
- * Android or a server.
+ * Pure: the caller reads the preference and the server value, so this can be tested without Android
+ * or a server.
  *
- * @param pref the "Play next episode automatically" preference.
- *   [Constants.PlayerAutoPlayNext.ON] and [Constants.PlayerAutoPlayNext.OFF] override the server.
+ * @param pref the "Play next episode automatically" preference. [Constants.PlayerAutoPlayNext.ON]
+ *   and [Constants.PlayerAutoPlayNext.OFF] override the server.
  *   [Constants.PlayerAutoPlayNext.SERVER], `null` and unknown values follow [server].
  * @param server the Jellyfin user's `enableNextEpisodeAutoPlay`, or `null` when it is not known
  *   (offline, or the request failed). Unknown falls back to autoplay, the behaviour before the

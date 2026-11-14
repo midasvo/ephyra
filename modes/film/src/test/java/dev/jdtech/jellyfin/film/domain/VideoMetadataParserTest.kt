@@ -123,8 +123,7 @@ class VideoMetadataParserTest {
 
     @Test
     fun `dolby vision with hdr10 plus reports both profiles`() = runTest {
-        val metadata =
-            VideoMetadataParser.parse(source(video(VideoRangeType.DOVI_WITH_HDR10_PLUS)))
+        val metadata = VideoMetadataParser.parse(source(video(VideoRangeType.DOVI_WITH_HDR10_PLUS)))
 
         assertEquals(
             listOf(DisplayProfile.DOLBY_VISION, DisplayProfile.HDR10_PLUS),

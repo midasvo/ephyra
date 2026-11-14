@@ -27,9 +27,9 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowEnvironment
 
 /**
- * CE (#379): after a database reset the downloaded files and their artwork stayed on disk for
- * good. The sweep now removes what no row refers to once it is a day old, and nothing when the
- * database cannot be read.
+ * CE (#379): after a database reset the downloaded files and their artwork stayed on disk for good.
+ * The sweep now removes what no row refers to once it is a day old, and nothing when the database
+ * cannot be read.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
@@ -102,8 +102,11 @@ class OrphanSweepTest {
         val orphan = file("Pioneer One/S01/S01E01 - Earthfall.mkv")
         val orphanArtwork = artwork(orphanId)
 
-        val failure =
-            runCatching { runBlocking { downloader(database(failOn = "getCompletedDownloadSources")).sweepOrphans() } }
+        val failure = runCatching {
+            runBlocking {
+                downloader(database(failOn = "getCompletedDownloadSources")).sweepOrphans()
+            }
+        }
 
         assertTrue(failure.isFailure)
         assertTrue(orphan.exists())
@@ -116,8 +119,9 @@ class OrphanSweepTest {
         val partial = file("Parasite (2019)/Parasite (2019).mkv.download")
         val orphanArtwork = artwork(orphanId)
 
-        val failure =
-            runCatching { runBlocking { downloader(database(failOn = "getAllItemIds")).sweepOrphans() } }
+        val failure = runCatching {
+            runBlocking { downloader(database(failOn = "getAllItemIds")).sweepOrphans() }
+        }
 
         assertTrue(failure.isFailure)
         assertTrue(orphan.exists())
@@ -125,10 +129,7 @@ class OrphanSweepTest {
         assertTrue(orphanArtwork.exists())
     }
 
-    private fun database(
-        sources: List<FindroidSourceDto> = emptyList(),
-        failOn: String? = null,
-    ) =
+    private fun database(sources: List<FindroidSourceDto> = emptyList(), failOn: String? = null) =
         Proxy.newProxyInstance(
             ServerDatabaseDao::class.java.classLoader,
             arrayOf(ServerDatabaseDao::class.java),

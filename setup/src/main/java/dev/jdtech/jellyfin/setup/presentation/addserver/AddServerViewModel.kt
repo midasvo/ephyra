@@ -97,7 +97,9 @@ constructor(
                 appPreferences.setValue(appPreferences.currentServer, server.id)
                 _state.emit(_state.value.copy(isLoading = false, error = null))
                 eventsChannel.send(AddServerEvent.Success)
-            } catch (e: CancellationException) { throw e } catch (e: ExceptionUiText) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ExceptionUiText) {
                 // CE (#376): "Server not found" for an address on the local network, while access
                 // to it is denied, names the permission.
                 val uiText =
@@ -123,8 +125,7 @@ constructor(
         this is UiText.StringResource && resId == SetupR.string.add_server_error_not_found
 
     private fun UiText.isLocalNetworkError(): Boolean =
-        this is UiText.StringResource &&
-            resId == SetupR.string.ce_add_server_error_local_network
+        this is UiText.StringResource && resId == SetupR.string.ce_add_server_error_local_network
 
     fun onAction(action: AddServerAction) {
         when (action) {

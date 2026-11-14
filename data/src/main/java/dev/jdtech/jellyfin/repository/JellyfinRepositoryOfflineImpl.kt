@@ -8,20 +8,20 @@ import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.CollectionType
 import dev.jdtech.jellyfin.models.FindroidCollection
 import dev.jdtech.jellyfin.models.FindroidEpisode
+import dev.jdtech.jellyfin.models.FindroidEpisodeDto
 import dev.jdtech.jellyfin.models.FindroidImages
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
+import dev.jdtech.jellyfin.models.FindroidMovieDto
 import dev.jdtech.jellyfin.models.FindroidPerson
 import dev.jdtech.jellyfin.models.FindroidSeason
 import dev.jdtech.jellyfin.models.FindroidSegment
 import dev.jdtech.jellyfin.models.FindroidShow
+import dev.jdtech.jellyfin.models.FindroidShowDto
 import dev.jdtech.jellyfin.models.FindroidSource
 import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
-import dev.jdtech.jellyfin.models.FindroidEpisodeDto
-import dev.jdtech.jellyfin.models.FindroidMovieDto
-import dev.jdtech.jellyfin.models.FindroidShowDto
 import dev.jdtech.jellyfin.models.getLocalSourcesForItems
 import dev.jdtech.jellyfin.models.toFindroidEpisode
 import dev.jdtech.jellyfin.models.toFindroidMovie
@@ -52,17 +52,16 @@ class JellyfinRepositoryOfflineImpl(
 ) : JellyfinRepository {
 
     companion object {
-        val VIRTUAL_VIEW_MOVIES: UUID =
-            UUID.fromString("a1b2c3d4-0000-0000-0000-000000000001")
-        val VIRTUAL_VIEW_SHOWS: UUID =
-            UUID.fromString("a1b2c3d4-0000-0000-0000-000000000002")
+        val VIRTUAL_VIEW_MOVIES: UUID = UUID.fromString("a1b2c3d4-0000-0000-0000-000000000001")
+        val VIRTUAL_VIEW_SHOWS: UUID = UUID.fromString("a1b2c3d4-0000-0000-0000-000000000002")
     }
 
     private val currentUserId: UUID
-        get() = jellyfinApi.userId ?: throw IllegalStateException("No user ID available in offline mode")
+        get() =
+            jellyfinApi.userId
+                ?: throw IllegalStateException("No user ID available in offline mode")
 
-    private fun currentServerId(): String? =
-        appPreferences.getValue(appPreferences.currentServer)
+    private fun currentServerId(): String? = appPreferences.getValue(appPreferences.currentServer)
 
     /** A library row with the fields the sort options read, so sorting never maps to models. */
     private class LibraryEntry(
@@ -224,10 +223,12 @@ class JellyfinRepositoryOfflineImpl(
         return withContext(Dispatchers.IO) {
             val serverId = currentServerId() ?: return@withContext ItemsPage(emptyList(), 0)
             val entries = mutableListOf<LibraryEntry>()
-            val wantMovies = parentId == VIRTUAL_VIEW_MOVIES ||
-                includeTypes?.contains(BaseItemKind.MOVIE) == true
-            val wantShows = parentId == VIRTUAL_VIEW_SHOWS ||
-                includeTypes?.contains(BaseItemKind.SERIES) == true
+            val wantMovies =
+                parentId == VIRTUAL_VIEW_MOVIES ||
+                    includeTypes?.contains(BaseItemKind.MOVIE) == true
+            val wantShows =
+                parentId == VIRTUAL_VIEW_SHOWS ||
+                    includeTypes?.contains(BaseItemKind.SERIES) == true
             // Sort and page the cheap DTOs; only the requested page is mapped to models.
             if (wantMovies) {
                 database.getMoviesByServerId(serverId).mapTo(entries) {
@@ -244,12 +245,13 @@ class JellyfinRepositoryOfflineImpl(
                     )
                 }
             }
-            val sorted = when (sortBy) {
-                SortBy.NAME -> entries.sortedBy { it.name }
-                SortBy.IMDB_RATING -> entries.sortedByDescending { it.rating }
-                SortBy.RELEASE_DATE -> entries.sortedByDescending { it.date }
-                else -> entries
-            }
+            val sorted =
+                when (sortBy) {
+                    SortBy.NAME -> entries.sortedBy { it.name }
+                    SortBy.IMDB_RATING -> entries.sortedByDescending { it.rating }
+                    SortBy.RELEASE_DATE -> entries.sortedByDescending { it.date }
+                    else -> entries
+                }
             val ordered = if (sortOrder == SortOrder.DESCENDING) sorted.reversed() else sorted
             val result = ordered.drop(startIndex ?: 0)
             val page = if (limit != null) result.take(limit) else result
@@ -368,9 +370,9 @@ class JellyfinRepositoryOfflineImpl(
             val serverId = currentServerId() ?: return@withContext emptyList()
             val played = database.getPlayedItemIds(currentUserId).toHashSet()
             val shows =
-                database
-                    .getShowsByServerId(serverId)
-                    .filter { if (seriesId != null) it.id == seriesId else true }
+                database.getShowsByServerId(serverId).filter {
+                    if (seriesId != null) it.id == seriesId else true
+                }
             // Find each show's next episode from the played ids, then map only those.
             val next = mutableListOf<FindroidEpisodeDto>()
             for (show in shows) {
@@ -465,6 +467,8 @@ class JellyfinRepositoryOfflineImpl(
         withContext(Dispatchers.IO) {
             database.setPlaybackPositionTicks(itemId, currentUserId, userData.positionTicks)
             database.setPlayed(currentUserId, itemId, userData.played)
+            // CE (#633): sent with the row, so the server moves the item up in Continue Watching.
+            database.setLastPlayedDate(currentUserId, itemId, System.currentTimeMillis())
             markToBeSynced(itemId)
         }
     }
@@ -477,6 +481,7 @@ class JellyfinRepositoryOfflineImpl(
     ) {
         withContext(Dispatchers.IO) {
             database.setPlaybackPositionTicks(itemId, currentUserId, positionTicks)
+            database.setLastPlayedDate(currentUserId, itemId, System.currentTimeMillis())
             markToBeSynced(itemId)
         }
     }
@@ -499,6 +504,8 @@ class JellyfinRepositoryOfflineImpl(
         withContext(Dispatchers.IO) {
             database.setPlayed(currentUserId, itemId, true)
             database.setPlaybackPositionTicks(itemId, currentUserId, 0)
+            // CE (#633): as the server does for a played mark without a date.
+            database.setLastPlayedDateIfUnknown(currentUserId, itemId, System.currentTimeMillis())
             markToBeSynced(itemId)
         }
     }
@@ -506,13 +513,16 @@ class JellyfinRepositoryOfflineImpl(
     override suspend fun markAsUnplayed(itemId: UUID) {
         withContext(Dispatchers.IO) {
             database.setPlayed(currentUserId, itemId, false)
+            // CE (#633): the server clears it for an unplayed mark; the sync cannot send that, so
+            // nothing is sent and the server keeps its own until the mark reaches it.
+            database.setLastPlayedDate(currentUserId, itemId, null)
             markToBeSynced(itemId)
         }
     }
 
     /**
-     * Marks the item's user data to be sent to the server later and asks for a sync. The request
-     * is only made when the mark is new, so a run of failed progress reports asks once.
+     * Marks the item's user data to be sent to the server later and asks for a sync. The request is
+     * only made when the mark is new, so a run of failed progress reports asks once.
      */
     private suspend fun markToBeSynced(itemId: UUID) {
         if (database.markUserDataToBeSynced(currentUserId, itemId) > 0) syncRequester.request()

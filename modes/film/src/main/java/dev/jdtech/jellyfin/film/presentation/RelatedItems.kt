@@ -35,11 +35,7 @@ data class RelatedItemsRequest(
          * Asks for extras only when the item has them. A missing special feature count (an older
          * server) is no reason to skip them; a zero is.
          */
-        fun forItem(
-            localTrailerCount: Int,
-            specialFeatureCount: Int?,
-            collections: Boolean,
-        ) =
+        fun forItem(localTrailerCount: Int, specialFeatureCount: Int?, collections: Boolean) =
             RelatedItemsRequest(
                 localTrailers = localTrailerCount > 0,
                 specialFeatures = specialFeatureCount != 0,
@@ -57,9 +53,9 @@ fun RelatedItems.keeping(request: RelatedItemsRequest) =
     )
 
 /**
- * Loads the [RelatedItems] of [itemId], each kind in its own coroutine so a slow one never holds the
- * others back. Every result is passed to [update] as soon as it is there; a failure is only logged
- * and leaves its row empty, since none of these rows is worth an error on the page.
+ * Loads the [RelatedItems] of [itemId], each kind in its own coroutine so a slow one never holds
+ * the others back. Every result is passed to [update] as soon as it is there; a failure is only
+ * logged and leaves its row empty, since none of these rows is worth an error on the page.
  */
 fun CoroutineScope.launchRelatedItems(
     repository: JellyfinRepository,

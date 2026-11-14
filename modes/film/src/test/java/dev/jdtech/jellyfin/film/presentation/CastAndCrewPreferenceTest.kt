@@ -17,7 +17,6 @@ import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
-import dev.jdtech.jellyfin.utils.Downloader
 import java.lang.reflect.Proxy
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers

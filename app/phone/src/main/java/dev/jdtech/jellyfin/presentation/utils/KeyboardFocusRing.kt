@@ -44,9 +44,7 @@ fun Modifier.keyboardFocusRing(shape: Shape): Modifier {
                 val offset = KeyboardFocusRingGap.toPx() + stroke / 2
                 val ringSize = Size(size.width + 2 * offset, size.height + 2 * offset)
                 val outline = shape.createOutline(ringSize, layoutDirection, this)
-                translate(-offset, -offset) {
-                    drawOutline(outline, color, style = Stroke(stroke))
-                }
+                translate(-offset, -offset) { drawOutline(outline, color, style = Stroke(stroke)) }
             }
         }
 }

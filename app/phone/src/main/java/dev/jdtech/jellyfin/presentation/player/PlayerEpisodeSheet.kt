@@ -57,11 +57,11 @@ import java.util.UUID
 import kotlin.math.roundToInt
 
 /**
- * CE (R10, design §9): the player's episode sheet at expanded width. The current season's
- * episodes in a side sheet over the right 30 % of the window (320 to 420 dp), the playing one
- * highlighted as the selected row of the Season list-detail. A tap anywhere outside the sheet
- * calls [onDismiss]; [onClosed] runs once the sheet has gone, so the host can hide its view.
- * [onBoundsChanged] gets the bounds the open sheet takes in the window (#456).
+ * CE (R10, design §9): the player's episode sheet at expanded width. The current season's episodes
+ * in a side sheet over the right 30 % of the window (320 to 420 dp), the playing one highlighted as
+ * the selected row of the Season list-detail. A tap anywhere outside the sheet calls [onDismiss];
+ * [onClosed] runs once the sheet has gone, so the host can hide its view. [onBoundsChanged] gets
+ * the bounds the open sheet takes in the window (#456).
  *
  * CE (#588): with [wantsFocus] (the sheet was opened from the keyboard) focus moves to the playing
  * episode's row as soon as the rows are there, which on the first open is after the season has
@@ -114,9 +114,7 @@ fun PlayerEpisodeSheet(
         if (visibleState.targetState) {
             Box(
                 modifier =
-                    Modifier.fillMaxSize().pointerInput(Unit) {
-                        detectTapGestures { onDismiss() }
-                    }
+                    Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { onDismiss() } }
             )
         }
 
@@ -126,7 +124,9 @@ fun PlayerEpisodeSheet(
             enter =
                 slideInHorizontally(
                     tween(EphyraMotion.DURATION_MEDIUM, easing = EphyraMotion.EasingEnter)
-                ) { it },
+                ) {
+                    it
+                },
             exit = fadeOut(tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingExit)),
         ) {
             Surface(

@@ -45,7 +45,8 @@ fun ephyraScreenTransition(): ContentTransform =
         slideInVertically(tween(EphyraMotion.DURATION_MEDIUM, easing = EphyraMotion.EasingEnter)) {
             (EphyraMotion.EnterDrift.value * Resources.getSystem().displayMetrics.density)
                 .roundToInt()
-        }) togetherWith fadeOut(tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingExit))
+        }) togetherWith
+        fadeOut(tween(EphyraMotion.DURATION_SHORT, easing = EphyraMotion.EasingExit))
 
 /**
  * True when the system animator duration scale is 0 (Developer options → Animator duration scale
@@ -60,4 +61,5 @@ fun reducedMotion(): Boolean =
     rememberCoroutineScope().coroutineContext[MotionDurationScale]?.scaleFactor == 0f
 
 /** Coil's backdrop crossfade: [EphyraMotion.DURATION_LONG], or 0 (none) under [reducedMotion]. */
-@Composable fun backdropCrossfadeMillis(): Int = if (reducedMotion()) 0 else EphyraMotion.DURATION_LONG
+@Composable
+fun backdropCrossfadeMillis(): Int = if (reducedMotion()) 0 else EphyraMotion.DURATION_LONG

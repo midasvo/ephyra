@@ -66,7 +66,10 @@ private fun WelcomeScreenLayout(onAction: (WelcomeAction) -> Unit) {
                     Modifier.height(200.dp).drawBehind {
                         val radius = 0.8f * 200.dp.toPx()
                         drawCircle(
-                            Brush.radialGradient(listOf(halo, halo.copy(alpha = 0f)), radius = radius),
+                            Brush.radialGradient(
+                                listOf(halo, halo.copy(alpha = 0f)),
+                                radius = radius,
+                            ),
                             radius = radius,
                         )
                     },

@@ -48,7 +48,12 @@ fun itemInfoLine(item: FindroidItem): String {
                 add(stringResource(CoreR.string.runtime_minutes_left, minutes(remainingTicks)))
             }
             val endsAt = Date(System.currentTimeMillis() + remainingTicks / TICKS_PER_MILLISECOND)
-            add(stringResource(CoreR.string.ends_at, DateFormat.getTimeFormat(context).format(endsAt)))
+            add(
+                stringResource(
+                    CoreR.string.ends_at,
+                    DateFormat.getTimeFormat(context).format(endsAt),
+                )
+            )
         }
     }
     return parts.joinToString(" · ")

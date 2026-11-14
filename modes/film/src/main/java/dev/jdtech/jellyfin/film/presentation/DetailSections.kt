@@ -7,8 +7,8 @@ import dev.jdtech.jellyfin.settings.domain.AppPreferences
 
 /**
  * CE (#332): which parts of the server's metadata the detail pages show, each a switch under
- * Settings > Interface > Detail pages. A part that is off is cleared from the item before it reaches
- * the page, which already hides empty values, and its row is never requested.
+ * Settings > Interface > Detail pages. A part that is off is cleared from the item before it
+ * reaches the page, which already hides empty values, and its row is never requested.
  */
 data class DetailSections(
     val criticRating: Boolean = true,

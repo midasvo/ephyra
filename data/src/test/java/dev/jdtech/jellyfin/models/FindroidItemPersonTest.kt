@@ -56,8 +56,7 @@ class FindroidItemPersonTest {
 
     @Test
     fun `duplicate and blank roles are dropped`() {
-        val people =
-            listOf(person(tomKane, "Yoda"), person(tomKane, ""), person(tomKane, "Yoda"))
+        val people = listOf(person(tomKane, "Yoda"), person(tomKane, ""), person(tomKane, "Yoda"))
 
         val merged = people.mergeDuplicateRoles()
 

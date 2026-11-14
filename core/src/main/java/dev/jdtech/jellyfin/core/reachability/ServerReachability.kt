@@ -26,12 +26,12 @@ import timber.log.Timber
  * CE (#281): whether the server in use answers, kept up to date while the app runs.
  *
  * This replaces the look at the device's internet at app start: a server that is down, a VPN that
- * is off or being away from home all leave the internet up. The screens show a banner with a way
- * to Downloads while [state] is unreachable; nothing is blocked and no screen waits for it.
+ * is off or being away from home all leave the internet up. The screens show a banner with a way to
+ * Downloads while [state] is unreachable; nothing is blocked and no screen waits for it.
  *
- * [start] hooks up the signs: the app's own requests ([JellyfinApi.requestWatcher]), the app
- * coming to the foreground, and the default network changing. Without [start] (Android TV, which
- * has no downloads to point at) the state stays unknown and nothing is probed.
+ * [start] hooks up the signs: the app's own requests ([JellyfinApi.requestWatcher]), the app coming
+ * to the foreground, and the default network changing. Without [start] (Android TV, which has no
+ * downloads to point at) the state stays unknown and nothing is probed.
  */
 @Singleton
 class ServerReachability
@@ -62,7 +62,9 @@ constructor(
     /** Asks now, without waiting for the answer: the banner's Retry and a pull to refresh. */
     fun check() = monitor.check()
 
-    /** Starts watching. Safe to call more than once, and cheap enough for `Application.onCreate`. */
+    /**
+     * Starts watching. Safe to call more than once, and cheap enough for `Application.onCreate`.
+     */
     fun start() {
         if (started) return
         started = true

@@ -38,9 +38,7 @@ import dev.jdtech.jellyfin.player.local.R as PlayerR
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import java.util.Locale
 
-/**
- * CE (#619): Subtitle track selection and delay adjustment dialog for the TV player.
- */
+/** CE (#619): Subtitle track selection and delay adjustment dialog for the TV player. */
 @Composable
 fun TvSubtitleDialog(
     options: List<String>,
@@ -67,11 +65,17 @@ fun TvSubtitleDialog(
                 // Subtitle delay stepper row
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    colors = SurfaceDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = MaterialTheme.spacings.medium),
+                    colors =
+                        SurfaceDefaults.colors(
+                            containerColor =
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        ),
+                    modifier =
+                        Modifier.fillMaxWidth().padding(bottom = MaterialTheme.spacings.medium),
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                        modifier =
+                            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
@@ -83,7 +87,8 @@ fun TvSubtitleDialog(
                             )
                             val delaySec = subtitleDelayMs / 1000.0
                             val delayText =
-                                if (subtitleDelayMs > 0) String.format(Locale.US, "+%.1fs", delaySec)
+                                if (subtitleDelayMs > 0)
+                                    String.format(Locale.US, "+%.1fs", delaySec)
                                 else String.format(Locale.US, "%.1fs", delaySec)
                             Text(
                                 text = delayText,
@@ -99,21 +104,35 @@ fun TvSubtitleDialog(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Button(
-                                onClick = { onDelayChanged((subtitleDelayMs - 100).coerceAtLeast(-180_000)) },
-                                colors = ButtonDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                                onClick = {
+                                    onDelayChanged((subtitleDelayMs - 100).coerceAtLeast(-180_000))
+                                },
+                                colors =
+                                    ButtonDefaults.colors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    ),
                             ) {
                                 Text("-0.1s")
                             }
                             Button(
-                                onClick = { onDelayChanged((subtitleDelayMs + 100).coerceAtMost(180_000)) },
-                                colors = ButtonDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                                onClick = {
+                                    onDelayChanged((subtitleDelayMs + 100).coerceAtMost(180_000))
+                                },
+                                colors =
+                                    ButtonDefaults.colors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    ),
                             ) {
                                 Text("+0.1s")
                             }
                             if (subtitleDelayMs != 0) {
                                 Button(
                                     onClick = { onDelayChanged(0) },
-                                    colors = ButtonDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                                    colors =
+                                        ButtonDefaults.colors(
+                                            containerColor =
+                                                MaterialTheme.colorScheme.surfaceVariant
+                                        ),
                                 ) {
                                     Text(stringResource(PlayerR.string.ce_reset))
                                 }
@@ -148,7 +167,8 @@ fun TvSubtitleDialog(
                             modifier =
                                 Modifier.fillMaxWidth()
                                     .then(
-                                        if (index == initial) Modifier.focusRequester(focusRequester)
+                                        if (index == initial)
+                                            Modifier.focusRequester(focusRequester)
                                         else Modifier
                                     ),
                         )

@@ -82,8 +82,10 @@ class ServerUrlTest {
             .path
     }
 
-    private fun subtitlePath(base: String, deliveryUrl: String? = "/Videos/$itemId/source/Subtitles/2/0/Stream.srt") =
-        subtitle(deliveryUrl).toFindroidMediaStream(repository(base)).path
+    private fun subtitlePath(
+        base: String,
+        deliveryUrl: String? = "/Videos/$itemId/source/Subtitles/2/0/Stream.srt",
+    ) = subtitle(deliveryUrl).toFindroidMediaStream(repository(base)).path
 
     @Test
     fun `serverUrl joins with one slash whatever the two sides bring`() {
@@ -91,7 +93,10 @@ class ServerUrlTest {
         assertEquals("https://host/jf/videos/1", serverUrl("https://host/jf", "/videos/1"))
         assertEquals("https://host/jf/videos/1", serverUrl("https://host/jf/", "videos/1"))
         assertEquals("https://host/jf/videos/1", serverUrl("https://host/jf", "videos/1"))
-        assertEquals("http://10.0.0.2:8096/videos/1", serverUrl("http://10.0.0.2:8096", "/videos/1"))
+        assertEquals(
+            "http://10.0.0.2:8096/videos/1",
+            serverUrl("http://10.0.0.2:8096", "/videos/1"),
+        )
     }
 
     @Test

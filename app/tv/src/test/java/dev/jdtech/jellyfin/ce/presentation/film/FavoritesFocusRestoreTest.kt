@@ -32,9 +32,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/**
- * Focus tests and empty state verification for the CE Favorites screen (#137, ADR 0003).
- */
+/** Focus tests and empty state verification for the CE Favorites screen (#137, ADR 0003). */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class, qualifiers = "w1920dp-h1080dp")
 class FavoritesFocusRestoreTest {
@@ -139,7 +137,8 @@ class FavoritesFocusRestoreTest {
         rule.onNodeWithTag(FAVORITES_EMPTY_TAG).assertIsDisplayed()
         rule.onNodeWithTag(FAVORITES_EMPTY_TAG).assertIsFocused()
         rule.onNode(hasText("You have no favorites")).assertIsDisplayed()
-        rule.onNode(
+        rule
+            .onNode(
                 hasText(
                     "Select the heart icon on any movie, show, or episode to add it to your favorites."
                 )

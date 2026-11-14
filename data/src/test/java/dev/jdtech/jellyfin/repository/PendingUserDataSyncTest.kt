@@ -28,9 +28,9 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * CE (#281): progress that could not reach the server asks for a sync when it is marked, not at
- * the next app start, and it survives its download being deleted until the sync has sent it. The
- * server here always fails: the API client has no address.
+ * CE (#281): progress that could not reach the server asks for a sync when it is marked, not at the
+ * next app start, and it survives its download being deleted until the sync has sent it. The server
+ * here always fails: the API client has no address.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
@@ -159,7 +159,7 @@ class PendingUserDataSyncTest {
         database.deleteUserDataIfOrphaned(userId, movieId)
         assertNotNull(database.getUserData(movieId, userId))
 
-        database.clearUserDataToBeSynced(userId, movieId, false, false, 600_000_000L)
+        database.clearUserDataToBeSynced(userId, movieId, false, false, 600_000_000L, null)
         database.deleteUserDataIfOrphaned(userId, movieId)
 
         assertNull(database.getUserData(movieId, userId))
@@ -179,9 +179,61 @@ class PendingUserDataSyncTest {
         storeMovie(positionTicks = 700_000_000L, toBeSynced = true)
 
         // The sync sent 600, a failed write has since moved the row to 700.
-        database.clearUserDataToBeSynced(userId, movieId, false, false, 600_000_000L)
+        database.clearUserDataToBeSynced(userId, movieId, false, false, 600_000_000L, null)
 
         assertEquals(700_000_000L, pending().single().playbackPositionTicks)
+    }
+
+    @Test
+    fun `failed progress is marked with when it was played`() = runBlocking {
+        storeMovie()
+        val before = System.currentTimeMillis()
+
+        repository.postPlaybackProgress(movieId, 600_000_000L, isPaused = false, transcoded = false)
+
+        val lastPlayed = pending().single().lastPlayedDate
+        assertNotNull(lastPlayed)
+        assertTrue(lastPlayed!! in before..System.currentTimeMillis())
+    }
+
+    @Test
+    fun `marking played keeps a known last played time`() = runBlocking {
+        storeMovie()
+        database.setLastPlayedDate(userId, movieId, 1_000L)
+
+        repository.markAsPlayed(movieId)
+
+        assertEquals(1_000L, pending().single().lastPlayedDate)
+    }
+
+    @Test
+    fun `marking played without a last played time sets one`() = runBlocking {
+        storeMovie()
+
+        repository.markAsPlayed(movieId)
+
+        assertNotNull(pending().single().lastPlayedDate)
+    }
+
+    @Test
+    fun `marking unplayed clears the last played time`() = runBlocking {
+        storeMovie()
+        database.setLastPlayedDate(userId, movieId, 1_000L)
+
+        repository.markAsUnplayed(movieId)
+
+        assertNull(pending().single().lastPlayedDate)
+    }
+
+    @Test
+    fun `a row played again during the sync stays marked`() = runBlocking {
+        storeMovie(positionTicks = 600_000_000L, toBeSynced = true)
+        database.setLastPlayedDate(userId, movieId, 2_000L)
+
+        // The sync sent the row as it was at 1000; it has been played since, at the same position.
+        database.clearUserDataToBeSynced(userId, movieId, false, false, 600_000_000L, 1_000L)
+
+        assertEquals(2_000L, pending().single().lastPlayedDate)
     }
 
     @Test

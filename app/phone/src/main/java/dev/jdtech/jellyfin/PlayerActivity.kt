@@ -38,10 +38,10 @@ import androidx.activity.viewModels
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModelProvider
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -143,8 +143,8 @@ class PlayerActivity : BasePlayerActivity() {
 
     /**
      * CE (#363): the display answered "Keep the player in landscape" with a letterboxed box
-     * ([refusesLandscape]). Latched for the life of this player, so it follows the device from
-     * then on instead of flipping between the box and full screen.
+     * ([refusesLandscape]). Latched for the life of this player, so it follows the device from then
+     * on instead of flipping between the box and full screen.
      */
     private var landscapeRefused = false
 
@@ -162,7 +162,8 @@ class PlayerActivity : BasePlayerActivity() {
     private fun updatePlayerOrientation() {
         val calculator = WindowMetricsCalculator.getOrCreate()
         val bounds = calculator.computeMaximumWindowMetrics(this).bounds
-        val shorterSideDp = minOf(bounds.width(), bounds.height()) / resources.displayMetrics.density
+        val shorterSideDp =
+            minOf(bounds.width(), bounds.height()) / resources.displayMetrics.density
         val keepLandscape = appPreferences.getValue(appPreferences.playerKeepLandscape)
         if (keepLandscape && !landscapeRefused) {
             val window = calculator.computeCurrentWindowMetrics(this).bounds
@@ -204,11 +205,10 @@ class PlayerActivity : BasePlayerActivity() {
 
     /**
      * CE (R9, #51): in tabletop posture the video (with its subtitles and the title bar) sits above
-     * the hinge, and the transport row, the time bar, the volume and brightness panels, the
-     * unlock button and the episode sheet (R10) sit below it. Done with margins on views that
-     * normally fill the player, so leaving the posture puts every margin back to 0 and the layout
-     * is the usual one. Only views move: the player and its surface stay attached, so playback
-     * carries on.
+     * the hinge, and the transport row, the time bar, the volume and brightness panels, the unlock
+     * button and the episode sheet (R10) sit below it. Done with margins on views that normally
+     * fill the player, so leaving the posture puts every margin back to 0 and the layout is the
+     * usual one. Only views move: the player and its surface stay attached, so playback carries on.
      *
      * Ignored in picture-in-picture, and when the hinge doesn't cross the player (a window on one
      * half of the screen).
@@ -272,11 +272,10 @@ class PlayerActivity : BasePlayerActivity() {
         fun px(id: Int) = resources.getDimensionPixelSize(id)
         fun View.size(width: Int = layoutParams.width, height: Int = layoutParams.height) {
             if (layoutParams.width == width && layoutParams.height == height) return
-            layoutParams =
-                layoutParams.also {
-                    it.width = width
-                    it.height = height
-                }
+            layoutParams = layoutParams.also {
+                it.width = width
+                it.height = height
+            }
         }
 
         val playerView = binding.playerView
@@ -360,8 +359,8 @@ class PlayerActivity : BasePlayerActivity() {
 
     /**
      * The episodes button is offered at expanded width (R7's bucket, read from the window, never
-     * the device type) while an episode plays, outside picture-in-picture. Leaving that closes
-     * the sheet at once.
+     * the device type) while an episode plays, outside picture-in-picture. Leaving that closes the
+     * sheet at once.
      */
     private fun updateEpisodesButton() {
         if (!::episodesButton.isInitialized) return
@@ -416,7 +415,8 @@ class PlayerActivity : BasePlayerActivity() {
                             episodeSheetTakesFocus(
                                 requested = episodeSheetWantsFocus.value,
                                 sheetOpen = episodeSheetBackCallback.isEnabled,
-                                focusParked = currentFocus.let { it == null || it === binding.playerView },
+                                focusParked =
+                                    currentFocus.let { it == null || it === binding.playerView },
                             )
                         },
                         onFocusSettled = { focused ->
@@ -513,10 +513,9 @@ class PlayerActivity : BasePlayerActivity() {
             followsEnd = topRowFollowsEnd(scrollX, maxScroll())
             if (episodeSheetBackCallback.isEnabled) updateControlsUnderEpisodeSheet()
         }
-        val keepAtEnd =
-            View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-                if (followsEnd) topRow.scrollTo(maxScroll(), 0)
-            }
+        val keepAtEnd = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            if (followsEnd) topRow.scrollTo(maxScroll(), 0)
+        }
         topRow.addOnLayoutChangeListener(keepAtEnd)
         buttons.addOnLayoutChangeListener(keepAtEnd)
     }
@@ -535,10 +534,10 @@ class PlayerActivity : BasePlayerActivity() {
 
     /**
      * Hides [view] under the open episode sheet, or brings it back. The fade is the view's
-     * transition alpha, which multiplies its alpha: media3 sets the alpha of the transport
-     * buttons itself (a disabled Next is dimmed), and the visibility other code sets is not
-     * touched either. A hidden control takes no focus and is not in the accessibility tree.
-     * Nothing happens to a control that is already where it should be, so a fade goes on.
+     * transition alpha, which multiplies its alpha: media3 sets the alpha of the transport buttons
+     * itself (a disabled Next is dimmed), and the visibility other code sets is not touched either.
+     * A hidden control takes no focus and is not in the accessibility tree. Nothing happens to a
+     * control that is already where it should be, so a fade goes on.
      */
     private fun setUnderEpisodeSheet(view: View, covered: Boolean, animate: Boolean) {
         val changed =
@@ -649,6 +648,8 @@ class PlayerActivity : BasePlayerActivity() {
         val itemKind = intent.extras?.getString("itemKind")
         val startFromBeginning = intent.extras?.getBoolean("startFromBeginning") ?: false
         val mediaSourceId = intent.extras?.getString("mediaSourceId")
+        // CE (#638): a show or season played in random order, from the Shuffle button.
+        val shuffle = intent.extras?.getBoolean("shuffle") ?: false
 
         isControlsLocked = false
         updatePlayerOrientation()
@@ -731,7 +732,8 @@ class PlayerActivity : BasePlayerActivity() {
         val subtitleButton = binding.playerView.findViewById<ImageButton>(R.id.btn_subtitle)
         val speedButton = binding.playerView.findViewById<ImageButton>(R.id.btn_speed)
         val sleepTimerButton = binding.playerView.findViewById<ImageButton>(R.id.btn_sleep_timer)
-        val sleepTimerRemaining = binding.playerView.findViewById<TextView>(R.id.sleep_timer_remaining)
+        val sleepTimerRemaining =
+            binding.playerView.findViewById<TextView>(R.id.sleep_timer_remaining)
         val qualityButton = binding.playerView.findViewById<ImageButton>(R.id.btn_quality)
         val qualitySpace = binding.playerView.findViewById<Space>(R.id.space_quality)
         skipSegmentButton = binding.playerView.findViewById(R.id.btn_skip_segment)
@@ -788,8 +790,9 @@ class PlayerActivity : BasePlayerActivity() {
                                     ?.bounds
                             applyTabletopLayout()
                             // CE (#363): any orientation, see playerOrientation.
-                            foldHalfOpened =
-                                folds.any { it.state == FoldingFeature.State.HALF_OPENED }
+                            foldHalfOpened = folds.any {
+                                it.state == FoldingFeature.State.HALF_OPENED
+                            }
                             updatePlayerOrientation()
                         }
                 }
@@ -1060,8 +1063,7 @@ class PlayerActivity : BasePlayerActivity() {
         }
 
         speedButton.setOnClickListener {
-            SpeedSelectionDialogFragment()
-                .show(supportFragmentManager, "speedselectiondialog")
+            SpeedSelectionDialogFragment().show(supportFragmentManager, "speedselectiondialog")
         }
 
         sleepTimerButton.setOnClickListener {
@@ -1069,13 +1071,11 @@ class PlayerActivity : BasePlayerActivity() {
         }
 
         qualityButton.setOnClickListener {
-            QualitySelectionDialogFragment()
-                .show(supportFragmentManager, "qualityselectiondialog")
+            QualitySelectionDialogFragment().show(supportFragmentManager, "qualityselectiondialog")
         }
 
         chaptersButton.setOnClickListener {
-            ChapterListDialogFragment()
-                .show(supportFragmentManager, "chapterlistdialog")
+            ChapterListDialogFragment().show(supportFragmentManager, "chapterlistdialog")
         }
 
         pipButton.setOnClickListener { pictureInPicture() }
@@ -1099,6 +1099,7 @@ class PlayerActivity : BasePlayerActivity() {
                 itemKind = itemKind ?: "",
                 startFromBeginning = startFromBeginning,
                 mediaSourceId = mediaSourceId,
+                shuffle = shuffle,
             )
         }
         hideSystemUI()
@@ -1113,22 +1114,22 @@ class PlayerActivity : BasePlayerActivity() {
      * CE (R8, T15): the player's keyboard map. It runs before the view hierarchy, so media3's
      * `PlayerView` only gets the keys this leaves alone. Returns true when the key was handled.
      *
-     * | Key | Action |
-     * |---|---|
-     * | Space, media play/pause | play or pause |
-     * | Left / Right | seek back / forward by the TV steps |
-     * | Up / Down | volume one step up / down, in the swipe's volume indicator |
-     * | M | mute or unmute |
-     * | L | lock or unlock the controls |
-     * | Escape | close the episode sheet (R10), else leave the player, as Back does |
-     * | Media next / previous | next / previous item in the queue |
+     * |Key                    |Action                                                            |
+     * |-----------------------|------------------------------------------------------------------|
+     * |Space, media play/pause|play or pause                                                     |
+     * |Left / Right           |seek back / forward by the TV steps                               |
+     * |Up / Down              |volume one step up / down, in the swipe's volume indicator        |
+     * |M                      |mute or unmute                                                    |
+     * |L                      |lock or unlock the controls                                       |
+     * |Escape                 |close the episode sheet (R10), else leave the player, as Back does|
+     * |Media next / previous  |next / previous item in the queue                                 |
      *
      * Any key but the media keys and Escape also shows the controls, or keeps them up. While the
      * controls are showing and the user moved focus to one of them (with Tab), the arrows and Space
      * go to that control; focus Android gave a control by itself does not count (#448). A row of
-     * the open episode sheet is such a control too (#588). With the
-     * controls locked only L, Escape and the media keys do anything, and Space presses Unlock or a
-     * skip button only when the user moved to it.
+     * the open episode sheet is such a control too (#588). With the controls locked only L, Escape
+     * and the media keys do anything, and Space presses Unlock or a skip button only when the user
+     * moved to it.
      */
     private fun onPlayerKey(event: KeyEvent): Boolean {
         // A picture-in-picture window takes no keys; leave everything to the system.
@@ -1280,11 +1281,21 @@ class PlayerActivity : BasePlayerActivity() {
     private fun mediaKeyAction(keyCode: Int): (() -> Unit)? {
         val player = viewModel.player
         return when (keyCode) {
-            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> { -> togglePlayPause() }
-            KeyEvent.KEYCODE_MEDIA_PLAY -> { -> player.play() }
-            KeyEvent.KEYCODE_MEDIA_PAUSE -> { -> player.pause() }
-            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { -> seekByStep(forward = true) }
-            KeyEvent.KEYCODE_MEDIA_REWIND -> { -> seekByStep(forward = false) }
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> { ->
+                togglePlayPause()
+            }
+            KeyEvent.KEYCODE_MEDIA_PLAY -> { ->
+                player.play()
+            }
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> { ->
+                player.pause()
+            }
+            KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { ->
+                seekByStep(forward = true)
+            }
+            KeyEvent.KEYCODE_MEDIA_REWIND -> { ->
+                seekByStep(forward = false)
+            }
             KeyEvent.KEYCODE_MEDIA_NEXT -> { ->
                 if (player.isCommandAvailable(Player.COMMAND_SEEK_TO_NEXT)) player.seekToNext()
             }
@@ -1420,12 +1431,14 @@ class PlayerActivity : BasePlayerActivity() {
         val itemKind = intent.extras!!.getString("itemKind")
         val startFromBeginning = intent.extras!!.getBoolean("startFromBeginning")
         val mediaSourceId = intent.extras!!.getString("mediaSourceId")
+        val shuffle = intent.extras!!.getBoolean("shuffle")
 
         viewModel.initializePlayer(
             itemId = itemId,
             itemKind = itemKind ?: "",
             startFromBeginning = startFromBeginning,
             mediaSourceId = mediaSourceId,
+            shuffle = shuffle,
         )
     }
 
@@ -1457,7 +1470,8 @@ class PlayerActivity : BasePlayerActivity() {
 
         // videoSize is VideoSize.UNKNOWN (0x0) until the file is loaded, which would yield a NaN
         // Rational and crash setAspectRatio. Bail with IAE so the existing call-site catches
-        // (setPictureInPictureParams / enterPictureInPictureMode both wrap in try { } catch (_: IAE)).
+        // (setPictureInPictureParams / enterPictureInPictureMode both wrap in try { } catch (_:
+        // IAE)).
         val videoSize = binding.playerView.player?.videoSize
         val aspectRatio =
             if (videoSize != null && videoSize.width > 0 && videoSize.height > 0) {
@@ -1514,10 +1528,9 @@ class PlayerActivity : BasePlayerActivity() {
      * the last params set (also the PiP button's), so this runs on every play/pause change and
      * whenever the player returns, from PiP or from Settings, whatever the gesture setting.
      *
-     * Building the params reads the video size, which on mpv waits for its core and can hold up
-     * the main thread while mpv sets up its output again (an ANR on a return). So they are only
-     * built again when auto-enter changes, or on a play/pause change with the gesture on, as
-     * before.
+     * Building the params reads the video size, which on mpv waits for its core and can hold up the
+     * main thread while mpv sets up its output again (an ANR on a return). So they are only built
+     * again when auto-enter changes, or on a play/pause change with the gesture on, as before.
      */
     private fun updatePipParams(
         isPlaying: Boolean = viewModel.player.isPlaying,

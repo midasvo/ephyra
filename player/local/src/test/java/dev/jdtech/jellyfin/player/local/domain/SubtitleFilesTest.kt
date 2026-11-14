@@ -19,7 +19,8 @@ class SubtitleFilesTest {
 
     @Test
     fun `a transcode gets the tracks inside the file as files, before the external ones`() {
-        val files = subtitleFiles(source(transcoded = true, method = SubtitleDeliveryMethod.EXTERNAL))
+        val files =
+            subtitleFiles(source(transcoded = true, method = SubtitleDeliveryMethod.EXTERNAL))
 
         assertEquals(listOf("eng", "nld", "deu"), files.map { it.language })
         assertEquals(listOf(true, true, false), files.map { it.embedded })
@@ -46,10 +47,22 @@ class SubtitleFilesTest {
         // An image format it would burn into the picture: no URL, or a method that is not a file.
         val streams =
             listOf(
-                subtitle(4, "eng", codec = "dvdsub", path = null, method = SubtitleDeliveryMethod.ENCODE),
+                subtitle(
+                    4,
+                    "eng",
+                    codec = "dvdsub",
+                    path = null,
+                    method = SubtitleDeliveryMethod.ENCODE,
+                ),
                 subtitle(5, "nld", codec = "pgssub", method = SubtitleDeliveryMethod.ENCODE),
                 subtitle(6, "fra", codec = "subrip", method = SubtitleDeliveryMethod.EXTERNAL),
-                subtitle(7, "spa", codec = "subrip", path = "", method = SubtitleDeliveryMethod.EXTERNAL),
+                subtitle(
+                    7,
+                    "spa",
+                    codec = "subrip",
+                    path = "",
+                    method = SubtitleDeliveryMethod.EXTERNAL,
+                ),
             )
 
         val files = subtitleFiles(source(transcoded = true, streams = streams))
@@ -64,13 +77,24 @@ class SubtitleFilesTest {
         val streams =
             listOf(
                 subtitle(2, "eng", codec = "PGSSUB", method = SubtitleDeliveryMethod.EXTERNAL)
-                    .copy(path = "http://server/Videos/id/source/Subtitles/2/0/Stream.pgssub?ApiKey=key"),
+                    .copy(
+                        path =
+                            "http://server/Videos/id/source/Subtitles/2/0/Stream.pgssub?ApiKey=key"
+                    ),
                 subtitle(3, "nld", codec = "DVDSUB", method = SubtitleDeliveryMethod.EXTERNAL)
-                    .copy(path = "http://server/Videos/id/source/Subtitles/3/0/Stream.dvdsub?ApiKey=key"),
+                    .copy(
+                        path =
+                            "http://server/Videos/id/source/Subtitles/3/0/Stream.dvdsub?ApiKey=key"
+                    ),
                 subtitle(4, "deu", codec = "mov_text", method = SubtitleDeliveryMethod.EXTERNAL)
-                    .copy(path = "http://server/Videos/id/source/Subtitles/4/0/Stream.srt?ApiKey=key"),
+                    .copy(
+                        path = "http://server/Videos/id/source/Subtitles/4/0/Stream.srt?ApiKey=key"
+                    ),
                 subtitle(5, "fra", codec = "pgssub", external = true)
-                    .copy(path = "http://server/Videos/id/source/Subtitles/5/0/Stream.pgssub?ApiKey=key"),
+                    .copy(
+                        path =
+                            "http://server/Videos/id/source/Subtitles/5/0/Stream.pgssub?ApiKey=key"
+                    ),
             )
 
         val files = subtitleFiles(source(transcoded = true, streams = streams))
@@ -116,7 +140,10 @@ class SubtitleFilesTest {
         // A track the server converts: MP4 timed text delivered as SubRip.
         assertEquals(
             MimeTypes.APPLICATION_SUBRIP,
-            subtitleMimeType("mov_text", "http://server/Videos/id/source/Subtitles/3/0/Stream.srt?ApiKey=key"),
+            subtitleMimeType(
+                "mov_text",
+                "http://server/Videos/id/source/Subtitles/3/0/Stream.srt?ApiKey=key",
+            ),
         )
         assertEquals(
             MimeTypes.APPLICATION_SUBRIP,
@@ -124,20 +151,30 @@ class SubtitleFilesTest {
         )
         assertEquals(MimeTypes.TEXT_VTT, subtitleMimeType("subrip", "http://server/Stream.vtt"))
         assertEquals(MimeTypes.TEXT_SSA, subtitleMimeType("ass", "http://server/Stream.ass?a=b.c"))
-        assertEquals(MimeTypes.APPLICATION_PGS, subtitleMimeType("pgssub", "http://server/Stream.sup"))
+        assertEquals(
+            MimeTypes.APPLICATION_PGS,
+            subtitleMimeType("pgssub", "http://server/Stream.sup"),
+        )
     }
 
     @Test
     fun `without a known format in the address the codec decides`() {
         assertEquals(MimeTypes.APPLICATION_SUBRIP, subtitleMimeType("subrip", null))
         assertEquals(MimeTypes.TEXT_VTT, subtitleMimeType("webvtt", "http://server/subtitle"))
-        assertEquals(MimeTypes.APPLICATION_VOBSUB, subtitleMimeType("dvdsub", "http://server.tld/a/b"))
-        assertEquals(MimeTypes.APPLICATION_PGS, subtitleMimeType("PGSSUB", "http://server/Stream.bin"))
+        assertEquals(
+            MimeTypes.APPLICATION_VOBSUB,
+            subtitleMimeType("dvdsub", "http://server.tld/a/b"),
+        )
+        assertEquals(
+            MimeTypes.APPLICATION_PGS,
+            subtitleMimeType("PGSSUB", "http://server/Stream.bin"),
+        )
         assertEquals(MimeTypes.APPLICATION_DVBSUBS, subtitleMimeType("dvbsub", null))
         assertEquals(MimeTypes.TEXT_UNKNOWN, subtitleMimeType("mov_text", null))
     }
 
-    private fun url(index: Int) = "http://server/Videos/id/source/Subtitles/$index/0/Stream.subrip?ApiKey=key"
+    private fun url(index: Int) =
+        "http://server/Videos/id/source/Subtitles/$index/0/Stream.subrip?ApiKey=key"
 
     /** Tracks Movie, with the tracks inside the file delivered by [method]. */
     private fun source(

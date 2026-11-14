@@ -29,8 +29,8 @@ fun List<ServerAudioTrack>.getTrackNames(context: Context): List<String> {
 }
 
 /**
- * CE (#596): the name of an audio stream as the server lists it, by the rules of [trackName], so
- * a track has the same name whether the player lists it or, during a transcode, the server.
+ * CE (#596): the name of an audio stream as the server lists it, by the rules of [trackName], so a
+ * track has the same name whether the player lists it or, during a transcode, the server.
  */
 fun serverTrackName(
     track: ServerAudioTrack,
@@ -59,8 +59,9 @@ fun trackName(format: Format, forcedLabel: String, locale: Locale = Locale.getDe
     val title = format.label?.trim()?.takeIf { it.isNotEmpty() }
     val parts = mutableListOf<String>()
     title?.let(parts::add)
-    fun unlessInTitle(part: String?): String? =
-        part?.takeUnless { it.isBlank() || (title != null && containsWord(title, it)) }
+    fun unlessInTitle(part: String?): String? = part?.takeUnless {
+        it.isBlank() || (title != null && containsWord(title, it))
+    }
     unlessInTitle(languageName(format.language, locale))?.let(parts::add)
     if (format.selectionFlags and C.SELECTION_FLAG_FORCED != 0) {
         unlessInTitle(forcedLabel)?.let(parts::add)
@@ -79,8 +80,8 @@ fun trackName(format: Format, forcedLabel: String, locale: Locale = Locale.getDe
 private val NO_LANGUAGE = setOf("und", "mul", "zxx", "mis")
 
 /**
- * The display name of [code] in [locale], such as "Dutch" for "nl", "dut" or "nld", and
- * "Portuguese (Brazil)" for "pt-BR". Null for a missing or undetermined language.
+ * The display name of [code] in [locale], such as "Dutch" for "nl", "dut" or "nld", and "Portuguese
+ * (Brazil)" for "pt-BR". Null for a missing or undetermined language.
  */
 @OptIn(UnstableApi::class)
 internal fun languageName(code: String?, locale: Locale): String? {
@@ -89,7 +90,10 @@ internal fun languageName(code: String?, locale: Locale): String? {
     val tag = Util.normalizeLanguageCode(raw.replace('_', '-'))
     val target = Locale.forLanguageTag(tag)
     if (target.language.isEmpty() || target.language in NO_LANGUAGE) return null
-    val name = target.getDisplayName(locale).ifBlank { return null }
+    val name =
+        target.getDisplayName(locale).ifBlank {
+            return null
+        }
     return name.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 }
 
@@ -161,8 +165,8 @@ private const val MEDIA3_CUES = "x-media3-cues"
 
 /**
  * A short codec name for [format]: ExoPlayer puts the codec in `codecs` (or, for subtitles it
- * parsed, the original MIME type) and its MIME type in `sampleMimeType`; mpv puts its codec name
- * in `codecs`. An unknown codec keeps its own name in capitals.
+ * parsed, the original MIME type) and its MIME type in `sampleMimeType`; mpv puts its codec name in
+ * `codecs`. An unknown codec keeps its own name in capitals.
  */
 internal fun codecName(format: Format): String? {
     val candidates =
@@ -196,5 +200,8 @@ internal fun channelLayout(channelCount: Int): String? =
 
 /** True when [text] contains [word] as a whole word, ignoring case. */
 private fun containsWord(text: String, word: String): Boolean =
-    Regex("(?<![\\p{L}\\p{N}])" + Regex.escape(word) + "(?![\\p{L}\\p{N}])", RegexOption.IGNORE_CASE)
+    Regex(
+            "(?<![\\p{L}\\p{N}])" + Regex.escape(word) + "(?![\\p{L}\\p{N}])",
+            RegexOption.IGNORE_CASE,
+        )
         .containsMatchIn(text)

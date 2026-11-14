@@ -140,8 +140,8 @@ class PersonHeaderTest {
     }
 
     /**
-     * The dialog is centred, so a height within the screen less the safe area above and below
-     * keeps all of it inside the safe area.
+     * The dialog is centred, so a height within the screen less the safe area above and below keeps
+     * all of it inside the safe area.
      */
     private fun assertDialogFitsSafeArea(fontScale: Float) {
         setPerson(biography = longBiography.repeat(3), fontScale = fontScale)
@@ -160,8 +160,7 @@ class PersonHeaderTest {
         assertTrue("Down didn't scroll the text", scrollPosition() > scrollBefore)
     }
 
-    @Test
-    fun `the dialog fits inside the safe area`() = assertDialogFitsSafeArea(fontScale = 1f)
+    @Test fun `the dialog fits inside the safe area`() = assertDialogFitsSafeArea(fontScale = 1f)
 
     @Test
     fun `the dialog fits inside the safe area at font scale 1_3`() =

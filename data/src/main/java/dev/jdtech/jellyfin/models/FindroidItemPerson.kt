@@ -61,7 +61,12 @@ fun List<FindroidItemPerson>.mergeDuplicateRoles(): List<FindroidItemPerson> {
             first
         } else {
             first.copy(
-                role = entries.map { it.role }.filter { it.isNotBlank() }.distinct().joinToString(" / ")
+                role =
+                    entries
+                        .map { it.role }
+                        .filter { it.isNotBlank() }
+                        .distinct()
+                        .joinToString(" / ")
             )
         }
     }
