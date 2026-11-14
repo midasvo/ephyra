@@ -39,12 +39,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.extensions.audioApi
 import org.jellyfin.sdk.model.api.BaseItemDto
@@ -800,20 +802,24 @@ class JellyfinRepositoryImpl(
         val report = playSessions.playReport(itemId, transcoded)
         Timber.d("Sending start $itemId, ${report.playMethod}")
         withContext(Dispatchers.IO) {
-            // CE (#637): before the stop of this item needs them.
-            readResumeThresholds()
-            jellyfinApi.sessionApi.reportPlaybackStart(
-                PlaybackStartInfo(
-                    itemId = itemId,
-                    canSeek = true,
-                    isPaused = false,
-                    isMuted = false,
-                    playMethod = report.playMethod,
-                    playSessionId = report.playSessionId,
-                    repeatMode = RepeatMode.REPEAT_NONE,
-                    playbackOrder = PlaybackOrder.DEFAULT,
+            // CE (#637): read alongside the start report, not before it, so a slow or failing read
+            // does not hold up the start. The player waits for this call before it reports the
+            // stop (up to 5 s), so the stop of this item still has them.
+            coroutineScope {
+                launch { readResumeThresholds() }
+                jellyfinApi.sessionApi.reportPlaybackStart(
+                    PlaybackStartInfo(
+                        itemId = itemId,
+                        canSeek = true,
+                        isPaused = false,
+                        isMuted = false,
+                        playMethod = report.playMethod,
+                        playSessionId = report.playSessionId,
+                        repeatMode = RepeatMode.REPEAT_NONE,
+                        playbackOrder = PlaybackOrder.DEFAULT,
+                    )
                 )
-            )
+            }
         }
     }
 
