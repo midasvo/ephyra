@@ -2,6 +2,7 @@ package dev.jdtech.jellyfin.work
 
 import dev.jdtech.jellyfin.models.FindroidUserDataDto
 import java.util.UUID
+import org.jellyfin.sdk.api.client.exception.InvalidStatusException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -83,5 +84,14 @@ class SyncWorkerDecisionsTest {
         // CE (#635): the run had nothing to send; a request made meanwhile was dropped (KEEP).
         assertTrue(needsAnotherRun(sent = emptyList(), stillMarked = listOf(row(1))))
         assertFalse(needsAnotherRun(sent = emptyList(), stillMarked = emptyList()))
+    }
+
+    @Test
+    fun `only a 401 is a refused login`() {
+        // CE (#635): logged as one line instead of a stack trace on every run.
+        assertTrue(isRefusedLogin(InvalidStatusException(401, null)))
+        assertFalse(isRefusedLogin(InvalidStatusException(500, null)))
+        assertFalse(isRefusedLogin(InvalidStatusException(404, null)))
+        assertFalse(isRefusedLogin(java.io.IOException("no route to host")))
     }
 }
