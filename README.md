@@ -19,7 +19,8 @@
 
 Ephyra is a Jellyfin client for Android phones, tablets and Android TV, forked from
 [Findroid](https://github.com/jarnedemeulemeester/findroid). It needs a
-[Jellyfin](https://jellyfin.org/) server and Android 10 or newer.
+[Jellyfin](https://jellyfin.org/) server, and Android 10 or newer on phones and tablets or
+Android 9 or newer on TV.
 
 <table>
   <tr>
