@@ -3,6 +3,7 @@ package dev.jdtech.jellyfin.work
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.util.TimeZone
 import java.util.UUID
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
@@ -47,6 +48,19 @@ class LastPlayedDateSyncTest {
 
     @Test
     fun `the server's user data is read by item, with its last played date`() {
+        // The SDK hands dates over in the device's zone; in a zone that is not UTC, a conversion
+        // that ignored it would be hours off.
+        val default = TimeZone.getDefault()
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Los_Angeles"))
+        try {
+            readsServerUserData()
+        } finally {
+            TimeZone.setDefault(default)
+        }
+    }
+
+    private fun readsServerUserData() {
+        // 2026-11-13 03:02:51 UTC, as the SDK hands it over in Los Angeles.
         val played = LocalDateTime.of(2026, 11, 12, 19, 2, 51)
         val withDate = item(lastPlayed = played, positionTicks = 1_270_000_000L, favorite = true)
         val withoutDate = item(lastPlayed = null)
@@ -61,7 +75,7 @@ class LastPlayedDateSyncTest {
                 played = false,
                 favorite = true,
                 playbackPositionTicks = 1_270_000_000L,
-                lastPlayedDate = epochMillisOf(played),
+                lastPlayedDate = Instant.parse("2026-11-13T03:02:51Z").toEpochMilli(),
             ),
             read[withDate.id],
         )
