@@ -5,6 +5,8 @@
 <p align="center">
   <a href="https://github.com/midasvo/ephyra/releases/latest"><img src="https://img.shields.io/github/v/release/midasvo/ephyra?label=release&color=4FD8F0" alt="Latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPLv3-B9A3FF" alt="License: GPLv3"></a>
+  <a href="#install"><img src="https://img.shields.io/badge/Android-10%2B-5A6B85?logo=android&logoColor=white" alt="Android 10 or newer on phones and tablets"></a>
+  <a href="#android-tv"><img src="https://img.shields.io/badge/Android%20TV-9%2B-5A6B85?logo=android&logoColor=white" alt="Android TV 9 or newer"></a>
 </p>
 
 <p align="center">
