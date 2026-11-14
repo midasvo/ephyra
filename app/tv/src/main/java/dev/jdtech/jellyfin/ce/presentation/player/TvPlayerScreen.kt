@@ -39,7 +39,6 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -110,10 +109,7 @@ import dev.jdtech.jellyfin.utils.applySubtitleStyle
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
-import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
 
 private enum class PlayerDialog {
     AUDIO,
@@ -270,9 +266,9 @@ fun TvPlayerScreen(
     }
 
     // #458: progress reports to the server, as the phone player sends them: every
-    // TvProgressReports.INTERVAL_MS while the screen is shown and started, at once when playback
-    // pauses, and on ON_PAUSE (in the PlayerView's update below). Nothing posts after Home or
-    // after the screen is left.
+    // TvProgressReports.INTERVAL_MS while the screen is shown and started, and on ON_PAUSE (in the
+    // PlayerView's update below). A pause or a resume is reported at once by PlayerViewModel
+    // itself (#674). Nothing posts after Home or after the screen is left.
     val progressReports = remember {
         TvProgressReports(
             send = viewModel::updatePlaybackProgress,
@@ -283,10 +279,7 @@ fun TvPlayerScreen(
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (true) {
                 progressReports.report()
-                val playing = isPlaying
-                withTimeoutOrNull(TvProgressReports.INTERVAL_MS) {
-                    if (playing) snapshotFlow { isPlaying }.first { !it } else awaitCancellation()
-                }
+                delay(TvProgressReports.INTERVAL_MS)
             }
         }
     }

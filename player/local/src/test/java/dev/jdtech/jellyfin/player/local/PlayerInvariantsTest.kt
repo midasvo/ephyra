@@ -223,6 +223,22 @@ class PlayerInvariantsTest {
     }
 
     @Test
+    fun `a pause or a resume is reported at once`() {
+        // #674: pause and resume reached the server only at the next 5 s tick, and a pause in the
+        // background (the background loop stops when playback does) never did.
+        val viewModel = source("presentation/PlayerViewModel.kt")
+        val callback =
+            Regex("""override fun onPlayWhenReadyChanged\([\s\S]*?\n    }""").find(viewModel)
+        assertTrue("PlayerViewModel.onPlayWhenReadyChanged not found", callback != null)
+        // In the branch that is not the end of an item, not only in the sleep timer's path there.
+        assertTrue(
+            "onPlayWhenReadyChanged must call updatePlaybackProgress() when not at the end (#674)",
+            Regex("""\n {8}} else \{[\s\S]*?\n {12}updatePlaybackProgress\(\)\n {8}}""")
+                .containsMatchIn(callback!!.value),
+        )
+    }
+
+    @Test
     fun `the TV player reports progress`() {
         // #458: the TV player only reported start and stop, never progress, so a crash or a
         // force-stop resumed from the previous stop. app/tv's own tests are not part of the root

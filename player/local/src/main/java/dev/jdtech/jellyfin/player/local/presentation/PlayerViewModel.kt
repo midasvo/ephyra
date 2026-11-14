@@ -1454,6 +1454,9 @@ constructor(
                 if (sleepTimer.stopsAtEndOfItem) {
                     sleepTimerEndedItemId = player.currentMediaItem?.mediaId
                     fireSleepTimer()
+                    // Already paused by the end of the item, so the pause in fireSleepTimer
+                    // changes nothing and onPlayWhenReadyChanged does not report it (#674).
+                    updatePlaybackProgress()
                     return@launch
                 }
 
@@ -1484,6 +1487,13 @@ constructor(
 
                 advanceOrAskStillWatching()
             }
+        } else {
+            // CE (#674): a pause or a resume (by the user, the notification, a headset, the sleep
+            // timer or a lost audio focus) reaches the server now instead of at the next 5 s
+            // tick. A pause in the background had no tick at all. Not on buffering: playWhenReady
+            // does not change there. The end of an item is left to the branch above, which
+            // reports it itself (a stop, an advance or the sleep timer's pause).
+            updatePlaybackProgress()
         }
     }
 
@@ -1703,8 +1713,9 @@ constructor(
     }
 
     /**
-     * The sleep timer went off: pause, report the position as a pause does, and hold autoplay until
-     * the user resumes. The player stays open on the paused item.
+     * The sleep timer went off: pause, and hold autoplay until the user resumes. The player stays
+     * open on the paused item. The pause is reported by [onPlayWhenReadyChanged] (#674); at the end
+     * of an item, where the player is paused already, its caller reports it.
      */
     private fun fireSleepTimer() {
         Timber.d("Sleep timer fired, pausing")
@@ -1712,7 +1723,6 @@ constructor(
         sleepTimerJob?.cancel()
         sleepTimerJob = null
         player.pause()
-        updatePlaybackProgress()
         updateSleepTimerState()
         eventsChannel.trySend(PlayerEvents.SleepTimerFired)
     }
