@@ -27,6 +27,7 @@ import dev.jdtech.jellyfin.models.FindroidCollection
 import dev.jdtech.jellyfin.models.FindroidImages
 import dev.jdtech.jellyfin.models.HomeItem
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.animateRowItem
 import dev.jdtech.jellyfin.presentation.utils.rememberLazyListStateAtStart
 
 @Composable
@@ -76,6 +77,8 @@ fun HomeView(
                     direction = Direction.VERTICAL,
                     showSeriesName = true,
                     onClick = { onAction(HomeAction.OnItemClick(item)) },
+                    // CE (#640): a card that joins or moves fades and slides into place.
+                    modifier = animateRowItem(),
                 )
             }
         }
