@@ -28,6 +28,7 @@ class CastPlayerControllerImpl @Inject constructor() : CastPlayerController {
         itemKind: String,
         startFromBeginning: Boolean,
         mediaSourceId: String?,
+        shuffle: Boolean,
     ) {}
 
     override fun play() {}

@@ -12,13 +12,16 @@ fun interface CastPlayback {
     /**
      * Plays the item on the connected receiver. Returns `false` when there is none (always, in a
      * build without Cast), and the caller plays the item on the device.
+     *
+     * CE (#638): [shuffle] plays a series or season in random order, as the local player does.
      */
     fun play(
         itemId: UUID,
         itemKind: BaseItemKind,
         startFromBeginning: Boolean,
         mediaSourceId: String?,
+        shuffle: Boolean,
     ): Boolean
 }
 
-val LocalCastPlayback = staticCompositionLocalOf { CastPlayback { _, _, _, _ -> false } }
+val LocalCastPlayback = staticCompositionLocalOf { CastPlayback { _, _, _, _, _ -> false } }

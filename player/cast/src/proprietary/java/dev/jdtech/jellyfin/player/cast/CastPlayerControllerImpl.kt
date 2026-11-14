@@ -744,6 +744,7 @@ constructor(
         itemKind: String,
         startFromBeginning: Boolean,
         mediaSourceId: String?,
+        shuffle: Boolean,
     ) {
         cancelJobs()
         stopReporting()
@@ -770,6 +771,7 @@ constructor(
                             itemKind = BaseItemKind.fromName(itemKind),
                             mediaSourceId = mediaSourceId,
                             startFromBeginning = startFromBeginning,
+                shuffle = shuffle,
                         )
                     built = item?.let { buildMedia(it) }
                 } catch (e: CancellationException) {

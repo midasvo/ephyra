@@ -112,7 +112,12 @@ constructor(
     private val repository: JellyfinRepository,
 ) : ViewModel() {
 
-    private class PlayRequest(val itemId: UUID, val kind: BaseItemKind, val mediaSourceId: String?)
+    private class PlayRequest(
+        val itemId: UUID,
+        val kind: BaseItemKind,
+        val mediaSourceId: String?,
+        val shuffle: Boolean = false,
+    )
 
     private val _state =
         MutableStateFlow(
@@ -397,7 +402,8 @@ constructor(
         kind: BaseItemKind,
         startFromBeginning: Boolean,
         mediaSourceId: String?,
-    ): Boolean = play(itemId, kind, startFromBeginning, mediaSourceId, known = null)
+        shuffle: Boolean = false,
+    ): Boolean = play(itemId, kind, startFromBeginning, mediaSourceId, known = null, shuffle = shuffle)
 
     private fun play(
         itemId: UUID,
@@ -405,9 +411,10 @@ constructor(
         startFromBeginning: Boolean,
         mediaSourceId: String?,
         known: CastNowPlaying?,
+        shuffle: Boolean = false,
     ): Boolean {
         if (sessionManager.connectionState.value != CastConnectionState.CONNECTED) return false
-        lastRequest = PlayRequest(itemId, kind, mediaSourceId)
+        lastRequest = PlayRequest(itemId, kind, mediaSourceId, shuffle)
         lastPlaying = null
         _state.update {
             it.copy(
@@ -418,7 +425,7 @@ constructor(
                 startingItem = known,
             )
         }
-        playerController.playItem(itemId, kind.serialName, startFromBeginning, mediaSourceId)
+        playerController.playItem(itemId, kind.serialName, startFromBeginning, mediaSourceId, shuffle)
         return true
     }
 
@@ -441,6 +448,7 @@ constructor(
                     request.kind,
                     startFromBeginning = false,
                     mediaSourceId = request.mediaSourceId,
+                    shuffle = request.shuffle,
                 )
         }
     }

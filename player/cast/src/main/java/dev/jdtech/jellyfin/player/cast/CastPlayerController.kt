@@ -17,13 +17,15 @@ interface CastPlayerController {
 
     /**
      * Plays [itemId] on the receiver, with the rest of its playlist queued behind it.
-     * [mediaSourceId] is the version the user chose, `null` for the default one.
+     * [mediaSourceId] is the version the user chose, `null` for the default one. CE (#638): with
+     * [shuffle], a series or season plays in random order.
      */
     fun playItem(
         itemId: UUID,
         itemKind: String,
         startFromBeginning: Boolean,
         mediaSourceId: String? = null,
+        shuffle: Boolean = false,
     )
 
     fun play()
