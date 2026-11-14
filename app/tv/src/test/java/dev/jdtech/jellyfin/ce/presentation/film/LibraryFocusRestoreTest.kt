@@ -30,9 +30,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * "Open → Back → same card focused" for the CE library grid (#125, ADR 0003). A
- * SaveableStateHolder swaps the grid out and back in, the way Navigation 3 does for the entry below
- * the top of the back stack.
+ * "Open → Back → same card focused" for the CE library grid (#125, ADR 0003). A SaveableStateHolder
+ * swaps the grid out and back in, the way Navigation 3 does for the entry below the top of the back
+ * stack.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
@@ -97,5 +97,4 @@ class LibraryFocusRestoreTest {
 
         rule.onNode(card(target)).assertIsFocused()
     }
-
 }

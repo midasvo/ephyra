@@ -18,8 +18,8 @@ import java.util.WeakHashMap
  * Asks for light status-bar icons while [condition] holds, whatever the theme (4-design.md §3,
  * T12): over a backdrop the theme's dark icons in light mode disappear into dark artwork.
  *
- * Requests are counted per window, so two item pages that overlap during a screen transition
- * can't undo each other: the icons go back to the theme's default once no screen asks any more.
+ * Requests are counted per window, so two item pages that overlap during a screen transition can't
+ * undo each other: the icons go back to the theme's default once no screen asks any more.
  */
 @Composable
 fun LightStatusBarWhile(condition: Boolean) {
@@ -48,9 +48,9 @@ fun LightStatusBarWhile(condition: Boolean) {
 
 /**
  * Light status-bar icons while an item page's backdrop is behind the status bar ([hasArtwork] is
- * false while the page is loading or shows an error): until the top bar
- * has faded to the solid background (`rememberTopBarBackgroundAlpha`). The header is always taller
- * than that fade distance, so this is also "while the header is under the bar".
+ * false while the page is loading or shows an error): until the top bar has faded to the solid
+ * background (`rememberTopBarBackgroundAlpha`). The header is always taller than that fade
+ * distance, so this is also "while the header is under the bar".
  */
 @Composable
 fun LightStatusBarOverArtwork(hasArtwork: Boolean, topBarBackgroundAlpha: () -> Float) {

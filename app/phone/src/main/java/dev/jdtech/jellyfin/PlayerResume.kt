@@ -1,8 +1,8 @@
 package dev.jdtech.jellyfin
 
 /**
- * The playWhenReady to give back to the player when its screen returns (not from PiP), or null
- * to leave the player as it is.
+ * The playWhenReady to give back to the player when its screen returns (not from PiP), or null to
+ * leave the player as it is.
  *
  * Leaving the screen pauses the player only when it does not play on in the background, and only
  * that pause is undone here, with [saved], the playWhenReady from before it. With background audio

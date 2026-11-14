@@ -19,10 +19,7 @@ class OfflineModeResolutionTest {
     @Test
     fun `online with preference off resolves to online`() {
         assertFalse(
-            isOfflineModeActive(
-                appPreferences(offlineMode = false),
-                connectivity(online = true),
-            )
+            isOfflineModeActive(appPreferences(offlineMode = false), connectivity(online = true))
         )
     }
 
@@ -30,10 +27,7 @@ class OfflineModeResolutionTest {
     fun `no connectivity with preference off resolves to offline`() {
         // The auto-detect case: the user never toggled offline mode, but there is no network.
         assertTrue(
-            isOfflineModeActive(
-                appPreferences(offlineMode = false),
-                connectivity(online = false),
-            )
+            isOfflineModeActive(appPreferences(offlineMode = false), connectivity(online = false))
         )
     }
 
@@ -41,27 +35,23 @@ class OfflineModeResolutionTest {
     fun `preference on while online resolves to offline`() {
         // The manual override is always respected.
         assertTrue(
-            isOfflineModeActive(
-                appPreferences(offlineMode = true),
-                connectivity(online = true),
-            )
+            isOfflineModeActive(appPreferences(offlineMode = true), connectivity(online = true))
         )
     }
 
     @Test
     fun `preference on without connectivity resolves to offline`() {
         assertTrue(
-            isOfflineModeActive(
-                appPreferences(offlineMode = true),
-                connectivity(online = false),
-            )
+            isOfflineModeActive(appPreferences(offlineMode = true), connectivity(online = false))
         )
     }
 
     private fun connectivity(online: Boolean): NetworkConnectivity =
         object : NetworkConnectivity {
             override fun isOnline() = online
+
             override fun isMetered() = false
+
             override fun isRoaming() = false
         }
 

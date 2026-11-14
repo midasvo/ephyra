@@ -26,18 +26,16 @@ data class HomeRowsProfile(val serverId: String, val userId: UUID) {
 /** CE (#142): reads and writes the Home layout of a [HomeRowsProfile]. */
 class HomeRowsStore
 @Inject
-constructor(
-    private val appPreferences: AppPreferences,
-    private val database: ServerDatabaseDao,
-) {
+constructor(private val appPreferences: AppPreferences, private val database: ServerDatabaseDao) {
     suspend fun currentProfile(): HomeRowsProfile? =
         appPreferences.getValue(appPreferences.currentServer)?.let {
             HomeRowsProfile.of(database.getServer(it))
         }
 
     /** Null when nothing is stored, or there's no profile to store it for. */
-    fun read(profile: HomeRowsProfile?): List<HomeRowConfig>? =
-        profile?.let { HomeRows.decode(appPreferences.getValue(it.preference)) }
+    fun read(profile: HomeRowsProfile?): List<HomeRowConfig>? = profile?.let {
+        HomeRows.decode(appPreferences.getValue(it.preference))
+    }
 
     fun write(profile: HomeRowsProfile, rows: List<HomeRowConfig>) {
         appPreferences.setValue(profile.preference, HomeRows.encode(rows))

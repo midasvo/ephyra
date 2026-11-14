@@ -47,8 +47,8 @@ import dev.jdtech.jellyfin.utils.copyOnLongClick
 /**
  * The backdrop hero of an item page at Medium and Expanded width (docs/tablet/4-design.md §6): a
  * full-width backdrop band, cropped from the top centre, with the poster (or an episode's still)
- * overlapping its bottom edge and the item's text column beside it, below the backdrop on the
- * page background.
+ * overlapping its bottom edge and the item's text column beside it, below the backdrop on the page
+ * background.
  *
  * Nothing but the poster and the top bar is drawn over the artwork, so the text keeps the theme's
  * colours and stays readable over any backdrop (#339).
@@ -94,10 +94,7 @@ fun ItemHeroHeader(
                 Canvas(modifier = Modifier.matchParentSize()) {
                     drawRect(
                         brush =
-                            Brush.verticalGradient(
-                                0.5f to Color.Transparent,
-                                1f to pageBackground,
-                            )
+                            Brush.verticalGradient(0.5f to Color.Transparent, 1f to pageBackground)
                     )
                     drawTopScrimOverArt()
                 }
@@ -144,9 +141,9 @@ internal fun collapsedHeroHeight(safeTop: Dp, posterOverlap: Dp): Dp =
 internal val HeroMinColumnWidth: Dp = 360.dp
 
 /**
- * True when a hero header [innerWidth] wide (inside its margins) has less than
- * [HeroMinColumnWidth] beside a poster [posterWidth] wide and the [gap] after it, so the text
- * column goes below the poster instead of beside it (#429).
+ * True when a hero header [innerWidth] wide (inside its margins) has less than [HeroMinColumnWidth]
+ * beside a poster [posterWidth] wide and the [gap] after it, so the text column goes below the
+ * poster instead of beside it (#429).
  */
 internal fun heroStacked(innerWidth: Dp, posterWidth: Dp, gap: Dp): Boolean =
     innerWidth - posterWidth - gap < HeroMinColumnWidth
@@ -188,8 +185,8 @@ fun HeroSubtitle(text: String, style: TextStyle = MaterialTheme.typography.bodyM
 }
 
 /**
- * The metadata line: plain texts (year, runtime, rating…) followed by the community rating star
- * and (CE, #332) the critic score, built the same way as on the compact screens.
+ * The metadata line: plain texts (year, runtime, rating…) followed by the community rating star and
+ * (CE, #332) the critic score, built the same way as on the compact screens.
  */
 @Composable
 fun HeroMetadataLine(texts: List<String>, communityRating: Float?, criticRating: Float? = null) {

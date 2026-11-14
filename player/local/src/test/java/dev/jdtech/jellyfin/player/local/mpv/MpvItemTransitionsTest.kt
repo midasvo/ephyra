@@ -107,7 +107,10 @@ class MpvItemTransitionsTest {
         replace(listOf(e5), 0)
         mpvCurrentPos(e5, indexChanged = false) // mpv's own event, later
 
-        assertEquals(listOf("timeline 1 $timelineReplaced", "transition e5 $playlistChanged"), events)
+        assertEquals(
+            listOf("timeline 1 $timelineReplaced", "transition e5 $playlistChanged"),
+            events,
+        )
     }
 
     @Test
@@ -120,7 +123,10 @@ class MpvItemTransitionsTest {
         // mpv's playlist-current-pos stays 0, so mpv sends nothing for the new item.
         replace(listOf(e3), 0)
 
-        assertEquals(listOf("timeline 1 $timelineReplaced", "transition e3 $playlistChanged"), events)
+        assertEquals(
+            listOf("timeline 1 $timelineReplaced", "transition e3 $playlistChanged"),
+            events,
+        )
     }
 
     @Test
@@ -178,6 +184,9 @@ class MpvItemTransitionsTest {
         replace(listOf(e1), 0)
         mpvCurrentPos(e1, indexChanged = false)
 
-        assertEquals(listOf("timeline 1 $timelineReplaced", "transition e1 $playlistChanged"), events)
+        assertEquals(
+            listOf("timeline 1 $timelineReplaced", "transition e1 $playlistChanged"),
+            events,
+        )
     }
 }

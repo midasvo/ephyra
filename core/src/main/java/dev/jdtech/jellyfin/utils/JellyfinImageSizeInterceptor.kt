@@ -18,11 +18,14 @@ private val JELLYFIN_IMAGE_URL =
     Regex("""^https?://.+/(?:items|users)/[^/?]+/images/[^?]+(\?.*)?$""", RegexOption.IGNORE_CASE)
 
 private val SIZED_IMAGE_URL =
-    Regex("""[?&](fillWidth|fillHeight|maxWidth|maxHeight|width|height)=""", RegexOption.IGNORE_CASE)
+    Regex(
+        """[?&](fillWidth|fillHeight|maxWidth|maxHeight|width|height)=""",
+        RegexOption.IGNORE_CASE,
+    )
 
 /**
- * Asks the server for artwork at the size it will be shown, instead of the full-size original, while
- * [isEnabled] says so. Off by default: the server resizes each image the first time a size is
+ * Asks the server for artwork at the size it will be shown, instead of the full-size original,
+ * while [isEnabled] says so. Off by default: the server resizes each image the first time a size is
  * asked for, which costs a busy server more than the smaller download saves.
  *
  * Lives in the image loader so nothing else sees the sized URLs: downloads fetch the URLs in

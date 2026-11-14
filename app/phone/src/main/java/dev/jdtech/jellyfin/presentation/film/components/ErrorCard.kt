@@ -127,11 +127,7 @@ private fun ErrorCardLocalNetworkPreview() {
         CompositionLocalProvider(
             LocalLocalNetworkBlock provides LocalNetworkBlock(blocked = true, request = {})
         ) {
-            ErrorCard(
-                onShowStacktrace = {},
-                onRetryClick = {},
-                error = SocketTimeoutException(),
-            )
+            ErrorCard(onShowStacktrace = {}, onRetryClick = {}, error = SocketTimeoutException())
         }
     }
 }

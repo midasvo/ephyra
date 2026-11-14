@@ -65,8 +65,8 @@ private val VersionPillMaxWidth = 240.dp
 
 /**
  * CE (#510): the file behind a movie or episode, opened from the info chip at the end of the badge
- * row. It replaces the "Display Extra Info" setting, which put the same facts on every page as
- * four lines of text.
+ * row. It replaces the "Display Extra Info" setting, which put the same facts on every page as four
+ * lines of text.
  *
  * Everything comes from [sources], which the page already has; nothing is worked out until the
  * sheet opens. An item with several versions gets a pill per version, and the sheet opens on the
@@ -231,8 +231,7 @@ private fun MediaInfoSection(
                 tracks.forEachIndexed { index, track ->
                     if (index > 0) {
                         HorizontalDivider(
-                            modifier =
-                                Modifier.padding(horizontal = MaterialTheme.spacings.medium),
+                            modifier = Modifier.padding(horizontal = MaterialTheme.spacings.medium),
                             color = MaterialTheme.colorScheme.outlineVariant,
                         )
                     }

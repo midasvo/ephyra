@@ -50,6 +50,8 @@ class ProfilePinHasherTest {
     fun `a damaged hash never verifies`() {
         val salt = ProfilePinHasher.newSalt()
         assertFalse(ProfilePinHasher.verify("1234", salt, "not base64!"))
-        assertFalse(ProfilePinHasher.verify("1234", "not base64!", ProfilePinHasher.hash("1234", salt)))
+        assertFalse(
+            ProfilePinHasher.verify("1234", "not base64!", ProfilePinHasher.hash("1234", salt))
+        )
     }
 }

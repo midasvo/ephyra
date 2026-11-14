@@ -19,8 +19,11 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import dev.jdtech.jellyfin.ce.presentation.film.CollectionScreen
 import dev.jdtech.jellyfin.ce.presentation.film.LibraryScreen
+import dev.jdtech.jellyfin.ce.presentation.film.MovieScreen
+import dev.jdtech.jellyfin.ce.presentation.film.PersonScreen
 import dev.jdtech.jellyfin.ce.presentation.film.SeasonScreen
 import dev.jdtech.jellyfin.ce.presentation.film.ShowScreen
+import dev.jdtech.jellyfin.ce.presentation.main.MainScreen
 import dev.jdtech.jellyfin.ce.presentation.pin.TvProfilePinGateScreen
 import dev.jdtech.jellyfin.ce.presentation.pin.TvProfilePinScreen
 import dev.jdtech.jellyfin.ce.presentation.player.TvPlayerScreen
@@ -31,7 +34,6 @@ import dev.jdtech.jellyfin.ce.presentation.settings.about.LicenseScreen
 import dev.jdtech.jellyfin.ce.presentation.settings.about.LicensesScreen
 import dev.jdtech.jellyfin.ce.watchnext.WatchNextItemType
 import dev.jdtech.jellyfin.ce.watchnext.WatchNextLink
-import dev.jdtech.jellyfin.models.CollectionType
 import dev.jdtech.jellyfin.models.FindroidBoxSet
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
@@ -49,9 +51,6 @@ import dev.jdtech.jellyfin.presentation.setup.users.UsersScreen
 import dev.jdtech.jellyfin.presentation.setup.welcome.WelcomeScreen
 import dev.jdtech.jellyfin.setup.presentation.permission.PermissionAction
 import dev.jdtech.jellyfin.setup.presentation.permission.PermissionViewModel
-import dev.jdtech.jellyfin.ce.presentation.main.MainScreen
-import dev.jdtech.jellyfin.ce.presentation.film.MovieScreen
-import dev.jdtech.jellyfin.ce.presentation.film.PersonScreen
 import java.util.UUID
 import org.jellyfin.sdk.model.api.BaseItemKind
 
@@ -174,19 +173,17 @@ fun NavigationRoot(
 @Composable
 private fun episodePlayerAction(
     navigate: (NavKey) -> Unit
-): (itemId: UUID, mediaSourceId: String?, startFromBeginning: Boolean) -> Unit = resumedAction {
-    itemId,
-    mediaSourceId,
-    startFromBeginning ->
-    navigate(
-        PlayerRoute(
-            itemId = itemId.toString(),
-            itemKind = BaseItemKind.EPISODE.serialName,
-            mediaSourceId = mediaSourceId,
-            startFromBeginning = startFromBeginning,
+): (itemId: UUID, mediaSourceId: String?, startFromBeginning: Boolean) -> Unit =
+    resumedAction { itemId, mediaSourceId, startFromBeginning ->
+        navigate(
+            PlayerRoute(
+                itemId = itemId.toString(),
+                itemKind = BaseItemKind.EPISODE.serialName,
+                mediaSourceId = mediaSourceId,
+                startFromBeginning = startFromBeginning,
+            )
         )
-    )
-}
+    }
 
 /** CE (#332): the page of a movie, show or collection picked from a row on a detail page. */
 private fun navigateToDetail(navigate: (NavKey) -> Unit, item: FindroidItem) {
@@ -304,7 +301,9 @@ private fun EntryProviderScope<NavKey>.tvEntries(
             navigateToMovie = resumedAction { itemId -> navigate(MovieRoute(itemId.toString())) },
             navigateToShow = resumedAction { itemId -> navigate(ShowRoute(itemId.toString())) },
             navigateToEpisode =
-                resumedAction { episodeId -> navigate(EpisodeRoute(episodeId = episodeId.toString())) },
+                resumedAction { episodeId ->
+                    navigate(EpisodeRoute(episodeId = episodeId.toString()))
+                },
             navigateToCollection =
                 resumedAction { collectionId, collectionName ->
                     navigate(
@@ -352,7 +351,9 @@ private fun EntryProviderScope<NavKey>.tvEntries(
             navigateToMovie = resumedAction { itemId -> navigate(MovieRoute(itemId.toString())) },
             navigateToShow = resumedAction { itemId -> navigate(ShowRoute(itemId.toString())) },
             navigateToEpisode =
-                resumedAction { episodeId -> navigate(EpisodeRoute(episodeId = episodeId.toString())) },
+                resumedAction { episodeId ->
+                    navigate(EpisodeRoute(episodeId = episodeId.toString()))
+                },
         )
     }
     entry<MovieRoute> { key ->
@@ -371,9 +372,7 @@ private fun EntryProviderScope<NavKey>.tvEntries(
                     )
                 },
             navigateToPerson =
-                resumedAction { personId ->
-                    navigate(PersonRoute(personId = personId.toString()))
-                },
+                resumedAction { personId -> navigate(PersonRoute(personId = personId.toString())) },
             // CE (#332): a collection the movie is in, or one of "More like this".
             navigateToItem = resumedAction { item -> navigateToDetail(navigate, item) },
         )
@@ -415,9 +414,7 @@ private fun EntryProviderScope<NavKey>.tvEntries(
                     )
                 },
             navigateToPerson =
-                resumedAction { personId ->
-                    navigate(PersonRoute(personId = personId.toString()))
-                },
+                resumedAction { personId -> navigate(PersonRoute(personId = personId.toString())) },
         )
     }
     entry<PersonRoute> { key ->
@@ -426,7 +423,9 @@ private fun EntryProviderScope<NavKey>.tvEntries(
             navigateToMovie = resumedAction { itemId -> navigate(MovieRoute(itemId.toString())) },
             navigateToShow = resumedAction { itemId -> navigate(ShowRoute(itemId.toString())) },
             navigateToEpisode =
-                resumedAction { episodeId -> navigate(EpisodeRoute(episodeId = episodeId.toString())) },
+                resumedAction { episodeId ->
+                    navigate(EpisodeRoute(episodeId = episodeId.toString()))
+                },
         )
     }
 

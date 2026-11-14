@@ -96,7 +96,11 @@ class SubtitleReplaySampleStreamTest {
         val holder = FormatHolder()
         assertEquals(
             C.RESULT_FORMAT_READ,
-            stream.readData(holder, DecoderInputBuffer(DecoderInputBuffer.BUFFER_REPLACEMENT_MODE_NORMAL), 0),
+            stream.readData(
+                holder,
+                DecoderInputBuffer(DecoderInputBuffer.BUFFER_REPLACEMENT_MODE_NORMAL),
+                0,
+            ),
         )
         assertEquals(newFormat, holder.format)
         assertEquals(listOf(10L), stream.read(1))

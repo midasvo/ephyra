@@ -7,10 +7,10 @@ import androidx.compose.runtime.DisposableEffect
 
 /**
  * A [LazyListState] for a list whose items arrive or change order while it is on screen, such as
- * the rows of Home. A lazy list keeps its first visible item in place when another lands before
- * it, so the new first item would sit out of view, half in the content padding (#393). While the
- * list is at its start, a change of [firstKey] scrolls it back to the new first item; a list the
- * user has scrolled stays where it is.
+ * the rows of Home. A lazy list keeps its first visible item in place when another lands before it,
+ * so the new first item would sit out of view, half in the content padding (#393). While the list
+ * is at its start, a change of [firstKey] scrolls it back to the new first item; a list the user
+ * has scrolled stays where it is.
  */
 @Composable
 fun rememberLazyListStateAtStart(firstKey: Any?): LazyListState {

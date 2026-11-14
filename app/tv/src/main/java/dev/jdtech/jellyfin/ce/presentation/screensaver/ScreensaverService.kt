@@ -1,6 +1,5 @@
 package dev.jdtech.jellyfin.ce.presentation.screensaver
 
-import android.os.Bundle
 import android.service.dreams.DreamService
 import android.view.KeyEvent
 import androidx.compose.ui.platform.ComposeView

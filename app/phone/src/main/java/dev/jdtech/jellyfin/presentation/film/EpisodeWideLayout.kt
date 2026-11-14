@@ -1,5 +1,6 @@
 package dev.jdtech.jellyfin.presentation.film
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -142,12 +142,12 @@ internal fun RowScope.EpisodeTopBarLinks(
 
 /**
  * The scrolling part of [EpisodeWideLayout] (hero, cast) and its download quality dialog, without
- * the top bar. The Season list-detail (4-design.md §7) uses it as its detail pane, where the
- * page's single top bar sits over the list.
+ * the top bar. The Season list-detail (4-design.md §7) uses it as its detail pane, where the page's
+ * single top bar sits over the list.
  *
  * The media info sheet (#510) belongs to the caller, which opens it on [onMediaInfoClick]: it has
- * to outlive a switch between this layout and the compact one. Null when there is no media info
- * to show, and then the badge row has no info chip.
+ * to outlive a switch between this layout and the compact one. Null when there is no media info to
+ * show, and then the badge row has no info chip.
  */
 @Composable
 fun EpisodeWideContent(
@@ -202,10 +202,7 @@ fun EpisodeWideContent(
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
                     state.videoMetadata?.let { videoMetadata ->
                         HeroChips {
-                            VideoMetadataBar(
-                                videoMetadata,
-                                onInfoClick = onMediaInfoClick,
-                            )
+                            VideoMetadataBar(videoMetadata, onInfoClick = onMediaInfoClick)
                         }
                         Spacer(Modifier.height(MaterialTheme.spacings.small))
                     }
@@ -268,7 +265,6 @@ fun EpisodeWideContent(
                     onRetryClick = { onAction(EpisodeAction.OnRetryClick) },
                 )
             }
-
 
         if (downloadQualityDialogOpen) {
             DownloadQualityDialog(

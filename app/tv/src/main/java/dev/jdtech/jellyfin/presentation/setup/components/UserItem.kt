@@ -81,16 +81,20 @@ fun UserItem(
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.width(160.dp)) {
         Box(
-            modifier = Modifier.graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            modifier =
+                Modifier.graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
         ) {
             Surface(
                 onClick = { onClick(user) },
                 onLongClick = onLongClick,
                 shape = ClickableSurfaceDefaults.shape(shape = CircleShape),
-                border = ClickableSurfaceDefaults.border(focusedBorder = ephyraFocusedBorder(CircleShape)),
+                border =
+                    ClickableSurfaceDefaults.border(
+                        focusedBorder = ephyraFocusedBorder(CircleShape)
+                    ),
                 glow = ClickableSurfaceDefaults.glow(focusedGlow = ephyraFocusedGlow()),
                 scale = ClickableSurfaceScale.None,
                 colors =
@@ -105,9 +109,9 @@ fun UserItem(
                             else Modifier
                         )
                         .onFocusChanged {
-                        focused = it.hasFocus || it.isFocused
-                        if (focused) onFocused(user)
-                    },
+                            focused = it.hasFocus || it.isFocused
+                            if (focused) onFocused(user)
+                        },
             ) {
                 // The lock badge is drawn below, outside the circle, like the current badge.
                 UserAvatar(

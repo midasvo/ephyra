@@ -1,5 +1,6 @@
 package dev.jdtech.jellyfin.player.local.domain
 
+import dev.jdtech.jellyfin.models.FindroidChapter
 import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidImages
 import dev.jdtech.jellyfin.models.FindroidSeason
@@ -9,7 +10,6 @@ import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.lang.reflect.Proxy
 import java.util.UUID
 import kotlin.random.Random
-import dev.jdtech.jellyfin.models.FindroidChapter
 import kotlinx.coroutines.runBlocking
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.junit.Assert.assertEquals
@@ -36,21 +36,16 @@ class PlaylistManagerShuffleTest {
         val ep3 = episode(season2, 1)
 
         val showMap =
-            mapOf(
-                season0 to listOf(epSpecial),
-                season1 to listOf(ep1, ep2),
-                season2 to listOf(ep3),
-            )
+            mapOf(season0 to listOf(epSpecial), season1 to listOf(ep1, ep2), season2 to listOf(ep3))
 
         val manager = PlaylistManager(fakeRepository(showMap))
-        val initialItem =
-            runBlocking {
-                manager.getInitialItem(
-                    itemId = seriesId,
-                    itemKind = BaseItemKind.SERIES,
-                    shuffle = true,
-                )
-            }
+        val initialItem = runBlocking {
+            manager.getInitialItem(
+                itemId = seriesId,
+                itemKind = BaseItemKind.SERIES,
+                shuffle = true,
+            )
+        }
 
         assertNotNull(initialItem)
         assertEquals(0L, initialItem!!.playbackPosition)
@@ -69,10 +64,13 @@ class PlaylistManagerShuffleTest {
         val showMap = seasons.associateWith { season -> List(5) { episode(season, it + 1) } }
 
         val manager = PlaylistManager(fakeRepository(showMap))
-        val initialItem =
-            runBlocking {
-                manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)
-            }
+        val initialItem = runBlocking {
+            manager.getInitialItem(
+                itemId = seriesId,
+                itemKind = BaseItemKind.SERIES,
+                shuffle = true,
+            )
+        }
 
         assertNotNull(initialItem)
         // One request for the episode list, not one per season.
@@ -89,7 +87,11 @@ class PlaylistManagerShuffleTest {
 
         runBlocking {
             val first =
-                manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)!!
+                manager.getInitialItem(
+                    itemId = seriesId,
+                    itemKind = BaseItemKind.SERIES,
+                    shuffle = true,
+                )!!
             manager.setCurrentMediaItemIndex(first.itemId)
             val second = manager.getNextPlayerItem()
             assertNotNull("second", second)
@@ -108,7 +110,11 @@ class PlaylistManagerShuffleTest {
         val manager = PlaylistManager(fakeRepository(showMap))
 
         runBlocking {
-            manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)
+            manager.getInitialItem(
+                itemId = seriesId,
+                itemKind = BaseItemKind.SERIES,
+                shuffle = true,
+            )
             val later = manager.upcomingItems().last()
 
             val jumped = manager.jumpTo(later.id)!!
@@ -125,7 +131,11 @@ class PlaylistManagerShuffleTest {
 
         runBlocking {
             val first =
-                manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)!!
+                manager.getInitialItem(
+                    itemId = seriesId,
+                    itemKind = BaseItemKind.SERIES,
+                    shuffle = true,
+                )!!
             manager.setCurrentMediaItemIndex(first.itemId)
             val second = manager.getNextPlayerItem()!!
             // A quality or audio switch rebuilds the item that is playing.
@@ -143,10 +153,13 @@ class PlaylistManagerShuffleTest {
         val showMap = mapOf(specials to List(3) { episode(specials, it + 1) })
 
         val manager = PlaylistManager(fakeRepository(showMap))
-        val initialItem =
-            runBlocking {
-                manager.getInitialItem(itemId = seriesId, itemKind = BaseItemKind.SERIES, shuffle = true)
-            }
+        val initialItem = runBlocking {
+            manager.getInitialItem(
+                itemId = seriesId,
+                itemKind = BaseItemKind.SERIES,
+                shuffle = true,
+            )
+        }
 
         assertNotNull(initialItem)
         assertEquals(3, 1 + manager.upcomingItems().size)
@@ -156,18 +169,18 @@ class PlaylistManagerShuffleTest {
     fun `shuffling a season queues only its episodes and starts from 0`() {
         val season1 = season(1)
         val season2 = season(2)
-        val inSeason = List(10) { episode(season1, it + 1) }.map { it.copy(playbackPositionTicks = 50000000L) }
+        val inSeason =
+            List(10) { episode(season1, it + 1) }.map { it.copy(playbackPositionTicks = 50000000L) }
         val showMap = mapOf(season1 to inSeason, season2 to listOf(episode(season2, 1)))
 
         val manager = PlaylistManager(fakeRepository(showMap)).apply { random = Random(638) }
-        val initialItem =
-            runBlocking {
-                manager.getInitialItem(
-                    itemId = season1.id,
-                    itemKind = BaseItemKind.SEASON,
-                    shuffle = true,
-                )
-            }
+        val initialItem = runBlocking {
+            manager.getInitialItem(
+                itemId = season1.id,
+                itemKind = BaseItemKind.SEASON,
+                shuffle = true,
+            )
+        }
 
         assertNotNull(initialItem)
         assertEquals(0L, initialItem!!.playbackPosition)
@@ -184,8 +197,9 @@ class PlaylistManagerShuffleTest {
         val inSeason = List(10) { episode(season1, it + 1) }
         val manager = PlaylistManager(fakeRepository(mapOf(season1 to inSeason)))
 
-        val initialItem =
-            runBlocking { manager.getInitialItem(itemId = season1.id, itemKind = BaseItemKind.SEASON) }
+        val initialItem = runBlocking {
+            manager.getInitialItem(itemId = season1.id, itemKind = BaseItemKind.SEASON)
+        }
 
         val queued = listOf(initialItem!!.itemId) + manager.upcomingItems().map { it.id }
         assertEquals(inSeason.map { it.id }, queued)
@@ -201,7 +215,8 @@ class PlaylistManagerShuffleTest {
                 "getSeason" -> show.keys.first { it.id == args[0] }
                 "getEpisodes" -> {
                     calls += "getEpisodes"
-                    if (args[1] == null) show.values.flatten().map { it.copy(chapters = emptyList()) }
+                    if (args[1] == null)
+                        show.values.flatten().map { it.copy(chapters = emptyList()) }
                     else show.entries.first { it.key.id == args[1] }.value
                 }
                 "getEpisode" -> {

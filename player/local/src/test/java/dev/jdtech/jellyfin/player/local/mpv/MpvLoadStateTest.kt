@@ -9,9 +9,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * #446: a stream that failed to open left the mpv player black and BUFFERING without an error
- * when mpv delivered END_FILE before its error lines. Both orders were seen on the emulators
- * with the same refused connection (about one in five opens had END_FILE first).
+ * #446: a stream that failed to open left the mpv player black and BUFFERING without an error when
+ * mpv delivered END_FILE before its error lines. Both orders were seen on the emulators with the
+ * same refused connection (about one in five opens had END_FILE first).
  *
  * #576: one failed open was reported two to four times, because mpv goes on to the next playlist
  * entries before it is stopped.

@@ -97,13 +97,17 @@ fun DownloadedShowScreen(
     }
     val seasons =
         state.seasons
-            .map { season -> season.copy(episodes = season.episodes.filterNot { it.id in undo.hiddenIds }) }
+            .map { season ->
+                season.copy(episodes = season.episodes.filterNot { it.id in undo.hiddenIds })
+            }
             .filter { it.episodes.isNotEmpty() }
     val episodes = seasons.flatMap { it.episodes }
 
     val removeEpisodes: (List<FindroidEpisode>) -> Unit = { removed ->
         val message =
-            removed.singleOrNull()?.let { context.getString(CoreR.string.download_removed, it.name) }
+            removed.singleOrNull()?.let {
+                context.getString(CoreR.string.download_removed, it.name)
+            }
                 ?: context.resources.getQuantityString(
                     CoreR.plurals.downloads_removed,
                     removed.size,
@@ -155,7 +159,8 @@ fun DownloadedShowScreen(
                                 episodes.size,
                                 episodes.size,
                             ) + " · " + Formatter.formatShortFileSize(context, totalBytes),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                        style =
+                            MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = rowWidth.padding(horizontal = 4.dp).animateItem(),
                     )
@@ -164,12 +169,12 @@ fun DownloadedShowScreen(
             for (season in seasons) {
                 item(key = "season:${season.number}") {
                     Text(
-                        text = season.name ?: stringResource(CoreR.string.season_number, season.number),
+                        text =
+                            season.name
+                                ?: stringResource(CoreR.string.season_number, season.number),
                         style = MaterialTheme.typography.titleMedium,
                         modifier =
-                            rowWidth
-                                .padding(start = 4.dp, top = 20.dp, bottom = 8.dp)
-                                .animateItem(),
+                            rowWidth.padding(start = 4.dp, top = 20.dp, bottom = 8.dp).animateItem(),
                     )
                 }
                 itemsIndexed(items = season.episodes, key = { _, ep -> ep.id }) { index, episode ->
@@ -234,7 +239,9 @@ private fun EpisodeRow(
     SwipeToDismissBox(
         state = dismissState,
         enableDismissFromStartToEnd = false,
-        backgroundContent = { SwipeActionBackground(icon = CoreR.drawable.ic_trash, shape = shape) },
+        backgroundContent = {
+            SwipeActionBackground(icon = CoreR.drawable.ic_trash, shape = shape)
+        },
         modifier = modifier,
     ) {
         DownloadRow(

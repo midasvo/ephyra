@@ -7,16 +7,16 @@ import dev.jdtech.jellyfin.models.MediaSegmentAction
 /**
  * CE (#271): which media segment playback is in, and what the player should do about it.
  *
- * Pure: no Android, no player. [PlayerViewModel][dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel]
- * calls [update] from its once-a-second poll with the player's position and acts on the
- * [SegmentDecision].
+ * Pure: no Android, no player.
+ * [PlayerViewModel][dev.jdtech.jellyfin.player.local.presentation.PlayerViewModel] calls [update]
+ * from its once-a-second poll with the player's position and acts on the [SegmentDecision].
  *
  * - A segment is active from its start until [END_MARGIN_MS] before its end, so the button doesn't
  *   flash up again in the last poll before the segment ends.
  * - An [MediaSegmentAction.ASK] segment shows the skip button from the position where playback
  *   entered it until [buttonDurationMs] of it has played ([SegmentDecision.Ask.inButtonWindow]).
- *   The UI shows it after that only while the controls are visible. Seeking back inside the
- *   segment opens the window again from there.
+ *   The UI shows it after that only while the controls are visible. Seeking back inside the segment
+ *   opens the window again from there.
  * - An [MediaSegmentAction.SKIP] segment is skipped once per entry; with [autoSkipOnlyInPip] it is
  *   only skipped in picture-in-picture and asks otherwise.
  * - Skipping lands at the segment's end, or on the next item for an outro that ends within
@@ -50,8 +50,9 @@ class SegmentTracker(
         actions[type] ?: MediaSegmentAction.IGNORE
 
     /** The segment playing at [positionMs], or null. */
-    fun activeSegment(positionMs: Long): FindroidSegment? =
-        segments.find { positionMs >= it.startTicks && positionMs < it.endTicks - END_MARGIN_MS }
+    fun activeSegment(positionMs: Long): FindroidSegment? = segments.find {
+        positionMs >= it.startTicks && positionMs < it.endTicks - END_MARGIN_MS
+    }
 
     /**
      * What to do at [positionMs]. [durationMs] is the item's runtime (0 or less when unknown),
@@ -116,8 +117,8 @@ class SegmentTracker(
     }
 
     /**
-     * CE (#272): where the outro that closes the item starts (one whose skip goes to the next
-     * item, see [skipTarget]), whatever its action is set to. Null when there is none.
+     * CE (#272): where the outro that closes the item starts (one whose skip goes to the next item,
+     * see [skipTarget]), whatever its action is set to. Null when there is none.
      */
     fun closingOutroStartMs(durationMs: Long, hasNextItem: Boolean): Long? =
         segments

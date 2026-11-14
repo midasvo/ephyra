@@ -95,7 +95,9 @@ fun WatchHistoryText(playCount: Int, lastPlayedDate: LocalDateTime?) {
             stringResource(
                 CoreR.string.item_watch_count_last,
                 playCount,
-                date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)),
+                date.format(
+                    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+                ),
             )
         } ?: stringResource(CoreR.string.item_watch_count, playCount)
     Text(
@@ -108,7 +110,8 @@ fun WatchHistoryText(playCount: Int, lastPlayedDate: LocalDateTime?) {
 /** "Airs Thursday 21:00", only while the show is still running. */
 @Composable
 fun AirScheduleText(show: FindroidShow) {
-    val schedule = show.airSchedule(currentLocale(), stringResource(CoreR.string.item_airs_daily)) ?: return
+    val schedule =
+        show.airSchedule(currentLocale(), stringResource(CoreR.string.item_airs_daily)) ?: return
     val text = stringResource(CoreR.string.item_airs, schedule)
     Text(
         text = text,
@@ -183,5 +186,4 @@ fun ItemsRow(
     }
 }
 
-@Composable
-private fun currentLocale(): Locale = LocalConfiguration.current.locales.get(0)
+@Composable private fun currentLocale(): Locale = LocalConfiguration.current.locales.get(0)

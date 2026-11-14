@@ -17,9 +17,9 @@ import timber.log.Timber
  * [PlaybackService] keeps the session, the notification and the progress reports going. The
  * activity attaches to the same view model again when the notification brings it back.
  *
- * The session is released by [clear], which clears the view model: when the user closes the
- * player, when the activity goes away without anything left to play in the background, or when a
- * session has been paused with no player screen for [IDLE_RELEASE_MS].
+ * The session is released by [clear], which clears the view model: when the user closes the player,
+ * when the activity goes away without anything left to play in the background, or when a session
+ * has been paused with no player screen for [IDLE_RELEASE_MS].
  */
 @Singleton
 class PlaybackSessionStore @Inject constructor() : ViewModelStoreOwner {

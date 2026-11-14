@@ -7,9 +7,9 @@ import androidx.media3.common.Tracks
 internal data class VideoTrackCandidate(val isSelected: Boolean, val frameRate: Float)
 
 /**
- * The frame rate of the selected video track, or of the first video track when none is selected,
- * or null when it is unknown. mpv lists attached pictures (cover art) as extra 1fps video tracks,
- * so taking the last video group would hint the display with 1fps (#338).
+ * The frame rate of the selected video track, or of the first video track when none is selected, or
+ * null when it is unknown. mpv lists attached pictures (cover art) as extra 1fps video tracks, so
+ * taking the last video group would hint the display with 1fps (#338).
  */
 internal fun selectedVideoFrameRate(candidates: List<VideoTrackCandidate>): Float? {
     val candidate =

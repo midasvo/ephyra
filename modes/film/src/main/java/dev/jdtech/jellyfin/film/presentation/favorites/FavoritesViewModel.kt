@@ -13,8 +13,8 @@ import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import javax.inject.Inject
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -26,53 +26,52 @@ class FavoritesViewModel @Inject constructor(private val repository: JellyfinRep
     private val _state = MutableStateFlow(CollectionState())
     val state = _state.asStateFlow()
 
-    fun loadItems(): Job =
-        viewModelScope.launch {
-            // With content on screen the refresh happens quietly (#251).
-            val hasContent = _state.value.sections.isNotEmpty()
-            _state.emit(_state.value.copy(isLoading = !hasContent, error = null))
+    fun loadItems(): Job = viewModelScope.launch {
+        // With content on screen the refresh happens quietly (#251).
+        val hasContent = _state.value.sections.isNotEmpty()
+        _state.emit(_state.value.copy(isLoading = !hasContent, error = null))
 
-            try {
-                val items = repository.getFavoriteItems()
+        try {
+            val items = repository.getFavoriteItems()
 
-                val sections = mutableListOf<CollectionSection>()
+            val sections = mutableListOf<CollectionSection>()
 
-                withContext(Dispatchers.Default) {
-                    CollectionSection(
-                            Constants.FAVORITE_TYPE_MOVIES,
-                            UiText.StringResource(CoreR.string.movies_label),
-                            items.filterIsInstance<FindroidMovie>(),
-                        )
-                        .let {
-                            if (it.items.isNotEmpty()) {
-                                sections.add(it)
-                            }
+            withContext(Dispatchers.Default) {
+                CollectionSection(
+                        Constants.FAVORITE_TYPE_MOVIES,
+                        UiText.StringResource(CoreR.string.movies_label),
+                        items.filterIsInstance<FindroidMovie>(),
+                    )
+                    .let {
+                        if (it.items.isNotEmpty()) {
+                            sections.add(it)
                         }
-                    CollectionSection(
-                            Constants.FAVORITE_TYPE_SHOWS,
-                            UiText.StringResource(CoreR.string.shows_label),
-                            items.filterIsInstance<FindroidShow>(),
-                        )
-                        .let {
-                            if (it.items.isNotEmpty()) {
-                                sections.add(it)
-                            }
+                    }
+                CollectionSection(
+                        Constants.FAVORITE_TYPE_SHOWS,
+                        UiText.StringResource(CoreR.string.shows_label),
+                        items.filterIsInstance<FindroidShow>(),
+                    )
+                    .let {
+                        if (it.items.isNotEmpty()) {
+                            sections.add(it)
                         }
-                    CollectionSection(
-                            Constants.FAVORITE_TYPE_EPISODES,
-                            UiText.StringResource(CoreR.string.episodes_label),
-                            items.filterIsInstance<FindroidEpisode>(),
-                        )
-                        .let {
-                            if (it.items.isNotEmpty()) {
-                                sections.add(it)
-                            }
+                    }
+                CollectionSection(
+                        Constants.FAVORITE_TYPE_EPISODES,
+                        UiText.StringResource(CoreR.string.episodes_label),
+                        items.filterIsInstance<FindroidEpisode>(),
+                    )
+                    .let {
+                        if (it.items.isNotEmpty()) {
+                            sections.add(it)
                         }
-                }
-
-                _state.emit(_state.value.copy(isLoading = false, sections = sections))
-            } catch (e: Exception) {
-                _state.emit(_state.value.copy(isLoading = false, error = e))
+                    }
             }
+
+            _state.emit(_state.value.copy(isLoading = false, sections = sections))
+        } catch (e: Exception) {
+            _state.emit(_state.value.copy(isLoading = false, error = e))
         }
+    }
 }

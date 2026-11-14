@@ -53,8 +53,12 @@ class ProfilePatternTest {
         val salt = ProfilePinHasher.newSalt()
         val hash = ProfilePinHasher.hash("0-1-2-5-8", salt)
 
-        assertTrue(ProfilePinHasher.verify(ProfileLockEntry.Pattern(listOf(0, 1, 2, 5, 8)), salt, hash))
-        assertFalse(ProfilePinHasher.verify(ProfileLockEntry.Pattern(listOf(0, 1, 2, 5)), salt, hash))
+        assertTrue(
+            ProfilePinHasher.verify(ProfileLockEntry.Pattern(listOf(0, 1, 2, 5, 8)), salt, hash)
+        )
+        assertFalse(
+            ProfilePinHasher.verify(ProfileLockEntry.Pattern(listOf(0, 1, 2, 5)), salt, hash)
+        )
         assertFalse(ProfilePinHasher.verify(ProfileLockEntry.Pattern(listOf(0, 1, 2)), salt, hash))
     }
 }

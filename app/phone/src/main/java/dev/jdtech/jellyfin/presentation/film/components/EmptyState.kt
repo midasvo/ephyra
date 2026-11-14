@@ -53,7 +53,8 @@ fun EmptyState(
         verticalArrangement = Arrangement.Center,
     ) {
         Box(contentAlignment = Alignment.Center) {
-            // A still speck field (VISION §9) in a 240 × 160 dp area centred on the icon, overflowing
+            // A still speck field (VISION §9) in a 240 × 160 dp area centred on the icon,
+            // overflowing
             // it without taking space; half as bright in light theme.
             val primary = MaterialTheme.colorScheme.primary
             val tertiary = MaterialTheme.colorScheme.tertiary

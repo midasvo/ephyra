@@ -79,8 +79,8 @@ class SignIn {
 
     /**
      * Submits the screen with Enter in the last text field set (its Go action). The on-screen
-     * keyboard opens when the text is set and would take the key, so close it first. A touch on
-     * the button below does nothing on TV.
+     * keyboard opens when the text is set and would take the key, so close it first. A touch on the
+     * button below does nothing on TV.
      */
     private fun UiDevice.submit() {
         if (executeShellCommand("dumpsys input_method").contains("mInputShown=true")) pressBack()

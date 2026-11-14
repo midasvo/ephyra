@@ -93,13 +93,9 @@ class EpisodeTopBarLinksTest {
 
         val season = dummyEpisode.seasonName!!
         val whole =
-            rule
-                .onNode(hasText(season) and hasAnyAncestor(hasTestTag("short")))
-                .getBoundsInRoot()
+            rule.onNode(hasText(season) and hasAnyAncestor(hasTestTag("short"))).getBoundsInRoot()
         val squeezed =
-            rule
-                .onNode(hasText(season) and hasAnyAncestor(hasTestTag("long")))
-                .getBoundsInRoot()
+            rule.onNode(hasText(season) and hasAnyAncestor(hasTestTag("long"))).getBoundsInRoot()
         val row = rule.onNodeWithTag("long").getBoundsInRoot()
 
         assertEquals(whole.right - whole.left, squeezed.right - squeezed.left)

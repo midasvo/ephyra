@@ -2,33 +2,16 @@ package dev.jdtech.jellyfin.presentation.settings
 
 import android.app.Activity
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
-import dev.jdtech.jellyfin.ce.presentation.settings.TvSettingsLayout
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.MaterialTheme
-import androidx.tv.material3.Text
-import dev.jdtech.jellyfin.ce.ui.TvSafeArea
-import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
-import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
-import dev.jdtech.jellyfin.ce.ui.focus.rememberFocusPosition
-import dev.jdtech.jellyfin.presentation.settings.components.SettingsGroupCard
+import dev.jdtech.jellyfin.ce.presentation.settings.TvSettingsLayout
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
-import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.settings.R as SettingsR
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceCategory
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceGroup

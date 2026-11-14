@@ -41,7 +41,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -126,8 +125,7 @@ fun LibraryScreen(
                         is FindroidShow -> navigateToShow(action.item.id)
                         is FindroidFolder ->
                             navigateToLibrary(action.item.id, action.item.name, libraryType)
-                        is FindroidBoxSet ->
-                            navigateToCollection(action.item.id, action.item.name)
+                        is FindroidBoxSet -> navigateToCollection(action.item.id, action.item.name)
                     }
                 }
                 else -> Unit
@@ -210,7 +208,9 @@ internal fun LibraryScreenLayout(
                             modifier = Modifier.weight(1f),
                         )
                         val canFocusHeader =
-                            !state.isLoading || items.itemCount > 0 || focusPosition.row == ROW_HEADER
+                            !state.isLoading ||
+                                items.itemCount > 0 ||
+                                focusPosition.row == ROW_HEADER
                         Button(
                             onClick = {
                                 onAction(LibraryAction.ToggleWatchedFilter(!state.filterWatched))
@@ -253,8 +253,7 @@ internal fun LibraryScreenLayout(
                         // Not loaded yet, for example right after a jump.
                         ItemCardSkeleton(
                             modifier =
-                                Modifier.focusPosition(focusPosition, ROW_ITEMS, i)
-                                    .focusable(),
+                                Modifier.focusPosition(focusPosition, ROW_ITEMS, i).focusable()
                         )
                     } else {
                         ItemCard(
@@ -265,7 +264,12 @@ internal fun LibraryScreenLayout(
                             // No animateItem() (#257): the grid pages and jumps, and placement
                             // animations there only cost bookkeeping while a key is held.
                             modifier =
-                                Modifier.focusPosition(focusPosition, ROW_ITEMS, i, item.id.toString())
+                                Modifier.focusPosition(
+                                        focusPosition,
+                                        ROW_ITEMS,
+                                        i,
+                                        item.id.toString(),
+                                    )
                                     .onFocusChanged { if (it.hasFocus) focusedIndex.intValue = i }
                                     .testTag(libraryCardTag(item.id)),
                         )
@@ -350,8 +354,7 @@ private val LETTER_BAR_WIDTH = 32.dp
 /** About two seconds at 60 fps, for the page of a jump to come in on a slow box. */
 private const val JUMP_FOCUS_FRAMES = 120
 
-private fun LazyPagingItems<FindroidItem>.peekId(index: Int): String? =
-    peek(index)?.id?.toString()
+private fun LazyPagingItems<FindroidItem>.peekId(index: Int): String? = peek(index)?.id?.toString()
 
 /** Scrolls only when [index] isn't on screen, so a return keeps the old scroll position. */
 private suspend fun LazyGridState.scrollIntoView(index: Int) {

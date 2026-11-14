@@ -11,8 +11,8 @@ package dev.jdtech.jellyfin.player.local.mpv
  * CE (#576):
  * - One failure is reported once. After a failed open mpv goes on to the next playlist entries by
  *   itself, and has usually failed on those too before the first END_FILE gets here. Their
- *   START_FILE and END_FILE say nothing new: a failure holds until this player starts a load
- *   itself ([newLoad]).
+ *   START_FILE and END_FILE say nothing new: a failure holds until this player starts a load itself
+ *   ([newLoad]).
  * - An END_FILE that comes while mpv is on the entry this player asked for belongs to an earlier
  *   file: one that mpv tried after a failure and that is only delivered after the retry, or the
  *   first entry of a new playlist that mpv had started to open before it was told to play another.

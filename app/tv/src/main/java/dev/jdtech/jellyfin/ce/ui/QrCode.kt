@@ -40,10 +40,7 @@ fun QrCode(text: String, size: Dp, modifier: Modifier = Modifier) {
         }
     Canvas(
         modifier =
-            modifier
-                .background(Color.White, RoundedCornerShape(8.dp))
-                .padding(12.dp)
-                .size(size)
+            modifier.background(Color.White, RoundedCornerShape(8.dp)).padding(12.dp).size(size)
     ) {
         val module = this.size.width / matrix.width
         for (y in 0 until matrix.height) {

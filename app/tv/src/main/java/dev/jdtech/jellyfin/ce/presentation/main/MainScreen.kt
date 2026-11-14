@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
@@ -67,11 +66,11 @@ import androidx.tv.material3.NavigationDrawerItemBorder
 import androidx.tv.material3.NavigationDrawerItemDefaults
 import androidx.tv.material3.Text
 import androidx.tv.material3.rememberDrawerState
+import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.ce.presentation.film.FavoritesScreen
 import dev.jdtech.jellyfin.ce.presentation.film.HomeScreen
 import dev.jdtech.jellyfin.ce.presentation.film.LibraryScreen
 import dev.jdtech.jellyfin.ce.presentation.film.SearchScreen
-import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
 import dev.jdtech.jellyfin.ce.ui.components.UserAvatar
 import dev.jdtech.jellyfin.ce.ui.focus.DirectionKeyClock
@@ -202,6 +201,7 @@ fun MainScreen(
 const val DESTINATION_HOME = "home"
 const val DESTINATION_SEARCH = "search"
 const val DESTINATION_FAVORITES = "favorites"
+
 fun libraryDestinationKey(libraryId: UUID): String = "library:$libraryId"
 
 /** How old the drawer's libraries may get before a return to Main refreshes them (#257). */
@@ -255,15 +255,15 @@ private const val ITEM_SETTINGS = "settings"
 /**
  * Where the pages beside the drawer start. Each page pads its own content by
  * [TvSafeArea.horizontal], so its content starts at 128 dp. The collapsed rail is wider
- * ([DrawerStartPadding] + the 56 dp item = 92 dp) and covers the first 12 dp of that padding,
- * which holds no content: the pages stay where they were before #539.
+ * ([DrawerStartPadding] + the 56 dp item = 92 dp) and covers the first 12 dp of that padding, which
+ * holds no content: the pages stay where they were before #539.
  */
 val ClosedDrawerWidth = 80.dp
 
 /**
  * #539 (ADR 0002, safe area): the drawer's icons, avatar and labels sit inside the TV safe area,
- * its background and focus pill may reach into the margin. tv-material puts the collapsed item's
- * 24 dp icon 16 dp in from the item's edge (20 dp when expanded) and the profile's 32 dp avatar
+ * its background and focus pill may reach into the margin. tv-material puts the collapsed item's 24
+ * dp icon 16 dp in from the item's edge (20 dp when expanded) and the profile's 32 dp avatar
  * overflows that box by 4 dp on each side, so the avatar starts 12 dp in: at
  * [TvSafeArea.horizontal].
  */
@@ -271,8 +271,8 @@ internal val DrawerStartPadding = TvSafeArea.horizontal - 12.dp
 
 /**
  * The expanded drawer keeps 12 dp of surface after the pill. The collapsed rail ends at the pill:
- * its opaque surface covers the pages' padding, and 12 dp more cut the glow of a focused first
- * card off with a visible edge (#539).
+ * its opaque surface covers the pages' padding, and 12 dp more cut the glow of a focused first card
+ * off with a visible edge (#539).
  */
 internal fun drawerEndPadding(drawerValue: DrawerValue): Dp =
     if (drawerValue == DrawerValue.Open) 12.dp else 0.dp
@@ -296,7 +296,9 @@ fun MainScreenLayout(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val baseUrl =
-        remember(context) { runCatching { JellyfinApi.getInstance(context).api.baseUrl }.getOrNull() }
+        remember(context) {
+            runCatching { JellyfinApi.getInstance(context).api.baseUrl }.getOrNull()
+        }
     val coroutineScope = rememberCoroutineScope()
     var activeDestinationKey by rememberSaveable { mutableStateOf(DESTINATION_HOME) }
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -454,8 +456,7 @@ fun MainScreenLayout(
                                     baseUrl = baseUrl,
                                     size = 32.dp,
                                     modifier =
-                                        Modifier.requiredSize(32.dp)
-                                            .testTag("drawer_icon_profile"),
+                                        Modifier.requiredSize(32.dp).testTag("drawer_icon_profile"),
                                 )
                             } else {
                                 Icon(
@@ -524,7 +525,9 @@ fun MainScreenLayout(
                     item(key = DESTINATION_HOME) {
                         NavigationDrawerItem(
                             selected = activeDestinationKey == DESTINATION_HOME,
-                            onClick = { showDestination(DESTINATION_HOME, fallback = homeFocusRequester) },
+                            onClick = {
+                                showDestination(DESTINATION_HOME, fallback = homeFocusRequester)
+                            },
                             leadingContent = {
                                 Icon(
                                     painter = painterResource(id = CoreR.drawable.ic_home),
@@ -676,8 +679,9 @@ fun MainScreenLayout(
                         }
                         activeDestinationKey.startsWith("library:") -> {
                             val libraryIdString = activeDestinationKey.removePrefix("library:")
-                            val library =
-                                libraries.firstOrNull { it.id.toString() == libraryIdString }
+                            val library = libraries.firstOrNull {
+                                it.id.toString() == libraryIdString
+                            }
                             if (library != null) {
                                 libraryContent(library)
                             }

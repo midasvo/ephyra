@@ -3,10 +3,10 @@ package dev.jdtech.jellyfin.setup.presentation.users
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.jdtech.jellyfin.profilelock.ProfileLock
-import dev.jdtech.jellyfin.setup.domain.SetupRepository
 import dev.jdtech.jellyfin.models.ProfileLockType
+import dev.jdtech.jellyfin.profilelock.ProfileLock
 import dev.jdtech.jellyfin.profilelock.ProfileLockEntry
+import dev.jdtech.jellyfin.setup.domain.SetupRepository
 import dev.jdtech.jellyfin.setup.presentation.pin.PinError
 import dev.jdtech.jellyfin.setup.presentation.pin.PinPrompt
 import java.util.UUID
@@ -49,16 +49,15 @@ constructor(private val repository: SetupRepository, private val profileLock: Pr
                 val publicUsers = repository.getPublicUsers(server.id)
                 // Pick up changed profile pictures of the saved users.
                 val publicById = publicUsers.associateBy { it.id }
-                val refreshed =
-                    users.map { user ->
-                        val tag = publicById[user.id]?.primaryImageTag
-                        if (publicById.containsKey(user.id) && tag != user.primaryImageTag) {
-                            repository.updateUserImageTag(user.id, tag)
-                            user.copy(primaryImageTag = tag)
-                        } else {
-                            user
-                        }
+                val refreshed = users.map { user ->
+                    val tag = publicById[user.id]?.primaryImageTag
+                    if (publicById.containsKey(user.id) && tag != user.primaryImageTag) {
+                        repository.updateUserImageTag(user.id, tag)
+                        user.copy(primaryImageTag = tag)
+                    } else {
+                        user
                     }
+                }
                 _state.emit(
                     _state.value.copy(
                         users = refreshed,

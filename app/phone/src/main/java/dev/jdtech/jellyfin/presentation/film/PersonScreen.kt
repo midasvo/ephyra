@@ -207,12 +207,13 @@ internal fun PersonScreenLayout(state: PersonState, onAction: (PersonAction) -> 
 
                 Spacer(Modifier.height(paddingBottom))
             }
-        } ?: run {
-            LoadingOrError(
-                error = state.error,
-                onRetryClick = { onAction(PersonAction.OnRetryClick) },
-            )
         }
+            ?: run {
+                LoadingOrError(
+                    error = state.error,
+                    onRetryClick = { onAction(PersonAction.OnRetryClick) },
+                )
+            }
 
         ItemTopBar(
             hasBackButton = true,

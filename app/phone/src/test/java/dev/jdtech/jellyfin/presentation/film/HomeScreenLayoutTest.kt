@@ -96,7 +96,9 @@ class HomeScreenLayoutTest {
         rule.onNodeWithText(string(CoreR.string.error_loading_data)).assertIsDisplayed()
     }
 
-    /** #392: the card keeps what #377 gave the Home error: details in words, Retry, Share, Close. */
+    /**
+     * #392: the card keeps what #377 gave the Home error: details in words, Retry, Share, Close.
+     */
     @Test
     fun theErrorCardOpensTheErrorDetails() {
         setLayout(loaded.copy(error = Exception("Failed to connect to /10.0.2.2:8096")))

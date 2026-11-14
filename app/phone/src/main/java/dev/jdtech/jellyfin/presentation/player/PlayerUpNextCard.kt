@@ -64,8 +64,7 @@ import java.util.UUID
  * VISION: a `medium` (16 dp) surface, the thumbnail `small` (12 dp), pill buttons, Play on
  * `primary`. The seconds left sit on the thumbnail in white over the scrim, and the bar along its
  * bottom, which is alive, is `primary`; without autoplay there is no countdown and nothing is cyan
- * but Play. Enters with a fade and an 8 dp drift up, leaves with
- * a fade.
+ * but Play. Enters with a fade and an 8 dp drift up, leaves with a fade.
  */
 @Composable
 fun PlayerUpNextCard(
@@ -110,10 +109,7 @@ private fun UpNextCardContent(state: UpNextState, onPlayNow: () -> Unit, onCance
         color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.94f),
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier =
                     Modifier.size(width = 112.dp, height = 63.dp)
@@ -127,7 +123,11 @@ private fun UpNextCardContent(state: UpNextState, onPlayNow: () -> Unit, onCance
                 )
                 state.secondsLeft?.let { seconds ->
                     val description =
-                        pluralStringResource(PlayerR.plurals.player_up_next_starts_in, seconds, seconds)
+                        pluralStringResource(
+                            PlayerR.plurals.player_up_next_starts_in,
+                            seconds,
+                            seconds,
+                        )
                     // Text on artwork: white over the scrim (VISION §3.4).
                     Box(
                         modifier =
@@ -159,7 +159,10 @@ private fun UpNextCardContent(state: UpNextState, onPlayNow: () -> Unit, onCance
             Column(modifier = Modifier.weight(1f, fill = false)) {
                 Text(
                     text =
-                        listOfNotNull(stringResource(PlayerR.string.player_up_next), state.episodeLabel)
+                        listOfNotNull(
+                                stringResource(PlayerR.string.player_up_next),
+                                state.episodeLabel,
+                            )
                             .joinToString(" · "),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -212,10 +215,7 @@ private fun CountdownBar(fraction: Float, modifier: Modifier = Modifier) {
         )
     Box(
         modifier =
-            modifier
-                .fillMaxWidth(shown)
-                .height(3.dp)
-                .background(MaterialTheme.colorScheme.primary)
+            modifier.fillMaxWidth(shown).height(3.dp).background(MaterialTheme.colorScheme.primary)
     )
 }
 

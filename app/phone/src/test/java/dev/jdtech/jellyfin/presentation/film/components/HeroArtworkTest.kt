@@ -113,7 +113,12 @@ class HeroArtworkTest {
 
         assertEquals(
             listOf(ArtworkSource(showBackdrop), ArtworkSource(still)),
-            artworkSources(episode, ArtworkPlacement.Header, canBlur = true, episodeImageFirst = false),
+            artworkSources(
+                episode,
+                ArtworkPlacement.Header,
+                canBlur = true,
+                episodeImageFirst = false,
+            ),
         )
         // The hero has the still beside the text and a Suggestions card is about the episode.
         assertEquals(
@@ -122,7 +127,12 @@ class HeroArtworkTest {
         )
         assertEquals(
             listOf(ArtworkSource(still), ArtworkSource(showBackdrop)),
-            artworkSources(episode, ArtworkPlacement.Carousel, canBlur = true, episodeImageFirst = false),
+            artworkSources(
+                episode,
+                ArtworkPlacement.Carousel,
+                canBlur = true,
+                episodeImageFirst = false,
+            ),
         )
     }
 
@@ -132,7 +142,12 @@ class HeroArtworkTest {
 
         assertEquals(
             listOf(ArtworkSource(still)),
-            artworkSources(episode, ArtworkPlacement.Header, canBlur = true, episodeImageFirst = false),
+            artworkSources(
+                episode,
+                ArtworkPlacement.Header,
+                canBlur = true,
+                episodeImageFirst = false,
+            ),
         )
     }
 

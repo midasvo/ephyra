@@ -21,7 +21,10 @@ fun ProgressBar(item: FindroidItem, width: Dp, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         val progress =
             if (item.runtimeTicks > 0) {
-                (item.playbackPositionTicks.toFloat() / item.runtimeTicks.toFloat()).coerceIn(0f, 1f)
+                (item.playbackPositionTicks.toFloat() / item.runtimeTicks.toFloat()).coerceIn(
+                    0f,
+                    1f,
+                )
             } else {
                 0f
             }

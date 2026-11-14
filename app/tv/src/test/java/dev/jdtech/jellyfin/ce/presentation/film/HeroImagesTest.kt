@@ -115,7 +115,10 @@ class HeroImagesTest {
                         showLogo = Uri.parse("$base/Logo?tag=show"),
                     )
             )
-        assertEquals("$base/Backdrop/0?tag=show&fillWidth=1920&quality=90", heroBackdropUrl(episode, 1344))
+        assertEquals(
+            "$base/Backdrop/0?tag=show&fillWidth=1920&quality=90",
+            heroBackdropUrl(episode, 1344),
+        )
         assertEquals("$base/Logo?tag=show&fillWidth=480&quality=90", heroLogoUrl(episode, 480))
     }
 

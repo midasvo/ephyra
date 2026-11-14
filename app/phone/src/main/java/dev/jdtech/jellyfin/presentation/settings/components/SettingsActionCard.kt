@@ -47,7 +47,10 @@ fun SettingsActionCard(preference: PreferenceAction, modifier: Modifier = Modifi
                 )
                 preference.descriptionStringRes?.let {
                     Spacer(modifier = Modifier.height(MaterialTheme.spacings.extraSmall))
-                    Text(text = stringResource(id = it), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(id = it),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                 }
             }
         }

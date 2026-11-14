@@ -17,8 +17,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * #456: the episode sheet is 92 % opaque, so the player's top-row controls under it showed
- * through. The sheet reports where it opens, and the player hides the controls under it.
+ * #456: the episode sheet is 92 % opaque, so the player's top-row controls under it showed through.
+ * The sheet reports where it opens, and the player hides the controls under it.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class, qualifiers = "w1280dp-h800dp-land-mdpi")

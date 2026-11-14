@@ -14,8 +14,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * CE (#281): the probes behind the reachability banner. The risk named in the issue is a probe
- * with a bad timeout that makes the app wait, so the first tests are about time.
+ * CE (#281): the probes behind the reachability banner. The risk named in the issue is a probe with
+ * a bad timeout that makes the app wait, so the first tests are about time.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ServerReachabilityMonitorTest {
@@ -259,32 +259,31 @@ class ServerReachabilityMonitorTest {
     }
 
     @Test
-    fun `with Offline Mode on nothing is probed or shown, and the signs are passed on`() =
-        runTest {
-            enabled = false
-            probe = { false }
-            val monitor = monitor()
-            var confirmed = 0
-            backgroundScope.launch { monitor.serverConfirmed.collect { confirmed++ } }
-            runCurrent()
+    fun `with Offline Mode on nothing is probed or shown, and the signs are passed on`() = runTest {
+        enabled = false
+        probe = { false }
+        val monitor = monitor()
+        var confirmed = 0
+        backgroundScope.launch { monitor.serverConfirmed.collect { confirmed++ } }
+        runCurrent()
 
-            monitor.onForeground()
-            monitor.onStarted()
-            monitor.onUnanswered()
-            advanceTimeBy(60_000)
-            runCurrent()
+        monitor.onForeground()
+        monitor.onStarted()
+        monitor.onUnanswered()
+        advanceTimeBy(60_000)
+        runCurrent()
 
-            assertEquals(0, probes)
-            assertEquals(Reachability.Unknown, monitor.reachability)
-            // The user data sync still gets "the app is in front", as before #281.
-            assertEquals(1, confirmed)
+        assertEquals(0, probes)
+        assertEquals(Reachability.Unknown, monitor.reachability)
+        // The user data sync still gets "the app is in front", as before #281.
+        assertEquals(1, confirmed)
 
-            monitor.onNetworkChanged()
-            advanceTimeBy(1_000)
-            runCurrent()
-            assertEquals(0, probes)
-            assertEquals(2, confirmed)
-        }
+        monitor.onNetworkChanged()
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertEquals(0, probes)
+        assertEquals(2, confirmed)
+    }
 
     @Test
     fun `the sync is told when a probe reaches the server, not when it fails`() = runTest {

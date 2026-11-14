@@ -5,9 +5,9 @@ import java.time.format.TextStyle
 import java.util.Locale
 import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.BaseItemKind
+import org.jellyfin.sdk.model.api.DayOfWeek as JellyfinDayOfWeek
 import org.jellyfin.sdk.model.api.ExternalUrl
 import org.jellyfin.sdk.model.api.MediaUrl
-import org.jellyfin.sdk.model.api.DayOfWeek as JellyfinDayOfWeek
 
 /**
  * CE (#332): metadata the server already sends in the item response and the detail pages show.
@@ -26,7 +26,9 @@ fun List<MediaUrl>?.toFindroidTrailers(): List<FindroidTrailer> =
         .mapNotNull { trailer ->
             trailer.url
                 ?.takeIf { it.isNotBlank() }
-                ?.let { FindroidTrailer(name = trailer.name?.takeIf { n -> n.isNotBlank() }, url = it) }
+                ?.let {
+                    FindroidTrailer(name = trailer.name?.takeIf { n -> n.isNotBlank() }, url = it)
+                }
         }
         .distinctBy { it.url }
 
@@ -53,23 +55,42 @@ fun externalLinks(
 
     val ids = providerIds.orEmpty().mapKeys { it.key.lowercase() }
     return buildList {
-            ids["imdb"]?.takeIf { it.isNotBlank() }?.let {
-                add(FindroidExternalLink("IMDb", "https://www.imdb.com/title/$it"))
-            }
-            ids["tmdb"]?.takeIf { it.isNotBlank() }?.let { id ->
-                when (type) {
-                    BaseItemKind.MOVIE ->
-                        add(FindroidExternalLink("TheMovieDb", "https://www.themoviedb.org/movie/$id"))
-                    BaseItemKind.SERIES ->
-                        add(FindroidExternalLink("TheMovieDb", "https://www.themoviedb.org/tv/$id"))
-                    else -> Unit
+            ids["imdb"]
+                ?.takeIf { it.isNotBlank() }
+                ?.let { add(FindroidExternalLink("IMDb", "https://www.imdb.com/title/$it")) }
+            ids["tmdb"]
+                ?.takeIf { it.isNotBlank() }
+                ?.let { id ->
+                    when (type) {
+                        BaseItemKind.MOVIE ->
+                            add(
+                                FindroidExternalLink(
+                                    "TheMovieDb",
+                                    "https://www.themoviedb.org/movie/$id",
+                                )
+                            )
+                        BaseItemKind.SERIES ->
+                            add(
+                                FindroidExternalLink(
+                                    "TheMovieDb",
+                                    "https://www.themoviedb.org/tv/$id",
+                                )
+                            )
+                        else -> Unit
+                    }
                 }
-            }
-            ids["tvdb"]?.takeIf { it.isNotBlank() }?.let { id ->
-                if (type == BaseItemKind.SERIES) {
-                    add(FindroidExternalLink("TheTVDB", "https://thetvdb.com/?tab=series&id=$id"))
+            ids["tvdb"]
+                ?.takeIf { it.isNotBlank() }
+                ?.let { id ->
+                    if (type == BaseItemKind.SERIES) {
+                        add(
+                            FindroidExternalLink(
+                                "TheTVDB",
+                                "https://thetvdb.com/?tab=series&id=$id",
+                            )
+                        )
+                    }
                 }
-            }
         }
         .distinctBy { it.url }
 }

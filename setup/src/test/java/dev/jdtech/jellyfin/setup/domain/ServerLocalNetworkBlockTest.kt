@@ -47,7 +47,9 @@ class ServerLocalNetworkBlockTest {
     @Test
     fun `a host name counts by the addresses it resolves to`() = runTest {
         val access = FakeLocalNetworkAccess(denied = true)
-        val lan: suspend (String) -> List<ByteArray> = { listOf(byteArrayOf(192.toByte(), 168.toByte(), 1, 10)) }
+        val lan: suspend (String) -> List<ByteArray> = {
+            listOf(byteArrayOf(192.toByte(), 168.toByte(), 1, 10))
+        }
         val internet: suspend (String) -> List<ByteArray> = { listOf(byteArrayOf(8, 8, 8, 8)) }
 
         assertTrue(block(access, "https://jellyfin.example.org", lan).refresh())
@@ -58,7 +60,11 @@ class ServerLocalNetworkBlockTest {
     fun `nothing is blocked while access is granted`() = runTest {
         // Android 16 and older never deny: localNetworkAccessDenied is false there, see
         // LocalNetworkAccessTest.
-        val block = block(FakeLocalNetworkAccess(denied = false, settingName = "Nearby devices"), "http://10.0.2.2:8096")
+        val block =
+            block(
+                FakeLocalNetworkAccess(denied = false, settingName = "Nearby devices"),
+                "http://10.0.2.2:8096",
+            )
 
         assertFalse(block.refresh())
 

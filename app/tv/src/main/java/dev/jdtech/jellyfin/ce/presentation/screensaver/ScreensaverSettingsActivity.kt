@@ -8,9 +8,7 @@ import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import javax.inject.Inject
 
-/**
- * CE (#140): System screensaver settings activity for Ephyra.
- */
+/** CE (#140): System screensaver settings activity for Ephyra. */
 @AndroidEntryPoint
 class ScreensaverSettingsActivity : ComponentActivity() {
 
@@ -20,10 +18,7 @@ class ScreensaverSettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             FindroidTheme {
-                ScreensaverSettingsScreen(
-                    appPreferences = appPreferences,
-                    onBack = { finish() },
-                )
+                ScreensaverSettingsScreen(appPreferences = appPreferences, onBack = { finish() })
             }
         }
     }

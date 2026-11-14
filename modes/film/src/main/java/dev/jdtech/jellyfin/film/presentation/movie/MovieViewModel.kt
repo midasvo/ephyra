@@ -22,15 +22,15 @@ import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.model.api.PersonKind
+import timber.log.Timber
 
 @HiltViewModel
 class MovieViewModel
@@ -70,14 +70,19 @@ constructor(
             _state.emit(_state.value.copy(error = null))
             try {
                 // The preference doesn't depend on the movie, so it is read while it loads.
-                val (movie, displayCastAndCrew) = coroutineScope {
-                    val movieAsync = async { repository.getMovie(movieId) }
-                    val castAsync = async { appPreferences.getValue(appPreferences.displayCastAndCrew) }
-                    movieAsync.await() to castAsync.await()
-                }
-                val videoMetadata = movie.sources.firstOrNull()?.let { videoMetadataParser.parse(it) }
+                val (movie, displayCastAndCrew) =
+                    coroutineScope {
+                        val movieAsync = async { repository.getMovie(movieId) }
+                        val castAsync = async {
+                            appPreferences.getValue(appPreferences.displayCastAndCrew)
+                        }
+                        movieAsync.await() to castAsync.await()
+                    }
+                val videoMetadata =
+                    movie.sources.firstOrNull()?.let { videoMetadataParser.parse(it) }
                 val actors = if (displayCastAndCrew) getActors(movie) else emptyList()
-                // CE (#510): the director and the writers have a switch of their own, off by default.
+                // CE (#510): the director and the writers have a switch of their own, off by
+                // default.
                 val displayCredits =
                     displayCastAndCrew && appPreferences.getValue(appPreferences.detailCredits)
                 val director = if (displayCredits) getDirector(movie) else null
@@ -158,7 +163,10 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, if (played) "Failed to mark as played" else "Failed to unmark as played")
+                Timber.e(
+                    e,
+                    if (played) "Failed to mark as played" else "Failed to unmark as played",
+                )
                 return@launch
             }
             reloadPolicy.changedHere()
@@ -170,7 +178,8 @@ constructor(
     private fun setFavorite(favorite: Boolean) {
         viewModelScope.launch {
             try {
-                if (favorite) repository.markAsFavorite(movieId) else repository.unmarkAsFavorite(movieId)
+                if (favorite) repository.markAsFavorite(movieId)
+                else repository.unmarkAsFavorite(movieId)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

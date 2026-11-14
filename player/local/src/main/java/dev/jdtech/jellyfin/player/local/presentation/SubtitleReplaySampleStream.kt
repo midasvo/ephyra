@@ -15,8 +15,8 @@ import java.util.TreeMap
  *
  * [SubtitleOffsetRenderer] shows a subtitle track [delay][SubtitleOffsetRenderer] later by
  * rendering it at an earlier position. After a seek, or after the delay grows, that position lies
- * before the samples the stream still has: the cue that is due was read before and is gone. [rewind]
- * makes the stream deliver the kept samples from a time on again, up to the next sample of
+ * before the samples the stream still has: the cue that is due was read before and is gone.
+ * [rewind] makes the stream deliver the kept samples from a time on again, up to the next sample of
  * [upstream], before it carries on with [upstream].
  *
  * Only the playback thread uses it.
@@ -162,8 +162,8 @@ class SubtitleReplaySampleStream(val upstream: SampleStream) : SampleStream {
 
     private companion object {
         /**
-         * More than the largest delay (180 s) and the renderer's look back (30 s), so every cue
-         * a delay can bring back is kept.
+         * More than the largest delay (180 s) and the renderer's look back (30 s), so every cue a
+         * delay can bring back is kept.
          */
         const val KEEP_SPAN_US = 240_000_000L
         /** Text is small; image subtitles are not, so the bytes are capped too. */

@@ -16,8 +16,8 @@ import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
 import dev.jdtech.jellyfin.player.core.domain.models.TrickplayInfo
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.util.UUID
-import kotlin.random.Random
 import javax.inject.Inject
+import kotlin.random.Random
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -88,9 +88,9 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         }
 
     /**
-     * Resolves the item to start playing. For a movie or episode, the item and its playback
-     * sources are fetched concurrently, and the episode list for the queue is not fetched at all:
-     * call [loadQueue] after the player is prepared (the neighbour lookups also wait for it).
+     * Resolves the item to start playing. For a movie or episode, the item and its playback sources
+     * are fetched concurrently, and the episode list for the queue is not fetched at all: call
+     * [loadQueue] after the player is prepared (the neighbour lookups also wait for it).
      */
     suspend fun getInitialItem(
         itemId: UUID,
@@ -114,7 +114,9 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                     val (movie, sources) =
                         coroutineScope {
                             val movie = async { repository.getMovie(itemId) }
-                            val sources = async { repository.getPlaybackSources(itemId, mediaSourceId) }
+                            val sources = async {
+                                repository.getPlaybackSources(itemId, mediaSourceId)
+                            }
                             movie.await() to sources.await()
                         }
                     prefetchedSources = sources
@@ -129,11 +131,13 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                         // a time with them. Specials are left out, unless the series has nothing
                         // else.
                         val all =
-                            repository
-                                .getEpisodes(seriesId = itemId, seasonId = null)
-                                .filter { !it.missing }
+                            repository.getEpisodes(seriesId = itemId, seasonId = null).filter {
+                                !it.missing
+                            }
                         val episodes =
-                            all.filter { it.parentIndexNumber != 0 }.ifEmpty { all }.shuffled(random)
+                            all.filter { it.parentIndexNumber != 0 }
+                                .ifEmpty { all }
+                                .shuffled(random)
 
                         if (episodes.isEmpty()) {
                             return null
@@ -155,7 +159,10 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                                 coroutineScope {
                                     val episode = async { fullEpisode(nextUpEpisode) }
                                     val sources = async {
-                                        repository.getPlaybackSources(nextUpEpisode.id, mediaSourceId)
+                                        repository.getPlaybackSources(
+                                            nextUpEpisode.id,
+                                            mediaSourceId,
+                                        )
                                     }
                                     episode.await() to sources.await()
                                 }
@@ -199,7 +206,9 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                     val (episode, sources) =
                         coroutineScope {
                             val episode = async { repository.getEpisode(itemId) }
-                            val sources = async { repository.getPlaybackSources(itemId, mediaSourceId) }
+                            val sources = async {
+                                repository.getPlaybackSources(itemId, mediaSourceId)
+                            }
                             episode.await() to sources.await()
                         }
                     prefetchedSources = sources
@@ -222,7 +231,8 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
 
         val playbackPosition =
             if (shuffle || startFromBeginning) 0L else initialItem.playbackPositionTicks.div(10000)
-        val playerItem = initialItem.toPlayerItem(mediaSourceId, playbackPosition, prefetchedSources)
+        val playerItem =
+            initialItem.toPlayerItem(mediaSourceId, playbackPosition, prefetchedSources)
         playerItems.add(playerItem)
 
         return playerItem
@@ -386,11 +396,10 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
     }
 
     /**
-     * Re-resolve an already-queued item's media sources — used when the user
-     * changes the max streaming bitrate mid-playback, which invalidates every
-     * queued stream URL. The cached entry is replaced (not just added) so the
-     * duplicate check in [getPreviousPlayerItem]/[getNextPlayerItem] keeps
-     * treating the item as already queued.
+     * Re-resolve an already-queued item's media sources — used when the user changes the max
+     * streaming bitrate mid-playback, which invalidates every queued stream URL. The cached entry
+     * is replaced (not just added) so the duplicate check in
+     * [getPreviousPlayerItem]/[getNextPlayerItem] keeps treating the item as already queued.
      *
      * CE (#580): [selectedAudio] is the audio track playing now, when the stream names it (a
      * transcode's single track does not). It goes to the server with the request, so a transcode
@@ -406,12 +415,13 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
     ): PlayerItem {
         val item = items.firstOrNull { it.id == playerItem.itemId } ?: return playerItem
         val recreated =
-            queued(item).toPlayerItem(
-                playerItem.mediaSourceId,
-                playerItem.playbackPosition,
-                selectedAudio = selectedAudio,
-                audioStreamIndex = audioStreamIndex,
-            )
+            queued(item)
+                .toPlayerItem(
+                    playerItem.mediaSourceId,
+                    playerItem.playbackPosition,
+                    selectedAudio = selectedAudio,
+                    audioStreamIndex = audioStreamIndex,
+                )
         playerItems.removeAll { it.itemId == playerItem.itemId }
         playerItems.add(recreated)
         return recreated
@@ -419,8 +429,8 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
 
     /**
      * CE (#638): [item] as it plays: in full when the queue was fetched without its details. The
-     * full episode replaces the light one in [items], so it is fetched once, however often the
-     * item is converted (Previous, Next, a jump in the queue, a quality or audio switch).
+     * full episode replaces the light one in [items], so it is fetched once, however often the item
+     * is converted (Previous, Next, a jump in the queue, a quality or audio switch).
      */
     private suspend fun queued(item: FindroidItem): FindroidItem {
         if (!lightQueue || item !is FindroidEpisode || item.id in fetchedInFull) return item
@@ -447,10 +457,9 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
         // Never an unfinished download (#454): its partial file plays as far as it got, or not at
         // all. With no other source (offline) there is nothing to play: the exception carries no
         // message, so the player shows its own error instead of a raw one.
-        val local =
-            mediaSources.firstOrNull {
-                it.type == FindroidSourceType.LOCAL && !it.path.endsWith(".download")
-            }
+        val local = mediaSources.firstOrNull {
+            it.type == FindroidSourceType.LOCAL && !it.path.endsWith(".download")
+        }
         val remote =
             if (local != null) {
                 null
@@ -520,13 +529,12 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
     private class RemoteSource(val source: FindroidSource, val audioStreamIndex: Int?)
 
     /**
-     * CE (#580): a transcode carries one audio track, the server's default unless the request
-     * names another. So when [source] is a transcode and the user's track is not that default,
-     * the source is asked for once more, with the track. In order: the track picked in the audio
-     * dialog of a transcode ([pickedIndex], #596), the track playing now ([selectedAudio], on a
-     * quality switch), the choice saved for the series, the track this item was last requested
-     * with. A source that plays directly is returned as it is: the player selects among its
-     * tracks itself.
+     * CE (#580): a transcode carries one audio track, the server's default unless the request names
+     * another. So when [source] is a transcode and the user's track is not that default, the source
+     * is asked for once more, with the track. In order: the track picked in the audio dialog of a
+     * transcode ([pickedIndex], #596), the track playing now ([selectedAudio], on a quality
+     * switch), the choice saved for the series, the track this item was last requested with. A
+     * source that plays directly is returned as it is: the player selects among its tracks itself.
      */
     private suspend fun FindroidItem.withChosenAudio(
         source: FindroidSource,

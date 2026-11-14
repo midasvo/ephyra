@@ -169,9 +169,7 @@ class LocalNetworkErrorTest {
 
     @Test
     fun theErrorCardNamesThePermissionAndOffersToAllowIt() {
-        setContent {
-            ErrorCard(onShowStacktrace = {}, onRetryClick = { retries++ }, error = error)
-        }
+        setContent { ErrorCard(onShowStacktrace = {}, onRetryClick = { retries++ }, error = error) }
 
         rule.onNodeWithText(string(SetupR.string.ce_local_network_off)).assertIsDisplayed()
         rule.onNodeWithContentDescription(string(CoreR.string.retry)).assertIsDisplayed()

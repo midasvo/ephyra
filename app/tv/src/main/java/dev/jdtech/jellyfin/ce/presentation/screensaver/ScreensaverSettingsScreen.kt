@@ -97,12 +97,7 @@ fun ScreensaverSettingsScreen(
         intervalOptions.firstOrNull { it.first == intervalStr }?.second
             ?: stringResource(SettingsR.string.pref_tv_screensaver_interval_20s)
 
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .tvSafeAreaPadding()
-    ) {
+    Column(modifier = modifier.fillMaxSize().tvSafeAreaPadding()) {
         Text(
             text = stringResource(SettingsR.string.pref_tv_screensaver_title),
             style = MaterialTheme.typography.headlineLarge,
@@ -137,7 +132,8 @@ fun ScreensaverSettingsScreen(
             item {
                 ScreensaverSwitchCard(
                     title = stringResource(SettingsR.string.pref_tv_screensaver_show_clock),
-                    summary = stringResource(SettingsR.string.pref_tv_screensaver_show_clock_summary),
+                    summary =
+                        stringResource(SettingsR.string.pref_tv_screensaver_show_clock_summary),
                     checked = showClock,
                     onClick = {
                         appPreferences.setValue(appPreferences.tvScreensaverShowClock, !showClock)
@@ -169,7 +165,8 @@ fun ScreensaverSettingsScreen(
     }
 
     if (showIntervalDialog) {
-        val selectedIndex = intervalOptions.indexOfFirst { it.first == intervalStr }.coerceAtLeast(0)
+        val selectedIndex =
+            intervalOptions.indexOfFirst { it.first == intervalStr }.coerceAtLeast(0)
         TvSelectionDialog(
             title = stringResource(SettingsR.string.pref_tv_screensaver_interval),
             options = intervalOptions.map { it.second },
@@ -269,10 +266,7 @@ private fun ScreensaverSwitchCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Switch(
-                checked = checked,
-                onCheckedChange = null,
-            )
+            Switch(checked = checked, onCheckedChange = null)
         }
     }
 }

@@ -114,7 +114,11 @@ class PosterSourcesTest {
         val images = FindroidImages(primary = own, showPrimary = show, showThumb = backdrop)
         assertEquals(
             listOf(show),
-            posterSources(dummyEpisode.copy(images = images), Direction.VERTICAL, preferThumb = true),
+            posterSources(
+                dummyEpisode.copy(images = images),
+                Direction.VERTICAL,
+                preferThumb = true,
+            ),
         )
     }
 }

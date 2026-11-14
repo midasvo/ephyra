@@ -40,13 +40,13 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import dev.jdtech.jellyfin.core.R as CoreR
-import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.player.cast.models.CastAvailability
 import dev.jdtech.jellyfin.player.cast.models.CastConnectionState
 import dev.jdtech.jellyfin.player.cast.models.Device
 import dev.jdtech.jellyfin.player.cast.presentation.CastDiscovery
 import dev.jdtech.jellyfin.player.cast.presentation.CastUiState
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.theme.spacings
 
 const val CAST_DEVICE_SHEET_TAG = "cast_device_sheet"
 

@@ -9,8 +9,7 @@ import android.view.KeyEvent
  * nothing has focus (a cold start, before Home's rows take it) a key moves focus in from outside.
  */
 object DirectionKeyClock {
-    @Volatile
-    private var lastAt = 0L
+    @Volatile private var lastAt = 0L
 
     fun onKeyEvent(event: KeyEvent) {
         if (event.action == KeyEvent.ACTION_DOWN && event.keyCode in DirectionKeyCodes) {

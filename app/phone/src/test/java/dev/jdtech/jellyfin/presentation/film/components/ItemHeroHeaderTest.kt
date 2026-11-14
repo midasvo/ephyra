@@ -32,9 +32,9 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * #429: the episode's header in a pane narrower than the window (the Season list-detail below
- * about 1230 dp, a 600 dp split-screen) stacks the still above the text, and no button of the
- * episode is squeezed or pushed out of the pane.
+ * #429: the episode's header in a pane narrower than the window (the Season list-detail below about
+ * 1230 dp, a 600 dp split-screen) stacks the still above the text, and no button of the episode is
+ * squeezed or pushed out of the pane.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)

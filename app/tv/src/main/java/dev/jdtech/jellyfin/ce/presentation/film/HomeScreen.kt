@@ -15,13 +15,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -39,9 +39,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -153,10 +153,7 @@ fun HomeScreen(
 
 /** The focused card. Written on focus changes and read only by the hero and its prefetch. */
 @Stable
-private class HeroFocus(
-    initialRow: List<FindroidItem> = emptyList(),
-    initialColumn: Int = 0,
-) {
+private class HeroFocus(initialRow: List<FindroidItem> = emptyList(), initialColumn: Int = 0) {
     var item by mutableStateOf<FindroidItem?>(initialRow.getOrNull(initialColumn))
         private set
 
@@ -183,7 +180,9 @@ private class HomeRow(
     val preferThumb: Boolean = false,
 )
 
-/** The rows in the order the user chose (#142). Keyed on the row, so focus restore follows a move. */
+/**
+ * The rows in the order the user chose (#142). Keyed on the row, so focus restore follows a move.
+ */
 private fun HomeState.rows(): List<HomeRow> =
     orderedRows().mapNotNull {
         when (it) {
@@ -272,7 +271,8 @@ internal fun HomeScreenLayout(
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (error != null) {
-                // #405: nothing remembered and the server failed, so say so instead of a blank page.
+                // #405: nothing remembered and the server failed, so say so instead of a blank
+                // page.
                 TvLoadError(
                     error = error,
                     onRetry = { onAction(HomeAction.OnRetryClick) },
@@ -369,8 +369,7 @@ private fun HomeRowContent(
             style = MaterialTheme.typography.titleLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier =
-                Modifier.height(ROW_TITLE_HEIGHT).padding(horizontal = TvSafeArea.horizontal),
+            modifier = Modifier.height(ROW_TITLE_HEIGHT).padding(horizontal = TvSafeArea.horizontal),
         )
         Spacer(modifier = Modifier.height(MaterialTheme.spacings.small))
         LazyRow(
@@ -503,17 +502,15 @@ private fun HeroBackdrop(item: FindroidItem, images: HeroImages) {
             // ask for the same image again, for ever.
             onError = { if (images.backdrop(item)?.data != request.data) missing++ },
             modifier =
-                Modifier.fillMaxWidth(HERO_BACKDROP_WIDTH)
-                    .aspectRatio(16f / 9f)
-                    .drawWithCache {
-                        val fadeLeft = backdropFadeLeft(background)
-                        val fadeBottom = backdropFadeBottom(background)
-                        onDrawWithContent {
-                            drawContent()
-                            drawRect(fadeLeft)
-                            drawRect(fadeBottom)
-                        }
-                    },
+                Modifier.fillMaxWidth(HERO_BACKDROP_WIDTH).aspectRatio(16f / 9f).drawWithCache {
+                    val fadeLeft = backdropFadeLeft(background)
+                    val fadeBottom = backdropFadeBottom(background)
+                    onDrawWithContent {
+                        drawContent()
+                        drawRect(fadeLeft)
+                        drawRect(fadeBottom)
+                    }
+                },
         )
     }
 }
@@ -544,7 +541,8 @@ private fun HeroTitle(item: FindroidItem, images: HeroImages) {
         val style = MaterialTheme.typography.displayMedium
         BasicText(
             text = title,
-            style = style.copy(color = LocalContentColor.current, lineHeight = HERO_TITLE_LINE_HEIGHT),
+            style =
+                style.copy(color = LocalContentColor.current, lineHeight = HERO_TITLE_LINE_HEIGHT),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             autoSize =
@@ -562,7 +560,8 @@ private fun HeroTitle(item: FindroidItem, images: HeroImages) {
             contentScale = ContentScale.Fit,
             alignment = Alignment.BottomStart,
             onError = { logoFailed = true },
-            modifier = Modifier.widthIn(max = HERO_LOGO_MAX_WIDTH).heightIn(max = HERO_LOGO_MAX_HEIGHT),
+            modifier =
+                Modifier.widthIn(max = HERO_LOGO_MAX_WIDTH).heightIn(max = HERO_LOGO_MAX_HEIGHT),
         )
     }
 }

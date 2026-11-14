@@ -78,7 +78,8 @@ fun SortByDialog(
 
     // 540 dp on a tall window; on a short one (a tablet or phone in landscape) the window height
     // minus a margin, so the dialog never runs off the screen.
-    val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
+    val windowHeight =
+        with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Card(

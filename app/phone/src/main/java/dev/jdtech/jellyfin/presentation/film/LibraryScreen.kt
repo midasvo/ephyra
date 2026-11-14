@@ -35,7 +35,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.CombinedLoadStates
@@ -53,8 +52,8 @@ import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.components.ErrorDialog
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.EmptyState
-import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.ItemCard
+import dev.jdtech.jellyfin.presentation.film.components.ServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.film.components.SortByDialog
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
@@ -129,9 +128,17 @@ private fun LibraryScreenLayout(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onAction(LibraryAction.ToggleWatchedFilter(!state.filterWatched)) }) {
+                    IconButton(
+                        onClick = {
+                            onAction(LibraryAction.ToggleWatchedFilter(!state.filterWatched))
+                        }
+                    ) {
                         Icon(
-                            painter = painterResource(if (state.filterWatched) CoreR.drawable.ic_eye_off else CoreR.drawable.ic_eye),
+                            painter =
+                                painterResource(
+                                    if (state.filterWatched) CoreR.drawable.ic_eye_off
+                                    else CoreR.drawable.ic_eye
+                                ),
                             contentDescription = stringResource(CoreR.string.toggle_watched),
                         )
                     }
@@ -155,7 +162,11 @@ private fun LibraryScreenLayout(
             )
             Box(modifier = Modifier.fillMaxSize()) {
                 LazyVerticalGrid(
-                    columns = GridCellsAdaptiveWithMinColumns(minSize = Layout.gridMinCell(currentWidthClass()), minColumns = 2),
+                    columns =
+                        GridCellsAdaptiveWithMinColumns(
+                            minSize = Layout.gridMinCell(currentWidthClass()),
+                            minColumns = 2,
+                        ),
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = contentPadding + innerPadding,
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),

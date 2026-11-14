@@ -238,7 +238,11 @@ fun FilmSearchBar(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             LazyVerticalGrid(
-                columns = GridCellsAdaptiveWithMinColumns(minSize = Layout.gridMinCell(currentWidthClass()), minColumns = 2),
+                columns =
+                    GridCellsAdaptiveWithMinColumns(
+                        minSize = Layout.gridMinCell(currentWidthClass()),
+                        minColumns = 2,
+                    ),
                 modifier = Modifier.fillMaxSize(),
                 contentPadding =
                     PaddingValues(

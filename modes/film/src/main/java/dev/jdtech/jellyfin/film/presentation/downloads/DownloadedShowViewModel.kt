@@ -51,23 +51,14 @@ constructor(
                                     !it.path.endsWith(".download")
                                 }
                             }
-                            .map {
-                                it.toFindroidEpisode(
-                                    database,
-                                    userId,
-                                    sourcesByEpisode,
-                                )
+                            .map { it.toFindroidEpisode(database, userId, sourcesByEpisode) }
+                            .sortedWith(compareBy({ it.parentIndexNumber }, { it.indexNumber }))
+                    val sizes = episodes.associate { ep ->
+                        ep.id to
+                            sourcesByEpisode[ep.id].orEmpty().sumOf { src ->
+                                File(src.path).takeIf { it.exists() }?.length() ?: 0L
                             }
-                            .sortedWith(
-                                compareBy({ it.parentIndexNumber }, { it.indexNumber })
-                            )
-                    val sizes =
-                        episodes.associate { ep ->
-                            ep.id to
-                                sourcesByEpisode[ep.id].orEmpty().sumOf { src ->
-                                    File(src.path).takeIf { it.exists() }?.length() ?: 0L
-                                }
-                        }
+                    }
                     episodes to sizes
                 }
             val seasons =
@@ -80,7 +71,9 @@ constructor(
                             episodes = seasonEpisodes,
                         )
                     }
-            _state.emit(DownloadedShowState(seasons = seasons, itemSizes = sizes, isLoading = false))
+            _state.emit(
+                DownloadedShowState(seasons = seasons, itemSizes = sizes, isLoading = false)
+            )
         }
     }
 

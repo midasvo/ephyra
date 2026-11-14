@@ -24,8 +24,7 @@ import timber.log.Timber
  * Call it on the main thread only.
  */
 @OptIn(UnstableApi::class)
-class ExoThemeMusicPlayer(context: Context, private val onFinished: () -> Unit) :
-    ThemeMusicOutput {
+class ExoThemeMusicPlayer(context: Context, private val onFinished: () -> Unit) : ThemeMusicOutput {
     private val context = context.applicationContext
     private val handler = Handler(Looper.getMainLooper())
     private var player: ExoPlayer? = null

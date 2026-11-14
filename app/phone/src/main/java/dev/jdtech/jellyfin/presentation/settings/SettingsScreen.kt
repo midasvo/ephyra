@@ -3,6 +3,7 @@ package dev.jdtech.jellyfin.presentation.settings
 import android.app.Activity
 import android.app.UiModeManager
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Arrangement
@@ -46,7 +47,6 @@ import dev.jdtech.jellyfin.settings.presentation.settings.SettingsAction
 import dev.jdtech.jellyfin.settings.presentation.settings.SettingsEvent
 import dev.jdtech.jellyfin.settings.presentation.settings.SettingsState
 import dev.jdtech.jellyfin.settings.presentation.settings.SettingsViewModel
-import android.widget.Toast
 import dev.jdtech.jellyfin.utils.ObserveAsEvents
 import dev.jdtech.jellyfin.utils.restart
 import timber.log.Timber
@@ -123,7 +123,9 @@ fun SettingsScreen(
             is SettingsEvent.RestartActivity -> {
                 try {
                     (context as Activity).restart()
-                } catch (e: Exception) { Timber.e(e, "Failed to restart activity") }
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to restart activity")
+                }
             }
         }
     }

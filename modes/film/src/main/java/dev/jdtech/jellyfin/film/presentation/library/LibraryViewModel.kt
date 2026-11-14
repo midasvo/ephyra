@@ -61,14 +61,18 @@ constructor(
     }
 
     /** CE (#371): what the first load was for, so a surviving ViewModel doesn't load again. */
-    private data class LoadKey(val parentId: UUID, val libraryType: CollectionType, val indexed: Boolean)
+    private data class LoadKey(
+        val parentId: UUID,
+        val libraryType: CollectionType,
+        val indexed: Boolean,
+    )
 
     private var loadedFor: LoadKey? = null
 
     /**
      * CE (#371): the screen's first load. Loads once per ViewModel, so going back to the grid keeps
-     * it, and a new ViewModel after process death loads. A saved flag in the screen would skip that.
-     * A sort or filter change still calls [loadItems].
+     * it, and a new ViewModel after process death loads. A saved flag in the screen would skip
+     * that. A sort or filter change still calls [loadItems].
      */
     fun loadItemsIfNeeded() {
         val key = LoadKey(parentId, libraryType, indexed)
@@ -116,7 +120,13 @@ constructor(
                                 // so they wait for the first page and reuse its total.
                                 onFirstPage = { total ->
                                     if (nameSort) {
-                                        loadLetterIndex(indexKey, total, itemType, recursive, filters)
+                                        loadLetterIndex(
+                                            indexKey,
+                                            total,
+                                            itemType,
+                                            recursive,
+                                            filters,
+                                        )
                                     }
                                 },
                             )
@@ -169,34 +179,33 @@ constructor(
         if (letterIndexCache.containsKey(key)) return
         val ascending = key.ascending
         letterIndexJob?.cancel()
-        letterIndexJob =
-            viewModelScope.launch {
-                val index =
-                    try {
-                        coroutineScope {
-                            val before =
-                                LetterIndex.BOUNDARIES.map { boundary ->
-                                    async {
-                                        jellyfinRepository.getItemCount(
-                                            parentId = parentId,
-                                            includeTypes = itemType,
-                                            recursive = recursive,
-                                            filters = filters,
-                                            nameLessThan = boundary,
-                                        )
-                                    }
+        letterIndexJob = viewModelScope.launch {
+            val index =
+                try {
+                    coroutineScope {
+                        val before =
+                            LetterIndex.BOUNDARIES.map { boundary ->
+                                async {
+                                    jellyfinRepository.getItemCount(
+                                        parentId = parentId,
+                                        includeTypes = itemType,
+                                        recursive = recursive,
+                                        filters = filters,
+                                        nameLessThan = boundary,
+                                    )
                                 }
-                            LetterIndex.build(before.awaitAll(), total, ascending)
-                        }
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Timber.w(e, "Couldn't load the letter index")
-                        null
+                            }
+                        LetterIndex.build(before.awaitAll(), total, ascending)
                     }
-                if (index != null) letterIndexCache[key] = index
-                if (key == letterIndexKey()) _state.update { it.copy(letterIndex = index) }
-            }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.w(e, "Couldn't load the letter index")
+                    null
+                }
+            if (index != null) letterIndexCache[key] = index
+            if (key == letterIndexKey()) _state.update { it.copy(letterIndex = index) }
+        }
     }
 
     private suspend fun initSorting() {
@@ -204,7 +213,13 @@ constructor(
             sortBy = SortBy.fromString(appPreferences.getValue(appPreferences.sortBy))
             sortOrder = SortOrder.fromString(appPreferences.getValue(appPreferences.sortOrder))
             filterWatched = appPreferences.getValue(appPreferences.filterWatched)
-            _state.emit(_state.value.copy(sortBy = sortBy, sortOrder = sortOrder, filterWatched = filterWatched))
+            _state.emit(
+                _state.value.copy(
+                    sortBy = sortBy,
+                    sortOrder = sortOrder,
+                    filterWatched = filterWatched,
+                )
+            )
         }
     }
 

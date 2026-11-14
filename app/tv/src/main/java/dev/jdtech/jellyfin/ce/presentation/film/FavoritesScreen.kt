@@ -37,7 +37,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Button
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
@@ -69,9 +68,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 /**
  * CE Favorites screen (#137, ADR 0001, ADR 0003):
  *
- * Displays favorite movies, shows, and episodes in rows by type.
- * When empty, explains how to add favorites using the heart icon on detail pages.
- * Restores focus to the last-viewed card on return.
+ * Displays favorite movies, shows, and episodes in rows by type. When empty, explains how to add
+ * favorites using the heart icon on detail pages. Restores focus to the last-viewed card on return.
  */
 @Composable
 fun FavoritesScreen(
@@ -288,12 +286,7 @@ private fun FavoritesRowContent(
                     showSeriesName = direction == Direction.HORIZONTAL,
                     onClick = { onItemClick(item) },
                     modifier =
-                        Modifier.focusPosition(
-                                focusPosition,
-                                rowIndex,
-                                column,
-                                item.id.toString(),
-                            )
+                        Modifier.focusPosition(focusPosition, rowIndex, column, item.id.toString())
                             .testTag(favoritesCardTag(item.id)),
                 )
             }

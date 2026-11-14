@@ -48,8 +48,8 @@ private val GroupOuterCorner = 20.dp
 private val GroupInnerCorner = 4.dp
 
 /**
- * Corner shape for row [index] of a grouped list of [count] rows: large outer corners on the
- * first and last row, small inner ones in between, so adjacent rows read as one rounded group.
+ * Corner shape for row [index] of a grouped list of [count] rows: large outer corners on the first
+ * and last row, small inner ones in between, so adjacent rows read as one rounded group.
  */
 fun groupedItemShape(index: Int, count: Int): Shape {
     val top = if (index == 0) GroupOuterCorner else GroupInnerCorner
@@ -67,9 +67,9 @@ fun downloadRowSize(context: Context, bytes: Long): String =
     Formatter.formatShortFileSize(context, bytes).replace(' ', ' ')
 
 /**
- * One row of the Downloads screen: 16:9 artwork, up to four lines of text and an optional
- * trailing control. Shared by in-progress downloads and the downloaded library. [metaMinLines]
- * reserves room for a [meta] that changes, so the row keeps its height as the text updates.
+ * One row of the Downloads screen: 16:9 artwork, up to four lines of text and an optional trailing
+ * control. Shared by in-progress downloads and the downloaded library. [metaMinLines] reserves room
+ * for a [meta] that changes, so the row keeps its height as the text updates.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -92,11 +92,7 @@ fun DownloadRow(
     footer: String? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    Surface(
-        shape = shape,
-        color = containerColor,
-        modifier = modifier,
-    ) {
+    Surface(shape = shape, color = containerColor, modifier = modifier) {
         Column(
             modifier =
                 Modifier.fillMaxWidth()
@@ -175,8 +171,8 @@ fun DownloadRow(
 }
 
 /**
- * 16:9 artwork for a download row, preferring wide images over cropped posters. With
- * [onPlayClick] it shows a play glyph and the whole artwork starts playback.
+ * 16:9 artwork for a download row, preferring wide images over cropped posters. With [onPlayClick]
+ * it shows a play glyph and the whole artwork starts playback.
  */
 @Composable
 fun DownloadArtwork(

@@ -38,7 +38,9 @@ fun SeasonScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(true) { if (viewModel.shouldReload(seasonId)) viewModel.loadSeason(seasonId = seasonId) }
+    LaunchedEffect(true) {
+        if (viewModel.shouldReload(seasonId)) viewModel.loadSeason(seasonId = seasonId)
+    }
 
     SeasonScreenLayout(
         state = state,

@@ -56,8 +56,8 @@ internal fun carouselPageCount(width: WidthClass, compactHeight: Boolean): Int =
     }
 
 /**
- * CE (#398): the pages a keyboard can focus, the ones fully on screen once the pager has settled
- * on [settledPage]. A peeking page, partly or wholly off screen, is not a Tab stop.
+ * CE (#398): the pages a keyboard can focus, the ones fully on screen once the pager has settled on
+ * [settledPage]. A peeking page, partly or wholly off screen, is not a Tab stop.
  */
 internal fun carouselFocusablePages(settledPage: Int, pages: Int, pageCount: Int): IntRange =
     settledPage until minOf(settledPage + pages, pageCount)

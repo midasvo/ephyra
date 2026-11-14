@@ -49,7 +49,10 @@ class PlayerInvariantsTest {
                         """startWindowIndex: Int,[\s\S]*?\n    }"""
                 )
                 .find(mpvPlayer)
-        assertTrue("MPVPlayer.setMediaItems(items, index, position) not found", setMediaItems != null)
+        assertTrue(
+            "MPVPlayer.setMediaItems(items, index, position) not found",
+            setMediaItems != null,
+        )
         assertTrue(
             "MPVPlayer.setMediaItems must call itemTransitions.playlistReplaced (#453)",
             setMediaItems!!.value.contains("itemTransitions.playlistReplaced("),
@@ -89,7 +92,10 @@ class PlayerInvariantsTest {
         val check = body.indexOf("streamBreak.atEndOfFile(")
         assertTrue("eof-reached must call streamBreak.atEndOfFile (#445)", check >= 0)
         listOf("STATE_ENDED", "prepareMediaItem(", "END_OF_MEDIA_ITEM").forEach {
-            assertTrue("eof-reached must check the stream before $it (#445)", check < body.indexOf(it))
+            assertTrue(
+                "eof-reached must check the stream before $it (#445)",
+                check < body.indexOf(it),
+            )
         }
         assertTrue(
             "MPVPlayer must feed the log observer's errors to streamBreak (#445)",
@@ -110,7 +116,10 @@ class PlayerInvariantsTest {
         val deselect = body.indexOf("""selectTrack(MPVTrackType.VIDEO, "no")""")
         val voNull = body.indexOf("""setOptionString("vo", "null")""")
         assertTrue("detachVideoSurface must deselect video (#460)", deselect >= 0)
-        assertTrue("detachVideoSurface must deselect video before vo=null (#460)", deselect < voNull)
+        assertTrue(
+            "detachVideoSurface must deselect video before vo=null (#460)",
+            deselect < voNull,
+        )
         val attach =
             Regex("""override fun surfaceCreated\(holder: SurfaceHolder\) \{[\s\S]*?\n {12}\}""")
                 .find(mpvPlayer)
@@ -126,11 +135,13 @@ class PlayerInvariantsTest {
         // #460: with mpv's default of 60 s a stalled read blocked recovery for over a minute
         // after the network came back. 10 s used up ffmpeg's reconnects during a longer stall.
         val mpvPlayer = source("mpv/MPVPlayer.kt")
-        val timeout =
-            Regex("""setOptionString\("network-timeout", "(\d+)"\)""").find(mpvPlayer)
+        val timeout = Regex("""setOptionString\("network-timeout", "(\d+)"\)""").find(mpvPlayer)
         assertTrue("MPVPlayer must set network-timeout (#460)", timeout != null)
         val seconds = timeout!!.groupValues[1].toInt()
-        assertTrue("network-timeout must stay between 20 and 45 s (#460), is $seconds", seconds in 20..45)
+        assertTrue(
+            "network-timeout must stay between 20 and 45 s (#460), is $seconds",
+            seconds in 20..45,
+        )
     }
 
     @Test
@@ -179,8 +190,7 @@ class PlayerInvariantsTest {
             "STATE_READY must send the start the gate holds (#601)",
             ready!!.value.contains("startGate.onReady()"),
         )
-        val progress =
-            Regex("""fun updatePlaybackProgress\(\) \{[\s\S]*?\n    }""").find(viewModel)
+        val progress = Regex("""fun updatePlaybackProgress\(\) \{[\s\S]*?\n    }""").find(viewModel)
         assertTrue("PlayerViewModel.updatePlaybackProgress not found", progress != null)
         assertTrue(
             "No progress report before the start report (#601)",
@@ -193,7 +203,10 @@ class PlayerInvariantsTest {
         // #458: the TV player only reported start and stop, never progress, so a crash or a
         // force-stop resumed from the previous stop. app/tv's own tests are not part of the root
         // testDebugUnitTest task, so this checks its source from here.
-        val file = File("../../app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/player/TvPlayerScreen.kt")
+        val file =
+            File(
+                "../../app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/player/TvPlayerScreen.kt"
+            )
         assertTrue("missing ${file.absolutePath}", file.isFile)
         val screen = file.readText()
         assertTrue(
@@ -210,10 +223,15 @@ class PlayerInvariantsTest {
     fun `the TV player takes the key-up of an OK that showed the controls`() {
         // #459: the OK-up reached the Play/Pause button, focused by then, and toggled playback.
         // app/tv's own tests (TvPlayerKeyHandlerTest) are not part of the root task.
-        val file = File("../../app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/player/TvPlayerKeyHandler.kt")
+        val file =
+            File(
+                "../../app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/player/TvPlayerKeyHandler.kt"
+            )
         assertTrue("missing ${file.absolutePath}", file.isFile)
         val handler = file.readText()
-        val onKeyUp = Regex("""private fun onKeyUp\(keyCode: Int\): Boolean \{[\s\S]*?\n    \}""").find(handler)
+        val onKeyUp =
+            Regex("""private fun onKeyUp\(keyCode: Int\): Boolean \{[\s\S]*?\n    \}""")
+                .find(handler)
         assertTrue("TvPlayerKeyHandler.onKeyUp not found", onKeyUp != null)
         assertTrue(
             "onKeyUp must take the up of the OK whose down showed the controls (#459)",
@@ -226,7 +244,10 @@ class PlayerInvariantsTest {
         // #462: ON_PAUSE paused the player and ON_RESUME only resumed the view, so after Home and
         // back the player sat paused with nothing on screen. app/tv's own tests
         // (TvResumeOnReturnTest) are not part of the root task.
-        val file = File("../../app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/player/TvPlayerScreen.kt")
+        val file =
+            File(
+                "../../app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/player/TvPlayerScreen.kt"
+            )
         assertTrue("missing ${file.absolutePath}", file.isFile)
         val screen = file.readText()
         assertTrue(

@@ -24,17 +24,17 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
- * Enqueues [SyncWorker], which sends the watch progress, played state and favourites that could
- * not reach the server (#552).
+ * Enqueues [SyncWorker], which sends the watch progress, played state and favourites that could not
+ * reach the server (#552).
  * - [request]: at app start and whenever a write is marked to be synced. The work is unique and
  *   kept, so asking while a run is waiting for the network or for a retry does nothing.
  * - [start] watches for signs that the server is reachable again: a request of the app's own
  *   reaching the server after failed ones, and [ServerReachability] finding it there when the app
- *   comes to the foreground or the device changes network (home Wi-Fi after mobile data). With
- *   rows waiting, each of those starts the sync over, so it does not sit out the delay of a retry.
+ *   comes to the foreground or the device changes network (home Wi-Fi after mobile data). With rows
+ *   waiting, each of those starts the sync over, so it does not sit out the delay of a retry.
  *
- * With the process gone only the retries are left, which is why they back off linearly: after a
- * day without the server the next try is at most about 40 minutes away, not 5 hours.
+ * With the process gone only the retries are left, which is why they back off linearly: after a day
+ * without the server the next try is at most about 40 minutes away, not 5 hours.
  *
  * Call [request] off the main thread, because the first call sets up WorkManager (#250).
  */
@@ -116,8 +116,8 @@ constructor(
         private const val BACKOFF_SECONDS = 30L
 
         /**
-         * Long enough for a burst of signs (a network change comes with several) to end in one
-         * run, and for a cold start to leave the first seconds to the Home screen (#250).
+         * Long enough for a burst of signs (a network change comes with several) to end in one run,
+         * and for a cold start to leave the first seconds to the Home screen (#250).
          */
         private const val RESTART_DELAY_SECONDS = 5L
     }

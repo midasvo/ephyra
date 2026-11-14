@@ -50,8 +50,8 @@ class ServerReachabilityMonitor(
     /**
      * Emits when it is worth sending the server what is waiting for it: a probe reached it, or the
      * app came to the foreground and the server answered a moment ago. While Offline Mode is on
-     * nothing is probed, and the foreground and network signs are passed on as they come.
-     * (The server answering a request again after failed ones is `JellyfinApi.serverReturned`.)
+     * nothing is probed, and the foreground and network signs are passed on as they come. (The
+     * server answering a request again after failed ones is `JellyfinApi.serverReturned`.)
      */
     val serverConfirmed: SharedFlow<Unit> = _serverConfirmed.asSharedFlow()
 
@@ -155,8 +155,8 @@ class ServerReachabilityMonitor(
     }
 
     /**
-     * Starts a probe unless one is running. With [again] a running probe is followed by another:
-     * it may have gone out over the old network, or to the old server.
+     * Starts a probe unless one is running. With [again] a running probe is followed by another: it
+     * may have gone out over the old network, or to the old server.
      */
     private fun requestProbe(settle: Boolean = false, again: Boolean = settle) {
         synchronized(lock) {
@@ -240,12 +240,11 @@ class ServerReachabilityMonitor(
             retryJob = null
         } else if (foreground && retryJob?.isActive != true) {
             val delayMs = tracker.nextRetryDelayMs()
-            retryJob =
-                scope.launch {
-                    delay(delayMs)
-                    synchronized(lock) { retryJob = null }
-                    requestProbe()
-                }
+            retryJob = scope.launch {
+                delay(delayMs)
+                synchronized(lock) { retryJob = null }
+                requestProbe()
+            }
         }
     }
 

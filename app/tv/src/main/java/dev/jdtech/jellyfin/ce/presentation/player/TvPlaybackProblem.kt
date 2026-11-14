@@ -31,8 +31,8 @@ import kotlinx.coroutines.delay
 /** CE (#463): what stopped playback, as the TV player's dialog tells it. */
 internal enum class PlaybackProblem {
     /**
-     * The connection was lost. The player loads again by itself when it is back (#450), and
-     * "Try again" does the same at once.
+     * The connection was lost. The player loads again by itself when it is back (#450), and "Try
+     * again" does the same at once.
      */
     WAITING_FOR_NETWORK,
 
@@ -79,12 +79,12 @@ internal fun retryPlayback(player: Player) {
 
 /**
  * CE (#131, #463): playback stopped. A message in plain words with "Try again" (which has focus,
- * also each time the dialog comes back after a retry failed) and "Exit player". Back exits too.
- * The player's own error text is not shown: it is in the log, with the error code
+ * also each time the dialog comes back after a retry failed) and "Exit player". Back exits too. The
+ * player's own error text is not shown: it is in the log, with the error code
  * (`PlayerViewModel.onPlayerError`).
  *
- * @param retrying the player is loading again: a spinner next to the buttons says the press on
- *   "Try again" did something, while the dialog stays up until playback resumes.
+ * @param retrying the player is loading again: a spinner next to the buttons says the press on "Try
+ *   again" did something, while the dialog stays up until playback resumes.
  */
 @Composable
 internal fun TvPlaybackProblemDialog(

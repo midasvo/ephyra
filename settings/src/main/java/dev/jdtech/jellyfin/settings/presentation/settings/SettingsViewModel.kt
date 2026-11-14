@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jdtech.jellyfin.settings.R
+import dev.jdtech.jellyfin.settings.domain.AppCaches
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.settings.domain.KeepPlayerLandscape
 import dev.jdtech.jellyfin.settings.domain.bounded
@@ -17,9 +18,8 @@ import dev.jdtech.jellyfin.settings.domain.models.PermissionDefinitions
 import dev.jdtech.jellyfin.settings.domain.models.Preference as PreferenceBackend
 import dev.jdtech.jellyfin.settings.presentation.enums.AppVariant
 import dev.jdtech.jellyfin.settings.presentation.enums.DeviceType
-import dev.jdtech.jellyfin.settings.presentation.models.PreferenceAppLanguage
-import dev.jdtech.jellyfin.settings.domain.AppCaches
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceAction
+import dev.jdtech.jellyfin.settings.presentation.models.PreferenceAppLanguage
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceCategory
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceDynamicSelect
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceFileEdit
@@ -31,16 +31,18 @@ import dev.jdtech.jellyfin.settings.presentation.models.PreferencePermission
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceSelect
 import dev.jdtech.jellyfin.settings.presentation.models.PreferenceSwitch
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Dispatchers
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor(
+class SettingsViewModel
+@Inject
+constructor(
     @ApplicationContext private val context: Context,
     private val appPreferences: AppPreferences,
     private val appVariant: AppVariant = AppVariant.PHONE,
@@ -78,8 +80,8 @@ class SettingsViewModel @Inject constructor(
         )
 
     /**
-     * CE (#363): only where the player can get a wide window. Worked out once: a foldable shows
-     * it folded or not (its hinge sensor), so folding does not change the answer.
+     * CE (#363): only where the player can get a wide window. Worked out once: a foldable shows it
+     * folded or not (its hinge sensor), so folding does not change the answer.
      */
     private val keepLandscapeDeviceTypes =
         if (appVariant == AppVariant.PHONE && KeepPlayerLandscape.isShown(context)) {
@@ -222,7 +224,8 @@ class SettingsViewModel @Inject constructor(
                                                     backendPreference = appPreferences.dynamicColors,
                                                 ),
                                                 PreferenceSwitch(
-                                                    nameStringResource = R.string.pref_tv_theme_music,
+                                                    nameStringResource =
+                                                        R.string.pref_tv_theme_music,
                                                     descriptionStringRes =
                                                         R.string.pref_tv_theme_music_summary,
                                                     supportedDeviceTypes = listOf(DeviceType.TV),
@@ -239,7 +242,8 @@ class SettingsViewModel @Inject constructor(
                                                 // Display ... switches, which it migrates.
                                                 PreferenceCategory(
                                                     nameStringResource = R.string.home_rows,
-                                                    descriptionStringRes = R.string.home_rows_summary,
+                                                    descriptionStringRes =
+                                                        R.string.home_rows_summary,
                                                     onClick = {
                                                         viewModelScope.launch {
                                                             eventsChannel.send(
@@ -255,7 +259,8 @@ class SettingsViewModel @Inject constructor(
                                                         R.string.home_next_up_max_days_summary,
                                                     backendPreference =
                                                         appPreferences.homeNextUpMaxDays,
-                                                    suffixRes = R.string.home_next_up_max_days_suffix,
+                                                    suffixRes =
+                                                        R.string.home_next_up_max_days_suffix,
                                                     suffixPluralsRes = R.plurals.ce_days_count,
                                                     zeroLabelRes = R.string.ce_number_no_limit,
                                                 ),
@@ -276,13 +281,15 @@ class SettingsViewModel @Inject constructor(
                                                     nameStringResource =
                                                         R.string.ce_pref_home_episode_images,
                                                     descriptionStringRes =
-                                                        R.string.ce_pref_home_episode_images_summary,
+                                                        R.string
+                                                            .ce_pref_home_episode_images_summary,
                                                     supportedDeviceTypes = listOf(DeviceType.TV),
                                                     backendPreference =
                                                         appPreferences.homeEpisodeImages,
                                                 ),
                                                 PreferenceSwitch(
-                                                    nameStringResource = R.string.pref_tv_watch_next,
+                                                    nameStringResource =
+                                                        R.string.pref_tv_watch_next,
                                                     descriptionStringRes =
                                                         R.string.pref_tv_watch_next_summary,
                                                     supportedDeviceTypes = listOf(DeviceType.TV),
@@ -294,21 +301,29 @@ class SettingsViewModel @Inject constructor(
                                         preferences =
                                             listOf(
                                                 PreferenceSwitch(
-                                                    nameStringResource = R.string.pref_show_favorites_tab,
-                                                    descriptionStringRes = R.string.pref_show_favorites_tab_summary,
-                                                    backendPreference = appPreferences.showFavoritesTab,
+                                                    nameStringResource =
+                                                        R.string.pref_show_favorites_tab,
+                                                    descriptionStringRes =
+                                                        R.string.pref_show_favorites_tab_summary,
+                                                    backendPreference =
+                                                        appPreferences.showFavoritesTab,
                                                 ),
-                                                // CE (#332): what the movie, show and episode pages show, on a page of
-                                                // its own. The rows at the bottom of a page are the second group.
+                                                // CE (#332): what the movie, show and episode pages
+                                                // show, on a page of
+                                                // its own. The rows at the bottom of a page are the
+                                                // second group.
                                                 PreferenceCategory(
-                                                    nameStringResource = R.string.ce_settings_detail_pages,
-                                                    descriptionStringRes = R.string.ce_settings_detail_pages_summary,
+                                                    nameStringResource =
+                                                        R.string.ce_settings_detail_pages,
+                                                    descriptionStringRes =
+                                                        R.string.ce_settings_detail_pages_summary,
                                                     onClick = {
                                                         viewModelScope.launch {
                                                             eventsChannel.send(
                                                                 SettingsEvent.NavigateToSettings(
                                                                     listOf(
-                                                                        R.string.settings_category_interface,
+                                                                        R.string
+                                                                            .settings_category_interface,
                                                                         it.nameStringResource,
                                                                     )
                                                                 )
@@ -321,48 +336,106 @@ class SettingsViewModel @Inject constructor(
                                                                 preferences =
                                                                     listOf(
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_critic_rating,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_critic_rating_summary,
-                                                                            backendPreference = appPreferences.detailCriticRating,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_critic_rating,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_critic_rating_summary,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailCriticRating,
                                                                         ),
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_tagline,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_tagline_summary,
-                                                                            backendPreference = appPreferences.detailTagline,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_tagline,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_tagline_summary,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailTagline,
                                                                         ),
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_studios,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_studios_summary,
-                                                                            backendPreference = appPreferences.detailStudios,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_studios,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_studios_summary,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailStudios,
                                                                         ),
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_air_schedule,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_air_schedule_summary,
-                                                                            backendPreference = appPreferences.detailAirSchedule,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_air_schedule,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_air_schedule_summary,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailAirSchedule,
                                                                         ),
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_watch_history,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_watch_history_summary,
-                                                                            backendPreference = appPreferences.detailWatchHistory,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_watch_history,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_watch_history_summary,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailWatchHistory,
                                                                         ),
-                                                                        // A TV has no browser, so its pages have no links.
+                                                                        // A TV has no browser, so
+                                                                        // its pages have no links.
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_external_links,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_external_links_summary,
-                                                                            supportedDeviceTypes = listOf(DeviceType.PHONE),
-                                                                            backendPreference = appPreferences.detailExternalLinks,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_external_links,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_external_links_summary,
+                                                                            supportedDeviceTypes =
+                                                                                listOf(
+                                                                                    DeviceType.PHONE
+                                                                                ),
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailExternalLinks,
                                                                         ),
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.cast_and_crew,
-                                                                            descriptionStringRes = R.string.cast_and_crew_summary,
-                                                                            backendPreference = appPreferences.displayCastAndCrew,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .cast_and_crew,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .cast_and_crew_summary,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .displayCastAndCrew,
                                                                         ),
-                                                                        // CE (#510): off by default, and part of the cast and crew.
+                                                                        // CE (#510): off by
+                                                                        // default, and part of the
+                                                                        // cast and crew.
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_credits,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_credits_summary,
-                                                                            dependencies = listOf(appPreferences.displayCastAndCrew),
-                                                                            backendPreference = appPreferences.detailCredits,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_credits,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_credits_summary,
+                                                                            dependencies =
+                                                                                listOf(
+                                                                                    appPreferences
+                                                                                        .displayCastAndCrew
+                                                                                ),
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailCredits,
                                                                         ),
                                                                     )
                                                             ),
@@ -370,19 +443,37 @@ class SettingsViewModel @Inject constructor(
                                                                 preferences =
                                                                     listOf(
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_extras,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_extras_summary,
-                                                                            backendPreference = appPreferences.detailExtras,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_extras,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_extras_summary,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailExtras,
                                                                         ),
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_collections,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_collections_summary,
-                                                                            backendPreference = appPreferences.detailCollections,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_collections,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_collections_summary,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailCollections,
                                                                         ),
                                                                         PreferenceSwitch(
-                                                                            nameStringResource = R.string.ce_pref_detail_similar,
-                                                                            descriptionStringRes = R.string.ce_pref_detail_similar_summary,
-                                                                            backendPreference = appPreferences.detailSimilar,
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_detail_similar,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_detail_similar_summary,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .detailSimilar,
                                                                         ),
                                                                     )
                                                             ),
@@ -542,16 +633,19 @@ class SettingsViewModel @Inject constructor(
                                         preferences =
                                             listOf(
                                                 PreferenceSelect(
-                                                    nameStringResource = R.string.pref_player_backend,
-                                                    backendPreference = appPreferences.playerBackend,
+                                                    nameStringResource =
+                                                        R.string.pref_player_backend,
+                                                    backendPreference =
+                                                        appPreferences.playerBackend,
                                                     options = R.array.player_backend_names,
-                                                    optionValues = R.array.player_backends
+                                                    optionValues = R.array.player_backends,
                                                 ),
                                                 PreferenceSwitch(
                                                     nameStringResource =
                                                         R.string.pref_player_direct_play_dovi,
                                                     descriptionStringRes =
-                                                        R.string.pref_player_direct_play_dovi_summary,
+                                                        R.string
+                                                            .pref_player_direct_play_dovi_summary,
                                                     backendPreference =
                                                         appPreferences.playerDirectPlayDolbyVision,
                                                 ),
@@ -559,7 +653,8 @@ class SettingsViewModel @Inject constructor(
                                                     nameStringResource =
                                                         R.string.pref_player_tv_match_refresh_rate,
                                                     descriptionStringRes =
-                                                        R.string.pref_player_tv_match_refresh_rate_summary,
+                                                        R.string
+                                                            .pref_player_tv_match_refresh_rate_summary,
                                                     supportedDeviceTypes = listOf(DeviceType.TV),
                                                     backendPreference =
                                                         appPreferences.playerTvMatchRefreshRate,
@@ -568,7 +663,8 @@ class SettingsViewModel @Inject constructor(
                                                     nameStringResource =
                                                         R.string.ce_pref_player_keep_landscape,
                                                     descriptionStringRes =
-                                                        R.string.ce_pref_player_keep_landscape_summary,
+                                                        R.string
+                                                            .ce_pref_player_keep_landscape_summary,
                                                     supportedDeviceTypes = keepLandscapeDeviceTypes,
                                                     backendPreference =
                                                         appPreferences.playerKeepLandscape,
@@ -579,7 +675,11 @@ class SettingsViewModel @Inject constructor(
                                                         viewModelScope.launch {
                                                             eventsChannel.send(
                                                                 SettingsEvent.NavigateToSettings(
-                                                                    listOf(R.string.settings_category_player, it.nameStringResource)
+                                                                    listOf(
+                                                                        R.string
+                                                                            .settings_category_player,
+                                                                        it.nameStringResource,
+                                                                    )
                                                                 )
                                                             )
                                                         }
@@ -591,61 +691,102 @@ class SettingsViewModel @Inject constructor(
                                                                     listOf(
                                                                         PreferenceSelect(
                                                                             nameStringResource =
-                                                                                R.string.pref_player_mpv_hwdec,
+                                                                                R.string
+                                                                                    .pref_player_mpv_hwdec,
                                                                             backendPreference =
-                                                                                appPreferences.playerMpvHwdec,
-                                                                            options = R.array.mpv_hwdec,
-                                                                            optionValues = R.array.mpv_hwdec,
+                                                                                appPreferences
+                                                                                    .playerMpvHwdec,
+                                                                            options =
+                                                                                R.array.mpv_hwdec,
+                                                                            optionValues =
+                                                                                R.array.mpv_hwdec,
                                                                         ),
                                                                         PreferenceSelect(
                                                                             nameStringResource =
-                                                                                R.string.pref_player_mpv_vo,
-                                                                            backendPreference = appPreferences.playerMpvVo,
-                                                                            options = R.array.mpv_vos,
-                                                                            optionValues = R.array.mpv_vos,
+                                                                                R.string
+                                                                                    .pref_player_mpv_vo,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .playerMpvVo,
+                                                                            options =
+                                                                                R.array.mpv_vos,
+                                                                            optionValues =
+                                                                                R.array.mpv_vos,
                                                                         ),
                                                                         PreferenceSelect(
                                                                             nameStringResource =
-                                                                                R.string.pref_player_mpv_ao,
-                                                                            backendPreference = appPreferences.playerMpvAo,
-                                                                            options = R.array.mpv_aos,
-                                                                            optionValues = R.array.mpv_aos,
+                                                                                R.string
+                                                                                    .pref_player_mpv_ao,
+                                                                            backendPreference =
+                                                                                appPreferences
+                                                                                    .playerMpvAo,
+                                                                            options =
+                                                                                R.array.mpv_aos,
+                                                                            optionValues =
+                                                                                R.array.mpv_aos,
                                                                         ),
-                                                                    ),
+                                                                    )
                                                             ),
                                                             PreferenceGroup(
-                                                                nameStringResource = R.string.advanced,
+                                                                nameStringResource =
+                                                                    R.string.advanced,
                                                                 preferences =
                                                                     listOf(
                                                                         PreferenceFileEdit(
-                                                                            nameStringResource = R.string.edit_file_title,
-                                                                            // CE (#421): the TV has no file editor.
-                                                                            supportedDeviceTypes = listOf(DeviceType.PHONE),
-                                                                            filePath = "mpv/mpv.conf",
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .edit_file_title,
+                                                                            // CE (#421): the TV has
+                                                                            // no file editor.
+                                                                            supportedDeviceTypes =
+                                                                                listOf(
+                                                                                    DeviceType.PHONE
+                                                                                ),
+                                                                            filePath =
+                                                                                "mpv/mpv.conf",
                                                                             onClick = {
-                                                                                viewModelScope.launch {
-                                                                                    eventsChannel.send(
-                                                                                        SettingsEvent.NavigateToSettingsFileEdit(it.filePath)
-                                                                                    )
-                                                                                }
-                                                                            }
+                                                                                viewModelScope
+                                                                                    .launch {
+                                                                                        eventsChannel
+                                                                                            .send(
+                                                                                                SettingsEvent
+                                                                                                    .NavigateToSettingsFileEdit(
+                                                                                                        it
+                                                                                                            .filePath
+                                                                                                    )
+                                                                                            )
+                                                                                    }
+                                                                            },
                                                                         ),
                                                                         PreferenceFileEdit(
-                                                                            nameStringResource = R.string.edit_file_title,
-                                                                            // CE (#421): the TV has no file editor.
-                                                                            supportedDeviceTypes = listOf(DeviceType.PHONE),
-                                                                            filePath = "mpv/input.conf",
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .edit_file_title,
+                                                                            // CE (#421): the TV has
+                                                                            // no file editor.
+                                                                            supportedDeviceTypes =
+                                                                                listOf(
+                                                                                    DeviceType.PHONE
+                                                                                ),
+                                                                            filePath =
+                                                                                "mpv/input.conf",
                                                                             onClick = {
-                                                                                viewModelScope.launch {
-                                                                                    eventsChannel.send(
-                                                                                        SettingsEvent.NavigateToSettingsFileEdit(it.filePath)
-                                                                                    )
-                                                                                }
-                                                                            }
-                                                                        )
-                                                                    )
+                                                                                viewModelScope
+                                                                                    .launch {
+                                                                                        eventsChannel
+                                                                                            .send(
+                                                                                                SettingsEvent
+                                                                                                    .NavigateToSettingsFileEdit(
+                                                                                                        it
+                                                                                                            .filePath
+                                                                                                    )
+                                                                                            )
+                                                                                    }
+                                                                            },
+                                                                        ),
+                                                                    ),
                                                             ),
-                                                        )
+                                                        ),
                                                 ),
                                             )
                                     ),
@@ -701,7 +842,8 @@ class SettingsViewModel @Inject constructor(
                                                     backendPreference =
                                                         appPreferences.playerGesturesHold,
                                                     options = R.array.player_gestures_hold,
-                                                    optionValues = R.array.player_gestures_hold_values,
+                                                    optionValues =
+                                                        R.array.player_gestures_hold_values,
                                                 ),
                                                 PreferenceSwitch(
                                                     nameStringResource =
@@ -800,15 +942,18 @@ class SettingsViewModel @Inject constructor(
                                                 // and type lists were migrated into these once
                                                 // (AppPreferences.migrateMediaSegmentActions).
                                                 mediaSegmentActionSelect(
-                                                    R.string.pref_player_media_segments_action_intro,
+                                                    R.string
+                                                        .pref_player_media_segments_action_intro,
                                                     appPreferences.playerMediaSegmentsIntroAction,
                                                 ),
                                                 mediaSegmentActionSelect(
-                                                    R.string.pref_player_media_segments_action_outro,
+                                                    R.string
+                                                        .pref_player_media_segments_action_outro,
                                                     appPreferences.playerMediaSegmentsOutroAction,
                                                 ),
                                                 mediaSegmentActionSelect(
-                                                    R.string.pref_player_media_segments_action_recap,
+                                                    R.string
+                                                        .pref_player_media_segments_action_recap,
                                                     appPreferences.playerMediaSegmentsRecapAction,
                                                 ),
                                                 mediaSegmentActionSelect(
@@ -901,7 +1046,7 @@ class SettingsViewModel @Inject constructor(
                                                     options = R.array.player_autoplay_next,
                                                     optionValues =
                                                         R.array.player_autoplay_next_values,
-                                                ),
+                                                )
                                             ),
                                     ),
                                     PreferenceGroup(
@@ -987,8 +1132,7 @@ class SettingsViewModel @Inject constructor(
                                                     descriptionStringRes =
                                                         R.string.ce_pref_cast_enabled_summary,
                                                     supportedDeviceTypes = castDeviceTypes,
-                                                    backendPreference =
-                                                        appPreferences.castEnabled,
+                                                    backendPreference = appPreferences.castEnabled,
                                                 ),
                                                 PreferenceIntInput(
                                                     nameStringResource =
@@ -1005,8 +1149,7 @@ class SettingsViewModel @Inject constructor(
                                                     zeroLabelRes = R.string.ce_number_no_limit,
                                                 ),
                                                 PreferenceSwitch(
-                                                    nameStringResource =
-                                                        R.string.ce_pref_cast_hevc,
+                                                    nameStringResource = R.string.ce_pref_cast_hevc,
                                                     descriptionStringRes =
                                                         R.string.ce_pref_cast_hevc_summary,
                                                     dependencies =
@@ -1025,11 +1168,12 @@ class SettingsViewModel @Inject constructor(
                                                     nameStringResource =
                                                         R.string.pref_player_background_audio,
                                                     descriptionStringRes =
-                                                        R.string.pref_player_background_audio_summary,
+                                                        R.string
+                                                            .pref_player_background_audio_summary,
                                                     supportedDeviceTypes = listOf(DeviceType.PHONE),
                                                     backendPreference =
                                                         appPreferences.playerBackgroundAudio,
-                                                ),
+                                                )
                                             ),
                                     ),
                                 ),
@@ -1112,7 +1256,10 @@ class SettingsViewModel @Inject constructor(
                                                 ),
                                                 PreferenceSwitch(
                                                     nameStringResource = R.string.download_roaming,
-                                                    dependencies = listOf(appPreferences.downloadOverMobileData),
+                                                    dependencies =
+                                                        listOf(
+                                                            appPreferences.downloadOverMobileData
+                                                        ),
                                                     supportedDeviceTypes = listOf(DeviceType.PHONE),
                                                     backendPreference =
                                                         appPreferences.downloadWhenRoaming,
@@ -1123,21 +1270,27 @@ class SettingsViewModel @Inject constructor(
                                         preferences =
                                             listOf(
                                                 PreferenceDynamicSelect(
-                                                    nameStringResource = R.string.pref_download_storage_location,
+                                                    nameStringResource =
+                                                        R.string.pref_download_storage_location,
                                                     iconDrawableId = R.drawable.ic_hard_drive,
                                                     supportedDeviceTypes = listOf(DeviceType.PHONE),
-                                                    backendPreference = appPreferences.downloadStorageIndex,
-                                                    dynamicOptions = emptyList(), // filled in loadPreferences
+                                                    backendPreference =
+                                                        appPreferences.downloadStorageIndex,
+                                                    dynamicOptions =
+                                                        emptyList(), // filled in loadPreferences
                                                 ),
                                                 PreferenceIntInput(
-                                                    nameStringResource = R.string.pref_download_max_concurrent,
+                                                    nameStringResource =
+                                                        R.string.pref_download_max_concurrent,
                                                     supportedDeviceTypes = listOf(DeviceType.PHONE),
                                                     backendPreference =
                                                         appPreferences.maxConcurrentDownloads,
                                                 ),
                                                 PreferenceSwitch(
-                                                    nameStringResource = R.string.pref_download_smart,
-                                                    descriptionStringRes = R.string.pref_download_smart_summary,
+                                                    nameStringResource =
+                                                        R.string.pref_download_smart,
+                                                    descriptionStringRes =
+                                                        R.string.pref_download_smart_summary,
                                                     supportedDeviceTypes = listOf(DeviceType.PHONE),
                                                     backendPreference =
                                                         appPreferences.smartDownloads,
@@ -1159,7 +1312,8 @@ class SettingsViewModel @Inject constructor(
                                                     nameStringResource =
                                                         R.string.pref_download_transcode_dovi,
                                                     descriptionStringRes =
-                                                        R.string.pref_download_transcode_dovi_summary,
+                                                        R.string
+                                                            .pref_download_transcode_dovi_summary,
                                                     supportedDeviceTypes = listOf(DeviceType.PHONE),
                                                     backendPreference =
                                                         appPreferences.downloadTranscodeDolbyVision,
@@ -1259,7 +1413,8 @@ class SettingsViewModel @Inject constructor(
                                                     nameStringResource =
                                                         R.string.settings_image_display_size_title,
                                                     descriptionStringRes =
-                                                        R.string.settings_image_display_size_summary,
+                                                        R.string
+                                                            .settings_image_display_size_summary,
                                                     backendPreference =
                                                         appPreferences.imageDisplaySize,
                                                 ),
@@ -1322,17 +1477,19 @@ class SettingsViewModel @Inject constructor(
         val dirs = context.getExternalFilesDirs(null)
         return dirs.mapIndexedNotNull { index, dir ->
             if (dir == null) return@mapIndexedNotNull null
-            val free = try {
-                Formatter.formatFileSize(context, StatFs(dir.path).availableBytes)
-            } catch (_: Exception) {
-                return@mapIndexedNotNull null
-            }
-            val label = if (index == 0) {
-                context.getString(R.string.pref_download_internal_storage, free)
-            } else {
-                // index + 1 for 1-based display ("SD card 1", "SD card 2", ...)
-                context.getString(R.string.pref_download_sd_card, index + 1, free)
-            }
+            val free =
+                try {
+                    Formatter.formatFileSize(context, StatFs(dir.path).availableBytes)
+                } catch (_: Exception) {
+                    return@mapIndexedNotNull null
+                }
+            val label =
+                if (index == 0) {
+                    context.getString(R.string.pref_download_internal_storage, free)
+                } else {
+                    // index + 1 for 1-based display ("SD card 1", "SD card 2", ...)
+                    context.getString(R.string.pref_download_sd_card, index + 1, free)
+                }
             Pair(index.toString(), label)
         }
     }
@@ -1359,7 +1516,11 @@ class SettingsViewModel @Inject constructor(
 
             // Disk syscalls (directories, StatFs): once per load, and off the main thread.
             val storageOptions =
-                if (preferences.any { group -> group.preferences.any { it is PreferenceDynamicSelect } }) {
+                if (
+                    preferences.any { group ->
+                        group.preferences.any { it is PreferenceDynamicSelect }
+                    }
+                ) {
                     withContext(Dispatchers.IO) { getStorageOptions() }
                 } else {
                     emptyList()
@@ -1451,10 +1612,16 @@ class SettingsViewModel @Inject constructor(
                                             }
                                             is PreferenceDynamicSelect -> {
                                                 preference.copy(
-                                                    enabled = preference.enabled &&
-                                                        preference.dependencies.all { appPreferences.getValue(it) },
+                                                    enabled =
+                                                        preference.enabled &&
+                                                            preference.dependencies.all {
+                                                                appPreferences.getValue(it)
+                                                            },
                                                     dynamicOptions = storageOptions,
-                                                    value = appPreferences.getValue(preference.backendPreference),
+                                                    value =
+                                                        appPreferences.getValue(
+                                                            preference.backendPreference
+                                                        ),
                                                 )
                                             }
                                             else -> preference

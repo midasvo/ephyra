@@ -10,12 +10,12 @@ import android.view.KeyEvent.KEYCODE_DPAD_LEFT
 import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
 import android.view.KeyEvent.KEYCODE_DPAD_UP
 import android.view.KeyEvent.KEYCODE_ENTER
-import android.view.KeyEvent.KEYCODE_NUMPAD_ENTER
 import android.view.KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK
 import android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD
 import android.view.KeyEvent.KEYCODE_MEDIA_NEXT
 import android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
 import android.view.KeyEvent.KEYCODE_MEDIA_STOP
+import android.view.KeyEvent.KEYCODE_NUMPAD_ENTER
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -142,11 +142,16 @@ class TvPlayerKeyHandlerTest {
 
     @Test
     fun holdSpeedScalesWithTheVideoLength() {
-        val episode = TvPlayerKeyHandler.holdSeekMs(30_000L, 1_500_000L, heldMs = 3_000, sinceLastMs = 50)
-        val film = TvPlayerKeyHandler.holdSeekMs(30_000L, 7_200_000L, heldMs = 3_000, sinceLastMs = 50)
+        val episode =
+            TvPlayerKeyHandler.holdSeekMs(30_000L, 1_500_000L, heldMs = 3_000, sinceLastMs = 50)
+        val film =
+            TvPlayerKeyHandler.holdSeekMs(30_000L, 7_200_000L, heldMs = 3_000, sinceLastMs = 50)
         assertTrue(film > episode)
         // Before the speed-up, a step-based floor applies: two steps a second.
-        assertEquals(3_000L, TvPlayerKeyHandler.holdSeekMs(30_000L, 0L, heldMs = 0, sinceLastMs = 50))
+        assertEquals(
+            3_000L,
+            TvPlayerKeyHandler.holdSeekMs(30_000L, 0L, heldMs = 0, sinceLastMs = 50),
+        )
     }
 
     @Test

@@ -11,9 +11,6 @@ import dev.jdtech.jellyfin.models.View
 import java.nio.charset.StandardCharsets
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.text.DateFormat
-import java.time.ZoneOffset
-import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

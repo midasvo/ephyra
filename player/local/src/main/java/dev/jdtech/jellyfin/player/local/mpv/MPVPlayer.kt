@@ -490,7 +490,9 @@ class MPVPlayer(
                     }
                     // PlayerView covers the surface with a black shutter while no video track is
                     // selected, and only lifts it on onRenderedFirstFrame.
-                    if (isPlayerReady && !hadVideo && newTracks.isTypeSelected(C.TRACK_TYPE_VIDEO)) {
+                    if (
+                        isPlayerReady && !hadVideo && newTracks.isTypeSelected(C.TRACK_TYPE_VIDEO)
+                    ) {
                         for (videoListener in videoListeners) {
                             videoListener.onRenderedFirstFrame()
                         }
@@ -510,7 +512,9 @@ class MPVPlayer(
                         // #445: a lost connection reaches the end of the file too. It must not
                         // end the item, report it finished or advance to the next one.
                         val outcome = streamBreak.atEndOfFile(currentDurationMs)
-                        Timber.d("mpv end of file, $streamBreak, duration $currentDurationMs: $outcome")
+                        Timber.d(
+                            "mpv end of file, $streamBreak, duration $currentDurationMs: $outcome"
+                        )
                         if (outcome is MpvStreamBreak.Outcome.Broken) {
                             onStreamBroken(outcome)
                             return@post
@@ -582,10 +586,7 @@ class MPVPlayer(
                     // to another item clears the error. #576: also while the error waits for
                     // mpv's error line, when there is no playerError yet.
                     if (
-                        value < 0 ||
-                            playerError != null ||
-                            reloadingAfterError ||
-                            loadState.failed
+                        value < 0 || playerError != null || reloadingAfterError || loadState.failed
                     ) {
                         return@post
                     }
@@ -614,7 +615,10 @@ class MPVPlayer(
                 "duration" -> currentDurationMs = (value * C.MILLIS_PER_SECOND).toLong()
                 "demuxer-cache-time" -> {
                     currentCacheDurationMs = (value * C.MILLIS_PER_SECOND).toLong()
-                    streamBreak.onBufferedEnd(currentCacheDurationMs!!, SystemClock.elapsedRealtime())
+                    streamBreak.onBufferedEnd(
+                        currentCacheDurationMs!!,
+                        SystemClock.elapsedRealtime(),
+                    )
                 }
                 "speed" -> {
                     playbackParameters = playbackParameters.withSpeed(value.toFloat())
@@ -692,12 +696,11 @@ class MPVPlayer(
                         "mpv END_FILE: fileLoaded=${loadState.fileLoaded}, " +
                             "endFileExpected=${loadState.endFileExpected}"
                     )
-                    val end =
-                        loadState.endFile {
-                            mpvLib.getPropertyInt("playlist-playing-pos").also {
-                                Timber.d("mpv END_FILE: mpv is on playlist entry $it")
-                            }
+                    val end = loadState.endFile {
+                        mpvLib.getPropertyInt("playlist-playing-pos").also {
+                            Timber.d("mpv END_FILE: mpv is on playlist entry $it")
                         }
+                    }
                     when (end) {
                         MpvLoadState.End.NOT_A_FAILURE -> Unit
                         MpvLoadState.End.FAILED -> onLoadError(loadState.failure)
@@ -820,8 +823,7 @@ class MPVPlayer(
             // The deprecated combined callback, as ExoPlayer sends it. This used to be a second
             // onPlaybackStateChanged, so every state change arrived twice (ENDED too).
             listeners.queueEvent(C.INDEX_UNSET) { listener ->
-                @Suppress("DEPRECATION")
-                listener.onPlayerStateChanged(playWhenReady, state)
+                @Suppress("DEPRECATION") listener.onPlayerStateChanged(playWhenReady, state)
             }
         }
         if (wasPlaying != isPlaying) {
@@ -1574,8 +1576,7 @@ class MPVPlayer(
         @Player.DiscontinuityReason reason: Int,
     ) {
         listeners.sendEvent(EVENT_POSITION_DISCONTINUITY) { listener ->
-            @Suppress("DEPRECATION")
-            listener.onPositionDiscontinuity(reason)
+            @Suppress("DEPRECATION") listener.onPositionDiscontinuity(reason)
             listener.onPositionDiscontinuity(oldPosition, newPosition, reason)
         }
     }
@@ -2099,11 +2100,10 @@ class MPVPlayer(
         Timber.w("MPVPlayer does not support setAudioAttributes")
     }
 
-
     /**
-     * Hints the surface with the video frame rate so the OS can pick a matching display rate,
-     * as ExoPlayer does by default (fixed source: an exact match or a multiple, so the OS does
-     * not settle on a rate like 20Hz for 23.976fps). Seamless switches only (a 120Hz phone panel
+     * Hints the surface with the video frame rate so the OS can pick a matching display rate, as
+     * ExoPlayer does by default (fixed source: an exact match or a multiple, so the OS does not
+     * settle on a rate like 20Hz for 23.976fps). Seamless switches only (a 120Hz phone panel
      * dropping to 48Hz for 24fps, #338) unless the TV "match refresh rate" setting is on, which
      * also allows a visible mode switch.
      */
@@ -2282,9 +2282,7 @@ class MPVPlayer(
                             // CE (#451): the track dialog marks forced subtitles, as on ExoPlayer.
                             // CE (#597): or a subtitle file added as forced, which mpv cannot
                             // be told.
-                            (if (
-                                json.optBoolean("forced") || externalFile in forcedSubtitleFiles
-                            ) {
+                            (if (json.optBoolean("forced") || externalFile in forcedSubtitleFiles) {
                                 C.SELECTION_FLAG_FORCED
                             } else {
                                 0
@@ -2349,7 +2347,9 @@ class MPVPlayer(
                 val sorted =
                     (0 until currentTrackList.length())
                         .map { currentTrackList.getJSONObject(it) }
-                        .sortedBy { subtitleFiles.indexOf(it.optNullableString("external-filename")) }
+                        .sortedBy {
+                            subtitleFiles.indexOf(it.optNullableString("external-filename"))
+                        }
                 for (json in sorted) {
                     trackGroups.add(createTracksGroupfromMpvJson(json, forcedSubtitleFiles))
                 }

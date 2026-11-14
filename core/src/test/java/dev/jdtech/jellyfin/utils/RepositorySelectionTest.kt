@@ -10,9 +10,9 @@ import org.junit.Test
 /**
  * [useOfflineRepository]: since #281 only the Offline Mode setting picks the offline repository.
  *
- * That keeps what #427 was for: the repository never changes under a running UI because the
- * network came or went, so a screen made after a network drop shows an error instead of an empty
- * list. Changing the setting restarts the activity, so no screen outlives that either.
+ * That keeps what #427 was for: the repository never changes under a running UI because the network
+ * came or went, so a screen made after a network drop shows an error instead of an empty list.
+ * Changing the setting restarts the activity, so no screen outlives that either.
  */
 class RepositorySelectionTest {
 

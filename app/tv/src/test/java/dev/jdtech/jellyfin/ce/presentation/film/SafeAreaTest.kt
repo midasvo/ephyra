@@ -30,9 +30,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/**
- * #423: text stays above the bottom of the TV safe area (5 %, 27 dp) on a 960 x 540 dp screen.
- */
+/** #423: text stays above the bottom of the TV safe area (5 %, 27 dp) on a 960 x 540 dp screen. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class, qualifiers = "w960dp-h540dp")
 class SafeAreaTest {
@@ -50,8 +48,8 @@ class SafeAreaTest {
 
     /**
      * Robolectric's text metrics are not the device's, so this checks the cause instead of pixels:
-     * a Home card's title gets one line (two lines of a poster row end at 525 dp on a 1080p TV,
-     * one line at 501 dp; at font scale 1.3, 534 and 507 dp).
+     * a Home card's title gets one line (two lines of a poster row end at 525 dp on a 1080p TV, one
+     * line at 501 dp; at font scale 1.3, 534 and 507 dp).
      */
     @Test
     fun homeCardTitleIsOneLine() {
@@ -75,7 +73,8 @@ class SafeAreaTest {
 
         // The poster without an image shows the name too: the title is the one below it.
         val title =
-            rule.onAllNodes(card and hasText("$title 0"), useUnmergedTree = true)
+            rule
+                .onAllNodes(card and hasText("$title 0"), useUnmergedTree = true)
                 .fetchSemanticsNodes()
                 .maxBy { it.boundsInRoot.bottom }
         val layouts = mutableListOf<TextLayoutResult>()

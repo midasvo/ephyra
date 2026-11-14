@@ -74,7 +74,8 @@ constructor(
                 }
             }
 
-            // CE (#633): what the server shows changed (Continue Watching, positions), so the screen
+            // CE (#633): what the server shows changed (Continue Watching, positions), so the
+            // screen
             // on display reloads, as after a playback stop. Also after a partly failed run.
             if (reachedServer) dataChanges.onSynced()
 
@@ -129,8 +130,8 @@ constructor(
     }
 
     /**
-     * CE (#633): the server's user data of [itemIds], one request per [USER_DATA_BATCH_SIZE]
-     * items. Items the server does not return (deleted there) are missing from the map.
+     * CE (#633): the server's user data of [itemIds], one request per [USER_DATA_BATCH_SIZE] items.
+     * Items the server does not return (deleted there) are missing from the map.
      */
     private suspend fun fetchServerUserData(
         api: ApiClient,
@@ -139,7 +140,10 @@ constructor(
     ): Map<UUID, ServerUserData> =
         itemIds.chunked(USER_DATA_BATCH_SIZE).fold(emptyMap()) { found, batch ->
             val items =
-                api.libraryApi.getItems(userId = userId, ids = batch, enableUserData = true).content.items
+                api.libraryApi
+                    .getItems(userId = userId, ids = batch, enableUserData = true)
+                    .content
+                    .items
             found + serverUserDataOf(items)
         }
 
@@ -217,7 +221,10 @@ constructor(
                             lastPlayedDate =
                                 userData.lastPlayedDate
                                     ?.takeIf {
-                                        isNewerThanServer(it, onServer[userData.itemId]?.lastPlayedDate)
+                                        isNewerThanServer(
+                                            it,
+                                            onServer[userData.itemId]?.lastPlayedDate,
+                                        )
                                     }
                                     ?.let(::localDateTimeOf),
                         ),
@@ -299,11 +306,13 @@ internal fun isNewerThanServer(local: Long?, server: Long?): Boolean =
     local != null && (server == null || local > server)
 
 /**
- * CE (#633): the SDK reads and writes dates as local date-times of this device's time zone, and
- * the database keeps epoch milliseconds, which do not depend on it.
+ * CE (#633): the SDK reads and writes dates as local date-times of this device's time zone, and the
+ * database keeps epoch milliseconds, which do not depend on it.
  */
-internal fun localDateTimeOf(epochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): LocalDateTime =
-    LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), zone)
+internal fun localDateTimeOf(
+    epochMillis: Long,
+    zone: ZoneId = ZoneId.systemDefault(),
+): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), zone)
 
 /** CE (#633): the reverse of [localDateTimeOf]. */
 internal fun epochMillisOf(dateTime: LocalDateTime, zone: ZoneId = ZoneId.systemDefault()): Long =
@@ -314,8 +323,11 @@ internal fun epochMillisOf(dateTime: LocalDateTime, zone: ZoneId = ZoneId.system
  * item playing for this device ([leftPlayingOnServer]) while the player here has closed it. With
  * the item open in the player here ([playingHere]) the session is alive and reports for itself.
  */
-internal fun endsStaleSession(rowItemId: UUID, leftPlayingOnServer: UUID?, playingHere: UUID?): Boolean =
-    leftPlayingOnServer == rowItemId && playingHere != rowItemId
+internal fun endsStaleSession(
+    rowItemId: UUID,
+    leftPlayingOnServer: UUID?,
+    playingHere: UUID?,
+): Boolean = leftPlayingOnServer == rowItemId && playingHere != rowItemId
 
 internal enum class AfterStatus {
     DROP,
@@ -332,9 +344,9 @@ internal fun afterStatus(status: Int): AfterStatus =
     }
 
 /**
- * Whether rows were marked or changed while the run was sending [sent]: those were not sent, or
- * not in their current state. A row that is still marked exactly as it was sent failed in this
- * run, and that failure decides for itself.
+ * Whether rows were marked or changed while the run was sending [sent]: those were not sent, or not
+ * in their current state. A row that is still marked exactly as it was sent failed in this run, and
+ * that failure decides for itself.
  */
 internal fun needsAnotherRun(
     sent: List<FindroidUserDataDto>,

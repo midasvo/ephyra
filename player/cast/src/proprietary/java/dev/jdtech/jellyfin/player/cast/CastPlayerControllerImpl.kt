@@ -124,8 +124,8 @@ constructor(
     private var isSessionRestored = false
 
     /**
-     * A load of ours is on its way to the receiver. Until the receiver answers, it still shows
-     * what it played before, and that must not be taken for the current item again.
+     * A load of ours is on its way to the receiver. Until the receiver answers, it still shows what
+     * it played before, and that must not be taken for the current item again.
      */
     private val loadPending: Boolean
         get() = pendingLoad != null
@@ -205,18 +205,15 @@ constructor(
             }
         }
 
-    private val playbackReportingCallback =
-        RemoteMediaClient.ProgressListener { progressMs, _ ->
-            remoteMediaClient?.let { send(reporter.tick(receiverState(it, progressMs))) }
-        }
+    private val playbackReportingCallback = RemoteMediaClient.ProgressListener { progressMs, _ ->
+        remoteMediaClient?.let { send(reporter.tick(receiverState(it, progressMs))) }
+    }
 
     private val remoteMediaClientProgressListener =
         RemoteMediaClient.ProgressListener { progressMs, durationMs ->
             val safeProgress = progressMs.coerceAtLeast(0L)
             val safeDuration = durationMs.coerceAtLeast(0L)
-            _playerState.update {
-                it.copy(currentPosition = safeProgress, duration = safeDuration)
-            }
+            _playerState.update { it.copy(currentPosition = safeProgress, duration = safeDuration) }
             remoteItemId()?.let { reporter.positionChanged(it, safeProgress, safeDuration) }
         }
 
@@ -535,51 +532,50 @@ constructor(
         val subtitleTrackId = client.mediaStatus?.activeTrackIds?.firstOrNull()?.toInt()
 
         restoreJob?.cancel()
-        restoreJob =
-            scope.launch {
-                try {
-                    val kind =
-                        when (repository.getItem(itemId)) {
-                            is FindroidMovie -> BaseItemKind.MOVIE
-                            is FindroidEpisode -> BaseItemKind.EPISODE
-                            else -> return@launch
-                        }
-                    val manager = playlistManagers.get()
-                    val item = manager.getInitialItem(itemId = itemId, itemKind = kind)
-                    // The receiver moved on, the session ended, or the user started something
-                    // else, while this was loading.
-                    if (item == null || loadPending || remoteItemId() != itemId) return@launch
-
-                    val mediaSource = playbackInfo?.mediaSources?.firstOrNull()
-                    if (playbackInfo != null && mediaSource != null) {
-                        // getInitialItem asked for the phone's playback info and its play session
-                        // replaced the receiver's.
-                        repository.onExternalPlaybackInfo(
-                            itemId,
-                            playbackInfo.playSessionId,
-                            transcodes = !mediaSource.transcodingUrl.isNullOrBlank(),
-                        )
+        restoreJob = scope.launch {
+            try {
+                val kind =
+                    when (repository.getItem(itemId)) {
+                        is FindroidMovie -> BaseItemKind.MOVIE
+                        is FindroidEpisode -> BaseItemKind.EPISODE
+                        else -> return@launch
                     }
-                    val tracks = mediaSource?.let { getTracks(it, audioIndex, subtitleTrackId) }
-                    val castItem =
-                        CastMediaItem(
-                            item = item,
-                            playbackInfo = playbackInfo,
-                            subtitleTracks = tracks?.subtitles.orEmpty(),
-                            audioTracks = tracks?.audio.orEmpty(),
-                        )
+                val manager = playlistManagers.get()
+                val item = manager.getInitialItem(itemId = itemId, itemKind = kind)
+                // The receiver moved on, the session ended, or the user started something
+                // else, while this was loading.
+                if (item == null || loadPending || remoteItemId() != itemId) return@launch
 
-                    playlistManager = manager
-                    playlist.restart(item)
-                    itemCache[itemId] = castItem
-                    _currentItem.value = castItem
-                    onCurrentItemSet(itemId)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to restore item $itemId")
+                val mediaSource = playbackInfo?.mediaSources?.firstOrNull()
+                if (playbackInfo != null && mediaSource != null) {
+                    // getInitialItem asked for the phone's playback info and its play session
+                    // replaced the receiver's.
+                    repository.onExternalPlaybackInfo(
+                        itemId,
+                        playbackInfo.playSessionId,
+                        transcodes = !mediaSource.transcodingUrl.isNullOrBlank(),
+                    )
                 }
+                val tracks = mediaSource?.let { getTracks(it, audioIndex, subtitleTrackId) }
+                val castItem =
+                    CastMediaItem(
+                        item = item,
+                        playbackInfo = playbackInfo,
+                        subtitleTracks = tracks?.subtitles.orEmpty(),
+                        audioTracks = tracks?.audio.orEmpty(),
+                    )
+
+                playlistManager = manager
+                playlist.restart(item)
+                itemCache[itemId] = castItem
+                _currentItem.value = castItem
+                onCurrentItemSet(itemId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to restore item $itemId")
             }
+        }
     }
 
     private suspend fun getPlaybackInfo(
@@ -754,63 +750,62 @@ constructor(
         playlistManager = manager
         val load = beginLoad()
 
-        playJob =
-            scope.launch {
-                val client = remoteMediaClient
-                if (client == null) {
-                    fail(message = "No Cast session to play $itemId on")
-                    return@launch
-                }
+        playJob = scope.launch {
+            val client = remoteMediaClient
+            if (client == null) {
+                fail(message = "No Cast session to play $itemId on")
+                return@launch
+            }
 
-                val item: PlayerItem?
-                val built: BuiltMedia?
-                try {
-                    item =
-                        manager.getInitialItem(
-                            itemId = itemId,
-                            itemKind = BaseItemKind.fromName(itemKind),
-                            mediaSourceId = mediaSourceId,
-                            startFromBeginning = startFromBeginning,
-                shuffle = shuffle,
-                        )
-                    built = item?.let { buildMedia(it) }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    fail(e, "Failed to prepare $itemId for Cast")
-                    return@launch
-                }
-                if (item == null || built == null) {
-                    fail(message = "Nothing to play for $itemId")
-                    return@launch
-                }
+            val item: PlayerItem?
+            val built: BuiltMedia?
+            try {
+                item =
+                    manager.getInitialItem(
+                        itemId = itemId,
+                        itemKind = BaseItemKind.fromName(itemKind),
+                        mediaSourceId = mediaSourceId,
+                        startFromBeginning = startFromBeginning,
+                        shuffle = shuffle,
+                    )
+                built = item?.let { buildMedia(it) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                fail(e, "Failed to prepare $itemId for Cast")
+                return@launch
+            }
+            if (item == null || built == null) {
+                fail(message = "Nothing to play for $itemId")
+                return@launch
+            }
 
-                playlist.add(item)
-                itemCache[item.itemId] = built.castItem
-                _currentItem.value = built.castItem
+            playlist.add(item)
+            itemCache[item.itemId] = built.castItem
+            _currentItem.value = built.castItem
 
-                val loadRequest =
-                    MediaLoadRequestData.Builder()
-                        .setMediaInfo(built.mediaInfo)
-                        .setAutoplay(true)
-                        .setCurrentTime(item.playbackPosition.coerceAtLeast(0L))
-                        .setActiveTrackIds(built.activeTrackIds)
-                        .build()
+            val loadRequest =
+                MediaLoadRequestData.Builder()
+                    .setMediaInfo(built.mediaInfo)
+                    .setAutoplay(true)
+                    .setCurrentTime(item.playbackPosition.coerceAtLeast(0L))
+                    .setActiveTrackIds(built.activeTrackIds)
+                    .build()
 
-                client.load(loadRequest).setResultCallback { result ->
-                    if (pendingLoad != load) return@setResultCallback
-                    pendingLoad = null
-                    val stillCurrent = _currentItem.value?.item?.itemId == item.itemId
-                    if (result.status.isSuccess) {
-                        // onMetadataUpdated skips an item that is current already, as this one
-                        // is, so the queue is filled from here.
-                        if (stillCurrent) onCurrentItemSet(item.itemId)
-                    } else {
-                        if (stillCurrent) _currentItem.value = null
-                        fail(message = "Error loading media: ${result.status.statusMessage}")
-                    }
+            client.load(loadRequest).setResultCallback { result ->
+                if (pendingLoad != load) return@setResultCallback
+                pendingLoad = null
+                val stillCurrent = _currentItem.value?.item?.itemId == item.itemId
+                if (result.status.isSuccess) {
+                    // onMetadataUpdated skips an item that is current already, as this one
+                    // is, so the queue is filled from here.
+                    if (stillCurrent) onCurrentItemSet(item.itemId)
+                } else {
+                    if (stillCurrent) _currentItem.value = null
+                    fail(message = "Error loading media: ${result.status.statusMessage}")
                 }
             }
+        }
     }
 
     /**
@@ -819,35 +814,34 @@ constructor(
      */
     private fun manageQueue(itemId: UUID) {
         queueJob?.cancel()
-        queueJob =
-            scope.launch {
-                try {
-                    val manager = playlistManager
-                    manager.setCurrentMediaItemIndex(itemId)
-                    manager.loadQueue()
-                    manager.setCurrentMediaItemIndex(itemId)
+        queueJob = scope.launch {
+            try {
+                val manager = playlistManager
+                manager.setCurrentMediaItemIndex(itemId)
+                manager.loadQueue()
+                manager.setCurrentMediaItemIndex(itemId)
 
-                    val nextItem = manager.getNextPlayerItem()
-                    val previousItem = manager.getPreviousPlayerItem()
-                    // The order of another playlist is of no use to the one that replaced it.
-                    if (playlistManager !== manager) return@launch
-                    playlist.setNeighbours(itemId, next = nextItem, previous = previousItem)
-                    if (_currentItem.value?.item?.itemId != itemId) return@launch
+                val nextItem = manager.getNextPlayerItem()
+                val previousItem = manager.getPreviousPlayerItem()
+                // The order of another playlist is of no use to the one that replaced it.
+                if (playlistManager !== manager) return@launch
+                playlist.setNeighbours(itemId, next = nextItem, previous = previousItem)
+                if (_currentItem.value?.item?.itemId != itemId) return@launch
 
-                    val next = playlist.next(itemId)
-                    val previous = playlist.previous(itemId)
-                    _playerState.update {
-                        it.copy(hasNextItem = next != null, hasPreviousItem = previous != null)
-                    }
-
-                    next?.let { queueItem(current = itemId, item = it, before = false) }
-                    previous?.let { queueItem(current = itemId, item = it, before = true) }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to queue the neighbours of $itemId")
+                val next = playlist.next(itemId)
+                val previous = playlist.previous(itemId)
+                _playerState.update {
+                    it.copy(hasNextItem = next != null, hasPreviousItem = previous != null)
                 }
+
+                next?.let { queueItem(current = itemId, item = it, before = false) }
+                previous?.let { queueItem(current = itemId, item = it, before = true) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to queue the neighbours of $itemId")
             }
+        }
     }
 
     private fun queueInsert(status: MediaStatus, current: UUID, item: PlayerItem, before: Boolean) =
@@ -992,62 +986,60 @@ constructor(
 
         audioTrackJob?.cancel()
         val load = beginLoad()
-        audioTrackJob =
-            scope.launch {
-                fun revert() {
-                    if (pendingLoad == load) pendingLoad = null
-                    if (_currentItem.value?.item?.itemId == currentItemId) {
-                        _currentItem.value = current
-                    }
-                }
-
-                val client = remoteMediaClient
-                val built =
-                    try {
-                        buildMedia(
-                            item = current.item,
-                            audioStreamIndex = track.id,
-                            subtitleTrackId =
-                                current.subtitleTracks.firstOrNull { it.selected }?.id,
-                            defaultSubtitle = false,
-                        )
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Timber.e(e, "Failed to get the stream for audio track ${track.id}")
-                        null
-                    }
-                if (client == null || built == null || remoteItemId() != currentItemId) {
-                    revert()
-                    if (built == null) _errors.tryEmit(CastError.PLAYBACK_FAILED)
-                    return@launch
-                }
-
-                // The stream changes, and with it the play session the reports name.
-                stopReporting()
-                itemCache[currentItemId] = built.castItem
-                _currentItem.value = built.castItem
-
-                // Loading replaces the receiver's queue; manageQueue fills it again once the
-                // receiver has the item.
-                val loadRequest =
-                    MediaLoadRequestData.Builder()
-                        .setMediaInfo(built.mediaInfo)
-                        .setCurrentTime(client.approximateStreamPosition.coerceAtLeast(0L))
-                        .setAutoplay(client.isPlaying || client.isBuffering)
-                        .setActiveTrackIds(built.activeTrackIds)
-                        .build()
-
-                client.load(loadRequest).setResultCallback { result ->
-                    if (pendingLoad != load) return@setResultCallback
-                    pendingLoad = null
-                    if (result.status.isSuccess) {
-                        onCurrentItemSet(currentItemId)
-                    } else {
-                        fail(message = "Failed to set audio track: ${result.status.statusMessage}")
-                    }
+        audioTrackJob = scope.launch {
+            fun revert() {
+                if (pendingLoad == load) pendingLoad = null
+                if (_currentItem.value?.item?.itemId == currentItemId) {
+                    _currentItem.value = current
                 }
             }
+
+            val client = remoteMediaClient
+            val built =
+                try {
+                    buildMedia(
+                        item = current.item,
+                        audioStreamIndex = track.id,
+                        subtitleTrackId = current.subtitleTracks.firstOrNull { it.selected }?.id,
+                        defaultSubtitle = false,
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to get the stream for audio track ${track.id}")
+                    null
+                }
+            if (client == null || built == null || remoteItemId() != currentItemId) {
+                revert()
+                if (built == null) _errors.tryEmit(CastError.PLAYBACK_FAILED)
+                return@launch
+            }
+
+            // The stream changes, and with it the play session the reports name.
+            stopReporting()
+            itemCache[currentItemId] = built.castItem
+            _currentItem.value = built.castItem
+
+            // Loading replaces the receiver's queue; manageQueue fills it again once the
+            // receiver has the item.
+            val loadRequest =
+                MediaLoadRequestData.Builder()
+                    .setMediaInfo(built.mediaInfo)
+                    .setCurrentTime(client.approximateStreamPosition.coerceAtLeast(0L))
+                    .setAutoplay(client.isPlaying || client.isBuffering)
+                    .setActiveTrackIds(built.activeTrackIds)
+                    .build()
+
+            client.load(loadRequest).setResultCallback { result ->
+                if (pendingLoad != load) return@setResultCallback
+                pendingLoad = null
+                if (result.status.isSuccess) {
+                    onCurrentItemSet(currentItemId)
+                } else {
+                    fail(message = "Failed to set audio track: ${result.status.statusMessage}")
+                }
+            }
+        }
     }
 
     override fun stop() {

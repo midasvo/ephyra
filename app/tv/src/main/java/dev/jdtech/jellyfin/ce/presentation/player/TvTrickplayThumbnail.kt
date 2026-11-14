@@ -42,8 +42,8 @@ import timber.log.Timber
 /**
  * CE (#134): the trickplay thumbnail for [positionMs], or null while there is none (no trickplay
  * data, not seeking, or the first one still loading). Loads only when the position crosses into
- * another thumbnail, and keeps the previous one on screen while the next loads, so holding a
- * seek key doesn't flicker.
+ * another thumbnail, and keeps the previous one on screen while the next loads, so holding a seek
+ * key doesn't flicker.
  */
 @Composable
 fun rememberTrickplayFrame(trickplay: Trickplay?, positionMs: Long?): ImageBitmap? {

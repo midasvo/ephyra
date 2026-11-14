@@ -6,9 +6,9 @@ import android.os.SystemClock
  * CE (#458): the TV player's progress reports to the server. The phone player sends them from its
  * own loop and from `BasePlayerActivity.onPause`; the TV player's `MainActivity` has neither.
  *
- * [report] skips a report that would say the same thing as the last one (same play state) less
- * than [MIN_GAP_MS] after it, so the pause seen by the loop and the one sent on ON_PAUSE do not
- * both reach the server.
+ * [report] skips a report that would say the same thing as the last one (same play state) less than
+ * [MIN_GAP_MS] after it, so the pause seen by the loop and the one sent on ON_PAUSE do not both
+ * reach the server.
  */
 internal class TvProgressReports(
     private val send: () -> Unit,

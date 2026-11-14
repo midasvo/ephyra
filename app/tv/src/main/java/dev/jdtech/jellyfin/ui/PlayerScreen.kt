@@ -1,5 +1,8 @@
 package dev.jdtech.jellyfin.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,9 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -106,9 +106,7 @@ fun PlayerScreen(
         if (window != null) {
             viewModel.attachWindow(window)
         }
-        onDispose {
-            viewModel.detachWindow()
-        }
+        onDispose { viewModel.detachWindow() }
     }
 
     // The media session is owned by PlayerViewModel; building a second one here would crash,

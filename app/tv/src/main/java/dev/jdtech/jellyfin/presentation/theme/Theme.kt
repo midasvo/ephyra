@@ -24,9 +24,7 @@ fun FindroidTheme(content: @Composable BoxScope.() -> Unit) {
                     contentColorForTv(MaterialThemeTv.colorScheme.background),
                 LocalSpacings provides Spacings,
             ) {
-                Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
-                    content()
-                }
+                Box(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) { content() }
             }
         }
     }

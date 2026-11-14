@@ -6,8 +6,8 @@ import androidx.media3.common.TrackSelectionParameters
 /**
  * CE (#460): the value of mpv's `vid` that [parameters] ask for, the same way
  * [MPVPlayer.setTrackSelectionParameters] selects it: an override's track id, `no` when video is
- * disabled (background audio), else `auto`. [MPVPlayer] deselects video while it has no surface
- * and selects this again when the surface comes back.
+ * disabled (background audio), else `auto`. [MPVPlayer] deselects video while it has no surface and
+ * selects this again when the surface comes back.
  */
 internal fun videoTrackSelection(parameters: TrackSelectionParameters): String {
     val override = parameters.overrides.entries.firstOrNull { it.key.type == C.TRACK_TYPE_VIDEO }

@@ -5,7 +5,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.recalculateWindowInsets
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
@@ -95,18 +93,20 @@ fun AboutScreen(
             is AboutEvent.CopyDeviceProfile -> {
                 copyToClipboard(context, event.json)
                 Toast.makeText(
-                    context,
-                    context.getString(SettingsR.string.export_device_profile_copied),
-                    Toast.LENGTH_SHORT,
-                ).show()
+                        context,
+                        context.getString(SettingsR.string.export_device_profile_copied),
+                        Toast.LENGTH_SHORT,
+                    )
+                    .show()
             }
             is AboutEvent.ExportFailed -> {
                 Timber.e(event.cause, "Failed to build device capability report")
                 Toast.makeText(
-                    context,
-                    context.getString(SettingsR.string.export_device_profile_failed),
-                    Toast.LENGTH_SHORT,
-                ).show()
+                        context,
+                        context.getString(SettingsR.string.export_device_profile_failed),
+                        Toast.LENGTH_SHORT,
+                    )
+                    .show()
             }
         }
     }
@@ -121,7 +121,7 @@ fun AboutScreen(
                     findroidVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                     findroidBuildType = BuildConfig.BUILD_TYPE,
                     target = ExportTarget.Share,
-                ),
+                )
             )
         },
         onCopyDeviceProfile = {
@@ -130,7 +130,7 @@ fun AboutScreen(
                     findroidVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                     findroidBuildType = BuildConfig.BUILD_TYPE,
                     target = ExportTarget.Clipboard,
-                ),
+                )
             )
         },
     )
@@ -401,7 +401,8 @@ private fun LinkItem(icon: Int, title: String, summary: String? = null, onClick:
         headlineContent = { Text(title) },
         supportingContent = summary?.let { { Text(it) } },
         leadingContent = { Icon(painter = painterResource(icon), contentDescription = null) },
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        colors =
+            ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
     )
 }
@@ -434,11 +435,12 @@ private fun DeviceProfileCard(isExporting: Boolean, onShare: () -> Unit, onCopy:
 }
 
 private fun shareJson(context: Context, json: String) {
-    val sendIntent = Intent(Intent.ACTION_SEND).apply {
-        type = "application/json"
-        putExtra(Intent.EXTRA_SUBJECT, "Ephyra device profile")
-        putExtra(Intent.EXTRA_TEXT, json)
-    }
+    val sendIntent =
+        Intent(Intent.ACTION_SEND).apply {
+            type = "application/json"
+            putExtra(Intent.EXTRA_SUBJECT, "Ephyra device profile")
+            putExtra(Intent.EXTRA_TEXT, json)
+        }
     try {
         context.startActivity(Intent.createChooser(sendIntent, null))
     } catch (e: Exception) {

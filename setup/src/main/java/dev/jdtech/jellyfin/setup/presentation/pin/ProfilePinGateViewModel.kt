@@ -57,8 +57,7 @@ constructor(private val repository: SetupRepository, private val profileLock: Pr
     fun onAction(action: ProfilePinGateAction) {
         when (action) {
             is ProfilePinGateAction.OnPinSubmit -> submit(ProfileLockEntry.Pin(action.pin))
-            is ProfilePinGateAction.OnPatternSubmit ->
-                submit(ProfileLockEntry.Pattern(action.dots))
+            is ProfilePinGateAction.OnPatternSubmit -> submit(ProfileLockEntry.Pattern(action.dots))
             is ProfilePinGateAction.OnCancel ->
                 viewModelScope.launch { repository.clearCurrentUser() }
         }

@@ -74,19 +74,18 @@ import dev.jdtech.jellyfin.film.presentation.movie.MovieViewModel
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.getVersions
-import dev.jdtech.jellyfin.ui.components.Direction
-import dev.jdtech.jellyfin.utils.AfterFirstFrame
 import dev.jdtech.jellyfin.presentation.film.components.VersionDialog
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.ui.components.Direction
+import dev.jdtech.jellyfin.utils.AfterFirstFrame
 import dev.jdtech.jellyfin.utils.format
 import java.util.UUID
 import kotlinx.coroutines.launch
 
 /**
- * CE replacement of the upstream TV movie page (ADR 0001).
- * Shows metadata, buttons, genres/crew and a cast row. Back from a person restores focus to that
- * card (ADR 0003).
+ * CE replacement of the upstream TV movie page (ADR 0001). Shows metadata, buttons, genres/crew and
+ * a cast row. Back from a person restores focus to that card (ADR 0003).
  */
 @Composable
 fun MovieScreen(
@@ -223,7 +222,10 @@ private fun MovieScreenContent(
                             Modifier.fillMaxSize()
                                 .background(
                                     Brush.radialGradient(
-                                        listOf(Color.Black.copy(alpha = .2f), MaterialTheme.colorScheme.surface),
+                                        listOf(
+                                            Color.Black.copy(alpha = .2f),
+                                            MaterialTheme.colorScheme.surface,
+                                        ),
                                         center = Offset(size.width, 0f),
                                         radius = size.width * .8f,
                                     )
@@ -313,7 +315,9 @@ private fun MovieScreenContent(
                                 }
                             }
                             if (movie.playCount > 0) {
-                                Spacer(modifier = Modifier.height(MaterialTheme.spacings.extraSmall))
+                                Spacer(
+                                    modifier = Modifier.height(MaterialTheme.spacings.extraSmall)
+                                )
                                 TvWatchHistory(movie.playCount, movie.lastPlayedDate)
                             }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
@@ -348,8 +352,7 @@ private fun MovieScreenContent(
                                 Button(
                                     border = ephyraButtonBorder(),
                                     onClick = { play(false) },
-                                    modifier =
-                                        Modifier.focusPosition(focusPosition, ROW_BUTTONS, 0),
+                                    modifier = Modifier.focusPosition(focusPosition, ROW_BUTTONS, 0),
                                 ) {
                                     Icon(
                                         painter = painterResource(id = CoreR.drawable.ic_play),
@@ -384,9 +387,7 @@ private fun MovieScreenContent(
                                 movie.trailer?.let { trailerUri ->
                                     Button(
                                         border = ephyraButtonBorder(),
-                                        onClick = {
-                                            onAction(MovieAction.PlayTrailer(trailerUri))
-                                        },
+                                        onClick = { onAction(MovieAction.PlayTrailer(trailerUri)) },
                                         modifier =
                                             Modifier.focusPosition(
                                                 focusPosition,
@@ -547,7 +548,8 @@ private fun MovieScreenContent(
                                 onFocused = { scrollToRow(lazyIndexOf(related.row)) },
                                 onClick = { item ->
                                     onAction(
-                                        if (related.row == ROW_EXTRAS) MovieAction.PlayExtra(item.id)
+                                        if (related.row == ROW_EXTRAS)
+                                            MovieAction.PlayExtra(item.id)
                                         else MovieAction.NavigateToItem(item)
                                     )
                                 },
@@ -566,9 +568,7 @@ private fun MovieScreenContent(
                         else -> relatedRows.any { it.row == focusPosition.row }
                     },
             ) { position ->
-                position.resolve(ROW_CAST, state.actors.size) { i ->
-                    state.actors[i].id.toString()
-                }
+                position.resolve(ROW_CAST, state.actors.size) { i -> state.actors[i].id.toString() }
                 relatedRows.forEach { related ->
                     position.resolve(related.row, related.items.size) { i ->
                         related.items[i].id.toString()

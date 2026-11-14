@@ -46,7 +46,8 @@ import dev.jdtech.jellyfin.ui.components.ItemCard
 import java.util.UUID
 
 /**
- * CE collection grid on Android TV (ADR 0001). Back from an item restores focus to that card (ADR 0003).
+ * CE collection grid on Android TV (ADR 0001). Back from an item restores focus to that card (ADR
+ * 0003).
  */
 @Composable
 fun CollectionScreen(
@@ -59,9 +60,7 @@ fun CollectionScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(collectionId) {
-        viewModel.loadItems(parentId = collectionId)
-    }
+    LaunchedEffect(collectionId) { viewModel.loadItems(parentId = collectionId) }
 
     CollectionScreenLayout(
         collectionName = collectionName,
@@ -112,10 +111,7 @@ internal fun CollectionScreenLayout(
                     modifier = Modifier.fillMaxSize().focusRestorer(),
                 ) {
                     item(span = { GridItemSpan(this.maxLineSpan) }) {
-                        Text(
-                            text = collectionName,
-                            style = MaterialTheme.typography.displayMedium,
-                        )
+                        Text(text = collectionName, style = MaterialTheme.typography.displayMedium)
                     }
                     state.sections.forEachIndexed { sectionIndex, section ->
                         if (state.sections.size > 1) {
@@ -123,15 +119,11 @@ internal fun CollectionScreenLayout(
                                 Text(
                                     text = section.name.asString(),
                                     style = MaterialTheme.typography.headlineSmall,
-                                    modifier =
-                                        Modifier.padding(top = MaterialTheme.spacings.medium),
+                                    modifier = Modifier.padding(top = MaterialTheme.spacings.medium),
                                 )
                             }
                         }
-                        items(
-                            count = section.items.size,
-                            key = { i -> section.items[i].id },
-                        ) { i ->
+                        items(count = section.items.size, key = { i -> section.items[i].id }) { i ->
                             val item = section.items[i]
                             val direction =
                                 if (item is FindroidEpisode) Direction.HORIZONTAL

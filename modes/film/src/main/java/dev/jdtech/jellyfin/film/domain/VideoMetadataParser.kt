@@ -53,15 +53,15 @@ object VideoMetadataParser {
 
                         /**
                          * CE: spatial audio from [org.jellyfin.sdk.model.api.MediaStream.profile],
-                         * falling back to the display title (older offline downloads have no
-                         * stored profile)
+                         * falling back to the display title (older offline downloads have no stored
+                         * profile)
                          */
                         val profile = stream.profile.orEmpty()
                         val title = stream.displayTitle.orEmpty()
                         when {
                             profile.contains("atmos", true) -> SpatialAudio.ATMOS
-                            profile.contains("dts:x", true) ||
-                                profile.contains("dts-x", true) -> SpatialAudio.DTS_X
+                            profile.contains("dts:x", true) || profile.contains("dts-x", true) ->
+                                SpatialAudio.DTS_X
                             title.contains("atmos", true) -> SpatialAudio.ATMOS
                             else -> null
                         }?.let { spatialAudio.add(it) }

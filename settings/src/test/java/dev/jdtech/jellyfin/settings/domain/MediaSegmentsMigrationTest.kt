@@ -18,7 +18,14 @@ class MediaSegmentsMigrationTest {
         autoSkipTypes: Set<String> = setOf(INTRO, OUTRO),
         skipButton: Boolean = true,
         skipButtonTypes: Set<String> = setOf(INTRO, OUTRO),
-    ) = MediaSegmentsMigration.actions(explicit, autoSkip, autoSkipTypes, skipButton, skipButtonTypes)
+    ) =
+        MediaSegmentsMigration.actions(
+            explicit,
+            autoSkip,
+            autoSkipTypes,
+            skipButton,
+            skipButtonTypes,
+        )
 
     @Test
     fun `old defaults give ask for intro and outro and nothing for the rest`() {

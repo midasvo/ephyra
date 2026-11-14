@@ -36,8 +36,8 @@ constructor(
     val state = _state.asStateFlow()
 
     /**
-     * CE (#281): what the screens show about the server. Apart from [MainState], so a probe
-     * result recomposes the banner and not the navigation.
+     * CE (#281): what the screens show about the server. Apart from [MainState], so a probe result
+     * recomposes the banner and not the navigation.
      */
     val serverStatus: StateFlow<ServerStatus> =
         serverReachability.state
@@ -45,7 +45,8 @@ constructor(
                 ServerStatus(
                     unreachable = reachability.unreachable,
                     confirmedUnreachable = reachability.confirmedUnreachable,
-                    // Only asked when it is shown: the banner points at Downloads when there are any.
+                    // Only asked when it is shown: the banner points at Downloads when there are
+                    // any.
                     hasDownloads = !reachability.unreachable || hasDownloads(),
                 )
             }

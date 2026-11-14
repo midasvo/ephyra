@@ -16,10 +16,10 @@ import dev.jdtech.jellyfin.models.FindroidSourceDto
 import dev.jdtech.jellyfin.models.FindroidTrickplayInfoDto
 import dev.jdtech.jellyfin.models.FindroidUserDataDto
 import dev.jdtech.jellyfin.models.PendingDownloadDto
-import dev.jdtech.jellyfin.models.Server
-import dev.jdtech.jellyfin.models.ServerAddress
 import dev.jdtech.jellyfin.models.SeasonEpisodeCounts
 import dev.jdtech.jellyfin.models.SeriesTrackPreferenceDto
+import dev.jdtech.jellyfin.models.Server
+import dev.jdtech.jellyfin.models.ServerAddress
 import dev.jdtech.jellyfin.models.ServerWithAddressAndUser
 import dev.jdtech.jellyfin.models.ServerWithAddresses
 import dev.jdtech.jellyfin.models.ServerWithAddressesAndUsers
@@ -339,7 +339,8 @@ interface ServerDatabaseDao {
     @Query("DELETE FROM episodes WHERE seasonId = :seasonId")
     suspend fun deleteEpisodesBySeasonId(seasonId: UUID)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertSegment(segment: FindroidSegmentDto)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSegment(segment: FindroidSegmentDto)
 
     @Query("SELECT * FROM segments WHERE itemId = :itemId")
     suspend fun getSegments(itemId: UUID): List<FindroidSegmentDto>

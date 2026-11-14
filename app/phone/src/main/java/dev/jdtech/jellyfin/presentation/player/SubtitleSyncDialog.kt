@@ -1,7 +1,6 @@
 package dev.jdtech.jellyfin.presentation.player
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -28,7 +27,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -76,11 +74,7 @@ const val HUMAN_REACTION_COMPENSATION_MS = 300L
 private const val STEPPER_HOLD_START_MS = 400L
 private const val STEPPER_HOLD_REPEAT_MS = 80L
 
-data class SubtitleTrackItem(
-    val index: Int,
-    val name: String,
-    val isSelected: Boolean,
-)
+data class SubtitleTrackItem(val index: Int, val name: String, val isSelected: Boolean)
 
 fun formatSubtitleDelay(delayMs: Int): String {
     val seconds = delayMs / 1000f
@@ -122,9 +116,7 @@ fun PlayerSubtitleSyncSheet(
         // Backdrop: tap outside the sheet to dismiss
         Box(
             modifier =
-                Modifier.fillMaxSize().pointerInput(Unit) {
-                    detectTapGestures { onDismiss() }
-                }
+                Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { onDismiss() } }
         )
 
         Surface(
@@ -134,9 +126,7 @@ fun PlayerSubtitleSyncSheet(
                 Modifier.align(Alignment.CenterEnd)
                     .width(sheetWidth)
                     .fillMaxHeight()
-                    .windowInsetsPadding(
-                        WindowInsets.displayCutout.only(WindowInsetsSides.End)
-                    ),
+                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.End)),
         ) {
             SubtitleSyncSheetContent(
                 tracks = tracks,
@@ -165,13 +155,9 @@ private fun SubtitleSyncSheetContent(
     onDelayChanged: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var selectedTab by remember {
-        mutableIntStateOf(if (selectedTrackIndex >= 0) 1 else 0)
-    }
+    var selectedTab by remember { mutableIntStateOf(if (selectedTrackIndex >= 0) 1 else 0) }
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 16.dp)) {
         // Top Header
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -399,7 +385,8 @@ private fun SubtitleTimingPanel(
                 shape = RoundedCornerShape(16.dp),
                 colors =
                     CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                        containerColor =
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
                     ),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -451,7 +438,8 @@ private fun SubtitleTimingPanel(
                 shape = RoundedCornerShape(16.dp),
                 colors =
                     CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                        containerColor =
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
                     ),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -483,9 +471,7 @@ private fun SubtitleTimingPanel(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     FilledTonalButton(
-                        onClick = {
-                            capturedPositionMs = getCurrentPositionMs().coerceAtLeast(0L)
-                        },
+                        onClick = { capturedPositionMs = getCurrentPositionMs().coerceAtLeast(0L) },
                         modifier = Modifier.fillMaxWidth(),
                         colors =
                             ButtonDefaults.filledTonalButtonColors(
@@ -528,7 +514,10 @@ private fun SubtitleTimingPanel(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp,
+                                )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
                                     text = stringResource(PlayerR.string.ce_loading_dialogue),
@@ -537,7 +526,8 @@ private fun SubtitleTimingPanel(
                             }
                         } else {
                             val nearby =
-                                cues.sortedBy { abs(it.startTimeMs - capturedPositionMs!!) }
+                                cues
+                                    .sortedBy { abs(it.startTimeMs - capturedPositionMs!!) }
                                     .take(5)
                                     .sortedBy { it.startTimeMs }
 
@@ -552,9 +542,14 @@ private fun SubtitleTimingPanel(
                                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                     for (cue in nearby) {
                                         val offsetMs =
-                                            (capturedPositionMs!! - cue.startTimeMs - HUMAN_REACTION_COMPENSATION_MS)
+                                            (capturedPositionMs!! -
+                                                    cue.startTimeMs -
+                                                    HUMAN_REACTION_COMPENSATION_MS)
                                                 .toInt()
-                                                .coerceIn(SUBTITLE_DELAY_MIN_MS, SUBTITLE_DELAY_MAX_MS)
+                                                .coerceIn(
+                                                    SUBTITLE_DELAY_MIN_MS,
+                                                    SUBTITLE_DELAY_MAX_MS,
+                                                )
 
                                         CueRow(
                                             cue = cue,
@@ -573,11 +568,7 @@ private fun SubtitleTimingPanel(
 }
 
 @Composable
-private fun CueRow(
-    cue: SubtitleSyncCue,
-    offsetMs: Int,
-    onClick: () -> Unit,
-) {
+private fun CueRow(cue: SubtitleSyncCue, offsetMs: Int, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(10.dp),
@@ -593,7 +584,7 @@ private fun CueRow(
                 modifier =
                     Modifier.clip(RoundedCornerShape(6.dp))
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f))
-                        .padding(horizontal = 6.dp, vertical = 3.dp),
+                        .padding(horizontal = 6.dp, vertical = 3.dp)
             ) {
                 Text(
                     text = formatCueTimestamp(cue.startTimeMs),
@@ -618,7 +609,7 @@ private fun CueRow(
                 modifier =
                     Modifier.clip(CircleShape)
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
                 Text(
                     text = formatSubtitleDelay(offsetMs),
@@ -632,11 +623,7 @@ private fun CueRow(
 }
 
 @Composable
-private fun HoldToRepeatStepper(
-    value: String,
-    onDecrease: () -> Unit,
-    onIncrease: () -> Unit,
-) {
+private fun HoldToRepeatStepper(value: String, onDecrease: () -> Unit, onIncrease: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -653,10 +640,7 @@ private fun HoldToRepeatStepper(
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
             modifier = Modifier.weight(1f).height(48.dp),
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize(),
-            ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 Text(
                     text = value,
                     style = MaterialTheme.typography.titleLarge,
@@ -676,11 +660,7 @@ private fun HoldToRepeatStepper(
 }
 
 @Composable
-private fun HoldToRepeatButton(
-    iconRes: Int,
-    contentDescription: String,
-    onAction: () -> Unit,
-) {
+private fun HoldToRepeatButton(iconRes: Int, contentDescription: String, onAction: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val latestAction by rememberUpdatedState(onAction)

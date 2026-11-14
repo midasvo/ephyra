@@ -65,7 +65,8 @@ class UnfinishedDownloadPlaybackTest {
         }
     }
 
-    private fun api() = JellyfinApi(context).apply { userId = this@UnfinishedDownloadPlaybackTest.userId }
+    private fun api() =
+        JellyfinApi(context).apply { userId = this@UnfinishedDownloadPlaybackTest.userId }
 
     private fun preferences() =
         AppPreferences(context.getSharedPreferences("test", Context.MODE_PRIVATE))
@@ -85,10 +86,7 @@ class UnfinishedDownloadPlaybackTest {
             val result = runCatching { repository.getPlaybackSources(episodeId, null) }
 
             // Asking the server is what fails here; the partial file must not be the answer.
-            assertTrue(
-                "Got ${result.getOrNull()?.map { it.path }}",
-                result.isFailure,
-            )
+            assertTrue("Got ${result.getOrNull()?.map { it.path }}", result.isFailure)
         }
 
     @Test

@@ -25,7 +25,10 @@ class LicenseDialogTextTest {
 
     @Test
     fun `bundled text wins over the url`() {
-        val lib = library(license("Apache-2.0", "https://spdx.org/licenses/Apache-2.0.html", "Apache text"))
+        val lib =
+            library(
+                license("Apache-2.0", "https://spdx.org/licenses/Apache-2.0.html", "Apache text")
+            )
         assertEquals(LicenseDialogText.Content("Apache text"), licenseDialogText(lib))
     }
 
@@ -47,7 +50,10 @@ class LicenseDialogTextTest {
     @Test
     fun `blank text counts as no text`() {
         val lib = library(license("LGPL", "https://example.org/lgpl", "  "))
-        assertEquals(LicenseDialogText.Links(listOf("https://example.org/lgpl")), licenseDialogText(lib))
+        assertEquals(
+            LicenseDialogText.Links(listOf("https://example.org/lgpl")),
+            licenseDialogText(lib),
+        )
     }
 
     @Test

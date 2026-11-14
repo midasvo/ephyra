@@ -3,10 +3,8 @@ package dev.jdtech.jellyfin.film.presentation.episode
 import java.util.UUID
 
 sealed interface EpisodeAction {
-    data class Play(
-        val startFromBeginning: Boolean = false,
-        val mediaSourceId: String? = null,
-    ) : EpisodeAction
+    data class Play(val startFromBeginning: Boolean = false, val mediaSourceId: String? = null) :
+        EpisodeAction
 
     data object MarkAsPlayed : EpisodeAction
 

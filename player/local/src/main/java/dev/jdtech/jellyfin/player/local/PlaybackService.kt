@@ -20,9 +20,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
-        mediaSession?.let {
-            removeSession(it)
-        }
+        mediaSession?.let { removeSession(it) }
         super.onDestroy()
     }
 

@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.jdtech.jellyfin.PlayerActivity
-import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
@@ -49,28 +48,27 @@ import dev.jdtech.jellyfin.film.presentation.show.ShowAction
 import dev.jdtech.jellyfin.film.presentation.show.ShowEvent
 import dev.jdtech.jellyfin.film.presentation.show.ShowState
 import dev.jdtech.jellyfin.film.presentation.show.ShowViewModel
-import dev.jdtech.jellyfin.utils.AfterFirstFrame
-import dev.jdtech.jellyfin.utils.ObserveAsEvents
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidShow
+import dev.jdtech.jellyfin.presentation.cast.LocalCastPlayback
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
 import dev.jdtech.jellyfin.presentation.film.components.AirScheduleText
 import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.CriticRating
-import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
-import dev.jdtech.jellyfin.presentation.film.components.ItemsRow
-import dev.jdtech.jellyfin.presentation.film.components.TaglineText
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
+import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
 import dev.jdtech.jellyfin.presentation.film.components.InfoText
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemCard
 import dev.jdtech.jellyfin.presentation.film.components.ItemHeader
 import dev.jdtech.jellyfin.presentation.film.components.ItemPoster
 import dev.jdtech.jellyfin.presentation.film.components.ItemTopBar
+import dev.jdtech.jellyfin.presentation.film.components.ItemsRow
 import dev.jdtech.jellyfin.presentation.film.components.LoadingOrError
 import dev.jdtech.jellyfin.presentation.film.components.OverviewText
 import dev.jdtech.jellyfin.presentation.film.components.SeasonSelectionDialog
+import dev.jdtech.jellyfin.presentation.film.components.TaglineText
 import dev.jdtech.jellyfin.presentation.film.components.rememberArtworkState
 import dev.jdtech.jellyfin.presentation.film.components.rememberTopBarBackgroundAlpha
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
@@ -80,6 +78,8 @@ import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
 import dev.jdtech.jellyfin.presentation.utils.ReloadOnResume
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import dev.jdtech.jellyfin.presentation.utils.useWideItemLayout
+import dev.jdtech.jellyfin.utils.AfterFirstFrame
+import dev.jdtech.jellyfin.utils.ObserveAsEvents
 import dev.jdtech.jellyfin.utils.copyOnLongClick
 import dev.jdtech.jellyfin.utils.getShowDateString
 import java.util.UUID
@@ -101,7 +101,9 @@ fun ShowScreen(
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    ReloadOnResume(shouldReload = { viewModel.shouldReload(showId, downloadsOnly, stopEventFollows = true) }) {
+    ReloadOnResume(
+        shouldReload = { viewModel.shouldReload(showId, downloadsOnly, stopEventFollows = true) }
+    ) {
         viewModel.loadShow(showId = showId, downloadsOnly = downloadsOnly)
     }
 
@@ -127,11 +129,7 @@ fun ShowScreen(
                                 event.started,
                                 event.skipped,
                             )
-                        else ->
-                            context.getString(
-                                CoreR.string.download_started,
-                                event.started,
-                            )
+                        else -> context.getString(CoreR.string.download_started, event.started)
                     }
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
@@ -144,7 +142,15 @@ fun ShowScreen(
             when (action) {
                 is ShowAction.Play -> {
                     // CE (#626): on the Cast receiver when one is connected.
-                    if (!castPlayback.play(showId, BaseItemKind.SERIES, false, null, shuffle = false)) {
+                    if (
+                        !castPlayback.play(
+                            showId,
+                            BaseItemKind.SERIES,
+                            false,
+                            null,
+                            shuffle = false,
+                        )
+                    ) {
                         val intent = Intent(context, PlayerActivity::class.java)
                         intent.putExtra("itemId", showId.toString())
                         intent.putExtra("itemKind", BaseItemKind.SERIES.serialName)
@@ -154,7 +160,9 @@ fun ShowScreen(
                 // CE (#638): every season's episodes, Specials left out, in random order.
                 is ShowAction.Shuffle -> {
                     // On the Cast receiver when one is connected, as Play does (#626).
-                    if (!castPlayback.play(showId, BaseItemKind.SERIES, false, null, shuffle = true)) {
+                    if (
+                        !castPlayback.play(showId, BaseItemKind.SERIES, false, null, shuffle = true)
+                    ) {
                         val intent = Intent(context, PlayerActivity::class.java)
                         intent.putExtra("itemId", showId.toString())
                         intent.putExtra("itemKind", BaseItemKind.SERIES.serialName)
@@ -260,10 +268,11 @@ private fun ShowScreenLayout(
                             modifier = Modifier.copyOnLongClick(dateText),
                             style = MaterialTheme.typography.bodyMedium,
                         )
-                        val runtimeText = stringResource(
-                            CoreR.string.runtime_minutes,
-                            show.runtimeTicks.div(Constants.TICKS_PER_MINUTE),
-                        )
+                        val runtimeText =
+                            stringResource(
+                                CoreR.string.runtime_minutes,
+                                show.runtimeTicks.div(Constants.TICKS_PER_MINUTE),
+                            )
                         Text(
                             text = runtimeText,
                             modifier = Modifier.copyOnLongClick(runtimeText),
@@ -273,14 +282,14 @@ private fun ShowScreenLayout(
                             Text(
                                 text = officialRating,
                                 modifier = Modifier.copyOnLongClick(officialRating),
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                         show.communityRating?.let { communityRating ->
                             val ratingText = "%.1f".format(communityRating)
                             Row(
                                 modifier = Modifier.copyOnLongClick(ratingText),
-                                verticalAlignment = Alignment.Bottom
+                                verticalAlignment = Alignment.Bottom,
                             ) {
                                 Icon(
                                     painter = painterResource(CoreR.drawable.ic_star),
@@ -394,8 +403,7 @@ private fun ShowScreenLayout(
                     }
                     LazyRow(
                         contentPadding = PaddingValues(start = paddingStart, end = paddingEnd),
-                        horizontalArrangement =
-                            Arrangement.spacedBy(MaterialTheme.spacings.default),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.default),
                     ) {
                         items(items = state.seasons, key = { item -> item.id }) { season ->
                             ItemCard(
@@ -425,12 +433,13 @@ private fun ShowScreenLayout(
                 )
                 Spacer(Modifier.height(paddingBottom))
             }
-        } ?: run {
-            LoadingOrError(
-                error = state.error,
-                onRetryClick = { onAction(ShowAction.OnRetryClick) },
-            )
         }
+            ?: run {
+                LoadingOrError(
+                    error = state.error,
+                    onRetryClick = { onAction(ShowAction.OnRetryClick) },
+                )
+            }
 
         LightStatusBarOverArtwork(artwork.hasArtwork, rememberTopBarBackgroundAlpha(scrollState))
         ItemTopBar(

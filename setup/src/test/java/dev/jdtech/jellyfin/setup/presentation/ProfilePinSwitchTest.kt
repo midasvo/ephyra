@@ -35,16 +35,17 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * CE (#299): the profile switch, the start lock and the Profile PIN settings, on a fake server
- * with two saved users. The demo server used for device tests has one user, so the switch between
- * two profiles is only covered here.
+ * CE (#299): the profile switch, the start lock and the Profile PIN settings, on a fake server with
+ * two saved users. The demo server used for device tests has one user, so the switch between two
+ * profiles is only covered here.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfilePinSwitchTest {
     private val adult = User(id = UUID.randomUUID(), name = "Adult", serverId = "s")
     private val kid = User(id = UUID.randomUUID(), name = "Kid", serverId = "s")
     private val users = mutableMapOf(adult.id to adult, kid.id to kid)
-    private val server = Server(id = "s", name = "Home", currentServerAddressId = null, currentUserId = kid.id)
+    private val server =
+        Server(id = "s", name = "Home", currentServerAddressId = null, currentUserId = kid.id)
     private val lock = ProfileLock(fakeDao(), Dispatchers.Unconfined)
     private val repository = fakeRepository()
 

@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.presentation.setup.pin
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -179,7 +179,9 @@ private fun ProfilePinLayout(
                     supportingContent = {
                         Text(stringResource(SetupR.string.ce_profile_lock_ask_on_start_summary))
                     },
-                    trailingContent = { Switch(checked = state.pinOnStart, onCheckedChange = null) },
+                    trailingContent = {
+                        Switch(checked = state.pinOnStart, onCheckedChange = null)
+                    },
                     modifier =
                         Modifier.clickable {
                             onAction(ProfilePinSettingsAction.OnPinOnStartChange(!state.pinOnStart))

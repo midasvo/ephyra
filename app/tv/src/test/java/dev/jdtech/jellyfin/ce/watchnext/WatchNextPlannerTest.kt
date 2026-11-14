@@ -24,7 +24,12 @@ class WatchNextPlannerTest {
         )
 
     private fun program(id: Long, entry: WatchNextEntry, browsable: Boolean = true) =
-        PublishedProgram(programId = id, itemId = entry.itemId, browsable = browsable, entry = entry)
+        PublishedProgram(
+            programId = id,
+            itemId = entry.itemId,
+            browsable = browsable,
+            entry = entry,
+        )
 
     @Test
     fun `new items are inserted`() {
@@ -87,7 +92,8 @@ class WatchNextPlannerTest {
     @Test
     fun `an item the user removed from the row is not added back`() {
         val a = entry("a")
-        val plan = planWatchNext(listOf(a), listOf(program(1, a, browsable = false)), emptyMap(), now)
+        val plan =
+            planWatchNext(listOf(a), listOf(program(1, a, browsable = false)), emptyMap(), now)
 
         assertTrue(plan.inserts.isEmpty())
         assertEquals(listOf(1L), plan.deletes)
@@ -105,7 +111,12 @@ class WatchNextPlannerTest {
     @Test
     fun `a dismissed item comes back once it is watched again`() {
         val plan =
-            planWatchNext(listOf(entry("a", positionMs = 90_000)), emptyList(), mapOf("a" to 60_000L), now)
+            planWatchNext(
+                listOf(entry("a", positionMs = 90_000)),
+                emptyList(),
+                mapOf("a" to 60_000L),
+                now,
+            )
 
         assertEquals(listOf("a"), plan.inserts.map { it.itemId })
         assertTrue(plan.dismissed.isEmpty())
@@ -120,7 +131,8 @@ class WatchNextPlannerTest {
 
     @Test
     fun `a dismissal without a known position takes the current one`() {
-        val plan = planWatchNext(listOf(entry("a")), emptyList(), mapOf("a" to UNKNOWN_POSITION), now)
+        val plan =
+            planWatchNext(listOf(entry("a")), emptyList(), mapOf("a" to UNKNOWN_POSITION), now)
 
         assertTrue(plan.inserts.isEmpty())
         assertEquals(mapOf("a" to 60_000L), plan.dismissed)

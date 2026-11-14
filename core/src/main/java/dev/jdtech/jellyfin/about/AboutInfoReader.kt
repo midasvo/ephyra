@@ -38,7 +38,9 @@ object AboutInfoReader {
     private fun installerPackageName(context: Context): String? =
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName
+                context.packageManager
+                    .getInstallSourceInfo(context.packageName)
+                    .installingPackageName
             } else {
                 @Suppress("DEPRECATION")
                 context.packageManager.getInstallerPackageName(context.packageName)

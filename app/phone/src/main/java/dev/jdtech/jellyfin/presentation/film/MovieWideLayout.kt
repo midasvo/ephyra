@@ -203,7 +203,6 @@ fun MovieWideLayout(
             onHomeClick = { onAction(MovieAction.OnHomeClick) },
         )
 
-
         if (downloadQualityDialogOpen) {
             DownloadQualityDialog(
                 onSelect = { maxBitrate ->

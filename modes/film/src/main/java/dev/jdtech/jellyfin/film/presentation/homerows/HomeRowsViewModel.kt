@@ -67,8 +67,10 @@ constructor(
     private fun entry(row: HomeRowConfig): HomeRowEntry {
         val title =
             when (row.type) {
-                HomeRowType.SUGGESTIONS -> UiText.StringResource(FilmR.string.home_suggestions_title)
-                HomeRowType.CONTINUE_WATCHING -> UiText.StringResource(FilmR.string.ce_continue_watching)
+                HomeRowType.SUGGESTIONS ->
+                    UiText.StringResource(FilmR.string.home_suggestions_title)
+                HomeRowType.CONTINUE_WATCHING ->
+                    UiText.StringResource(FilmR.string.ce_continue_watching)
                 HomeRowType.NEXT_UP -> UiText.StringResource(FilmR.string.next_up)
                 HomeRowType.LATEST ->
                     UiText.StringResource(

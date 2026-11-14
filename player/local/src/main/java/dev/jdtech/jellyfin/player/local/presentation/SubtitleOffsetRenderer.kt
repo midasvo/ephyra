@@ -11,8 +11,8 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.SampleStream
 
 /**
- * CE (#619): Offsets the playback timestamp fed to ExoPlayer's subtitle [Renderer] so
- * that subtitles are shifted earlier or later without restarting playback or rebuffering.
+ * CE (#619): Offsets the playback timestamp fed to ExoPlayer's subtitle [Renderer] so that
+ * subtitles are shifted earlier or later without restarting playback or rebuffering.
  *
  * The text renderer only moves its output on when the position passes its next cue change, and
  * after a seek its stream starts at the seek position. So when the shifted position goes back (a
@@ -117,10 +117,10 @@ class SubtitleOffsetRenderer(
     }
 
     /**
-     * With a positive delay the shifted position trails the video, and the text renderer reads
-     * the end of its stream only when that position reaches the end of the item: the item would
-     * stay on its last frame for up to the delay after the video ended. The item ends when the
-     * video and audio do; the cues still due then are left out, as with a stop.
+     * With a positive delay the shifted position trails the video, and the text renderer reads the
+     * end of its stream only when that position reaches the end of the item: the item would stay on
+     * its last frame for up to the delay after the video ended. The item ends when the video and
+     * audio do; the cues still due then are left out, as with a stop.
      */
     override fun isEnded(): Boolean {
         if (super.isEnded()) return true

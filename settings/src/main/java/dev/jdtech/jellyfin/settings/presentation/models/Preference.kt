@@ -13,6 +13,7 @@ interface Preference {
     val supportedDeviceTypes: List<DeviceType>
     val supportedVariants: List<AppVariant>
         get() = supportedDeviceTypes
+
     val minSdk: Int?
         get() = null
 }

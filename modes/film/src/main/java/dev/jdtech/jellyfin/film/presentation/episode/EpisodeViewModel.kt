@@ -18,15 +18,15 @@ import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import timber.log.Timber
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.model.api.PersonKind
+import timber.log.Timber
 
 @HiltViewModel
 class EpisodeViewModel
@@ -58,13 +58,19 @@ constructor(
             _state.emit(_state.value.copy(error = null))
             try {
                 // The preference doesn't depend on the episode, so it is read while it loads.
-                val (episode, displayCastAndCrew, useEpisodeImages) = coroutineScope {
-                    val episodeAsync = async { repository.getEpisode(episodeId) }
-                    val castAsync = async { appPreferences.getValue(appPreferences.displayCastAndCrew) }
-                    val imagesAsync = async { appPreferences.getValue(appPreferences.homeEpisodeImages) }
-                    Triple(episodeAsync.await(), castAsync.await(), imagesAsync.await())
-                }
-                val videoMetadata = episode.sources.firstOrNull()?.let { videoMetadataParser.parse(it) }
+                val (episode, displayCastAndCrew, useEpisodeImages) =
+                    coroutineScope {
+                        val episodeAsync = async { repository.getEpisode(episodeId) }
+                        val castAsync = async {
+                            appPreferences.getValue(appPreferences.displayCastAndCrew)
+                        }
+                        val imagesAsync = async {
+                            appPreferences.getValue(appPreferences.homeEpisodeImages)
+                        }
+                        Triple(episodeAsync.await(), castAsync.await(), imagesAsync.await())
+                    }
+                val videoMetadata =
+                    episode.sources.firstOrNull()?.let { videoMetadataParser.parse(it) }
                 val actors = if (displayCastAndCrew) getActors(episode) else emptyList()
                 _state.emit(
                     _state.value.copy(
@@ -93,11 +99,15 @@ constructor(
     private fun setPlayed(played: Boolean) {
         viewModelScope.launch {
             try {
-                if (played) repository.markAsPlayed(episodeId) else repository.markAsUnplayed(episodeId)
+                if (played) repository.markAsPlayed(episodeId)
+                else repository.markAsUnplayed(episodeId)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e, if (played) "Failed to mark as played" else "Failed to unmark as played")
+                Timber.e(
+                    e,
+                    if (played) "Failed to mark as played" else "Failed to unmark as played",
+                )
                 return@launch
             }
             reloadPolicy.changedHere()
@@ -109,7 +119,8 @@ constructor(
     private fun setFavorite(favorite: Boolean) {
         viewModelScope.launch {
             try {
-                if (favorite) repository.markAsFavorite(episodeId) else repository.unmarkAsFavorite(episodeId)
+                if (favorite) repository.markAsFavorite(episodeId)
+                else repository.unmarkAsFavorite(episodeId)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -120,7 +131,9 @@ constructor(
                 return@launch
             }
             reloadPolicy.changedHere()
-            _state.update { state -> state.copy(episode = state.episode?.copy(favorite = favorite)) }
+            _state.update { state ->
+                state.copy(episode = state.episode?.copy(favorite = favorite))
+            }
         }
     }
 

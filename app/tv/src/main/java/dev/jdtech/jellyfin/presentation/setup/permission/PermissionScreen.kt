@@ -131,10 +131,7 @@ private fun PermissionScreenLayout(
                 modifier = Modifier.size(64.dp),
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
-            Text(
-                text = stringResource(title),
-                style = MaterialTheme.typography.displayMedium,
-            )
+            Text(text = stringResource(title), style = MaterialTheme.typography.displayMedium)
             Spacer(modifier = Modifier.height(MaterialTheme.spacings.default))
             Text(
                 text = stringResource(rationale),

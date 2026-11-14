@@ -6,8 +6,8 @@ import org.junit.Test
 
 /**
  * #462: after Home (or standby) and back, the TV player sat paused with nothing on screen. It now
- * plays again if it was playing, or shows the controls if it was paused, unless something else
- * took over the play state while the app was away.
+ * plays again if it was playing, or shows the controls if it was paused, unless something else took
+ * over the play state while the app was away.
  */
 class TvResumeOnReturnTest {
 

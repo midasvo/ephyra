@@ -16,11 +16,11 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import timber.log.Timber
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
+import timber.log.Timber
 
 @HiltViewModel
 class LoginViewModel
@@ -42,7 +42,9 @@ constructor(
             try {
                 val server = repository.getCurrentServer()
                 _state.emit(_state.value.copy(serverName = server?.name))
-            } catch (e: Exception) { Timber.e(e, "Failed to load server") }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to load server")
+            }
         }
     }
 
@@ -51,7 +53,9 @@ constructor(
             try {
                 val loginDisclaimer = repository.loadDisclaimer()
                 _state.emit(_state.value.copy(disclaimer = loginDisclaimerText(loginDisclaimer)))
-            } catch (e: Exception) { Timber.e(e, "Failed to load disclaimer") }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to load disclaimer")
+            }
         }
     }
 
@@ -60,7 +64,9 @@ constructor(
             try {
                 val isEnabled = repository.getIsQuickConnectEnabled()
                 _state.emit(_state.value.copy(quickConnectEnabled = isEnabled))
-            } catch (e: Exception) { Timber.e(e, "Failed to load quick connect status") }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to load quick connect status")
+            }
         }
     }
 
@@ -91,45 +97,42 @@ constructor(
             _state.update { it.copy(quickConnectCode = null) }
             return
         }
-        quickConnectJob =
-            viewModelScope.launch {
-                var step = QuickConnectStep.INITIATE
-                try {
-                    var quickConnectState = repository.initiateQuickConnect()
-                    // CE (#606): a new code replaces the error of the previous attempt.
-                    _state.emit(
-                        _state.value.copy(quickConnectCode = quickConnectState.code, error = null)
+        quickConnectJob = viewModelScope.launch {
+            var step = QuickConnectStep.INITIATE
+            try {
+                var quickConnectState = repository.initiateQuickConnect()
+                // CE (#606): a new code replaces the error of the previous attempt.
+                _state.emit(
+                    _state.value.copy(quickConnectCode = quickConnectState.code, error = null)
+                )
+
+                step = QuickConnectStep.POLL
+                while (!quickConnectState.authenticated) {
+                    delay(5000L)
+                    quickConnectState = repository.getQuickConnectState(quickConnectState.secret)
+                }
+
+                step = QuickConnectStep.LOGIN
+                repository.loginWithSecret(quickConnectState.secret)
+
+                _state.emit(_state.value.copy(quickConnectCode = null))
+                eventsChannel.send(LoginEvent.Success)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Quick connect failed")
+                // CE (#606): plain words, never the exception's own text.
+                val message = connectionErrorText(e) ?: quickConnectErrorText(e, step)
+                _state.update {
+                    it.copy(
+                        quickConnectCode = null,
+                        error = message,
+                        // Turned off on the server: the button would only fail again.
+                        quickConnectEnabled = it.quickConnectEnabled && !isQuickConnectOff(e, step),
                     )
-
-                    step = QuickConnectStep.POLL
-                    while (!quickConnectState.authenticated) {
-                        delay(5000L)
-                        quickConnectState =
-                            repository.getQuickConnectState(quickConnectState.secret)
-                    }
-
-                    step = QuickConnectStep.LOGIN
-                    repository.loginWithSecret(quickConnectState.secret)
-
-                    _state.emit(_state.value.copy(quickConnectCode = null))
-                    eventsChannel.send(LoginEvent.Success)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.e(e, "Quick connect failed")
-                    // CE (#606): plain words, never the exception's own text.
-                    val message = connectionErrorText(e) ?: quickConnectErrorText(e, step)
-                    _state.update {
-                        it.copy(
-                            quickConnectCode = null,
-                            error = message,
-                            // Turned off on the server: the button would only fail again.
-                            quickConnectEnabled =
-                                it.quickConnectEnabled && !isQuickConnectOff(e, step),
-                        )
-                    }
                 }
             }
+        }
     }
 
     /**

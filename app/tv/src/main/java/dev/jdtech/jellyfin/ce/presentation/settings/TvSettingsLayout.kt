@@ -97,12 +97,11 @@ fun TvSettingsLayout(
     var focused by remember { mutableStateOf<Preference?>(null) }
     var paneFocused by remember { mutableStateOf(false) }
     // A reload hands out new copies of the preferences: show the current one, by name.
-    val shown =
-        focused?.let { old ->
-            groups.firstNotNullOfOrNull { group ->
-                group.preferences.firstOrNull { it.nameStringResource == old.nameStringResource }
-            }
+    val shown = focused?.let { old ->
+        groups.firstNotNullOfOrNull { group ->
+            group.preferences.firstOrNull { it.nameStringResource == old.nameStringResource }
         }
+    }
     // The rows of all groups count on as one column, so each has a place of its own to return to.
     val firstRow = remember(groups) { groups.runningFold(0) { sum, g -> sum + g.preferences.size } }
 
@@ -154,9 +153,7 @@ fun TvSettingsLayout(
             }
             Box(
                 modifier =
-                    Modifier.weight(1f - LIST_WEIGHT).onFocusChanged {
-                        paneFocused = it.hasFocus
-                    }
+                    Modifier.weight(1f - LIST_WEIGHT).onFocusChanged { paneFocused = it.hasFocus }
             ) {
                 TvSettingsDetails(preference = shown, onAction = onAction)
             }

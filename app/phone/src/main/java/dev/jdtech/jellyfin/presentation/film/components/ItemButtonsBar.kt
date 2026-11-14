@@ -36,7 +36,6 @@ import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
-import dev.jdtech.jellyfin.utils.download.DownloadStatus
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidShow
@@ -45,9 +44,10 @@ import dev.jdtech.jellyfin.models.FindroidTrailer
 import dev.jdtech.jellyfin.models.getVersions
 import dev.jdtech.jellyfin.models.isDownloaded
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
+import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.LocalOfflineMode
 import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
-import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.utils.download.DownloadStatus
 
 @Composable
 fun ItemButtonsBar(
@@ -134,12 +134,16 @@ fun ItemButtonsBar(
                         FilledTonalIconButton(onClick = { onPlay(true) }) {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_rotate_ccw),
-                                contentDescription = stringResource(CoreR.string.play_from_beginning),
+                                contentDescription =
+                                    stringResource(CoreR.string.play_from_beginning),
                             )
                         }
                     }
                     if (onShuffleClick != null) {
-                        FilledTonalIconButton(onClick = onShuffleClick, enabled = item.canPlay && canPlay) {
+                        FilledTonalIconButton(
+                            onClick = onShuffleClick,
+                            enabled = item.canPlay && canPlay,
+                        ) {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_shuffle),
                                 contentDescription = stringResource(CoreR.string.shuffle),
@@ -167,12 +171,16 @@ fun ItemButtonsBar(
                         FilledTonalIconButton(onClick = { onPlay(true) }) {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_rotate_ccw),
-                                contentDescription = stringResource(CoreR.string.play_from_beginning),
+                                contentDescription =
+                                    stringResource(CoreR.string.play_from_beginning),
                             )
                         }
                     }
                     if (onShuffleClick != null) {
-                        FilledTonalIconButton(onClick = onShuffleClick, enabled = item.canPlay && canPlay) {
+                        FilledTonalIconButton(
+                            onClick = onShuffleClick,
+                            enabled = item.canPlay && canPlay,
+                        ) {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_shuffle),
                                 contentDescription = stringResource(CoreR.string.shuffle),
@@ -190,7 +198,8 @@ fun ItemButtonsBar(
                         ) {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_film),
-                                contentDescription = stringResource(CoreR.string.trailer_button_description),
+                                contentDescription =
+                                    stringResource(CoreR.string.trailer_button_description),
                             )
                         }
                         DropdownMenu(
@@ -239,14 +248,16 @@ fun ItemButtonsBar(
                         true -> {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_heart_filled),
-                                contentDescription = stringResource(CoreR.string.favorite_button_description),
+                                contentDescription =
+                                    stringResource(CoreR.string.favorite_button_description),
                                 tint = MaterialTheme.colorScheme.tertiary,
                             )
                         }
                         false -> {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_heart),
-                                contentDescription = stringResource(CoreR.string.favorite_button_description),
+                                contentDescription =
+                                    stringResource(CoreR.string.favorite_button_description),
                             )
                         }
                     }
@@ -256,7 +267,8 @@ fun ItemButtonsBar(
                         FilledTonalIconButton(onClick = onDownloadClick) {
                             Icon(
                                 painter = painterResource(CoreR.drawable.ic_download),
-                                contentDescription = stringResource(CoreR.string.download_button_description),
+                                contentDescription =
+                                    stringResource(CoreR.string.download_button_description),
                             )
                         }
                     }
@@ -282,7 +294,11 @@ fun ItemButtonsBar(
                     }
                 }
             }
-            if (currentDownloaderState != null && !currentDownloaderState.isDownloading && isDownloaded) {
+            if (
+                currentDownloaderState != null &&
+                    !currentDownloaderState.isDownloading &&
+                    isDownloaded
+            ) {
                 val localSource =
                     item.sources.firstOrNull {
                         it.type == FindroidSourceType.LOCAL && !it.path.endsWith(".download")
@@ -290,10 +306,9 @@ fun ItemButtonsBar(
                 if (localSource != null) {
                     val label =
                         remember(localSource.path) {
-                            val dir =
-                                storageLocations.firstOrNull { dir ->
-                                    dir != null && localSource.path.startsWith(dir.path)
-                                }
+                            val dir = storageLocations.firstOrNull { dir ->
+                                dir != null && localSource.path.startsWith(dir.path)
+                            }
                             val isExternal =
                                 dir != null && Environment.isExternalStorageRemovable(dir)
                             context.getString(
@@ -364,8 +379,7 @@ private fun ItemButtonsBarDownloadingPreview() {
     FindroidTheme {
         ItemButtonsBar(
             item = dummyEpisode,
-            downloaderState =
-                DownloaderState(status = DownloadStatus.RUNNING, progress = 0.3f),
+            downloaderState = DownloaderState(status = DownloadStatus.RUNNING, progress = 0.3f),
             onPlayClick = {},
             onMarkAsPlayedClick = {},
             onMarkAsFavoriteClick = {},

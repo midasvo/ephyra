@@ -3,9 +3,9 @@ package dev.jdtech.jellyfin.player.local.domain
 import androidx.media3.common.C
 
 /**
- * The playback stop to send for an item: [positionTicks] for the server, and the
- * [playedPercentage] that decides whether the local database resets, saves or marks it played.
- * A `null` percentage leaves the local database as it is.
+ * The playback stop to send for an item: [positionTicks] for the server, and the [playedPercentage]
+ * that decides whether the local database resets, saves or marks it played. A `null` percentage
+ * leaves the local database as it is.
  */
 data class PlaybackStopReport(val positionTicks: Long, val playedPercentage: Int?)
 

@@ -43,7 +43,9 @@ class PlaybackStopReportTest {
 
     @Test
     fun `an item left while loading before its start owes no stop`() {
-        assertNull(playbackStopReport(positionMs = 0L, durationMs = C.TIME_UNSET, startSent = false))
+        assertNull(
+            playbackStopReport(positionMs = 0L, durationMs = C.TIME_UNSET, startSent = false)
+        )
         assertNull(playbackStopReport(positionMs = 5_000L, durationMs = 0L, startSent = false))
     }
 

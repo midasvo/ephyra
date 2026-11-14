@@ -14,8 +14,8 @@ import org.robolectric.annotation.Config
 
 /**
  * #460: MPVPlayer deselects video while it has no surface and selects it again from the track
- * selection parameters when the surface comes back. That must give back exactly what was
- * selected, so background audio does not turn video on and an explicit pick is kept.
+ * selection parameters when the surface comes back. That must give back exactly what was selected,
+ * so background audio does not turn video on and an explicit pick is kept.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])

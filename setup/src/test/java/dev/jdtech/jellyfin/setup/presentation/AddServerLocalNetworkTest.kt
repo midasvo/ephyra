@@ -33,8 +33,8 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * CE (#376): with local network access denied on Android 17, Add server searched without a word
- * and answered a LAN address with "Server not found". The state now says that access is denied, the
+ * CE (#376): with local network access denied on Android 17, Add server searched without a word and
+ * answered a LAN address with "Server not found". The state now says that access is denied, the
  * search waits for it, and the error for a local address names the permission.
  */
 @OptIn(ExperimentalCoroutinesApi::class)

@@ -36,8 +36,7 @@ fun resolutionText(screen: ScreenSummary): String =
     "${screen.widthPx}×${screen.heightPx}, ${hzText(screen.refreshRateHz)}"
 
 /** `60 Hz`, `59.94 Hz`. */
-fun hzText(hz: Float): String =
-    "%.2f".format(Locale.ROOT, hz).trimEnd('0').trimEnd('.') + " Hz"
+fun hzText(hz: Float): String = "%.2f".format(Locale.ROOT, hz).trimEnd('0').trimEnd('.') + " Hz"
 
 @Composable
 fun hdrText(hdrTypes: List<String>): String =

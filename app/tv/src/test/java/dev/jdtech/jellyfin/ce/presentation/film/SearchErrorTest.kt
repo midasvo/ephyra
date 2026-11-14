@@ -31,7 +31,9 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/** A failed TV search (#417): the reason in plain words and Retry, without taking the field's focus. */
+/**
+ * A failed TV search (#417): the reason in plain words and Retry, without taking the field's focus.
+ */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class, qualifiers = "w960dp-h540dp")
 class SearchErrorTest {
@@ -69,7 +71,9 @@ class SearchErrorTest {
     fun showsThePlainReasonAndRetryAndKeepsTheField() {
         setUp()
 
-        rule.onNode(hasText("Can't reach the Jellyfin server", substring = true)).assertIsDisplayed()
+        rule
+            .onNode(hasText("Can't reach the Jellyfin server", substring = true))
+            .assertIsDisplayed()
         rule.onNode(hasText("10.0.2.2", substring = true)).assertDoesNotExist()
         rule.onNode(hasText("Connection timed out", substring = true)).assertDoesNotExist()
         rule.onNode(retry).assertIsDisplayed()
@@ -97,7 +101,8 @@ class SearchErrorTest {
         // The retry finds something: focus goes to the first result.
         state = SearchState(query = "jungle", items = movies)
         rule.waitForIdle()
-        rule.onNode(hasAnyAncestor(hasTestTag(searchCardTag(movies[0].id))) and isFocusable())
+        rule
+            .onNode(hasAnyAncestor(hasTestTag(searchCardTag(movies[0].id))) and isFocusable())
             .assertIsFocused()
     }
 

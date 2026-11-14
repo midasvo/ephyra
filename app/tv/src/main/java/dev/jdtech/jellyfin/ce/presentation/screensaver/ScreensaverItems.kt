@@ -14,9 +14,9 @@ private val screensaverKinds = listOf(BaseItemKind.MOVIE, BaseItemKind.SERIES)
 private const val SCREENSAVER_LIMIT = 100
 
 /**
- * CE (#140): the items the screensaver cycles through, all with a backdrop. "Random" lets the server
- * pick from the whole library (sorting by name and shuffling would only ever show the start of the
- * alphabet). "Recently added" keeps the newest first. Empty when loading fails.
+ * CE (#140): the items the screensaver cycles through, all with a backdrop. "Random" lets the
+ * server pick from the whole library (sorting by name and shuffling would only ever show the start
+ * of the alphabet). "Recently added" keeps the newest first. Empty when loading fails.
  */
 internal suspend fun loadScreensaverItems(
     repository: JellyfinRepository,

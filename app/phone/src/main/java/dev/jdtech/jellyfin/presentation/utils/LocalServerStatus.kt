@@ -47,7 +47,8 @@ fun showsServerBanner(): Boolean =
  */
 @Composable
 fun isServerUnreachable(error: Throwable?): Boolean {
-    val connectionError = remember(error) { error != null && LoadErrorText.isConnectionError(error) }
+    val connectionError =
+        remember(error) { error != null && LoadErrorText.isConnectionError(error) }
     return connectionError && showsServerBanner()
 }
 
@@ -59,7 +60,8 @@ fun isServerUnreachable(error: Throwable?): Boolean {
 @Composable
 fun RetryWhenServerReturns(error: Throwable?, onRetry: () -> Unit) {
     val unreachable = LocalServerStatus.current.unreachable
-    val connectionError = remember(error) { error != null && LoadErrorText.isConnectionError(error) }
+    val connectionError =
+        remember(error) { error != null && LoadErrorText.isConnectionError(error) }
     val explained = connectionError && unreachable
     val retry = remember { UnblockRetry() }
     val currentOnRetry by rememberUpdatedState(onRetry)

@@ -54,8 +54,8 @@ import kotlinx.coroutines.launch
  *
  * Each of those buzzes, through the system haptics (no vibrate permission needed).
  *
- * The tentacles are chains of points that follow the body with water drag and remember their
- * shape in the logo, so they trail behind when it moves, fan out on each stroke and ripple while it
+ * The tentacles are chains of points that follow the body with water drag and remember their shape
+ * in the logo, so they trail behind when it moves, fan out on each stroke and ripple while it
  * floats. Everything is in the logo's own units (its 160×160 viewport), y pointing down.
  */
 @Composable
@@ -193,9 +193,8 @@ private class Tentacle(
     val y = FloatArray(count)
     val px = FloatArray(count)
     val py = FloatArray(count)
-    val segment = FloatArray(count) { i ->
-        if (i == 0) 0f else (rest[i] - rest[i - 1]).getDistance()
-    }
+    val segment =
+        FloatArray(count) { i -> if (i == 0) 0f else (rest[i] - rest[i - 1]).getDistance() }
     /** Where the chain starts along its whole tentacle (0 at the bell), for the ripple. */
     val start = if (parent != null) 0.55f else 0f
     var initialized = false
@@ -338,7 +337,8 @@ private class JellyfishSim {
             nextIdleStroke = time + 4f + random.nextFloat() * 4f
         }
 
-        // The bell: a fast contraction, then a slow, bouncy relaxation that overshoots into a flare.
+        // The bell: a fast contraction, then a slow, bouncy relaxation that overshoots into a
+        // flare.
         val contracting = strokeTime < 0.13f
         val breath = 0.05f * (1f + sin(time * 2.2f))
         val target = if (contracting) strokePower else breath
@@ -474,8 +474,7 @@ private class JellyfishSim {
         val origin = tentacle.rest[0]
         val point = tentacle.rest[i]
         val along = tentacle.start + (1f - tentacle.start) * i / (tentacle.count - 1)
-        val squeezedOrigin =
-            if (tentacle.parent == null) squeezeAttach(origin) else origin
+        val squeezedOrigin = if (tentacle.parent == null) squeezeAttach(origin) else origin
         var dx = point.x - origin.x
         var dy = point.y - origin.y
         if (tentacle.curls) {
@@ -595,8 +594,8 @@ private class Bell(contraction: Float, private val time: Float) {
     private val c = contraction
 
     /**
-     * The bottom edge from [fromX] to [toX], rippling: a real bell's rim flutters, and more so on
-     * a stroke.
+     * The bottom edge from [fromX] to [toX], rippling: a real bell's rim flutters, and more so on a
+     * stroke.
      */
     private fun Path.rim(fromX: Float, toX: Float) {
         val steps = 8

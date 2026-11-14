@@ -11,15 +11,15 @@ import coil3.SingletonImageLoader
 import coil3.annotation.ExperimentalCoilApi
 import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
-import dev.jdtech.jellyfin.utils.JellyfinImageCacheStrategy
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import dagger.hilt.android.HiltAndroidApp
-import dev.jdtech.jellyfin.core.session.ServerSessionKeeper
 import dev.jdtech.jellyfin.ce.watchnext.WatchNextSync
+import dev.jdtech.jellyfin.core.session.ServerSessionKeeper
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
+import dev.jdtech.jellyfin.utils.JellyfinImageCacheStrategy
 import dev.jdtech.jellyfin.utils.JellyfinImageSizeInterceptor
 import javax.inject.Inject
 import kotlin.time.ExperimentalTime
@@ -95,8 +95,8 @@ class BaseApplication : Application(), Configuration.Provider, SingletonImageLoa
 /**
  * The TV image memory cache: [MEMORY_CACHE_PERCENT] of the app's memory, at most
  * [MEMORY_CACHE_MAX_MB]. More than Coil's default, so the Home hero's prefetched backdrops (#155),
- * about 4 MB each at 1080p, fit next to the posters on screen without pushing them out. The cap keeps
- * a box with a large heap from holding on to more than it needs.
+ * about 4 MB each at 1080p, fit next to the posters on screen without pushing them out. The cap
+ * keeps a box with a large heap from holding on to more than it needs.
  */
 internal fun imageMemoryCacheBytes(memoryClassMb: Int): Long =
     minOf(memoryClassMb * MEMORY_CACHE_PERCENT / 100, MEMORY_CACHE_MAX_MB) * 1024L * 1024
@@ -104,8 +104,8 @@ internal fun imageMemoryCacheBytes(memoryClassMb: Int): Long =
 /**
  * Sets the image disk cache to [TV_IMAGE_CACHE_SIZE_MB] while the user hasn't picked a size. The
  * Home hero prefetches screen-sized backdrops (#155), which fill the phone's 20 MB default within
- * minutes and push the posters out, so they come over the network again after a restart. Written
- * to the preference, not only used, so Settings shows the size in use.
+ * minutes and push the posters out, so they come over the network again after a restart. Written to
+ * the preference, not only used, so Settings shows the size in use.
  */
 internal fun AppPreferences.useTvImageCacheSize() {
     if (!sharedPreferences.contains(imageCacheSize.backendName)) {

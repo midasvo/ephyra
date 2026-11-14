@@ -21,7 +21,11 @@ import dev.jdtech.jellyfin.presentation.theme.spacings
 
 /** A heading above a group of [InfoRow]s. */
 @Composable
-internal fun InfoSection(title: String, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+internal fun InfoSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = title,
@@ -33,7 +37,10 @@ internal fun InfoSection(title: String, modifier: Modifier = Modifier, content: 
     }
 }
 
-/** A read-only label (none when empty) and value. It isn't focusable: the About screen fits without scrolling. */
+/**
+ * A read-only label (none when empty) and value. It isn't focusable: the About screen fits without
+ * scrolling.
+ */
 @Composable
 internal fun InfoRow(label: String, value: String, labelWidth: Dp = 136.dp) {
     Row {
@@ -54,8 +61,8 @@ internal fun InfoRow(label: String, value: String, labelWidth: Dp = 136.dp) {
 }
 
 /**
- * A focusable row for the lists that do scroll (licenses, device profile): moving focus down is what
- * scrolls a list on a TV.
+ * A focusable row for the lists that do scroll (licenses, device profile): moving focus down is
+ * what scrolls a list on a TV.
  */
 @Composable
 internal fun FocusableCard(

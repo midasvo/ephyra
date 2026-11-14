@@ -53,9 +53,9 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.OutlinedButton
 import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.ce.ui.TvSafeArea
+import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
 import dev.jdtech.jellyfin.ce.ui.rememberTvTextFieldEditing
 import dev.jdtech.jellyfin.ce.ui.tvTextFieldEditing
-import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
 import dev.jdtech.jellyfin.core.R
 import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
@@ -126,10 +126,9 @@ internal fun LoginScreenLayout(
     // below it can be read.
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
-    val scrollToEndOnFocus =
-        Modifier.onFocusChanged {
-            if (it.isFocused) scope.launch { scrollState.animateScrollTo(scrollState.maxValue) }
-        }
+    val scrollToEndOnFocus = Modifier.onFocusChanged {
+        if (it.isFocused) scope.launch { scrollState.animateScrollTo(scrollState.maxValue) }
+    }
 
     Box(modifier = Modifier.fillMaxSize().padding(TvSafeArea.paddingValues)) {
         IconButton(
@@ -311,8 +310,7 @@ internal fun LoginScreenLayout(
                                 if (state.quickConnectCode != null) {
                                     CircularProgressIndicator(
                                         color = LocalContentColor.current,
-                                        modifier =
-                                            Modifier.size(24.dp).align(Alignment.CenterStart),
+                                        modifier = Modifier.size(24.dp).align(Alignment.CenterStart),
                                     )
                                 }
                                 Text(

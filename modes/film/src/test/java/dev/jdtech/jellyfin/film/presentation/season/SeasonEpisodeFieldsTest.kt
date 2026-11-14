@@ -7,12 +7,11 @@ import org.junit.Test
 /**
  * Regression test for the missing season-level download button.
  *
- * `SeasonScreen` gates the header download button on
- * `episodes.any { it.canDownload }`, but the Jellyfin server only populates
- * `BaseItemDto.CanDownload` on `GET /Shows/{id}/Episodes` when `CanDownload`
- * is explicitly requested in `fields` (see `DtoService` server-side). If
- * [seasonEpisodeFields] drops [ItemFields.CAN_DOWNLOAD], every episode
- * reports `canDownload = false` and the button never appears.
+ * `SeasonScreen` gates the header download button on `episodes.any { it.canDownload }`, but the
+ * Jellyfin server only populates `BaseItemDto.CanDownload` on `GET /Shows/{id}/Episodes` when
+ * `CanDownload` is explicitly requested in `fields` (see `DtoService` server-side). If
+ * [seasonEpisodeFields] drops [ItemFields.CAN_DOWNLOAD], every episode reports `canDownload =
+ * false` and the button never appears.
  */
 class SeasonEpisodeFieldsTest {
 

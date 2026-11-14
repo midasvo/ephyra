@@ -17,9 +17,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * #394: Home's search button opens the search on the My media tab. Leaving that search returned
- * to My media instead of Home. The rules are the same with or without the rail beside a docked
- * search (#439); the rail only makes tab picks possible while the search is open.
+ * #394: Home's search button opens the search on the My media tab. Leaving that search returned to
+ * My media instead of Home. The rules are the same with or without the rail beside a docked search
+ * (#439); the rail only makes tab picks possible while the search is open.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)

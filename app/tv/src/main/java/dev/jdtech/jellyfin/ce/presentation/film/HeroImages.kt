@@ -58,9 +58,9 @@ internal class HeroImages(
         heroLogoUrl(item, logoWidthPx)?.let { request(it, logoWidthPx, logoHeightPx, Scale.FIT) }
 
     /**
-     * The memory cache key the hero keeps [uri] under as a backdrop, or null for none. A detail page
-     * uses it as its backdrop's placeholder: opened from Home, it shows the hero's image straight
-     * away while its own, larger one loads (#257).
+     * The memory cache key the hero keeps [uri] under as a backdrop, or null for none. A detail
+     * page uses it as its backdrop's placeholder: opened from Home, it shows the hero's image
+     * straight away while its own, larger one loads (#257).
      */
     fun backdropCacheKey(uri: Uri?): MemoryCache.Key? =
         uri?.toString()?.withImageSize(backdropWidthPx, null)?.let { MemoryCache.Key(it) }
@@ -93,8 +93,9 @@ internal class HeroImages(
     }
 
     /**
-     * Loads the images of [neighbours] into the memory cache. Prefetches for cards that are no longer
-     * near [focused] are cancelled; one for [focused] itself keeps running, as the hero waits for it.
+     * Loads the images of [neighbours] into the memory cache. Prefetches for cards that are no
+     * longer near [focused] are cancelled; one for [focused] itself keeps running, as the hero
+     * waits for it.
      */
     fun prefetch(focused: FindroidItem, neighbours: List<FindroidItem>) {
         val wanted = neighbours.flatMap { requests(it) }
@@ -145,14 +146,14 @@ internal fun rememberHeroImages(): HeroImages {
  * A detail page's full-screen backdrop. It is requested at the page's own size, with the hero's
  * smaller copy of the same image as the placeholder, so a page opened from Home doesn't show a bare
  * background while the backdrop decodes (#257), and at most [DETAIL_BACKDROP_MAX_WIDTH_PX] wide.
- * Without a hero copy in the memory cache it loads as
- * before.
+ * Without a hero copy in the memory cache it loads as before.
  */
 @Composable
 internal fun rememberDetailBackdrop(uri: Uri?): ImageRequest? {
     val context = LocalContext.current
     val images = rememberHeroImages()
-    val widthPx = LocalWindowInfo.current.containerSize.width.coerceAtMost(DETAIL_BACKDROP_MAX_WIDTH_PX)
+    val widthPx =
+        LocalWindowInfo.current.containerSize.width.coerceAtMost(DETAIL_BACKDROP_MAX_WIDTH_PX)
     return remember(uri, images, widthPx) {
         uri?.let {
             ImageRequest.Builder(context)

@@ -59,7 +59,11 @@ private fun DeviceProfileScreenLayout(info: AboutInfo?, codecs: ProbedCodecs?) {
     Column(
         modifier =
             Modifier.fillMaxSize()
-                .padding(start = TvSafeArea.horizontal, top = TvSafeArea.vertical, end = TvSafeArea.horizontal)
+                .padding(
+                    start = TvSafeArea.horizontal,
+                    top = TvSafeArea.vertical,
+                    end = TvSafeArea.horizontal,
+                )
     ) {
         Text(
             text = stringResource(SettingsR.string.about_device_profile),
@@ -99,7 +103,9 @@ private fun DeviceProfileScreenLayout(info: AboutInfo?, codecs: ProbedCodecs?) {
             listOf(
                 // The section title says what it is.
                 "" to
-                    codecs.audioCodecs.sorted().joinToString(", ", transform = ::codecName)
+                    codecs.audioCodecs
+                        .sorted()
+                        .joinToString(", ", transform = ::codecName)
                         .ifEmpty { none }
             )
 
@@ -108,11 +114,7 @@ private fun DeviceProfileScreenLayout(info: AboutInfo?, codecs: ProbedCodecs?) {
             contentPadding =
                 PaddingValues(top = MaterialTheme.spacings.default, bottom = TvSafeArea.vertical),
         ) {
-            section(
-                title = SettingsR.string.about_screen,
-                rows = screenRows,
-                firstItem = firstItem,
-            )
+            section(title = SettingsR.string.about_screen, rows = screenRows, firstItem = firstItem)
             section(title = SettingsR.string.about_video_decoders, rows = videoRows)
             if (dolbyVisionRows.isNotEmpty()) {
                 section(title = SettingsR.string.about_dolby_vision, rows = dolbyVisionRows)

@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Runs destructive actions (cancelling, removing downloads) behind an Undo snackbar instead of
- * right away. The affected ids are hidden while the snackbar shows. The action is committed
- * when the snackbar times out, when another action replaces it, or when the screen goes away.
+ * right away. The affected ids are hidden while the snackbar shows. The action is committed when
+ * the snackbar times out, when another action replaces it, or when the screen goes away.
  */
 @Stable
 class UndoController(

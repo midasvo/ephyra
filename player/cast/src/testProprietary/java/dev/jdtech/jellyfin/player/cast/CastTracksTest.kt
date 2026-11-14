@@ -118,7 +118,8 @@ class CastTracksTest {
     fun `a subtitle the receiver cannot get is neither selected nor active`() {
         // The receiver was not told about these tracks; naming one would fail the whole load.
         listOf(104, 105).forEach { trackId ->
-            val tracks = castTracks(source, base, audioStreamIndex = null, subtitleTrackId = trackId)
+            val tracks =
+                castTracks(source, base, audioStreamIndex = null, subtitleTrackId = trackId)
 
             assertTrue(tracks.subtitles.none { it.selected })
             assertEquals(emptyList<Long>(), tracks.activeTrackIds)

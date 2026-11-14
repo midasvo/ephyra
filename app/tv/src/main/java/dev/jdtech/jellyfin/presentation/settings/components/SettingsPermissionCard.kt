@@ -46,10 +46,7 @@ import dev.jdtech.jellyfin.utils.openAppSettings
 import dev.jdtech.jellyfin.utils.shouldShowPermissionRationale
 
 @Composable
-fun SettingsPermissionCard(
-    preference: PreferencePermission,
-    modifier: Modifier = Modifier,
-) {
+fun SettingsPermissionCard(preference: PreferencePermission, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var isGranted by remember {
         mutableStateOf(isPermissionGranted(context, preference.permission))

@@ -48,8 +48,8 @@ import dev.jdtech.jellyfin.presentation.theme.spacings
  * has focus ([playNowFocus]), so OK plays the next episode and Back (handled by the screen's key
  * handler) cancels; with the overlay shown it sits above it, reachable with Up.
  *
- * VISION: a 16 dp surface, a 12 dp thumbnail, pill buttons with the Ephyra focus ring. The countdown
- * is alive, so its text and bar are `primary`.
+ * VISION: a 16 dp surface, a 12 dp thumbnail, pill buttons with the Ephyra focus ring. The
+ * countdown is alive, so its text and bar are `primary`.
  */
 @Composable
 internal fun TvUpNextCard(
@@ -158,9 +158,6 @@ private fun CountdownBar(fraction: Float, modifier: Modifier = Modifier) {
         )
     Box(
         modifier =
-            modifier
-                .fillMaxWidth(shown)
-                .height(4.dp)
-                .background(MaterialTheme.colorScheme.primary)
+            modifier.fillMaxWidth(shown).height(4.dp).background(MaterialTheme.colorScheme.primary)
     )
 }

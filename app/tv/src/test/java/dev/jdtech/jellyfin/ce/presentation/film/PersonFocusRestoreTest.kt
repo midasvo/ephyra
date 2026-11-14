@@ -10,14 +10,12 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performKeyInput
-import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
@@ -34,9 +32,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-/**
- * "Open → Back → same card focused" for the CE person screen (#136, ADR 0003).
- */
+/** "Open → Back → same card focused" for the CE person screen (#136, ADR 0003). */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class, qualifiers = "w1920dp-h1080dp")
 class PersonFocusRestoreTest {

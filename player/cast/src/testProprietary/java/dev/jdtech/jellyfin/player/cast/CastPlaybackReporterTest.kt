@@ -105,7 +105,10 @@ class CastPlaybackReporterTest {
         startA()
         now = 4_000L
 
-        assertEquals(listOf(CastReport.Progress(a, 4_000L, isPaused = true)), status(PAUSED, 4_000L))
+        assertEquals(
+            listOf(CastReport.Progress(a, 4_000L, isPaused = true)),
+            status(PAUSED, 4_000L),
+        )
         now = 4_100L
         assertEquals(none, status(PAUSED, 4_000L))
         now = 60_000L
@@ -415,11 +418,11 @@ class CastPlaybackReporterTest {
 
         // No seek: item b started at 0 just now.
         now = 601_000L
-        assertEquals(none, reporter.statusChanged(state(PLAYING, 1_000L, receiver = b, current = b)))
         assertEquals(
-            listOf(CastReport.Stop(b, 1_000L, playedPercentage = null)),
-            reporter.stop(),
+            none,
+            reporter.statusChanged(state(PLAYING, 1_000L, receiver = b, current = b)),
         )
+        assertEquals(listOf(CastReport.Stop(b, 1_000L, playedPercentage = null)), reporter.stop())
     }
 
     @Test
