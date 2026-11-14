@@ -20,8 +20,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jellyfin.sdk.api.client.ApiClient
 import org.jellyfin.sdk.api.client.exception.InvalidStatusException
+import org.jellyfin.sdk.api.client.extensions.libraryApi
 import org.jellyfin.sdk.api.client.extensions.sessionApi
 import org.jellyfin.sdk.api.client.extensions.userDataApi
+import org.jellyfin.sdk.model.api.BaseItemDto
 import org.jellyfin.sdk.model.api.PlaybackStopInfo
 import org.jellyfin.sdk.model.api.UpdateUserItemDataDto
 import timber.log.Timber
@@ -117,6 +119,21 @@ constructor(
             ?.id
     }
 
+    /**
+     * CE (#633): the server's user data of [itemIds], one request per [USER_DATA_BATCH_SIZE]
+     * items. Items the server does not return (deleted there) are missing from the map.
+     */
+    private suspend fun fetchServerUserData(
+        api: ApiClient,
+        userId: UUID,
+        itemIds: List<UUID>,
+    ): Map<UUID, ServerUserData> =
+        itemIds.chunked(USER_DATA_BATCH_SIZE).fold(emptyMap()) { found, batch ->
+            val items =
+                api.libraryApi.getItems(userId = userId, ids = batch, enableUserData = true).content.items
+            found + serverUserDataOf(items)
+        }
+
     private suspend fun syncUserData(
         api: ApiClient,
         userId: UUID,
@@ -135,6 +152,20 @@ constructor(
             } catch (e: Exception) {
                 Timber.e(e, "Failed to sync user data: the server was not reached")
                 return false
+            }
+
+        // CE (#633): what the server has now, so a row only sends its LastPlayedDate when it is
+        // newer: another device that watched the item later keeps it at the top of Continue
+        // Watching. Read before anything is sent, also before a stale session's stop below, which
+        // sets the server's date to now. Without an answer the date is sent, as before.
+        val onServer =
+            try {
+                fetchServerUserData(api, userId, items.map { it.itemId })
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "Could not read the server's user data before sending")
+                emptyMap()
             }
 
         var allOk = true
@@ -169,7 +200,12 @@ constructor(
                             played = userData.played,
                             // CE (#633): moves the item up in Continue Watching on every device.
                             // Null leaves the server's date as it is.
-                            lastPlayedDate = userData.lastPlayedDate?.let(::localDateTimeOf),
+                            lastPlayedDate =
+                                userData.lastPlayedDate
+                                    ?.takeIf {
+                                        isNewerThanServer(it, onServer[userData.itemId]?.lastPlayedDate)
+                                    }
+                                    ?.let(::localDateTimeOf),
                         ),
                 )
 
@@ -214,6 +250,39 @@ constructor(
     }
 }
 
+/** CE (#633): the server's user data of one item, as the sync compares it with the local row. */
+internal data class ServerUserData(
+    val itemId: UUID,
+    val played: Boolean,
+    val favorite: Boolean,
+    val playbackPositionTicks: Long,
+    /** Epoch milliseconds, null when the server has none. */
+    val lastPlayedDate: Long?,
+)
+
+/** CE (#633): the user data of [items] by item id; items without user data are left out. */
+internal fun serverUserDataOf(items: List<BaseItemDto>): Map<UUID, ServerUserData> =
+    items
+        .mapNotNull { item ->
+            val userData = item.userData ?: return@mapNotNull null
+            ServerUserData(
+                itemId = item.id,
+                played = userData.played,
+                favorite = userData.isFavorite,
+                playbackPositionTicks = userData.playbackPositionTicks,
+                lastPlayedDate = userData.lastPlayedDate?.let { epochMillisOf(it) },
+            )
+        }
+        .associateBy { it.itemId }
+
+/**
+ * CE (#633): whether a local last-played time [local] is newer than the server's [server], both in
+ * epoch milliseconds. Unknown locally is never newer; unknown on the server is always older. An
+ * equal time is not newer: there is nothing to move.
+ */
+internal fun isNewerThanServer(local: Long?, server: Long?): Boolean =
+    local != null && (server == null || local > server)
+
 /**
  * CE (#633): the SDK reads and writes dates as local date-times of this device's time zone, and
  * the database keeps epoch milliseconds, which do not depend on it.
@@ -256,6 +325,9 @@ internal fun needsAnotherRun(
     sent: List<FindroidUserDataDto>,
     stillMarked: List<FindroidUserDataDto>,
 ): Boolean = stillMarked.any { it !in sent }
+
+/** CE (#633): items per request when reading the server's user data, to keep the URL short. */
+private const val USER_DATA_BATCH_SIZE = 100
 
 private const val HTTP_NOT_FOUND = 404
 private const val HTTP_SERVER_ERROR = 500
