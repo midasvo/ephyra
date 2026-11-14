@@ -20,3 +20,4 @@ Ephyra collects nothing and only talks to the Jellyfin servers the user adds.
 - [Changelog](https://github.com/midasvo/ephyra/blob/main/CHANGELOG.md)
 - [Privacy policy](https://midasvo.nl/ephyra/privacy.html)
 - [Findroid](https://github.com/jarnedemeulemeester/findroid): the app Ephyra is forked from
+- [libmpv for Android](https://midasvo.nl/libmpv-android/): Ephyra's own build of mpv and FFmpeg, used by its mpv player
