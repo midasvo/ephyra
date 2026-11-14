@@ -11,6 +11,9 @@ import dev.jdtech.jellyfin.core.presentation.downloader.SmartDownloads
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.FindroidUserDataDto
 import dev.jdtech.jellyfin.repository.PlaybackEvents
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -164,6 +167,9 @@ constructor(
                             playbackPositionTicks = userData.playbackPositionTicks,
                             isFavorite = userData.favorite,
                             played = userData.played,
+                            // CE (#633): moves the item up in Continue Watching on every device.
+                            // Null leaves the server's date as it is.
+                            lastPlayedDate = userData.lastPlayedDate?.let(::localDateTimeOf),
                         ),
                 )
 
@@ -173,6 +179,7 @@ constructor(
                     played = userData.played,
                     favorite = userData.favorite,
                     playbackPositionTicks = userData.playbackPositionTicks,
+                    lastPlayedDate = userData.lastPlayedDate,
                 )
                 // A row kept only for this sync, because its download was deleted first.
                 database.deleteUserDataIfOrphaned(userId, userData.itemId)
@@ -206,6 +213,17 @@ constructor(
         return allOk
     }
 }
+
+/**
+ * CE (#633): the SDK reads and writes dates as local date-times of this device's time zone, and
+ * the database keeps epoch milliseconds, which do not depend on it.
+ */
+internal fun localDateTimeOf(epochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): LocalDateTime =
+    LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), zone)
+
+/** CE (#633): the reverse of [localDateTimeOf]. */
+internal fun epochMillisOf(dateTime: LocalDateTime, zone: ZoneId = ZoneId.systemDefault()): Long =
+    dateTime.atZone(zone).toInstant().toEpochMilli()
 
 /**
  * Whether the sync of [rowItemId] has to end a playback session first: the server still has the

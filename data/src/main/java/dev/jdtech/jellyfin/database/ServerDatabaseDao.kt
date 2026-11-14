@@ -233,6 +233,22 @@ interface ServerDatabaseDao {
     @Query("UPDATE userdata SET favorite = :favorite WHERE userId = :userId AND itemId = :itemId")
     suspend fun setFavorite(userId: UUID, itemId: UUID, favorite: Boolean)
 
+    /** CE (#633): when the item was last played, in epoch milliseconds; null when unknown. */
+    @Query(
+        "UPDATE userdata SET lastPlayedDate = :lastPlayedDate WHERE userId = :userId AND itemId = :itemId"
+    )
+    suspend fun setLastPlayedDate(userId: UUID, itemId: UUID, lastPlayedDate: Long?)
+
+    /**
+     * CE (#633): sets when the item was last played only when that is unknown, as the server does
+     * when an item is marked played without a date.
+     */
+    @Query(
+        "UPDATE userdata SET lastPlayedDate = COALESCE(lastPlayedDate, :now) " +
+            "WHERE userId = :userId AND itemId = :itemId"
+    )
+    suspend fun setLastPlayedDateIfUnknown(userId: UUID, itemId: UUID, now: Long)
+
     @Query("SELECT * FROM movies ORDER BY name ASC") suspend fun getMovies(): List<FindroidMovieDto>
 
     @Query("SELECT * FROM movies WHERE serverId = :serverId ORDER BY name ASC")
@@ -429,7 +445,8 @@ interface ServerDatabaseDao {
     @Query(
         "UPDATE userdata SET toBeSynced = 0 WHERE itemId = :itemId AND userId = :userId " +
             "AND played = :played AND favorite = :favorite " +
-            "AND playbackPositionTicks = :playbackPositionTicks"
+            "AND playbackPositionTicks = :playbackPositionTicks " +
+            "AND lastPlayedDate IS :lastPlayedDate"
     )
     suspend fun clearUserDataToBeSynced(
         userId: UUID,
@@ -437,6 +454,7 @@ interface ServerDatabaseDao {
         played: Boolean,
         favorite: Boolean,
         playbackPositionTicks: Long,
+        lastPlayedDate: Long?,
     )
 
     @Query("SELECT * FROM movies WHERE serverId = :serverId AND name LIKE '%' || :name || '%'")
