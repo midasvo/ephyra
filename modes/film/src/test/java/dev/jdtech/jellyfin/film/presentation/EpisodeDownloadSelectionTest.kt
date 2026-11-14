@@ -50,6 +50,32 @@ class EpisodeDownloadSelectionTest {
         assertEquals(1, selection.skipped)
     }
 
+    @Test
+    fun `prompts ask the quality, then hand over the download`() {
+        val episodes = List(2) { episode(canDownload = true) }
+        val prompts = EpisodeDownloadPrompts()
+
+        prompts.start(episodes)
+        assertEquals(DownloadPrompt.Quality, prompts.prompt.value)
+
+        assertEquals(
+            EpisodeDownloadPrompts.Answer(episodes, 4_000_000),
+            prompts.chooseQuality(maxBitrate = 4_000_000),
+        )
+        assertEquals(null, prompts.prompt.value)
+    }
+
+    @Test
+    fun `dismissing the prompts downloads nothing`() {
+        val prompts = EpisodeDownloadPrompts()
+        prompts.start(listOf(episode(canDownload = true)))
+
+        prompts.dismiss()
+
+        assertEquals(null, prompts.prompt.value)
+        assertEquals(null, prompts.chooseQuality(maxBitrate = null))
+    }
+
     private fun episode(canDownload: Boolean, downloaded: Boolean = false) =
         FindroidEpisode(
             id = UUID.randomUUID(),

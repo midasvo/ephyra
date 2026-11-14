@@ -49,6 +49,7 @@ import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadStatus
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloaderState
 import dev.jdtech.jellyfin.core.presentation.dummy.dummySeason
+import dev.jdtech.jellyfin.film.presentation.DownloadPrompt
 import dev.jdtech.jellyfin.film.presentation.season.SeasonAction
 import dev.jdtech.jellyfin.film.presentation.season.SeasonEvent
 import dev.jdtech.jellyfin.film.presentation.season.SeasonState
@@ -178,6 +179,17 @@ fun SeasonScreen(
         viewModel.onAction(action)
     }
 
+    // CE (#636): the questions of a season download, shared by the phone and wide layouts.
+    val downloadPrompt by viewModel.downloadPrompt.collectAsStateWithLifecycle()
+    when (downloadPrompt) {
+        DownloadPrompt.Quality ->
+            DownloadQualityDialog(
+                onSelect = { maxBitrate -> viewModel.chooseQuality(maxBitrate) },
+                onDismiss = { viewModel.dismissDownloadPrompt() },
+            )
+        null -> Unit
+    }
+
     // CE: expanded windows show the season as list-detail (docs/tablet/4-design.md §7).
     if (useSeasonListDetail()) {
         SeasonListDetail(
@@ -186,7 +198,7 @@ fun SeasonScreen(
             onSelectEpisode = { selectedEpisodeId = it },
             lazyListState = episodeListState,
             onAction = onAction,
-            onDownloadSeason = { maxBitrate -> viewModel.downloadSeason(maxBitrate) },
+            onDownloadSeason = { viewModel.downloadSeason() },
             onDeleteSeasonDownloads = { viewModel.deleteSeasonDownloads() },
             onReloadSeason = {
                 viewModel.loadSeason(
@@ -203,7 +215,7 @@ fun SeasonScreen(
     SeasonScreenLayout(
         state = state,
         onAction = onAction,
-        onDownloadSeason = { maxBitrate -> viewModel.downloadSeason(maxBitrate) },
+        onDownloadSeason = { viewModel.downloadSeason() },
         onDeleteSeasonDownloads = { viewModel.deleteSeasonDownloads() },
         lazyListState = episodeListState,
     )
@@ -213,7 +225,7 @@ fun SeasonScreen(
 private fun SeasonScreenLayout(
     state: SeasonState,
     onAction: (SeasonAction) -> Unit,
-    onDownloadSeason: (maxBitrate: Int?) -> Unit,
+    onDownloadSeason: () -> Unit,
     onDeleteSeasonDownloads: () -> Unit,
     lazyListState: LazyListState = rememberLazyListState(),
 ) {
@@ -224,7 +236,6 @@ private fun SeasonScreenLayout(
     val paddingEnd = safePadding.end + MaterialTheme.spacings.default
     val paddingBottom = safePadding.bottom + MaterialTheme.spacings.default
 
-    var seasonQualityDialogOpen by remember { mutableStateOf(false) }
     var episodeQualityTarget by remember { mutableStateOf<FindroidEpisode?>(null) }
 
     // Removing a download is deferred behind an Undo snackbar. Until it resolves the episode
@@ -326,7 +337,7 @@ private fun SeasonScreenLayout(
                             }
                         },
                         onTrailerClick = {},
-                        onDownloadClick = { seasonQualityDialogOpen = true },
+                        onDownloadClick = onDownloadSeason,
                         onDownloadCancelClick = {},
                         onDownloadDeleteClick = onDeleteSeasonDownloads,
                         modifier =
@@ -453,15 +464,6 @@ private fun SeasonScreenLayout(
             }
         }
 
-        if (seasonQualityDialogOpen) {
-            DownloadQualityDialog(
-                onSelect = { maxBitrate ->
-                    onDownloadSeason(maxBitrate)
-                    seasonQualityDialogOpen = false
-                },
-                onDismiss = { seasonQualityDialogOpen = false },
-            )
-        }
         episodeQualityTarget?.let { episode ->
             DownloadQualityDialog(
                 onSelect = { maxBitrate ->
