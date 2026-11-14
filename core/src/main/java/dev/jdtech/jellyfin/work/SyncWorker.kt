@@ -46,7 +46,7 @@ constructor(
         return withContext(Dispatchers.IO) {
             val servers = database.getServers()
             var hadFailures = false
-            var reachedServer = false
+            var changed = false
 
             for (server in servers) {
                 val serverWithAddressesAndUsers =
@@ -73,10 +73,12 @@ constructor(
                     if (pending.isNotEmpty()) {
                         val outcome = syncUserData(api, user.id, pending)
                         if (!outcome.allOk) ok = false
-                        if (outcome.sent > 0) reachedServer = true
+                        if (outcome.sent > 0 || outcome.tookServer > 0) changed = true
                     }
                     // CE (#635): after sending, so the server's values include what was just sent.
-                    if (ok && refresh) refreshFromServer(api, server.id, user.id)
+                    if (ok && refresh && refreshFromServer(api, server.id, user.id) > 0) {
+                        changed = true
+                    }
                     // A write that failed while this run was sending keeps its row marked, and
                     // asking for a sync during a run does nothing: run again for those. CE (#635):
                     // also for a row marked during a run that only refreshed.
@@ -86,9 +88,10 @@ constructor(
                 }
             }
 
-            // CE (#633): what the server shows changed (Continue Watching, positions), so the
+            // CE (#633): what the screens show changed (Continue Watching, positions), so the
             // screen on display reloads, as after a playback stop. Also after a partly failed run.
-            if (reachedServer) dataChanges.onSynced()
+            // CE (#635): also when the server's progress replaced a row here.
+            if (changed) dataChanges.onSynced()
 
             if (hadFailures) {
                 Result.retry()
@@ -158,8 +161,11 @@ constructor(
             found + serverUserDataOf(items)
         }
 
-    /** CE (#633): how a run for one user went: whether to retry, and how many rows were sent. */
-    private data class SyncOutcome(val allOk: Boolean, val sent: Int)
+    /**
+     * CE (#633): how a run for one user went: whether to retry, and how many rows were sent. CE
+     * (#635): and how many rows took the server's newer progress instead.
+     */
+    private data class SyncOutcome(val allOk: Boolean, val sent: Int, val tookServer: Int = 0)
 
     /**
      * CE (#635): copies the server's user data into the rows of [userId]'s downloads from
@@ -167,29 +173,33 @@ constructor(
      * where it was when it was downloaded. Uses [fetchServerUserData] (#633).
      *
      * Rows waiting to be sent are never touched, see [ServerDatabaseDao.refreshUserDataFromServer].
-     * A failure only leaves the rows as they were, so it does not make the sync retry.
+     * A failure only leaves the rows as they were, so it does not make the sync retry. Returns how
+     * many rows changed.
      */
-    private suspend fun refreshFromServer(api: ApiClient, serverId: String, userId: UUID) {
+    private suspend fun refreshFromServer(api: ApiClient, serverId: String, userId: UUID): Int {
         val itemIds = database.getSyncedUserDataItemIds(serverId, userId)
-        if (itemIds.isEmpty()) return
+        if (itemIds.isEmpty()) return 0
+        var changed = 0
         try {
             val onServer = fetchServerUserData(api, userId, itemIds)
             for (userData in serverUserDataToStore(onServer, playbackEvents.playingItemId.value)) {
-                database.refreshUserDataFromServer(
-                    userId = userId,
-                    itemId = userData.itemId,
-                    played = userData.played,
-                    favorite = userData.favorite,
-                    playbackPositionTicks = userData.playbackPositionTicks,
-                    lastPlayedDate = userData.lastPlayedDate,
-                )
+                changed +=
+                    database.refreshUserDataFromServer(
+                        userId = userId,
+                        itemId = userData.itemId,
+                        played = userData.played,
+                        favorite = userData.favorite,
+                        playbackPositionTicks = userData.playbackPositionTicks,
+                        lastPlayedDate = userData.lastPlayedDate,
+                    )
             }
-            Timber.d("Refreshed the user data of ${itemIds.size} downloads from the server")
+            Timber.d("Refreshed the user data of ${itemIds.size} downloads, $changed changed")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Timber.w(e, "Could not refresh the user data of downloads from the server")
         }
+        return changed
     }
 
     /**
@@ -197,7 +207,8 @@ constructor(
      * so the server's progress wins: it is copied into the row and nothing of the phone's progress
      * is sent. A favourite changed here is still sent, on its own. A session the server still has
      * playing for this device is ended at the server's own position, or its idle check would end it
-     * later with the position it last heard from here (#584).
+     * later with the position it last heard from here (#584). Returns whether the row took the
+     * server's progress.
      */
     private suspend fun keepServerProgress(
         api: ApiClient,
@@ -205,7 +216,7 @@ constructor(
         row: FindroidUserDataDto,
         server: ServerUserData,
         leftPlaying: UUID?,
-    ) {
+    ): Boolean {
         Timber.d("Item ${row.itemId} was played later elsewhere, keeping the server's progress")
         if (endsStaleSession(row.itemId, leftPlaying, playbackEvents.playingItemId.value)) {
             api.sessionApi.reportPlaybackStopped(
@@ -223,18 +234,20 @@ constructor(
                 data = UpdateUserItemDataDto(isFavorite = row.favorite),
             )
         }
-        database.takeServerProgress(
-            userId = userId,
-            itemId = row.itemId,
-            played = server.played,
-            playbackPositionTicks = server.playbackPositionTicks,
-            lastPlayedDate = server.lastPlayedDate,
-            sentPlayed = row.played,
-            sentFavorite = row.favorite,
-            sentPlaybackPositionTicks = row.playbackPositionTicks,
-            sentLastPlayedDate = row.lastPlayedDate,
-        )
+        val took =
+            database.takeServerProgress(
+                userId = userId,
+                itemId = row.itemId,
+                played = server.played,
+                playbackPositionTicks = server.playbackPositionTicks,
+                lastPlayedDate = server.lastPlayedDate,
+                sentPlayed = row.played,
+                sentFavorite = row.favorite,
+                sentPlaybackPositionTicks = row.playbackPositionTicks,
+                sentLastPlayedDate = row.lastPlayedDate,
+            ) > 0
         database.deleteUserDataIfOrphaned(userId, row.itemId)
+        return took
     }
 
     private suspend fun syncUserData(
@@ -274,13 +287,14 @@ constructor(
 
         var allOk = true
         var sent = 0
+        var tookServer = 0
         for (userData in items) {
             try {
                 val server = onServer[userData.itemId]
                 if (
                     server != null && serverIsNewer(userData.lastPlayedDate, server.lastPlayedDate)
                 ) {
-                    keepServerProgress(api, userId, userData, server, leftPlaying)
+                    if (keepServerProgress(api, userId, userData, server, leftPlaying)) tookServer++
                     continue
                 }
 
@@ -360,10 +374,10 @@ constructor(
                 // The server was not reached: the other rows would fail the same way, each after
                 // its own timeout.
                 Timber.e(e, "Failed to sync user data, leaving the rest for the next run")
-                return SyncOutcome(allOk = false, sent = sent)
+                return SyncOutcome(allOk = false, sent = sent, tookServer = tookServer)
             }
         }
-        return SyncOutcome(allOk = allOk, sent = sent)
+        return SyncOutcome(allOk = allOk, sent = sent, tookServer = tookServer)
     }
 }
 

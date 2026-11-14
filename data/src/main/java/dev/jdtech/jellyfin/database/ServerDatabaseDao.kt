@@ -477,12 +477,16 @@ interface ServerDatabaseDao {
     /**
      * CE (#635): writes the server's user data into a downloaded item's row, so it resumes offline
      * where it was left on any device. A row marked to be sent in the meantime keeps its own
-     * values: the condition is in the update itself, so no write can slip in between.
+     * values: the condition is in the update itself, so no write can slip in between. Returns 1
+     * when the row changed, 0 when it already held these values or is marked.
      */
     @Query(
         "UPDATE userdata SET played = :played, favorite = :favorite, " +
             "playbackPositionTicks = :playbackPositionTicks, lastPlayedDate = :lastPlayedDate " +
-            "WHERE userId = :userId AND itemId = :itemId AND toBeSynced = 0"
+            "WHERE userId = :userId AND itemId = :itemId AND toBeSynced = 0 " +
+            "AND (played != :played OR favorite != :favorite " +
+            "OR playbackPositionTicks != :playbackPositionTicks " +
+            "OR lastPlayedDate IS NOT :lastPlayedDate)"
     )
     suspend fun refreshUserDataFromServer(
         userId: UUID,
@@ -491,7 +495,7 @@ interface ServerDatabaseDao {
         favorite: Boolean,
         playbackPositionTicks: Long,
         lastPlayedDate: Long?,
-    )
+    ): Int
 
     /**
      * CE (#635): another device played the item after this one did, so its progress replaces the

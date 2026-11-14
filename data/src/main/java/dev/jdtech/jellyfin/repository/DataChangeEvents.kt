@@ -36,7 +36,8 @@ class DataChangeEvents {
     /**
      * CE (#633): emits when the sync has sent progress watched offline to the server. What the
      * server shows (Continue Watching, Next Up, positions) changed without this screen knowing, so
-     * the screen on display reloads, as it does after a playback stop.
+     * the screen on display reloads, as it does after a playback stop. CE (#635): also when the
+     * server's progress replaced the progress stored here, which offline screens show.
      */
     val synced: SharedFlow<Unit> = _synced.asSharedFlow()
 

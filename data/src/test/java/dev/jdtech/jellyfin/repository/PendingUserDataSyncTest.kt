@@ -321,6 +321,46 @@ class PendingUserDataSyncTest {
     }
 
     @Test
+    fun `a refresh counts only rows it changed`() = runBlocking {
+        storeMovie(positionTicks = 600_000_000L)
+        database.setLastPlayedDate(userId, movieId, 1_000L)
+
+        suspend fun refresh(positionTicks: Long, lastPlayedDate: Long?) =
+            database.refreshUserDataFromServer(
+                userId = userId,
+                itemId = movieId,
+                played = false,
+                favorite = false,
+                playbackPositionTicks = positionTicks,
+                lastPlayedDate = lastPlayedDate,
+            )
+
+        // CE (#635): the same values change nothing, so the screen on display is not reloaded.
+        assertEquals(0, refresh(600_000_000L, 1_000L))
+        assertEquals(1, refresh(900_000_000L, 2_000L))
+        assertEquals(1, refresh(900_000_000L, null))
+        assertEquals(900_000_000L, database.getUserData(movieId, userId)!!.playbackPositionTicks)
+    }
+
+    @Test
+    fun `a refresh leaves a marked row alone`() = runBlocking {
+        storeMovie(positionTicks = 600_000_000L, toBeSynced = true)
+
+        val changed =
+            database.refreshUserDataFromServer(
+                userId = userId,
+                itemId = movieId,
+                played = true,
+                favorite = false,
+                playbackPositionTicks = 0L,
+                lastPlayedDate = 2_000L,
+            )
+
+        assertEquals(0, changed)
+        assertEquals(600_000_000L, pending().single().playbackPositionTicks)
+    }
+
+    @Test
     fun `a write and its mark go together`() = runBlocking {
         storeMovie()
 
