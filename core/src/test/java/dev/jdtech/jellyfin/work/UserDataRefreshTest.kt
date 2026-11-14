@@ -50,6 +50,13 @@ class UserDataRefreshTest {
         assertTrue(refreshDue(lastAt = 1_000L, now = 1_000L + INTERVAL, intervalMillis = INTERVAL))
     }
 
+    @Test
+    fun `a run refreshes the downloads only while nothing is playing here`() {
+        assertTrue(refreshesDownloads(hasDownloads = true, playingHere = null))
+        assertFalse(refreshesDownloads(hasDownloads = true, playingHere = UUID.randomUUID()))
+        assertFalse(refreshesDownloads(hasDownloads = false, playingHere = null))
+    }
+
     private fun serverUserData(
         positionTicks: Long,
         favorite: Boolean = false,

@@ -60,9 +60,13 @@ constructor(
                     // the server may have moved on: without either, no item is loaded, no client
                     // is built and no request is made (#250).
                     val pending = database.getAllUserDataToBeSynced(server.id, user.id)
-                    val hasDownloads =
-                        database.getSyncedUserDataItemIds(server.id, user.id).isNotEmpty()
-                    if (pending.isEmpty() && !hasDownloads) continue
+                    val refresh =
+                        refreshesDownloads(
+                            hasDownloads =
+                                database.getSyncedUserDataItemIds(server.id, user.id).isNotEmpty(),
+                            playingHere = playbackEvents.playingItemId.value,
+                        )
+                    if (pending.isEmpty() && !refresh) continue
 
                     val api = apiFor(serverAddress.address, user.accessToken, user.id)
                     var ok = true
@@ -82,7 +86,7 @@ constructor(
                         continue
                     }
                     // CE (#635): after sending, so the server's values include what was just sent.
-                    refreshFromServer(api, server.id, user.id)
+                    if (refresh) refreshFromServer(api, server.id, user.id)
                 }
             }
 
@@ -434,6 +438,16 @@ internal fun serverUserDataToStore(
     onServer: Map<UUID, ServerUserData>,
     playingHere: UUID?,
 ): List<ServerUserData> = onServer.values.filter { it.itemId != playingHere }
+
+/**
+ * CE (#635): whether a run refreshes the downloads' user data from the server: only with downloads,
+ * and not while the player here has an item open ([playingHere]). In Offline Mode every progress
+ * report is synced, every few seconds, and a refresh then would read the server each time for
+ * nothing. The player is closed before it reports the stop, so the run that sends the stop
+ * refreshes.
+ */
+internal fun refreshesDownloads(hasDownloads: Boolean, playingHere: UUID?): Boolean =
+    hasDownloads && playingHere == null
 
 /**
  * Whether the sync of [rowItemId] has to end a playback session first: the server still has the
