@@ -8,10 +8,12 @@ import dev.jdtech.jellyfin.models.FindroidSourceType
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.lang.reflect.Proxy
 import java.util.UUID
+import kotlin.random.Random
 import dev.jdtech.jellyfin.models.FindroidChapter
 import kotlinx.coroutines.runBlocking
 import org.jellyfin.sdk.model.api.BaseItemKind
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -157,7 +159,7 @@ class PlaylistManagerShuffleTest {
         val inSeason = List(10) { episode(season1, it + 1) }.map { it.copy(playbackPositionTicks = 50000000L) }
         val showMap = mapOf(season1 to inSeason, season2 to listOf(episode(season2, 1)))
 
-        val manager = PlaylistManager(fakeRepository(showMap))
+        val manager = PlaylistManager(fakeRepository(showMap)).apply { random = Random(638) }
         val initialItem =
             runBlocking {
                 manager.getInitialItem(
@@ -172,6 +174,8 @@ class PlaylistManagerShuffleTest {
         val queued = listOf(initialItem.itemId) + manager.upcomingItems().map { it.id }
         assertEquals(inSeason.map { it.id }.toSet(), queued.toSet())
         assertEquals(inSeason.size, queued.size)
+        // The seeded order differs from the season's own, so the queue really is shuffled.
+        assertNotEquals(inSeason.map { it.id }, queued)
     }
 
     @Test

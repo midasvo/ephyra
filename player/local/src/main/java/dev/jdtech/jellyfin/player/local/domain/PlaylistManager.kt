@@ -16,6 +16,7 @@ import dev.jdtech.jellyfin.player.core.domain.models.ServerAudioTrack
 import dev.jdtech.jellyfin.player.core.domain.models.TrickplayInfo
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.util.UUID
+import kotlin.random.Random
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -29,6 +30,9 @@ import timber.log.Timber
 class PlaylistManager @Inject internal constructor(private val repository: JellyfinRepository) {
     private var startItem: FindroidItem? = null
     private var items: List<FindroidItem> = emptyList()
+
+    /** CE (#638): the order of a shuffle; tests set a seeded one. */
+    internal var random: Random = Random.Default
 
     /** CE (#638): a queue in random order does not go on with the next season at its end. */
     private var shuffled = false
@@ -129,7 +133,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                                 .getEpisodes(seriesId = itemId, seasonId = null)
                                 .filter { !it.missing }
                         val episodes =
-                            all.filter { it.parentIndexNumber != 0 }.ifEmpty { all }.shuffled()
+                            all.filter { it.parentIndexNumber != 0 }.ifEmpty { all }.shuffled(random)
 
                         if (episodes.isEmpty()) {
                             return null
@@ -180,7 +184,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
                     val season = repository.getSeason(itemId)
                     // CE (#638): shuffle a single season too, not only a whole series.
                     val inOrder = fetchEpisodes(season.seriesId, season.id)
-                    val episodes = if (shuffle) inOrder.shuffled() else inOrder
+                    val episodes = if (shuffle) inOrder.shuffled(random) else inOrder
 
                     if (episodes.isEmpty()) {
                         return null
