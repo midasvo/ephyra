@@ -165,7 +165,27 @@ androidComponents {
 // committed under src/libreRelease/generated/baselineProfiles; it never runs as part of a build.
 baselineProfile { automaticGenerationDuringBuild = false }
 
+// Spike (#668): nextlib without its FFmpeg libraries, which libmpv already ships under the same
+// names. See app/phone/build.gradle.kts.
+val nextlibAar by configurations.creating { isTransitive = false }
+
+interface NextlibArchives {
+    @get:Inject val operations: ArchiveOperations
+}
+
+val stripNextlibFfmpeg =
+    tasks.register<Zip>("stripNextlibFfmpeg") {
+        val archives = project.objects.newInstance<NextlibArchives>().operations
+        from(nextlibAar.elements.map { archives.zipTree(it.single()) }) {
+            exclude("jni/*/libav*.so", "jni/*/libsw*.so")
+        }
+        archiveFileName = "nextlib-media3ext-noffmpeg.aar"
+        destinationDirectory = layout.buildDirectory.dir("nextlib")
+    }
+
 dependencies {
+    nextlibAar(libs.nextlib.media3ext)
+    implementation(files(stripNextlibFfmpeg))
     baselineProfile(projects.baselineprofileTv)
     implementation(libs.androidx.profileinstaller)
     implementation(projects.core)

@@ -179,9 +179,15 @@ baselineProfile { automaticGenerationDuringBuild = false }
 // libmpv's copies (same library versions, every symbol there), so nextlib goes in without its own.
 val nextlibAar by configurations.creating { isTransitive = false }
 
-val stripNextlibFfmpeg by
-    tasks.registering(Zip::class) {
-        from(nextlibAar.elements.map { zipTree(it.single()) }) {
+interface NextlibArchives {
+    @get:Inject val operations: ArchiveOperations
+}
+
+val stripNextlibFfmpeg =
+    tasks.register<Zip>("stripNextlibFfmpeg") {
+        // Not the script's zipTree: the configuration cache cannot store a reference to the script.
+        val archives = project.objects.newInstance<NextlibArchives>().operations
+        from(nextlibAar.elements.map { archives.zipTree(it.single()) }) {
             exclude("jni/*/libav*.so", "jni/*/libsw*.so")
         }
         archiveFileName = "nextlib-media3ext-noffmpeg.aar"

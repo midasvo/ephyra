@@ -15,6 +15,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.view.Window
 import android.widget.Toast
 import androidx.lifecycle.SavedStateHandle
@@ -34,7 +35,6 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.text.CueGroup
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.ForwardingRenderer
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.audio.AudioRendererEventListener
 import androidx.media3.exoplayer.metadata.MetadataOutput
@@ -58,10 +58,13 @@ import dev.jdtech.jellyfin.player.core.domain.models.Trickplay
 import dev.jdtech.jellyfin.player.local.PlaybackService
 import dev.jdtech.jellyfin.player.local.PlaybackSessionStore
 import dev.jdtech.jellyfin.player.local.R
+import dev.jdtech.jellyfin.player.local.domain.AsyncLibassRenderer
 import dev.jdtech.jellyfin.player.local.domain.AudioDecoderFallback
 import dev.jdtech.jellyfin.player.local.domain.AutoSyncSubtitleCueParser
 import dev.jdtech.jellyfin.player.local.domain.DebugSegments
 import dev.jdtech.jellyfin.player.local.domain.DisplayRefreshRateManager
+import dev.jdtech.jellyfin.player.local.domain.LIBASS_TAG
+import dev.jdtech.jellyfin.player.local.domain.LibassRenderer
 import dev.jdtech.jellyfin.player.local.domain.NetworkRecovery
 import dev.jdtech.jellyfin.player.local.domain.PlaybackStartGate
 import dev.jdtech.jellyfin.player.local.domain.PlaylistManager
@@ -85,9 +88,14 @@ import dev.jdtech.jellyfin.player.local.domain.UpNextCountdown
 import dev.jdtech.jellyfin.player.local.domain.UpNextDecision
 import dev.jdtech.jellyfin.player.local.domain.autoPlayNextFollowsServer
 import dev.jdtech.jellyfin.player.local.domain.buildMediaSourceFactory
+import dev.jdtech.jellyfin.player.local.domain.downloadLibassFonts
+import dev.jdtech.jellyfin.player.local.domain.forwardVideoSizeToLibass
 import dev.jdtech.jellyfin.player.local.domain.getTrackNames
 import dev.jdtech.jellyfin.player.local.domain.isNewEndOfItem
+import dev.jdtech.jellyfin.player.local.domain.libassAsync
 import dev.jdtech.jellyfin.player.local.domain.libassSpikeEnabled
+import dev.jdtech.jellyfin.player.local.domain.libassStatsEnabled
+import dev.jdtech.jellyfin.player.local.domain.logLibassSpikeStats
 import dev.jdtech.jellyfin.player.local.domain.matchSeriesTrack
 import dev.jdtech.jellyfin.player.local.domain.playbackStopReport
 import dev.jdtech.jellyfin.player.local.domain.playerTitle
@@ -103,7 +111,6 @@ import dev.jdtech.jellyfin.repository.PlaybackEvents
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.settings.domain.Constants
 import dev.jdtech.jellyfin.settings.presentation.enums.AppVariant
-import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.FfmpegTextRenderer
 import java.util.ArrayList
 import java.util.Collections
 import java.util.UUID
@@ -744,7 +751,7 @@ constructor(
                                     textRendererOutput: TextOutput,
                                     metadataRendererOutput: MetadataOutput,
                                 ): Array<Renderer> {
-                                    val renderers =
+                                    val renderers: Array<Renderer> =
                                         super.createRenderers(
                                             eventHandler,
                                             videoRendererEventListener,
@@ -752,36 +759,7 @@ constructor(
                                             textRendererOutput,
                                             metadataRendererOutput,
                                         )
-                                    val libass = renderers.filterIsInstance<FfmpegTextRenderer>()
-                                    if (libass.isEmpty()) return renderers
-                                    return renderers
-                                        .map { renderer ->
-                                            if (renderer.trackType != C.TRACK_TYPE_VIDEO) {
-                                                renderer
-                                            } else {
-                                                object : ForwardingRenderer(renderer) {
-                                                    override fun handleMessage(
-                                                        messageType: Int,
-                                                        message: Any?,
-                                                    ) {
-                                                        super.handleMessage(messageType, message)
-                                                        if (
-                                                            messageType ==
-                                                                Renderer
-                                                                    .MSG_SET_VIDEO_OUTPUT_RESOLUTION
-                                                        ) {
-                                                            libass.forEach {
-                                                                it.handleMessage(
-                                                                    messageType,
-                                                                    message,
-                                                                )
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        .toTypedArray()
+                                    return renderers.forwardVideoSizeToLibass()
                                 }
 
                                 override fun buildTextRenderers(
@@ -791,10 +769,25 @@ constructor(
                                     extensionRendererMode: Int,
                                     out: ArrayList<Renderer>,
                                 ) {
-                                    // Spike (#668): libass takes the ASS/SSA tracks. Not behind
-                                    // SubtitleOffsetRenderer: the subtitle delay does not reach it.
+                                    // Spike (#668): libass takes the ASS/SSA tracks.
                                     if (libassSpikeEnabled()) {
-                                        out.add(FfmpegTextRenderer(context, output, outputLooper))
+                                        out.add(
+                                            if (libassAsync()) {
+                                                AsyncLibassRenderer(
+                                                    context,
+                                                    output,
+                                                    outputLooper,
+                                                    subtitleOffsetUs::get,
+                                                )
+                                            } else {
+                                                LibassRenderer(
+                                                    context,
+                                                    output,
+                                                    outputLooper,
+                                                    subtitleOffsetUs::get,
+                                                )
+                                            }
+                                        )
                                     }
                                     val startIndex = out.size
                                     super.buildTextRenderers(
@@ -839,6 +832,7 @@ constructor(
                         )
                         .setPauseAtEndOfMediaItems(true)
                         .build()
+                        .also { if (libassStatsEnabled()) it.logLibassSpikeStats() }
                 }
                 "mpv" -> {
                     MPVPlayer.Builder(application)
@@ -868,6 +862,17 @@ constructor(
         // with
         // the player in picture-in-picture). ExoPlayer's SubtitleView is styled when the player
         // screen opens.
+        // Spike (#668): the same script in mpv, as the baseline.
+        (player as? MPVPlayer)
+            ?.takeIf { libassStatsEnabled() }
+            ?.let { mpvPlayer ->
+                viewModelScope.launch {
+                    while (true) {
+                        delay(5_000)
+                        Log.i(LIBASS_TAG, "mpv ${mpvPlayer.spikeStats()}")
+                    }
+                }
+            }
         (player as? MPVPlayer)?.let { mpvPlayer ->
             viewModelScope.launch {
                 appPreferences.mpvSubtitleOptionChanges().collect {
@@ -976,6 +981,15 @@ constructor(
             // Read the series' track choice alongside buffering, so it is there when the tracks
             // are.
             startItem.seriesId?.let { seriesTrackPreferences(it) }
+            // Spike (#668): the fonts have to be there before libass opens the script.
+            if (libassSpikeEnabled()) {
+                downloadLibassFonts(
+                    application,
+                    jellyfinApi,
+                    startItem.itemId,
+                    startItem.mediaSourceId,
+                )
+            }
             player.setMediaItems(mediaItems, 0, startPosition)
             player.prepare()
             player.play()
