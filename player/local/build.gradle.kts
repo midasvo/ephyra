@@ -36,6 +36,8 @@ dependencies {
     implementation(libs.jellyfin.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.libmpv)
+    // Spike (#668): libass subtitles in the Media3 player. The apps package it, without FFmpeg.
+    compileOnly(libs.nextlib.media3ext)
     implementation(libs.timber)
 
     testImplementation(libs.junit)

@@ -172,7 +172,24 @@ androidComponents {
 // The proprietary flavor and the staging builds use the same profile (onVariants above).
 baselineProfile { automaticGenerationDuringBuild = false }
 
+// Spike (#668): nextlib and libmpv both ship FFmpeg 9 as libavcodec.so, libavutil.so,
+// libswresample.so
+// and libswscale.so, and an APK holds one file of a name. nextlib's code and its libass link
+// against
+// libmpv's copies (same library versions, every symbol there), so nextlib goes in without its own.
+val nextlibAar by configurations.creating { isTransitive = false }
+
+val stripNextlibFfmpeg by
+    tasks.registering(Zip::class) {
+        from(nextlibAar.elements.map { zipTree(it.single()) }) {
+            exclude("jni/*/libav*.so", "jni/*/libsw*.so")
+        }
+        archiveFileName = "nextlib-media3ext-noffmpeg.aar"
+        destinationDirectory = layout.buildDirectory.dir("nextlib")
+    }
+
 dependencies {
+    nextlibAar(libs.nextlib.media3ext)
     baselineProfile(projects.baselineprofile)
     implementation(libs.androidx.profileinstaller)
     implementation(projects.core)
@@ -221,6 +238,8 @@ dependencies {
     implementation(libs.jellyfin.core)
     ksp(libs.kotlin.metadata.jvm)
     compileOnly(libs.libmpv)
+    // Spike (#668): nextlib without its FFmpeg, see stripNextlibFfmpeg.
+    implementation(files(stripNextlibFfmpeg))
     implementation(libs.material)
     implementation(libs.media3.ffmpeg.decoder)
     implementation(libs.timber)

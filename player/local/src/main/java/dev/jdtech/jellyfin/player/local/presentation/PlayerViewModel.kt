@@ -12,6 +12,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.view.Window
@@ -33,9 +34,13 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.text.CueGroup
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.ForwardingRenderer
 import androidx.media3.exoplayer.Renderer
+import androidx.media3.exoplayer.audio.AudioRendererEventListener
+import androidx.media3.exoplayer.metadata.MetadataOutput
 import androidx.media3.exoplayer.text.TextOutput
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.exoplayer.video.VideoRendererEventListener
 import androidx.media3.session.MediaSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.api.JellyfinApi
@@ -82,6 +87,7 @@ import dev.jdtech.jellyfin.player.local.domain.autoPlayNextFollowsServer
 import dev.jdtech.jellyfin.player.local.domain.buildMediaSourceFactory
 import dev.jdtech.jellyfin.player.local.domain.getTrackNames
 import dev.jdtech.jellyfin.player.local.domain.isNewEndOfItem
+import dev.jdtech.jellyfin.player.local.domain.libassSpikeEnabled
 import dev.jdtech.jellyfin.player.local.domain.matchSeriesTrack
 import dev.jdtech.jellyfin.player.local.domain.playbackStopReport
 import dev.jdtech.jellyfin.player.local.domain.playerTitle
@@ -97,6 +103,7 @@ import dev.jdtech.jellyfin.repository.PlaybackEvents
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.settings.domain.Constants
 import dev.jdtech.jellyfin.settings.presentation.enums.AppVariant
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.FfmpegTextRenderer
 import java.util.ArrayList
 import java.util.Collections
 import java.util.UUID
@@ -728,6 +735,55 @@ constructor(
                     // handles, and what a broken one fails on, see AudioDecoderFallback.
                     val renderersFactory =
                         object : DefaultRenderersFactory(application) {
+                                // Spike (#668): libass draws at the size of the video surface,
+                                // which the player only tells the video renderers.
+                                override fun createRenderers(
+                                    eventHandler: Handler,
+                                    videoRendererEventListener: VideoRendererEventListener,
+                                    audioRendererEventListener: AudioRendererEventListener,
+                                    textRendererOutput: TextOutput,
+                                    metadataRendererOutput: MetadataOutput,
+                                ): Array<Renderer> {
+                                    val renderers =
+                                        super.createRenderers(
+                                            eventHandler,
+                                            videoRendererEventListener,
+                                            audioRendererEventListener,
+                                            textRendererOutput,
+                                            metadataRendererOutput,
+                                        )
+                                    val libass = renderers.filterIsInstance<FfmpegTextRenderer>()
+                                    if (libass.isEmpty()) return renderers
+                                    return renderers
+                                        .map { renderer ->
+                                            if (renderer.trackType != C.TRACK_TYPE_VIDEO) {
+                                                renderer
+                                            } else {
+                                                object : ForwardingRenderer(renderer) {
+                                                    override fun handleMessage(
+                                                        messageType: Int,
+                                                        message: Any?,
+                                                    ) {
+                                                        super.handleMessage(messageType, message)
+                                                        if (
+                                                            messageType ==
+                                                                Renderer
+                                                                    .MSG_SET_VIDEO_OUTPUT_RESOLUTION
+                                                        ) {
+                                                            libass.forEach {
+                                                                it.handleMessage(
+                                                                    messageType,
+                                                                    message,
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        .toTypedArray()
+                                }
+
                                 override fun buildTextRenderers(
                                     context: Context,
                                     output: TextOutput,
@@ -735,6 +791,11 @@ constructor(
                                     extensionRendererMode: Int,
                                     out: ArrayList<Renderer>,
                                 ) {
+                                    // Spike (#668): libass takes the ASS/SSA tracks. Not behind
+                                    // SubtitleOffsetRenderer: the subtitle delay does not reach it.
+                                    if (libassSpikeEnabled()) {
+                                        out.add(FfmpegTextRenderer(context, output, outputLooper))
+                                    }
                                     val startIndex = out.size
                                     super.buildTextRenderers(
                                         context,
