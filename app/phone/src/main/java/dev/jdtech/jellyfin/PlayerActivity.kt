@@ -17,6 +17,7 @@ import android.os.Process
 import android.text.format.DateUtils
 import android.util.Rational
 import android.util.TypedValue
+import android.view.Gravity
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -24,6 +25,7 @@ import android.view.PointerIcon
 import android.view.SurfaceView
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
@@ -47,7 +49,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.media3.common.C
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
 import androidx.media3.ui.DefaultTimeBar
 import androidx.media3.ui.PlayerControlView
 import androidx.media3.ui.PlayerView
@@ -243,6 +247,44 @@ class PlayerActivity : BasePlayerActivity() {
                 binding.episodeSheet,
             )
         for (view in below) view?.setVerticalMargins(top = controlsTop, bottom = 0)
+    }
+
+    /**
+     * Spike (#668): libass draws one picture the size of the video, with every line and sign where
+     * the script puts it. The subtitle view covers the whole player, so that picture was stretched
+     * over the black bars next to the video. While a track libass draws is selected, the view takes
+     * the bounds of the video (the content frame, which also follows zoom); for any other track it
+     * fills the player as before.
+     */
+    private fun bindLibassSubtitlesToVideo() {
+        val subtitleView = binding.playerView.subtitleView ?: return
+        val frame =
+            binding.playerView.findViewById<View>(androidx.media3.ui.R.id.exo_content_frame)
+                ?: return
+        fun update() {
+            val groups = viewModel.player.currentTracks.groups
+            val libass = groups.any { group ->
+                group.type == C.TRACK_TYPE_TEXT &&
+                    (0 until group.length).any {
+                        group.isTrackSelected(it) &&
+                            group.getTrackFormat(it).sampleMimeType == MimeTypes.TEXT_SSA
+                    }
+            }
+            val params = subtitleView.layoutParams as FrameLayout.LayoutParams
+            val width = if (libass && frame.width > 0) frame.width else MATCH_PARENT
+            val height = if (libass && frame.height > 0) frame.height else MATCH_PARENT
+            if (params.width == width && params.height == height) return
+            params.width = width
+            params.height = height
+            params.gravity = Gravity.CENTER
+            subtitleView.layoutParams = params
+        }
+        frame.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> frame.post { update() } }
+        viewModel.player.addListener(
+            object : Player.Listener {
+                override fun onTracksChanged(tracks: Tracks) = update()
+            }
+        )
     }
 
     private fun View.setVerticalMargins(top: Int, bottom: Int) {
@@ -735,6 +777,7 @@ class PlayerActivity : BasePlayerActivity() {
         // Apply user-configured subtitle appearance to the embedded SubtitleView. The view is
         // created by the inflated exo_player_view.xml and exposed via the @id/exo_subtitles id.
         binding.playerView.subtitleView?.applySubtitleStyle(appPreferences)
+        bindLibassSubtitlesToVideo()
 
         val videoNameTextView = binding.playerView.findViewById<TextView>(R.id.video_name)
         val seriesNameTextView = binding.playerView.findViewById<TextView>(R.id.video_series_name)

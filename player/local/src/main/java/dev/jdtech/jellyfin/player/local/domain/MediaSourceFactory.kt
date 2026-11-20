@@ -6,6 +6,9 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.FfmpegSubtitleExtractorsFactory
+import io.github.anilbeesetti.nextlib.media3ext.ffdecoder.withFfmpegSubtitles
 import java.util.concurrent.TimeUnit
 import okhttp3.OkHttpClient
 
@@ -26,20 +29,30 @@ private const val HTTP_READ_TIMEOUT_MS = 60_000L
 internal fun buildMediaSourceFactory(
     context: Context,
     apiClient: OkHttpClient,
-): DefaultMediaSourceFactory {
+): MediaSource.Factory {
     val client =
         apiClient
             .newBuilder()
             .connectTimeout(HTTP_CONNECT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .readTimeout(HTTP_READ_TIMEOUT_MS, TimeUnit.MILLISECONDS)
             .build()
-    return DefaultMediaSourceFactory(
-            DefaultDataSource.Factory(
-                context,
-                // The User-Agent DefaultHttpDataSource sent (the system's), so the server's logs
-                // and any proxy rules see the same client as before.
-                OkHttpDataSource.Factory(client).setUserAgent(System.getProperty("http.agent")),
-            )
+    // The User-Agent DefaultHttpDataSource sent (the system's), so the server's logs and any
+    // proxy rules see the same client as before.
+    val dataSources =
+        DefaultDataSource.Factory(
+            context,
+            OkHttpDataSource.Factory(client).setUserAgent(System.getProperty("http.agent")),
         )
-        .setSubtitleParserFactory(ImageSubtitleParserFactory())
+    if (!libassSpikeEnabled()) {
+        return DefaultMediaSourceFactory(dataSources)
+            .setSubtitleParserFactory(ImageSubtitleParserFactory())
+    }
+    // Spike (#668): ASS/SSA goes to libass unparsed, as a track of the file (with the fonts
+    // attached to a Matroska file) and as a file of its own. withFfmpegSubtitles sets a parser
+    // factory of its own that also takes the image formats away from media3; ours is set after it,
+    // so those stay where they are (#613).
+    val factory = DefaultMediaSourceFactory(dataSources, FfmpegSubtitleExtractorsFactory())
+    val withAss = factory.withFfmpegSubtitles(dataSources)
+    factory.setSubtitleParserFactory(ImageSubtitleParserFactory(WithoutSsaParserFactory()))
+    return withAss
 }

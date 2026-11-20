@@ -2330,6 +2330,18 @@ class MPVPlayer(
     }
 
     /** CE (#619): shifts subtitles by [delayMs] (positive = later, negative = earlier). */
+    /** Spike (#668): mpv's own frame counters, to compare with libass in the Media3 player. */
+    fun spikeStats(): String =
+        listOf(
+                "frame-drop-count",
+                "decoder-frame-drop-count",
+                "mistimed-frame-count",
+                "vo-delayed-frame-count",
+            )
+            .joinToString(" ") { "$it=${mpv.getPropertyInt(it)}" } +
+            " fps=${mpv.getPropertyDouble("estimated-vf-fps")}" +
+            " pos=${mpv.getPropertyDouble("time-pos")?.toInt()}s"
+
     fun setSubtitleDelayMs(delayMs: Int) {
         mpv.setPropertyDouble("sub-delay", delayMs / 1000.0)
     }

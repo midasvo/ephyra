@@ -45,6 +45,7 @@ ktfmt-formatter = "0.62"
 libmpv = "1.2.0"
 material = "1.14.0"
 media3-ffmpeg-decoder = "1.9.0+1"
+nextlib = "1.11.1-0.18.0"
 okhttp = "5.5.1"
 play-services-cast = "23.0.0"
 # CE-owned: JVM Compose UI tests for app/tv (focus restore, #125).
@@ -125,6 +126,7 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 libmpv = { group = "io.github.midasvo", name = "libmpv", version.ref = "libmpv" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+nextlib-media3ext = { group = "io.github.anilbeesetti", name = "nextlib-media3ext", version.ref = "nextlib" }
 media3-ffmpeg-decoder = { group = "org.jellyfin.media3", name = "media3-ffmpeg-decoder", version.ref = "media3-ffmpeg-decoder" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 play-services-cast-framework = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "play-services-cast" }
