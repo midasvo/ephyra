@@ -209,4 +209,16 @@
     <string name="ce_pref_hide_spoilers_summary">보지 않은 에피소드의 이미지를 흐리게 하고 제목과 줄거리를 숨깁니다. 길게 누르면 표시됩니다</string>
     <string name="ce_pref_side_backdrop">텍스트 옆에 배경 표시</string>
     <string name="ce_pref_side_backdrop_summary">가로 모드 태블릿에서 항목의 배경을 전체 너비 대신 원래 모양 그대로 제목 옆에 표시합니다</string>
+    <string name="ce_pref_external_ratings">외부 평점 (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">내 MDBList 키로 IMDb, Rotten Tomatoes, Metacritic, Letterboxd 점수 표시</string>
+    <string name="ce_external_ratings_switch">외부 평점 표시</string>
+    <string name="ce_external_ratings_privacy">켜져 있는 동안 영화나 프로그램 페이지를 열면 해당 IMDb, TMDB 또는 TVDB ID와 키가 mdblist.com으로 전송됩니다. 꺼져 있으면 아무것도 전송되지 않습니다.</string>
+    <string name="ce_external_ratings_api_key">MDBList API 키</string>
+    <string name="ce_external_ratings_get_key">mdblist.com에서 무료 키 받기: 로그인한 다음 Preferences → API</string>
+    <string name="ce_external_ratings_test">키 테스트</string>
+    <string name="ce_external_ratings_testing">테스트 중…</string>
+    <string name="ce_external_ratings_test_valid">키가 작동합니다</string>
+    <string name="ce_external_ratings_test_invalid">MDBList가 이 키를 허용하지 않습니다</string>
+    <string name="ce_external_ratings_test_rate_limited">이 키의 요청 한도에 도달했습니다. 나중에 다시 시도하세요</string>
+    <string name="ce_external_ratings_test_unreachable">MDBList에 연결할 수 없습니다</string>
 </resources>

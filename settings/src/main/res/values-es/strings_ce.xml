@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Difumina la imagen y oculta el título y la sinopsis de los episodios que no has visto. Mantén pulsado uno para mostrarlo</string>
     <string name="ce_pref_side_backdrop">Fondo junto al texto</string>
     <string name="ce_pref_side_backdrop_summary">En una tableta en horizontal, muestra el fondo de un elemento con su propia forma junto al título en lugar de a todo el ancho</string>
+    <string name="ce_pref_external_ratings">Valoraciones externas (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Puntuaciones de IMDb, Rotten Tomatoes, Metacritic y Letterboxd, con tu propia clave de MDBList</string>
+    <string name="ce_external_ratings_switch">Mostrar valoraciones externas</string>
+    <string name="ce_external_ratings_privacy">Mientras esté activado, abrir la página de una película o serie envía su ID de IMDb, TMDB o TVDB y tu clave a mdblist.com. No se envía nada mientras esté desactivado.</string>
+    <string name="ce_external_ratings_api_key">Clave de API de MDBList</string>
+    <string name="ce_external_ratings_get_key">Consigue una clave gratuita en mdblist.com: inicia sesión y ve a Preferences → API</string>
+    <string name="ce_external_ratings_test">Probar clave</string>
+    <string name="ce_external_ratings_testing">Probando…</string>
+    <string name="ce_external_ratings_test_valid">La clave funciona</string>
+    <string name="ce_external_ratings_test_invalid">MDBList no acepta esta clave</string>
+    <string name="ce_external_ratings_test_rate_limited">Esta clave ha alcanzado su límite de peticiones. Inténtalo más tarde</string>
+    <string name="ce_external_ratings_test_unreachable">No se ha podido conectar con MDBList</string>
 </resources>

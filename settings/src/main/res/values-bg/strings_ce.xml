@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Размазва изображението и скрива заглавието и описанието на епизодите, които не сте гледали. Задръжте върху някой, за да го покажете</string>
     <string name="ce_pref_side_backdrop">Фон до текста</string>
     <string name="ce_pref_side_backdrop_summary">На таблет в хоризонтален режим показвай фона на елемента в собствената му форма до заглавието вместо по цялата ширина</string>
+    <string name="ce_pref_external_ratings">Външни оценки (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Оценки от IMDb, Rotten Tomatoes, Metacritic и Letterboxd с ваш собствен ключ за MDBList</string>
+    <string name="ce_external_ratings_switch">Показване на външни оценки</string>
+    <string name="ce_external_ratings_privacy">Докато това е включено, отварянето на страница на филм или сериал изпраща неговия IMDb, TMDB или TVDB ID и вашия ключ до mdblist.com. Нищо не се изпраща, докато е изключено.</string>
+    <string name="ce_external_ratings_api_key">API ключ за MDBList</string>
+    <string name="ce_external_ratings_get_key">Вземете безплатен ключ от mdblist.com: влезте, след това Preferences → API</string>
+    <string name="ce_external_ratings_test">Проверка на ключа</string>
+    <string name="ce_external_ratings_testing">Проверява се…</string>
+    <string name="ce_external_ratings_test_valid">Ключът работи</string>
+    <string name="ce_external_ratings_test_invalid">MDBList не приема този ключ</string>
+    <string name="ce_external_ratings_test_rate_limited">Този ключ достигна лимита си за заявки. Опитайте отново по-късно</string>
+    <string name="ce_external_ratings_test_unreachable">Няма връзка с MDBList</string>
 </resources>

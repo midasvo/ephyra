@@ -215,4 +215,16 @@
     <string name="ce_pref_hide_spoilers_summary">Rozmaže obrázok a skryje názov a popis epizód, ktoré ste nevideli. Podržaním epizódu odkryjete</string>
     <string name="ce_pref_side_backdrop">Pozadie vedľa textu</string>
     <string name="ce_pref_side_backdrop_summary">Na tablete na šírku zobraziť pozadie položky v jeho vlastnom tvare vedľa názvu namiesto cez celú šírku</string>
+    <string name="ce_pref_external_ratings">Externé hodnotenia (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Hodnotenia z IMDb, Rotten Tomatoes, Metacritic a Letterboxd s vaším vlastným kľúčom MDBList</string>
+    <string name="ce_external_ratings_switch">Zobraziť externé hodnotenia</string>
+    <string name="ce_external_ratings_privacy">Keď je táto voľba zapnutá, otvorenie stránky filmu alebo seriálu odošle jeho ID z IMDb, TMDB alebo TVDB a váš kľúč na mdblist.com. Keď je vypnutá, nič sa neodosiela.</string>
+    <string name="ce_external_ratings_api_key">API kľúč MDBList</string>
+    <string name="ce_external_ratings_get_key">Bezplatný kľúč získate na mdblist.com: prihláste sa a potom Preferences → API</string>
+    <string name="ce_external_ratings_test">Otestovať kľúč</string>
+    <string name="ce_external_ratings_testing">Testuje sa…</string>
+    <string name="ce_external_ratings_test_valid">Kľúč funguje</string>
+    <string name="ce_external_ratings_test_invalid">MDBList tento kľúč neprijíma</string>
+    <string name="ce_external_ratings_test_rate_limited">Tento kľúč dosiahol limit požiadaviek. Skúste to neskôr</string>
+    <string name="ce_external_ratings_test_unreachable">Nedá sa spojiť s MDBList</string>
 </resources>

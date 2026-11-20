@@ -213,4 +213,16 @@
     <string name="ce_pref_hide_spoilers_summary">טשטוש התמונה והסתרת השם והתקציר של פרקים שלא צפית בהם. יש ללחוץ לחיצה ארוכה על פרק כדי להציג אותו</string>
     <string name="ce_pref_side_backdrop">רקע לצד הטקסט</string>
     <string name="ce_pref_side_backdrop_summary">בטאבלט במצב לרוחב, הצג את הרקע של פריט בצורתו המקורית לצד הכותרת במקום לכל הרוחב</string>
+    <string name="ce_pref_external_ratings">דירוגים חיצוניים (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">ציונים מ-IMDb, ‏Rotten Tomatoes, ‏Metacritic ו-Letterboxd, עם מפתח MDBList משלך</string>
+    <string name="ce_external_ratings_switch">הצגת דירוגים חיצוניים</string>
+    <string name="ce_external_ratings_privacy">כשאפשרות זו פעילה, פתיחת דף של סרט או סדרה שולחת את מזהה ה-IMDb, ‏TMDB או TVDB שלו ואת המפתח שלך אל mdblist.com. כשהיא כבויה לא נשלח דבר.</string>
+    <string name="ce_external_ratings_api_key">מפתח API של MDBList</string>
+    <string name="ce_external_ratings_get_key">אפשר לקבל מפתח בחינם ב-mdblist.com: להתחבר, ואז Preferences ← API</string>
+    <string name="ce_external_ratings_test">בדיקת המפתח</string>
+    <string name="ce_external_ratings_testing">בבדיקה…</string>
+    <string name="ce_external_ratings_test_valid">המפתח עובד</string>
+    <string name="ce_external_ratings_test_invalid">MDBList לא מקבל את המפתח הזה</string>
+    <string name="ce_external_ratings_test_rate_limited">המפתח הזה הגיע למגבלת הבקשות שלו. יש לנסות שוב מאוחר יותר</string>
+    <string name="ce_external_ratings_test_unreachable">לא ניתן להתחבר אל MDBList</string>
 </resources>

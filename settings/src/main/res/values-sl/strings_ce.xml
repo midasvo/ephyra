@@ -215,4 +215,16 @@
     <string name="ce_pref_hide_spoilers_summary">Zamegli sliko ter skrije naslov in opis epizod, ki si jih še niste ogledali. Pridržite epizodo, da jo razkrijete</string>
     <string name="ce_pref_side_backdrop">Ozadje ob besedilu</string>
     <string name="ce_pref_side_backdrop_summary">Na tabličnem računalniku v ležečem načinu prikaži ozadje elementa v njegovi obliki ob naslovu namesto čez celo širino</string>
+    <string name="ce_pref_external_ratings">Zunanje ocene (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Ocene iz IMDb, Rotten Tomatoes, Metacritic in Letterboxd z lastnim ključem MDBList</string>
+    <string name="ce_external_ratings_switch">Prikaži zunanje ocene</string>
+    <string name="ce_external_ratings_privacy">Ko je to vklopljeno, odpiranje strani filma ali serije pošlje njegov ID IMDb, TMDB ali TVDB in vaš ključ na mdblist.com. Ko je izklopljeno, se ne pošlje nič.</string>
+    <string name="ce_external_ratings_api_key">Ključ API MDBList</string>
+    <string name="ce_external_ratings_get_key">Brezplačen ključ dobite na mdblist.com: prijavite se, nato Preferences → API</string>
+    <string name="ce_external_ratings_test">Preizkusi ključ</string>
+    <string name="ce_external_ratings_testing">Preizkušanje…</string>
+    <string name="ce_external_ratings_test_valid">Ključ deluje</string>
+    <string name="ce_external_ratings_test_invalid">MDBList ne sprejme tega ključa</string>
+    <string name="ce_external_ratings_test_rate_limited">Ta ključ je dosegel omejitev zahtev. Poskusite znova pozneje</string>
+    <string name="ce_external_ratings_test_unreachable">Povezava z MDBList ni uspela</string>
 </resources>

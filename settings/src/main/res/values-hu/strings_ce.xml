@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Elhomályosítja a képet, és elrejti a nem látott epizódok címét és leírását. Tartsa lenyomva az egyiket a megjelenítéséhez</string>
     <string name="ce_pref_side_backdrop">Háttérkép a szöveg mellett</string>
     <string name="ce_pref_side_backdrop_summary">Fekvő tájolású táblagépen az elem háttérképe a saját formájában jelenjen meg a cím mellett a teljes szélesség helyett</string>
+    <string name="ce_pref_external_ratings">Külső értékelések (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">IMDb-, Rotten Tomatoes-, Metacritic- és Letterboxd-pontszámok a saját MDBList-kulcsoddal</string>
+    <string name="ce_external_ratings_switch">Külső értékelések megjelenítése</string>
+    <string name="ce_external_ratings_privacy">Amíg ez be van kapcsolva, egy film vagy sorozat oldalának megnyitása elküldi annak IMDb-, TMDB- vagy TVDB-azonosítóját és a kulcsodat a mdblist.com-nak. Kikapcsolva semmi sem kerül elküldésre.</string>
+    <string name="ce_external_ratings_api_key">MDBList API-kulcs</string>
+    <string name="ce_external_ratings_get_key">Ingyenes kulcs a mdblist.com oldalon: jelentkezz be, majd Preferences → API</string>
+    <string name="ce_external_ratings_test">Kulcs tesztelése</string>
+    <string name="ce_external_ratings_testing">Tesztelés…</string>
+    <string name="ce_external_ratings_test_valid">A kulcs működik</string>
+    <string name="ce_external_ratings_test_invalid">Az MDBList nem fogadja el ezt a kulcsot</string>
+    <string name="ce_external_ratings_test_rate_limited">Ez a kulcs elérte a kéréskorlátját. Próbáld újra később</string>
+    <string name="ce_external_ratings_test_unreachable">Az MDBList nem érhető el</string>
 </resources>

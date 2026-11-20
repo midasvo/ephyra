@@ -445,6 +445,26 @@ constructor(
                                                                                 appPreferences
                                                                                     .detailCredits,
                                                                         ),
+                                                                        // CE (#331): MDBList, on a
+                                                                        // page of its own.
+                                                                        PreferenceCategory(
+                                                                            nameStringResource =
+                                                                                R.string
+                                                                                    .ce_pref_external_ratings,
+                                                                            descriptionStringRes =
+                                                                                R.string
+                                                                                    .ce_pref_external_ratings_summary,
+                                                                            onClick = {
+                                                                                viewModelScope
+                                                                                    .launch {
+                                                                                        eventsChannel
+                                                                                            .send(
+                                                                                                SettingsEvent
+                                                                                                    .NavigateToExternalRatings
+                                                                                            )
+                                                                                    }
+                                                                            },
+                                                                        ),
                                                                     )
                                                             ),
                                                             PreferenceGroup(

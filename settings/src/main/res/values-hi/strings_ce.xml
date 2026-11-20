@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">जो एपिसोड आपने नहीं देखे, उनकी छवि धुंधली करें और शीर्षक व विवरण छिपाएँ। किसी को दिखाने के लिए उसे दबाकर रखें</string>
     <string name="ce_pref_side_backdrop">टेक्स्ट के बगल में बैकड्रॉप</string>
     <string name="ce_pref_side_backdrop_summary">लैंडस्केप में टैबलेट पर, आइटम का बैकड्रॉप पूरी चौड़ाई के बजाय उसके अपने आकार में शीर्षक के बगल में दिखाएँ</string>
+    <string name="ce_pref_external_ratings">बाहरी रेटिंग (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">आपकी अपनी MDBList कुंजी से IMDb, Rotten Tomatoes, Metacritic और Letterboxd के स्कोर</string>
+    <string name="ce_external_ratings_switch">बाहरी रेटिंग दिखाएँ</string>
+    <string name="ce_external_ratings_privacy">इसके चालू रहते, किसी फ़िल्म या शो का पेज खोलने पर उसकी IMDb, TMDB या TVDB ID और आपकी कुंजी mdblist.com को भेजी जाती है। बंद होने पर कुछ नहीं भेजा जाता।</string>
+    <string name="ce_external_ratings_api_key">MDBList API कुंजी</string>
+    <string name="ce_external_ratings_get_key">mdblist.com पर मुफ़्त कुंजी पाएँ: साइन इन करें, फिर Preferences → API</string>
+    <string name="ce_external_ratings_test">कुंजी जाँचें</string>
+    <string name="ce_external_ratings_testing">जाँच हो रही है…</string>
+    <string name="ce_external_ratings_test_valid">कुंजी काम करती है</string>
+    <string name="ce_external_ratings_test_invalid">MDBList यह कुंजी स्वीकार नहीं करता</string>
+    <string name="ce_external_ratings_test_rate_limited">यह कुंजी अपनी अनुरोध सीमा तक पहुँच गई है। बाद में फिर कोशिश करें</string>
+    <string name="ce_external_ratings_test_unreachable">MDBList से संपर्क नहीं हो सका</string>
 </resources>

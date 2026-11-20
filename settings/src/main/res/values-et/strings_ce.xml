@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Hägustab pildi ning peidab vaatamata episoodide pealkirja ja kirjelduse. Näitamiseks vajuta ja hoia</string>
     <string name="ce_pref_side_backdrop">Taust teksti kõrval</string>
     <string name="ce_pref_side_backdrop_summary">Näita tahvelarvutil rõhtpaigutuses üksuse tausta selle enda kujul pealkirja kõrval, mitte kogu laiuses</string>
+    <string name="ce_pref_external_ratings">Välised hinnangud (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">IMDb, Rotten Tomatoesi, Metacriticu ja Letterboxdi hinded sinu enda MDBListi võtmega</string>
+    <string name="ce_external_ratings_switch">Näita väliseid hinnanguid</string>
+    <string name="ce_external_ratings_privacy">Kui see on sees, saadab filmi või sarja lehe avamine selle IMDb, TMDB või TVDB ID ja sinu võtme aadressile mdblist.com. Kui see on väljas, ei saadeta midagi.</string>
+    <string name="ce_external_ratings_api_key">MDBListi API-võti</string>
+    <string name="ce_external_ratings_get_key">Hangi tasuta võti saidilt mdblist.com: logi sisse, seejärel Preferences → API</string>
+    <string name="ce_external_ratings_test">Testi võtit</string>
+    <string name="ce_external_ratings_testing">Testimine…</string>
+    <string name="ce_external_ratings_test_valid">Võti töötab</string>
+    <string name="ce_external_ratings_test_invalid">MDBList ei aktsepteeri seda võtit</string>
+    <string name="ce_external_ratings_test_rate_limited">See võti on jõudnud päringute piirini. Proovi hiljem uuesti</string>
+    <string name="ce_external_ratings_test_unreachable">MDBListiga ei saanud ühendust</string>
 </resources>

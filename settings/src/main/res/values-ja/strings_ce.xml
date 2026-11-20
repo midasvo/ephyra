@@ -209,4 +209,16 @@
     <string name="ce_pref_hide_spoilers_summary">未視聴のエピソードの画像をぼかし、タイトルとあらすじを隠します。長押しすると表示されます</string>
     <string name="ce_pref_side_backdrop">背景画像をテキストの横に表示</string>
     <string name="ce_pref_side_backdrop_summary">横向きのタブレットで、アイテムの背景画像を全幅ではなく元の形のままタイトルの横に表示します</string>
+    <string name="ce_pref_external_ratings">外部の評価（MDBList）</string>
+    <string name="ce_pref_external_ratings_summary">自分の MDBList キーで IMDb、Rotten Tomatoes、Metacritic、Letterboxd のスコアを表示</string>
+    <string name="ce_external_ratings_switch">外部の評価を表示</string>
+    <string name="ce_external_ratings_privacy">オンの間は、映画や番組のページを開くと、その IMDb、TMDB、TVDB の ID とキーが mdblist.com に送信されます。オフの間は何も送信されません。</string>
+    <string name="ce_external_ratings_api_key">MDBList API キー</string>
+    <string name="ce_external_ratings_get_key">mdblist.com で無料のキーを取得：サインインして Preferences → API</string>
+    <string name="ce_external_ratings_test">キーをテスト</string>
+    <string name="ce_external_ratings_testing">テスト中…</string>
+    <string name="ce_external_ratings_test_valid">キーは有効です</string>
+    <string name="ce_external_ratings_test_invalid">MDBList はこのキーを受け付けません</string>
+    <string name="ce_external_ratings_test_rate_limited">このキーはリクエストの上限に達しました。後でもう一度お試しください</string>
+    <string name="ce_external_ratings_test_unreachable">MDBList に接続できませんでした</string>
 </resources>

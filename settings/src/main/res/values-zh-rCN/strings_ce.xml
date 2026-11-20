@@ -209,4 +209,16 @@
     <string name="ce_pref_hide_spoilers_summary">模糊未观看剧集的图片，并隐藏其标题和简介。长按某一集即可显示</string>
     <string name="ce_pref_side_backdrop">背景图显示在文字旁</string>
     <string name="ce_pref_side_backdrop_summary">在横屏平板上，将项目的背景图以原始比例显示在标题旁边，而不是铺满整个宽度</string>
+    <string name="ce_pref_external_ratings">外部评分（MDBList）</string>
+    <string name="ce_pref_external_ratings_summary">使用你自己的 MDBList 密钥显示 IMDb、Rotten Tomatoes、Metacritic 和 Letterboxd 的评分</string>
+    <string name="ce_external_ratings_switch">显示外部评分</string>
+    <string name="ce_external_ratings_privacy">开启后，打开电影或剧集页面时会将其 IMDb、TMDB 或 TVDB ID 以及你的密钥发送到 mdblist.com。关闭时不会发送任何内容。</string>
+    <string name="ce_external_ratings_api_key">MDBList API 密钥</string>
+    <string name="ce_external_ratings_get_key">在 mdblist.com 获取免费密钥：登录，然后 Preferences → API</string>
+    <string name="ce_external_ratings_test">测试密钥</string>
+    <string name="ce_external_ratings_testing">正在测试…</string>
+    <string name="ce_external_ratings_test_valid">密钥有效</string>
+    <string name="ce_external_ratings_test_invalid">MDBList 不接受此密钥</string>
+    <string name="ce_external_ratings_test_rate_limited">此密钥已达到请求上限。请稍后再试</string>
+    <string name="ce_external_ratings_test_unreachable">无法连接到 MDBList</string>
 </resources>

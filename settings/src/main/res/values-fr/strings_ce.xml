@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Floute l\'image et masque le titre et le résumé des épisodes que vous n\'avez pas vus. Appuyez longuement sur l\'un d\'eux pour l\'afficher</string>
     <string name="ce_pref_side_backdrop">Arrière-plan à côté du texte</string>
     <string name="ce_pref_side_backdrop_summary">Sur une tablette en paysage, afficher l\'arrière-plan d\'un élément dans sa propre forme à côté du titre au lieu de toute la largeur</string>
+    <string name="ce_pref_external_ratings">Notes externes (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Notes d\'IMDb, Rotten Tomatoes, Metacritic et Letterboxd, avec votre propre clé MDBList</string>
+    <string name="ce_external_ratings_switch">Afficher les notes externes</string>
+    <string name="ce_external_ratings_privacy">Tant que cette option est activée, ouvrir la page d\'un film ou d\'une série envoie son identifiant IMDb, TMDB ou TVDB et votre clé à mdblist.com. Rien n\'est envoyé quand elle est désactivée.</string>
+    <string name="ce_external_ratings_api_key">Clé d\'API MDBList</string>
+    <string name="ce_external_ratings_get_key">Obtenez une clé gratuite sur mdblist.com : connectez-vous, puis Preferences → API</string>
+    <string name="ce_external_ratings_test">Tester la clé</string>
+    <string name="ce_external_ratings_testing">Test en cours…</string>
+    <string name="ce_external_ratings_test_valid">La clé fonctionne</string>
+    <string name="ce_external_ratings_test_invalid">MDBList n\'accepte pas cette clé</string>
+    <string name="ce_external_ratings_test_rate_limited">Cette clé a atteint sa limite de requêtes. Réessayez plus tard</string>
+    <string name="ce_external_ratings_test_unreachable">Impossible de joindre MDBList</string>
 </resources>

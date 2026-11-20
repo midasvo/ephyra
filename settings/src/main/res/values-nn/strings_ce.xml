@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Gjer biletet uskarpt og gøym tittelen og skildringa av episodar du ikkje har sett. Trykk og hald på ein for å visa han</string>
     <string name="ce_pref_side_backdrop">Bakgrunn ved sida av teksten</string>
     <string name="ce_pref_side_backdrop_summary">På nettbrett i liggjande format, vis bakgrunnen til eit element i si eiga form ved sida av tittelen i staden for over heile breidda</string>
+    <string name="ce_pref_external_ratings">Eksterne vurderingar (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Poeng frå IMDb, Rotten Tomatoes, Metacritic og Letterboxd, med din eigen MDBList-nøkkel</string>
+    <string name="ce_external_ratings_switch">Vis eksterne vurderingar</string>
+    <string name="ce_external_ratings_privacy">Når dette er på, sender opning av ei film- eller serieside ID-en frå IMDb, TMDB eller TVDB og nøkkelen din til mdblist.com. Ingenting blir sendt når det er av.</string>
+    <string name="ce_external_ratings_api_key">MDBList API-nøkkel</string>
+    <string name="ce_external_ratings_get_key">Få ein gratis nøkkel på mdblist.com: logg inn, så Preferences → API</string>
+    <string name="ce_external_ratings_test">Test nøkkelen</string>
+    <string name="ce_external_ratings_testing">Testar…</string>
+    <string name="ce_external_ratings_test_valid">Nøkkelen verkar</string>
+    <string name="ce_external_ratings_test_invalid">MDBList godtek ikkje denne nøkkelen</string>
+    <string name="ce_external_ratings_test_rate_limited">Denne nøkkelen har nådd grensa for førespurnader. Prøv igjen seinare</string>
+    <string name="ce_external_ratings_test_unreachable">Fekk ikkje kontakt med MDBList</string>
 </resources>

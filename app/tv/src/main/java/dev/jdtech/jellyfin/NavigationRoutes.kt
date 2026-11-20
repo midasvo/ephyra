@@ -57,6 +57,9 @@ data class PlayerRoute(
 // CE (#142)
 @Serializable data object HomeRowsRoute : NavKey
 
+// CE (#331)
+@Serializable data object ExternalRatingsRoute : NavKey
+
 // CE (#299)
 @Serializable data object ProfilePinRoute : NavKey
 

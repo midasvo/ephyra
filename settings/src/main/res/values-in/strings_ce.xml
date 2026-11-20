@@ -209,4 +209,16 @@
     <string name="ce_pref_hide_spoilers_summary">Buramkan gambar serta sembunyikan judul dan ringkasan episode yang belum Anda tonton. Tekan lama salah satunya untuk menampilkannya</string>
     <string name="ce_pref_side_backdrop">Latar di samping teks</string>
     <string name="ce_pref_side_backdrop_summary">Di tablet dalam mode lanskap, tampilkan latar item dalam bentuk aslinya di samping judul, bukan selebar layar</string>
+    <string name="ce_pref_external_ratings">Rating eksternal (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Skor dari IMDb, Rotten Tomatoes, Metacritic, dan Letterboxd, dengan kunci MDBList Anda sendiri</string>
+    <string name="ce_external_ratings_switch">Tampilkan rating eksternal</string>
+    <string name="ce_external_ratings_privacy">Selama ini aktif, membuka halaman film atau acara akan mengirim ID IMDb, TMDB, atau TVDB-nya beserta kunci Anda ke mdblist.com. Tidak ada yang dikirim saat nonaktif.</string>
+    <string name="ce_external_ratings_api_key">Kunci API MDBList</string>
+    <string name="ce_external_ratings_get_key">Dapatkan kunci gratis di mdblist.com: masuk, lalu Preferences → API</string>
+    <string name="ce_external_ratings_test">Uji kunci</string>
+    <string name="ce_external_ratings_testing">Menguji…</string>
+    <string name="ce_external_ratings_test_valid">Kunci berfungsi</string>
+    <string name="ce_external_ratings_test_invalid">MDBList tidak menerima kunci ini</string>
+    <string name="ce_external_ratings_test_rate_limited">Kunci ini telah mencapai batas permintaannya. Coba lagi nanti</string>
+    <string name="ce_external_ratings_test_unreachable">Tidak dapat menghubungi MDBList</string>
 </resources>

@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Baxmadığınız bölümlərin şəklini bulanıqlaşdır, adını və təsvirini gizlət. Göstərmək üçün birinə basıb saxlayın</string>
     <string name="ce_pref_side_backdrop">Fon şəkli mətnin yanında</string>
     <string name="ce_pref_side_backdrop_summary">Planşet üfüqi vəziyyətdə olanda elementin fon şəklini bütün en boyu deyil, öz formasında başlığın yanında göstər</string>
+    <string name="ce_pref_external_ratings">Xarici reytinqlər (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Öz MDBList açarınızla IMDb, Rotten Tomatoes, Metacritic və Letterboxd balları</string>
+    <string name="ce_external_ratings_switch">Xarici reytinqləri göstər</string>
+    <string name="ce_external_ratings_privacy">Bu açıq olduqda, film və ya serial səhifəsini açmaq onun IMDb, TMDB və ya TVDB ID-sini və açarınızı mdblist.com-a göndərir. Bağlı olduqda heç nə göndərilmir.</string>
+    <string name="ce_external_ratings_api_key">MDBList API açarı</string>
+    <string name="ce_external_ratings_get_key">mdblist.com-da pulsuz açar alın: daxil olun, sonra Preferences → API</string>
+    <string name="ce_external_ratings_test">Açarı yoxla</string>
+    <string name="ce_external_ratings_testing">Yoxlanılır…</string>
+    <string name="ce_external_ratings_test_valid">Açar işləyir</string>
+    <string name="ce_external_ratings_test_invalid">MDBList bu açarı qəbul etmir</string>
+    <string name="ce_external_ratings_test_rate_limited">Bu açar sorğu limitinə çatıb. Sonra yenidən cəhd edin</string>
+    <string name="ce_external_ratings_test_unreachable">MDBList-ə qoşulmaq mümkün olmadı</string>
 </resources>

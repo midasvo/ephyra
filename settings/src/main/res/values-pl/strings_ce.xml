@@ -215,4 +215,16 @@
     <string name="ce_pref_hide_spoilers_summary">Rozmywa obraz oraz ukrywa tytuł i opis nieobejrzanych odcinków. Przytrzymaj odcinek, aby go odsłonić</string>
     <string name="ce_pref_side_backdrop">Tło obok tekstu</string>
     <string name="ce_pref_side_backdrop_summary">Na tablecie w poziomie pokazuj tło elementu w jego własnym kształcie obok tytułu zamiast na całą szerokość</string>
+    <string name="ce_pref_external_ratings">Oceny zewnętrzne (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Oceny z IMDb, Rotten Tomatoes, Metacritic i Letterboxd z Twoim własnym kluczem MDBList</string>
+    <string name="ce_external_ratings_switch">Pokazuj oceny zewnętrzne</string>
+    <string name="ce_external_ratings_privacy">Gdy ta opcja jest włączona, otwarcie strony filmu lub serialu wysyła jego identyfikator IMDb, TMDB lub TVDB oraz Twój klucz do mdblist.com. Gdy jest wyłączona, nic nie jest wysyłane.</string>
+    <string name="ce_external_ratings_api_key">Klucz API MDBList</string>
+    <string name="ce_external_ratings_get_key">Darmowy klucz uzyskasz na mdblist.com: zaloguj się, potem Preferences → API</string>
+    <string name="ce_external_ratings_test">Sprawdź klucz</string>
+    <string name="ce_external_ratings_testing">Sprawdzanie…</string>
+    <string name="ce_external_ratings_test_valid">Klucz działa</string>
+    <string name="ce_external_ratings_test_invalid">MDBList nie akceptuje tego klucza</string>
+    <string name="ce_external_ratings_test_rate_limited">Ten klucz osiągnął limit zapytań. Spróbuj ponownie później</string>
+    <string name="ce_external_ratings_test_unreachable">Nie można połączyć się z MDBList</string>
 </resources>

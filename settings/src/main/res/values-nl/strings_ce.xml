@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Maak de afbeelding wazig en verberg de titel en beschrijving van afleveringen die je nog niet hebt gezien. Houd er een ingedrukt om hem te tonen</string>
     <string name="ce_pref_side_backdrop">Achtergrond naast de tekst</string>
     <string name="ce_pref_side_backdrop_summary">Toon op een tablet in liggende stand de achtergrond van een item in zijn eigen vorm naast de titel in plaats van over de volle breedte</string>
+    <string name="ce_pref_external_ratings">Externe beoordelingen (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Scores van IMDb, Rotten Tomatoes, Metacritic en Letterboxd, met je eigen MDBList-sleutel</string>
+    <string name="ce_external_ratings_switch">Externe beoordelingen tonen</string>
+    <string name="ce_external_ratings_privacy">Zolang dit aan staat, stuurt het openen van een film- of seriepagina de IMDb-, TMDB- of TVDB-ID en je sleutel naar mdblist.com. Als het uit staat, wordt er niets verstuurd.</string>
+    <string name="ce_external_ratings_api_key">MDBList-API-sleutel</string>
+    <string name="ce_external_ratings_get_key">Haal een gratis sleutel op mdblist.com: log in en ga naar Preferences → API</string>
+    <string name="ce_external_ratings_test">Sleutel testen</string>
+    <string name="ce_external_ratings_testing">Bezig met testen…</string>
+    <string name="ce_external_ratings_test_valid">De sleutel werkt</string>
+    <string name="ce_external_ratings_test_invalid">MDBList accepteert deze sleutel niet</string>
+    <string name="ce_external_ratings_test_rate_limited">Deze sleutel heeft zijn limiet voor verzoeken bereikt. Probeer het later opnieuw</string>
+    <string name="ce_external_ratings_test_unreachable">Kan MDBList niet bereiken</string>
 </resources>

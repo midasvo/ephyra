@@ -27,6 +27,9 @@ sealed interface SettingsEvent {
     // CE (#299)
     data object NavigateToProfilePin : SettingsEvent
 
+    // CE (#331)
+    data object NavigateToExternalRatings : SettingsEvent
+
     /** The Clear cache row did its work. */
     data object CacheCleared : SettingsEvent
 }

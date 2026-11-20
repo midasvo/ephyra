@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Difumina la imatge i amaga el títol i la sinopsi dels episodis que no has vist. Mantén premut un episodi per mostrar-lo</string>
     <string name="ce_pref_side_backdrop">Fons al costat del text</string>
     <string name="ce_pref_side_backdrop_summary">En una tauleta en horitzontal, mostra el fons d\'un element amb la seva forma pròpia al costat del títol en lloc d\'ocupar tota l\'amplada</string>
+    <string name="ce_pref_external_ratings">Valoracions externes (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Puntuacions d\'IMDb, Rotten Tomatoes, Metacritic i Letterboxd, amb la teva pròpia clau de MDBList</string>
+    <string name="ce_external_ratings_switch">Mostra les valoracions externes</string>
+    <string name="ce_external_ratings_privacy">Mentre això estigui activat, obrir la pàgina d\'una pel·lícula o sèrie envia el seu ID d\'IMDb, TMDB o TVDB i la teva clau a mdblist.com. No s\'envia res mentre estigui desactivat.</string>
+    <string name="ce_external_ratings_api_key">Clau d\'API de MDBList</string>
+    <string name="ce_external_ratings_get_key">Aconsegueix una clau gratuïta a mdblist.com: inicia la sessió i ves a Preferences → API</string>
+    <string name="ce_external_ratings_test">Prova la clau</string>
+    <string name="ce_external_ratings_testing">S\'està provant…</string>
+    <string name="ce_external_ratings_test_valid">La clau funciona</string>
+    <string name="ce_external_ratings_test_invalid">MDBList no accepta aquesta clau</string>
+    <string name="ce_external_ratings_test_rate_limited">Aquesta clau ha arribat al seu límit de peticions. Torna-ho a provar més tard</string>
+    <string name="ce_external_ratings_test_unreachable">No s\'ha pogut connectar amb MDBList</string>
 </resources>
