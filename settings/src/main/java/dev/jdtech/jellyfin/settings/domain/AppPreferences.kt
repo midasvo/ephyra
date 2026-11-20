@@ -60,6 +60,11 @@ class AppPreferences @Inject constructor(val sharedPreferences: SharedPreference
     val detailExtras = Preference("pref_detail_extras", true)
     val detailCollections = Preference("pref_detail_collections", true)
     val detailSimilar = Preference("pref_detail_similar", true)
+    // CE (#331): scores from MDBList on the movie and show pages, with the user's own key. Off by
+    // default; while off, nothing is ever sent to MDBList. The key is kept here like the session's
+    // access token: app-private, and these preferences are left out of backups.
+    val externalRatings = Preference("pref_external_ratings", false)
+    val mdbListApiKey = Preference<String?>("pref_mdblist_api_key", null)
     // CE (#618): an unwatched episode's still, title and overview are hidden until held.
     val hideSpoilers = Preference("pref_hide_spoilers", false)
     // CE (#188): show the Favorites tab in the bottom navigation bar.

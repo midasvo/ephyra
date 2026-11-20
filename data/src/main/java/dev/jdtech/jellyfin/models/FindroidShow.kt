@@ -44,6 +44,8 @@ data class FindroidShow(
     val airTime: String? = null,
     val localTrailerCount: Int = 0,
     val specialFeatureCount: Int? = null,
+    /** CE (#331): ids at outside sites, see [toProviderIds]. Empty offline. */
+    val providerIds: Map<String, String> = emptyMap(),
     override val images: FindroidImages,
     override val chapters: List<FindroidChapter> = emptyList(),
 ) : FindroidItem
@@ -79,6 +81,7 @@ fun BaseItemDto.toFindroidShow(jellyfinRepository: JellyfinRepository): Findroid
         airTime = airTime?.takeIf { it.isNotBlank() }?.trim(),
         localTrailerCount = localTrailerCount ?: 0,
         specialFeatureCount = specialFeatureCount,
+        providerIds = providerIds.toProviderIds(),
         images = toFindroidImages(jellyfinRepository),
     )
 }
