@@ -97,9 +97,10 @@ constructor(
                     displayCastAndCrew && appPreferences.getValue(appPreferences.detailCredits)
                 val director = if (displayCredits) getDirector(movie) else null
                 val writers = if (displayCredits) getWriters(movie) else emptyList()
+                val sections = appPreferences.detailSections()
                 _state.emit(
                     _state.value.copy(
-                        movie = movie.shownIn(appPreferences.detailSections()),
+                        movie = movie.shownIn(sections),
                         videoMetadata = videoMetadata,
                         actors = actors,
                         director = director,
@@ -109,6 +110,7 @@ constructor(
                                 movieId,
                                 movie.ratingsLookup(),
                                 _state.value.externalRatings,
+                                rottenTomatoes = sections.criticRating && movie.criticRating == null,
                             ),
                     )
                 )

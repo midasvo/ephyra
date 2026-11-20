@@ -42,16 +42,23 @@ class ExternalRatingsLoadingTest {
 
     private inner class FakeSource : ExternalRatingsSource {
         var on = true
+        /** False while MDBList may not be asked (a failure, a 429, a rejected key). */
+        var allowed = true
         var answer = listOf(imdb, tomatoes)
+        /** Runs while a lookup is under way, before it answers. */
+        var during: () -> Unit = {}
         val asked: MutableList<RatingsLookup> = Collections.synchronizedList(mutableListOf())
 
         override fun isOn() = on
+
+        override fun canRequest(lookup: RatingsLookup) = on && allowed
 
         override fun mightHaveRatings(lookup: RatingsLookup) = on
 
         override suspend fun ratings(lookup: RatingsLookup): List<ExternalRating> {
             asked += lookup
-            return if (on) answer else emptyList()
+            during()
+            return if (on && allowed) answer else emptyList()
         }
     }
 
@@ -78,6 +85,67 @@ class ExternalRatingsLoadingTest {
         viewModel.loadMovie(itemId)
         withTimeout(5_000) { viewModel.state.first { it.movie != null } }
         viewModel
+    }
+
+    @Test
+    fun `switched off while the lookup runs, its answer is dropped`() {
+        source.during = { source.on = false }
+        val viewModel = loaded()
+        viewModel.loadRelated(itemId)
+        assertEquals(ExternalRatingsState.Hidden, viewModel.state.value.externalRatings)
+        assertEquals(1, source.asked.size)
+    }
+
+    @Test
+    fun `a lookup MDBList couldn't answer is tried again on a reload`() = runBlocking {
+        source.allowed = false
+        val viewModel = loaded()
+        viewModel.loadRelated(itemId)
+        assertEquals(ExternalRatingsState.Hidden, viewModel.state.value.externalRatings)
+
+        source.allowed = true
+        viewModel.loadMovie(itemId)
+        val state =
+            withTimeout(5_000) {
+                viewModel.state.first { it.externalRatings is ExternalRatingsState.Shown }
+            }
+        assertEquals(ExternalRatingsState.Shown(listOf(imdb, tomatoes)), state.externalRatings)
+        assertEquals(2, source.asked.size)
+    }
+
+    @Test
+    fun `a title MDBList has nothing for is not asked again on a reload`() = runBlocking {
+        source.answer = emptyList()
+        val viewModel = loaded()
+        viewModel.loadRelated(itemId)
+        viewModel.loadMovie(itemId)
+        withTimeout(5_000) { viewModel.state.first { it.movie != null } }
+        assertEquals(1, source.asked.size)
+        assertEquals(ExternalRatingsState.Hidden, viewModel.state.value.externalRatings)
+    }
+
+    @Test
+    fun `the Rotten Tomatoes switch applies again on a reload`() = runBlocking {
+        val viewModel = loaded()
+        viewModel.loadRelated(itemId)
+        withTimeout(5_000) {
+            viewModel.state.first { it.externalRatings is ExternalRatingsState.Shown }
+        }
+
+        switchedOff += "pref_detail_critic_rating"
+        viewModel.loadMovie(itemId)
+        withTimeout(5_000) {
+            viewModel.state.first { it.externalRatings == ExternalRatingsState.Shown(listOf(imdb)) }
+        }
+
+        switchedOff.clear()
+        viewModel.loadMovie(itemId)
+        withTimeout(5_000) {
+            viewModel.state.first {
+                it.externalRatings == ExternalRatingsState.Shown(listOf(imdb, tomatoes))
+            }
+        }
+        assertEquals(1, source.asked.size)
     }
 
     @Test

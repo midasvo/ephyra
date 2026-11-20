@@ -167,9 +167,10 @@ constructor(
                     // Room answers long before the server does, so whether anything is
                     // downloaded is right in the first emit and the buttons don't flip later.
                     val localCounts = localCountsAsync.await()
+                    val sections = appPreferences.detailSections()
                     _state.emit(
                         _state.value.copy(
-                            show = show.shownIn(appPreferences.detailSections()),
+                            show = show.shownIn(sections),
                             nextUp = nextUp,
                             seasons = seasons,
                             actors = castAndCrew.actors,
@@ -181,6 +182,8 @@ constructor(
                                     // None on the downloads-only page, as no related rows.
                                     show.ratingsLookup().takeUnless { downloadsOnly },
                                     _state.value.externalRatings,
+                                    rottenTomatoes =
+                                        sections.criticRating && show.criticRating == null,
                                 ),
                             hasDownloads =
                                 localCounts?.let { counts ->

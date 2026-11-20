@@ -45,9 +45,18 @@ class ExternalRatingsCache(private val directory: File) {
         try {
             directory.mkdirs()
             val stored = Stored(fetchedAt, ratings.map { StoredRating(it.source.name, it.value) })
-            val temp = File(directory, "${lookup.key}.tmp")
-            temp.writeText(json.encodeToString(Stored.serializer(), stored))
-            Files.move(temp.toPath(), file(lookup).toPath(), StandardCopyOption.REPLACE_EXISTING)
+            // A temp file of its own per write, so two writes of one title can't mix.
+            val temp = File.createTempFile("${lookup.key}-", ".tmp", directory)
+            try {
+                temp.writeText(json.encodeToString(Stored.serializer(), stored))
+                Files.move(
+                    temp.toPath(),
+                    file(lookup).toPath(),
+                    StandardCopyOption.REPLACE_EXISTING,
+                )
+            } finally {
+                temp.delete()
+            }
         } catch (e: Exception) {
             Timber.w("Could not store external ratings (%s)", e.javaClass.simpleName)
         }

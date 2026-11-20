@@ -8,7 +8,11 @@ import java.lang.reflect.Proxy
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -27,11 +31,68 @@ class MdbListRatingsTest {
     private val lookup = RatingsLookup("tmdb", "movie", "278")
     private val other = RatingsLookup("imdb", "movie", "tt0111161")
 
+    /** Runs on every clock read: the first one inside a lookup comes after the cache read. */
+    private var onClock: () -> Unit = {}
+
     private val ratings by lazy {
-        MdbListRatings(appPreferences(), server.client(), ExternalRatingsCache(cacheDir)) { now }
+        MdbListRatings(appPreferences(), server.client(), ExternalRatingsCache(cacheDir)) {
+            onClock()
+            now
+        }
     }
 
     @AfterEach fun stop() = server.close()
+
+    @Test
+    fun `switched off during the cache read, nothing is sent`() {
+        onClock = { values["pref_external_ratings"] = false }
+        assertEquals(emptyList(), get())
+        assertEquals(0, requests)
+    }
+
+    @Test
+    fun `a key changed during the cache read, the new one is sent`() {
+        onClock = { values["pref_mdblist_api_key"] = "new-key" }
+        get()
+        assertEquals(listOf("/tmdb/movie/278/?apikey=new-key"), server.requests.toList())
+    }
+
+    @Test
+    fun `two pages asking at once share one request`() = runBlocking {
+        server.respond = { FakeMdbList.Reply(200, FakeMdbList.TITLE_BODY, delayMs = 300) }
+        val both =
+            withContext(Dispatchers.Default) {
+                listOf(async { ratings.ratings(lookup) }, async { ratings.ratings(lookup) })
+                    .awaitAll()
+            }
+        assertEquals(4, both[0].size)
+        assertEquals(both[0], both[1])
+        assertEquals(1, requests)
+    }
+
+    @Test
+    fun `with a rejected key the cached ratings still show, and room is kept for them`() {
+        val cached = get()
+        now += MdbListRatings.FOUND_TTL_MS
+        server.respond = { FakeMdbList.Reply(401, FakeMdbList.ERROR_BODY) }
+        assertEquals(cached, get(), message = "stale ratings after the 401")
+        assertTrue(ratings.isOn())
+        assertFalse(ratings.canRequest(lookup))
+        assertTrue(ratings.mightHaveRatings(lookup), message = "the cached title keeps its room")
+        assertFalse(ratings.mightHaveRatings(other), message = "a title without ratings doesn't")
+        assertEquals(cached, get())
+        assertEquals(2, requests)
+    }
+
+    @Test
+    fun `during a 429 wait a title with cached ratings keeps its room`() {
+        get()
+        now += MdbListRatings.FOUND_TTL_MS
+        server.respond = { FakeMdbList.Reply(429, headers = mapOf("Retry-After" to "600")) }
+        get()
+        assertTrue(ratings.mightHaveRatings(lookup))
+        assertFalse(ratings.mightHaveRatings(other))
+    }
 
     private fun get(which: RatingsLookup = lookup) = runBlocking { ratings.ratings(which) }
 
@@ -91,11 +152,11 @@ class MdbListRatingsTest {
         now += MdbListRatings.FOUND_TTL_MS
         server.respond = { FakeMdbList.Reply(500, "") }
         assertEquals(cached, get(), message = "stale ratings on a failure")
-        assertFalse(ratings.mightHaveRatings(lookup))
+        assertFalse(ratings.canRequest(lookup))
         assertEquals(cached, get())
         assertEquals(2, requests)
         now += MdbListRatings.FAILURE_BACKOFF_MS
-        assertTrue(ratings.mightHaveRatings(lookup))
+        assertTrue(ratings.canRequest(lookup))
         get()
         assertEquals(3, requests)
     }
@@ -136,11 +197,11 @@ class MdbListRatingsTest {
     fun `a rejected key isn't used again until it changes`() {
         server.respond = { FakeMdbList.Reply(401, FakeMdbList.ERROR_BODY) }
         get()
-        assertFalse(ratings.isOn())
+        assertFalse(ratings.canRequest(other))
         get(other)
         assertEquals(1, requests)
         values["pref_mdblist_api_key"] = "new-key"
-        assertTrue(ratings.isOn())
+        assertTrue(ratings.canRequest(other))
         get(other)
         assertEquals(2, requests)
     }
@@ -151,7 +212,7 @@ class MdbListRatingsTest {
         get()
         server.respond = { FakeMdbList.Reply(200, """{"user_id": 1}""") }
         assertEquals(ExternalRatingsKeyStatus.VALID, runBlocking { ratings.check("key") })
-        assertTrue(ratings.isOn())
+        assertTrue(ratings.canRequest(lookup))
     }
 
     @Test

@@ -38,32 +38,42 @@ class ExternalRatingsLoader(
     private val scope: CoroutineScope,
     private val update: (ExternalRatingsState) -> Unit,
 ) {
+    /** The item asked about, while its lookup runs and once it is done. */
     private var loadedFor: UUID? = null
+    /** The ratings [loadedFor] got, before the Rotten Tomatoes rule; null while loading. */
+    private var loaded: List<ExternalRating>? = null
     private var job: Job? = null
 
-    /** The row's state for the page's first frame. No I/O. */
+    /**
+     * The row's state for the page's first frame. No I/O. [rottenTomatoes] is false when the page
+     * shows the server's own Rotten Tomatoes score, or the user turned that score off; a reload
+     * applies it again to ratings that are already there.
+     */
     fun onItemLoaded(
         itemId: UUID,
         lookup: RatingsLookup?,
         current: ExternalRatingsState,
+        rottenTomatoes: Boolean,
     ): ExternalRatingsState {
         if (lookup == null || !source.isOn()) {
             reset()
             return ExternalRatingsState.Hidden
         }
-        if (loadedFor == itemId) return current
+        if (loadedFor == itemId) return loaded?.let { stateOf(it, rottenTomatoes) } ?: current
         reset()
         return if (source.mightHaveRatings(lookup)) ExternalRatingsState.Pending
         else ExternalRatingsState.Hidden
     }
 
     /**
-     * Fetches the ratings of [itemId], unless that is done already. [rottenTomatoes] is false when
-     * the page shows the server's own Rotten Tomatoes score, or the user turned that score off.
+     * Fetches the ratings of [itemId], unless that is done already. A lookup that got nothing
+     * because MDBList couldn't be asked (a failure, a 429, a rejected key) is not done: a later
+     * load of the page tries again, once the source allows it.
      */
     fun load(itemId: UUID, lookup: RatingsLookup?, rottenTomatoes: Boolean) {
         if (lookup == null || loadedFor == itemId || !source.isOn()) return
         loadedFor = itemId
+        loaded = null
         job?.cancel()
         job = scope.launch {
             val ratings =
@@ -75,19 +85,30 @@ class ExternalRatingsLoader(
                     Timber.w(e, "Failed to load the external ratings")
                     emptyList()
                 }
-            val shown = ratings.filter {
-                rottenTomatoes || it.source != RatingSource.ROTTEN_TOMATOES
+            when {
+                // Switched off while the lookup ran: its answer is dropped.
+                !source.isOn() -> {
+                    loadedFor = null
+                    update(ExternalRatingsState.Hidden)
+                    return@launch
+                }
+                ratings.isEmpty() && !source.canRequest(lookup) -> loadedFor = null
+                else -> loaded = ratings
             }
-            update(
-                if (shown.isEmpty()) ExternalRatingsState.Hidden
-                else ExternalRatingsState.Shown(shown)
-            )
+            update(stateOf(ratings, rottenTomatoes))
         }
     }
+
+    private fun stateOf(ratings: List<ExternalRating>, rottenTomatoes: Boolean) =
+        ratings
+            .filter { rottenTomatoes || it.source != RatingSource.ROTTEN_TOMATOES }
+            .takeIf { it.isNotEmpty() }
+            ?.let { ExternalRatingsState.Shown(it) } ?: ExternalRatingsState.Hidden
 
     private fun reset() {
         job?.cancel()
         job = null
         loadedFor = null
+        loaded = null
     }
 }

@@ -71,13 +71,19 @@ data class RatingsLookup(val provider: String, val type: String, val id: String)
 
 /** The external ratings of a title, for the detail pages. */
 interface ExternalRatingsSource {
-    /** Switched on, with a key that isn't known to be wrong. Reads only memory and preferences. */
+    /** Switched on, with a key. Reads only memory and preferences. */
     fun isOn(): Boolean
 
     /**
-     * Whether a page should keep room for ratings of [lookup]: switched on, with a key that isn't
-     * known to be wrong, not waiting out a 429, and no recent failure for this title. Reads only
-     * memory and preferences, so it is cheap enough for the page's first load.
+     * Whether MDBList may be asked about [lookup] now: on, with a key it didn't turn down, not
+     * waiting out a 429, and no recent failure for this title. Memory and preferences only.
+     */
+    fun canRequest(lookup: RatingsLookup): Boolean
+
+    /**
+     * Whether a page should keep room for ratings of [lookup]: when [canRequest], or when [ratings]
+     * would show cached ones without asking. Memory and preferences only, so it is cheap enough for
+     * the page's first load.
      */
     fun mightHaveRatings(lookup: RatingsLookup): Boolean
 
@@ -91,6 +97,8 @@ interface ExternalRatingsSource {
     /** For tests and previews: never any ratings. */
     object None : ExternalRatingsSource {
         override fun isOn() = false
+
+        override fun canRequest(lookup: RatingsLookup) = false
 
         override fun mightHaveRatings(lookup: RatingsLookup) = false
 
