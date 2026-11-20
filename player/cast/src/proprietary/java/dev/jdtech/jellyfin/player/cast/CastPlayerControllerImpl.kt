@@ -548,9 +548,9 @@ constructor(
 
                 val mediaSource = playbackInfo?.mediaSources?.firstOrNull()
                 if (playbackInfo != null && mediaSource != null) {
-                    // getInitialItem asked for the phone's playback info and its play session
-                    // replaced the receiver's.
-                    repository.onExternalPlaybackInfo(
+                    // The receiver's stream plays, so its play session is the one the reports
+                    // name, whatever the phone's own player recorded for this item before.
+                    repository.setPlaySession(
                         itemId,
                         playbackInfo.playSessionId,
                         transcodes = !mediaSource.transcodingUrl.isNullOrBlank(),
@@ -647,7 +647,7 @@ constructor(
         val mediaSource = playbackInfo.mediaSources.firstOrNull() ?: return null
         val transcodingUrl = mediaSource.transcodingUrl
         val isTranscoded = !transcodingUrl.isNullOrBlank()
-        repository.onExternalPlaybackInfo(item.itemId, playbackInfo.playSessionId, isTranscoded)
+        repository.setPlaySession(item.itemId, playbackInfo.playSessionId, isTranscoded)
 
         val isEpisode = item.seriesName != null
         val mediaMetadata =

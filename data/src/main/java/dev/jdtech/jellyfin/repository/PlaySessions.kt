@@ -13,10 +13,10 @@ internal class PlaySessions {
     private val sessions = ConcurrentHashMap<UUID, String>()
 
     /**
-     * Records the answer to a playback info request for [itemId]. A source that plays directly has
-     * no transcode to end, so its session is not kept. A later request for the same item (a quality
-     * switch) replaces the session: the stream it replaces is left to the server's timer, the SDK
-     * has no call to end it.
+     * Records the session of the stream that plays [itemId] now (see
+     * [JellyfinRepository.setPlaySession]). A source that plays directly has no transcode to end,
+     * so its session is not kept. A new stream for the same item (a quality switch) replaces the
+     * session: the stream it replaces is left to the server's timer, the SDK has no call to end it.
      */
     fun onPlaybackInfo(itemId: UUID, playSessionId: String?, transcodes: Boolean) {
         val session = playSessionId?.takeIf { transcodes && it.isNotBlank() }

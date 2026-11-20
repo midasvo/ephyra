@@ -236,12 +236,16 @@ interface JellyfinRepository {
     suspend fun postCapabilities()
 
     /**
-     * CE (#626): records the play session of a playback info request the caller made itself. Cast
-     * asks with the receiver's device profile, not the phone's, so the reports for [itemId] must
-     * name that session: it is the one whose transcode the stop report ends. [transcodes] is
-     * whether the answer has a transcoding URL.
+     * Records the play session of the stream that plays [itemId] now, which the start, progress and
+     * stop reports of [itemId] name: it is the one whose transcode the stop report ends.
+     * [transcodes] is whether that stream is the server's transcode.
+     *
+     * CE (#626): Cast asks with the receiver's device profile, not the phone's. CE (#728): the
+     * local player calls this for each stream it loads. [getPlaybackSources] records nothing: a
+     * quality or audio switch that fails after asking for the playing item's new stream keeps the
+     * old stream, whose session the reports must keep naming.
      */
-    fun onExternalPlaybackInfo(itemId: UUID, playSessionId: String?, transcodes: Boolean) {}
+    fun setPlaySession(itemId: UUID, playSessionId: String?, transcodes: Boolean) {}
 
     /**
      * Report that [itemId] started playing. [transcoded] says whether the stream playing is the

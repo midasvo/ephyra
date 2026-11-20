@@ -674,14 +674,14 @@ class JellyfinRepositoryImpl(
                         ),
                     )
                     .content
-            playSessions.onPlaybackInfo(
-                itemId,
-                playbackInfo.playSessionId,
-                transcodes = playbackInfo.mediaSources.any { !it.transcodingUrl.isNullOrBlank() },
-            )
+            // CE (#728): each transcode carries its play session; the player records it when it
+            // loads the stream (setPlaySession), not here: a switch that fails keeps the old one.
+            val playSessionId = playbackInfo.playSessionId?.takeIf { it.isNotBlank() }
             sources.addAll(
                 playbackInfo.mediaSources.map {
-                    it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath = true)
+                    val source =
+                        it.toFindroidSource(this@JellyfinRepositoryImpl, itemId, includePath = true)
+                    if (source.transcoded) source.copy(playSessionId = playSessionId) else source
                 }
             )
             sources.addAll(localSources)
@@ -833,7 +833,7 @@ class JellyfinRepositoryImpl(
         }
     }
 
-    override fun onExternalPlaybackInfo(itemId: UUID, playSessionId: String?, transcodes: Boolean) =
+    override fun setPlaySession(itemId: UUID, playSessionId: String?, transcodes: Boolean) =
         playSessions.onPlaybackInfo(itemId, playSessionId, transcodes)
 
     override suspend fun postPlaybackStart(itemId: UUID, transcoded: Boolean) {

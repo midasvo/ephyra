@@ -532,6 +532,7 @@ class PlaylistManager @Inject internal constructor(private val repository: Jelly
             mediaSourceId = mediaSource.id,
             mediaSourceUri = mediaSource.path,
             isTranscoded = mediaSource.transcoded,
+            playSessionId = mediaSource.playSessionId,
             audioTracks =
                 if (remote != null && mediaSource.transcoded) {
                     serverAudioTracks(mediaSource.mediaStreams)

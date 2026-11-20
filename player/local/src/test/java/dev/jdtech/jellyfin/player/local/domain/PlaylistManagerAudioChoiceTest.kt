@@ -186,6 +186,35 @@ class PlaylistManagerAudioChoiceTest {
         assertEquals(path(null), item?.mediaSourceUri)
     }
 
+    @Test
+    fun `an item carries the play session of the stream it plays`() {
+        // #728: the reports name it once the player loads the stream, not when the server answers.
+        val manager = PlaylistManager(repository(transcodes = true, saved = dutch()))
+        val item = runBlocking { manager.getInitialItem(episode.id, BaseItemKind.EPISODE) }!!
+
+        assertEquals(session(DUTCH), item.playSessionId, message = "the answer with the track")
+    }
+
+    @Test
+    fun `when the request for the picked track fails the item keeps the session that plays`() {
+        val manager =
+            PlaylistManager(repository(transcodes = true, saved = null, failWithAudio = true))
+        val item = runBlocking { manager.getInitialItem(episode.id, BaseItemKind.EPISODE) }!!
+
+        val picked = runBlocking { manager.recreatePlayerItem(item, audioStreamIndex = DUTCH) }
+
+        assertEquals(session(null), picked.playSessionId, message = "the default track plays")
+    }
+
+    @Test
+    fun `a stream that plays directly has no play session`() {
+        val manager = PlaylistManager(repository(transcodes = false, saved = null))
+
+        val item = runBlocking { manager.getInitialItem(episode.id, BaseItemKind.EPISODE) }!!
+
+        assertNull(item.playSessionId, message = "no transcode to name")
+    }
+
     private fun repository(
         transcodes: Boolean,
         saved: SeriesTrackPreferenceDto?,
@@ -240,7 +269,11 @@ class PlaylistManagerAudioChoiceTest {
                 listOf(audio(ENGLISH, "eng", "English"), audio(DUTCH, "dut", "Nederlands")),
             transcoded = transcodes,
             defaultAudioStreamIndex = audio ?: ENGLISH,
+            playSessionId = if (transcodes) session(audio) else null,
         )
+
+    /** The play session of the server's answer for [audio]. */
+    private fun session(audio: Int?) = "session-$audio"
 
     private fun download() =
         FindroidSource(

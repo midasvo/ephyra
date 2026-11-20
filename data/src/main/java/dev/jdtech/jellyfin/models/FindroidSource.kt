@@ -26,6 +26,11 @@ data class FindroidSource(
     val bitrate: Int? = null,
     /** CE (#580): the audio stream the server plays, and puts in a transcode, for this source. */
     val defaultAudioStreamIndex: Int? = null,
+    /**
+     * CE (#728): the play session of a transcode on the playback path, which the playback reports
+     * name once the player loads it. Null for anything else.
+     */
+    val playSessionId: String? = null,
 )
 
 suspend fun MediaSourceInfo.toFindroidSource(

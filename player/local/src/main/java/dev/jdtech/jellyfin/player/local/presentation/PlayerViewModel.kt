@@ -939,7 +939,12 @@ constructor(
         }
     }
 
+    /**
+     * The player's item for this stream. Every stream goes through here on its way into the player,
+     * so this is where its play session becomes the one the reports name (#728).
+     */
     private fun PlayerItem.toMediaItem(): MediaItem {
+        repository.setPlaySession(itemId, playSessionId, isTranscoded)
         val streamUrl = mediaSourceUri
         val mediaSubtitles = externalSubtitles.map { externalSubtitle ->
             MediaItem.SubtitleConfiguration.Builder(externalSubtitle.uri)
