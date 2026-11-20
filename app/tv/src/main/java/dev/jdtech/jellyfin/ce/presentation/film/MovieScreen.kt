@@ -320,6 +320,11 @@ private fun MovieScreenContent(
                                 )
                                 TvWatchHistory(movie.playCount, movie.lastPlayedDate)
                             }
+                            // CE (#331)
+                            TvExternalRatings(
+                                state.externalRatings,
+                                Modifier.padding(top = MaterialTheme.spacings.small),
+                            )
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
                             TvTagline(movie.tagline)
                             // CE (#545): a cut overview takes focus and opens in full on OK.

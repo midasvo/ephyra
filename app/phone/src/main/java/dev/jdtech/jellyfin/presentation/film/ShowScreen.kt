@@ -63,6 +63,7 @@ import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
 import dev.jdtech.jellyfin.presentation.film.components.DownloadUnwatchedDialog
 import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
+import dev.jdtech.jellyfin.presentation.film.components.ExternalRatingsRow
 import dev.jdtech.jellyfin.presentation.film.components.InfoText
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemCard
@@ -325,6 +326,11 @@ private fun ShowScreenLayout(
                     }
                     AirScheduleText(show)
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
+                    // CE (#331)
+                    ExternalRatingsRow(
+                        state.externalRatings,
+                        Modifier.padding(bottom = MaterialTheme.spacings.small),
+                    )
                     ItemButtonsBar(
                         item = show,
                         downloaderState =

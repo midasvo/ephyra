@@ -57,6 +57,7 @@ import dev.jdtech.jellyfin.presentation.film.components.CriticRating
 import dev.jdtech.jellyfin.presentation.film.components.Direction
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
 import dev.jdtech.jellyfin.presentation.film.components.ExternalLinksRow
+import dev.jdtech.jellyfin.presentation.film.components.ExternalRatingsRow
 import dev.jdtech.jellyfin.presentation.film.components.InfoText
 import dev.jdtech.jellyfin.presentation.film.components.ItemButtonsBar
 import dev.jdtech.jellyfin.presentation.film.components.ItemHeader
@@ -308,6 +309,11 @@ private fun MovieScreenLayout(
                         CriticRating(movie.criticRating)
                     }
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
+                    // CE (#331)
+                    ExternalRatingsRow(
+                        state.externalRatings,
+                        Modifier.padding(bottom = MaterialTheme.spacings.small),
+                    )
                     state.videoMetadata?.let { videoMetadata ->
                         VideoMetadataBar(
                             videoMetadata,

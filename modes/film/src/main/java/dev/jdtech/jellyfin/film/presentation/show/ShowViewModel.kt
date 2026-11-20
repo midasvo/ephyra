@@ -7,12 +7,14 @@ import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.film.presentation.DownloadPrompt
 import dev.jdtech.jellyfin.film.presentation.EpisodeDownloadPrompts
+import dev.jdtech.jellyfin.film.presentation.ExternalRatingsLoader
 import dev.jdtech.jellyfin.film.presentation.RelatedItems
 import dev.jdtech.jellyfin.film.presentation.RelatedItemsRequest
 import dev.jdtech.jellyfin.film.presentation.detailSections
 import dev.jdtech.jellyfin.film.presentation.inFlightIds
 import dev.jdtech.jellyfin.film.presentation.keeping
 import dev.jdtech.jellyfin.film.presentation.launchRelatedItems
+import dev.jdtech.jellyfin.film.presentation.ratingsLookup
 import dev.jdtech.jellyfin.film.presentation.selectEpisodesToDownload
 import dev.jdtech.jellyfin.film.presentation.shownIn
 import dev.jdtech.jellyfin.models.FindroidEpisode
@@ -21,6 +23,7 @@ import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.models.FindroidSourceType
 import dev.jdtech.jellyfin.models.SeasonEpisodeCounts
 import dev.jdtech.jellyfin.models.mergeDuplicateRoles
+import dev.jdtech.jellyfin.ratings.ExternalRatingsSource
 import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.repository.ReloadPolicy
@@ -63,9 +66,16 @@ constructor(
     private val downloadQueue: DownloadQueue,
     private val database: ServerDatabaseDao,
     dataChanges: DataChangeEvents = DataChangeEvents(),
+    externalRatings: ExternalRatingsSource = ExternalRatingsSource.None,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ShowState())
     val state = _state.asStateFlow()
+
+    // CE (#331)
+    private val ratingsLoader =
+        ExternalRatingsLoader(externalRatings, viewModelScope) { ratings ->
+            _state.update { it.copy(externalRatings = ratings) }
+        }
 
     private val eventsChannel = Channel<ShowEvent>()
     val events = eventsChannel.receiveAsFlow()
@@ -165,6 +175,13 @@ constructor(
                             actors = castAndCrew.actors,
                             director = castAndCrew.director.takeIf { displayCredits },
                             writers = castAndCrew.writers.takeIf { displayCredits }.orEmpty(),
+                            externalRatings =
+                                ratingsLoader.onItemLoaded(
+                                    showId,
+                                    // None on the downloads-only page, as no related rows.
+                                    show.ratingsLookup().takeUnless { downloadsOnly },
+                                    _state.value.externalRatings,
+                                ),
                             hasDownloads =
                                 localCounts?.let { counts ->
                                     seasons.any { (counts[it.id]?.downloaded ?: 0) > 0 }
@@ -251,13 +268,20 @@ constructor(
     fun loadRelated(showId: UUID) {
         val show = _state.value.show?.takeIf { it.id == showId } ?: return
         if (downloadsOnly) return
+        val sections = appPreferences.detailSections()
+        // CE (#331): the external ratings, after the first frame like the rows.
+        ratingsLoader.load(
+            showId,
+            show.ratingsLookup(),
+            rottenTomatoes = sections.criticRating && show.criticRating == null,
+        )
         val request =
             RelatedItemsRequest.forItem(
                     localTrailerCount = show.localTrailerCount,
                     specialFeatureCount = show.specialFeatureCount,
                     collections = false,
                 )
-                .shownIn(appPreferences.detailSections())
+                .shownIn(sections)
         if (relatedFor == showId && relatedRequest == request) return
         relatedFor = showId
         relatedRequest = request

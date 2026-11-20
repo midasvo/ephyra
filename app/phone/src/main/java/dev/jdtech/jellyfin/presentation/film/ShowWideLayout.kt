@@ -43,6 +43,7 @@ import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
 import dev.jdtech.jellyfin.presentation.film.components.AirScheduleText
 import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.Direction
+import dev.jdtech.jellyfin.presentation.film.components.ExternalRatingsRow
 import dev.jdtech.jellyfin.presentation.film.components.HeroMetadataLine
 import dev.jdtech.jellyfin.presentation.film.components.HeroSubtitle
 import dev.jdtech.jellyfin.presentation.film.components.HeroTitle
@@ -124,6 +125,11 @@ fun ShowWideLayout(
                     )
                     AirScheduleText(show)
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
+                    // CE (#331)
+                    ExternalRatingsRow(
+                        state.externalRatings,
+                        Modifier.padding(bottom = MaterialTheme.spacings.small),
+                    )
                     ItemButtonsBar(
                         item = show,
                         downloaderState =

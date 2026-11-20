@@ -1,7 +1,10 @@
 package dev.jdtech.jellyfin.ce.presentation.film
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
@@ -16,16 +19,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme as MaterialThemePhone
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
@@ -37,8 +45,12 @@ import androidx.tv.material3.Text
 import dev.jdtech.jellyfin.ce.ui.focus.FocusPosition
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
 import dev.jdtech.jellyfin.core.R as CoreR
+import dev.jdtech.jellyfin.core.presentation.ephyra.EphyraMotion
+import dev.jdtech.jellyfin.film.presentation.ExternalRatingsState
 import dev.jdtech.jellyfin.models.FindroidItem
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.ratings.ExternalRating
+import dev.jdtech.jellyfin.ratings.RatingSource
 import dev.jdtech.jellyfin.ui.components.Direction
 import dev.jdtech.jellyfin.ui.components.ItemCard
 import java.time.LocalDateTime
@@ -72,6 +84,63 @@ fun TvCriticRating(criticRating: Float?) {
         )
         Spacer(modifier = Modifier.width(MaterialTheme.spacings.extraSmall))
         Text(text = text, style = MaterialTheme.typography.labelMedium)
+    }
+}
+
+/** What a pending row measures, so the ratings take exactly the room kept for them. */
+private val ratingsPlaceholder = listOf(ExternalRating(RatingSource.IMDB, 0f))
+
+/**
+ * CE (#331): MDBList's scores under the metadata row, as neutral pills (VISION §3.4). Nothing when
+ * [state] is hidden; while pending, an invisible pill keeps the row's height and the scores fade in
+ * over it, so nothing below moves. Not focusable: there is nothing to do with a score.
+ */
+@Composable
+fun TvExternalRatings(state: ExternalRatingsState, modifier: Modifier = Modifier) {
+    if (state is ExternalRatingsState.Hidden) return
+    val ratings = (state as? ExternalRatingsState.Shown)?.ratings
+    val alpha by
+        animateFloatAsState(
+            targetValue = if (ratings != null) 1f else 0f,
+            animationSpec = tween(EphyraMotion.DURATION_MEDIUM, easing = EphyraMotion.EasingEnter),
+            label = "externalRatingsAlpha",
+        )
+    val locale = LocalConfiguration.current.locales.get(0)
+    Row(
+        modifier =
+            modifier
+                .graphicsLayer { this.alpha = alpha }
+                .then(if (ratings == null) Modifier.clearAndSetSemantics {} else Modifier),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.small),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        (ratings ?: ratingsPlaceholder).forEach { rating ->
+            val value = rating.source.format(rating.value, locale)
+            Row(
+                modifier =
+                    Modifier.background(
+                            MaterialThemePhone.colorScheme.surfaceContainerHigh,
+                            CircleShape,
+                        )
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = "${rating.source.label} $value"
+                        },
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacings.extraSmall),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = rating.source.label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
     }
 }
 

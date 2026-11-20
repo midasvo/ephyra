@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,7 @@ import dev.jdtech.jellyfin.film.presentation.movie.MovieState
 import dev.jdtech.jellyfin.presentation.film.components.ActorsRow
 import dev.jdtech.jellyfin.presentation.film.components.ArtworkPlacement
 import dev.jdtech.jellyfin.presentation.film.components.DownloadQualityDialog
+import dev.jdtech.jellyfin.presentation.film.components.ExternalRatingsRow
 import dev.jdtech.jellyfin.presentation.film.components.HeroChips
 import dev.jdtech.jellyfin.presentation.film.components.HeroMetadataLine
 import dev.jdtech.jellyfin.presentation.film.components.HeroSubtitle
@@ -107,6 +109,11 @@ fun MovieWideLayout(
                         criticRating = movie.criticRating,
                     )
                     Spacer(Modifier.height(MaterialTheme.spacings.small))
+                    // CE (#331)
+                    ExternalRatingsRow(
+                        state.externalRatings,
+                        Modifier.padding(bottom = MaterialTheme.spacings.small),
+                    )
                     state.videoMetadata?.let { videoMetadata ->
                         HeroChips {
                             VideoMetadataBar(

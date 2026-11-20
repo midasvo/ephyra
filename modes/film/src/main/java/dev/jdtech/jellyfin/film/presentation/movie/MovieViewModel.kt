@@ -4,15 +4,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.film.domain.VideoMetadataParser
+import dev.jdtech.jellyfin.film.presentation.ExternalRatingsLoader
 import dev.jdtech.jellyfin.film.presentation.RelatedItems
 import dev.jdtech.jellyfin.film.presentation.RelatedItemsRequest
 import dev.jdtech.jellyfin.film.presentation.detailSections
 import dev.jdtech.jellyfin.film.presentation.keeping
 import dev.jdtech.jellyfin.film.presentation.launchRelatedItems
+import dev.jdtech.jellyfin.film.presentation.ratingsLookup
 import dev.jdtech.jellyfin.film.presentation.shownIn
 import dev.jdtech.jellyfin.models.FindroidItemPerson
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.mergeDuplicateRoles
+import dev.jdtech.jellyfin.ratings.ExternalRatingsSource
 import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import dev.jdtech.jellyfin.repository.ReloadPolicy
@@ -40,9 +43,16 @@ constructor(
     private val appPreferences: AppPreferences,
     private val videoMetadataParser: VideoMetadataParser,
     dataChanges: DataChangeEvents = DataChangeEvents(),
+    externalRatings: ExternalRatingsSource = ExternalRatingsSource.None,
 ) : ViewModel() {
     private val _state = MutableStateFlow(MovieState())
     val state = _state.asStateFlow()
+
+    // CE (#331)
+    private val ratingsLoader =
+        ExternalRatingsLoader(externalRatings, viewModelScope) { ratings ->
+            _state.update { it.copy(externalRatings = ratings) }
+        }
 
     private lateinit var movieId: UUID
     private val reloadPolicy = ReloadPolicy(dataChanges)
@@ -94,6 +104,12 @@ constructor(
                         actors = actors,
                         director = director,
                         writers = writers,
+                        externalRatings =
+                            ratingsLoader.onItemLoaded(
+                                movieId,
+                                movie.ratingsLookup(),
+                                _state.value.externalRatings,
+                            ),
                     )
                 )
                 // A reload of a page that has its rows: a switch may have changed since.
@@ -114,13 +130,20 @@ constructor(
      */
     fun loadRelated(movieId: UUID) {
         val movie = _state.value.movie?.takeIf { it.id == movieId } ?: return
+        val sections = appPreferences.detailSections()
+        // CE (#331): the external ratings, after the first frame like the rows.
+        ratingsLoader.load(
+            movieId,
+            movie.ratingsLookup(),
+            rottenTomatoes = sections.criticRating && movie.criticRating == null,
+        )
         val request =
             RelatedItemsRequest.forItem(
                     localTrailerCount = movie.localTrailerCount,
                     specialFeatureCount = movie.specialFeatureCount,
                     collections = true,
                 )
-                .shownIn(appPreferences.detailSections())
+                .shownIn(sections)
         if (relatedFor == movieId && relatedRequest == request) return
         relatedFor = movieId
         relatedRequest = request
