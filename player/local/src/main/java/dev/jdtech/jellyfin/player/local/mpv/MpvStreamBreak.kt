@@ -6,7 +6,7 @@ package dev.jdtech.jellyfin.player.local.mpv
  * libmpv turns a read error into an end of file: on direct play the demuxer gives up after its
  * retries ("treating it as fatal error"), and the HLS demuxer of a transcode skips every segment it
  * cannot fetch and then ends normally. Either way `eof-reached` looks the same as a real end, and
- * the JNI layer passes no `end-file` reason. What does differ:
+ * mpv's `end-file` reason ([MPVPlayer.eventEndFile], #786) is EOF for both. What does differ:
  * - mpv logged an error from the stream or demuxer layer since the last data arrived, and
  * - the demuxer had not buffered up to the end of the file.
  *

@@ -242,6 +242,14 @@ class PlayerInvariantsTest {
                 endFileReason.value.contains("loadState.endFileReason(reason, error)"),
             message = "eventEndFile must post the reason to MpvLoadState like event() (#786)",
         )
+        // And event() must still handle END_FILE inside that same post(), after the reason.
+        val event =
+            Regex("""override fun event\(eventId: Int\) \{\s*post \{[\s\S]*?\n {4}\}""")
+                .find(mpvPlayer)
+        assertTrue(
+            event != null && event.value.contains("MpvEvent.MPV_EVENT_END_FILE -> {"),
+            message = "event() must handle END_FILE inside post(), as eventEndFile does (#786)",
+        )
     }
 
     @Test
