@@ -10,6 +10,7 @@ import dev.jdtech.jellyfin.repository.ReloadPolicy
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,6 +41,7 @@ constructor(
 
     private val serverAwayReload = ServerAwayReload()
     private var loadJob: Job? = null
+    private var storeRetryJob: Job? = null
 
     /**
      * Loads the libraries. [silent] (CE, #257) leaves the current list and loading state alone: no
@@ -54,16 +56,27 @@ constructor(
         val replaced = loadJob?.takeIf { it.isActive }
         replaced?.cancel()
         val quiet = silent && !(replaced != null && _state.value.isLoading)
+        // CE (#779): a newer load stands in for the one more try after a stored answer.
+        storeRetryJob?.cancel()
         serverAwayReload.begin()
         loadJob = viewModelScope.launch {
             val token = reloadPolicy.begin()
             if (!quiet) _state.emit(_state.value.copy(isLoading = true, error = null))
             try {
-                val libraries = repository.getLibraries()
+                val result = repository.getLibraries()
                 ensureActive()
                 librariesLoadedAtNanos = System.nanoTime()
                 reloadPolicy.complete(token)
-                _state.emit(_state.value.copy(libraries = libraries, error = null))
+                _state.emit(_state.value.copy(libraries = result.items, error = null))
+                // CE (#779): the stored libraries before the server was known to be away get one
+                // more try, quietly, so they do not stay when the server did answer the probe.
+                if (serverAwayReload.retriesAfterStore(result.fromStore)) {
+                    storeRetryJob = viewModelScope.launch {
+                        delay(ServerAwayReload.STORE_RETRY_DELAY_MS)
+                        storeRetryJob = null
+                        loadData(silent = true)
+                    }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

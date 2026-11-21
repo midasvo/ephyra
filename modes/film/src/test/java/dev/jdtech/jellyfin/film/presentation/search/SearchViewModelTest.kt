@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.film.presentation.search
 
 import dev.jdtech.jellyfin.models.FindroidItem
+import dev.jdtech.jellyfin.repository.ItemsResult
 import dev.jdtech.jellyfin.repository.JellyfinRepository
 import java.lang.reflect.Proxy
 import kotlin.test.assertEquals
@@ -97,7 +98,7 @@ class SearchViewModelTest {
             when (method.name) {
                 "getSearchItems" -> {
                     requests += args!![0] as String
-                    listOf(item())
+                    ItemsResult(listOf(item()))
                 }
                 else -> throw NotImplementedError("JellyfinRepository.${method.name}")
             }

@@ -21,6 +21,7 @@ import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
 import dev.jdtech.jellyfin.player.DeviceProfileBuilder
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
+import java.io.File
 import java.net.ServerSocket
 import java.time.LocalDateTime
 import java.util.UUID
@@ -266,8 +267,11 @@ class StoredListsFallbackTest {
         userData(showId, favorite = true)
         userData(episodeId, favorite = true)
 
-        assertEquals(listOf(id(1), showId, episodeId), repository.getFavoriteItems().map { it.id })
-        assertTrue(repository.getFavoriteItems().all { it.favorite })
+        assertEquals(
+            listOf(id(1), showId, episodeId),
+            repository.getFavoriteItems().items.map { it.id },
+        )
+        assertTrue(repository.getFavoriteItems().items.all { it.favorite })
     }
 
     @Test
@@ -275,7 +279,10 @@ class StoredListsFallbackTest {
         // The screen says that none of the favourites are downloaded, not that loading failed.
         storeMovie(id(1), "Not a favourite")
         userData(id(1))
-        assertEquals(emptyList<Any>(), repository.getFavoriteItems())
+        val result = repository.getFavoriteItems()
+        assertEquals(emptyList<Any>(), result.items)
+        // CE (#779): Room answered the unanswered request, before anything knew the server away.
+        assertTrue(result.fromStore)
     }
 
     @Test
@@ -284,20 +291,20 @@ class StoredListsFallbackTest {
             storeMovie(id(1), "Not a favourite")
             knownServerState.unreachable = true
 
-            assertEquals(emptyList<Any>(), repository.getFavoriteItems())
+            assertEquals(emptyList<Any>(), repository.getFavoriteItems().items)
             assertEquals(1, knownServerState.skipped)
         }
 
     @Test
     fun `with nothing downloaded the server's error surfaces for favourites`() = runBlocking {
         // TV, or a phone without downloads: the error page, as before.
-        assertTrue(fails { repository.getFavoriteItems() })
+        assertTrue(fails { repository.getFavoriteItems().items })
 
         knownServerState.unreachable = true
-        assertTrue(fails { repository.getFavoriteItems() })
+        assertTrue(fails { repository.getFavoriteItems().items })
         // Only an unfinished download: nothing to play, so the same.
         storeMovie(id(1), "Writing", download = Download.WRITING)
-        assertTrue(fails { repository.getFavoriteItems() })
+        assertTrue(fails { repository.getFavoriteItems().items })
         assertEquals(0, knownServerState.skipped)
     }
 
@@ -306,13 +313,13 @@ class StoredListsFallbackTest {
         // The server is there and says no: that is an error to show.
         storeMovie(id(1), "Not a favourite")
         serverUrl = answering("HTTP/1.1 500 Internal Server Error")
-        assertTrue(fails { repository.getFavoriteItems() })
+        assertTrue(fails { repository.getFavoriteItems().items })
     }
 
     @Test
     fun `without a current server there is no fallback for favourites`() = runBlocking {
         preferences.setValue(preferences.currentServer, null)
-        assertTrue(fails { repository.getFavoriteItems() })
+        assertTrue(fails { repository.getFavoriteItems().items })
     }
 
     /** A server that answers every request with [statusLine] and an empty body. */
@@ -340,21 +347,73 @@ class StoredListsFallbackTest {
 
     @Test
     fun `the stored libraries are those with downloads of the current server`() = runBlocking {
-        assertTrue(fails { repository.getLibraries() }, "nothing stored")
+        assertTrue(fails { repository.getLibraries().items }, "nothing stored")
 
         storeMovie(id(1), "Movie", serverId = SERVER_B)
-        assertTrue(fails { repository.getLibraries() }, "only another server's")
+        assertTrue(fails { repository.getLibraries().items }, "only another server's")
 
         storeMovie(id(2), "Movie")
         assertEquals(
             listOf(StoredLibraries.MOVIES to CollectionType.Movies),
-            repository.getLibraries().map { it.id to it.type },
+            repository.getLibraries().items.map { it.id to it.type },
         )
 
         storeEpisode()
-        val libraries = repository.getLibraries()
+        val libraries = repository.getLibraries().items
         assertEquals(listOf(StoredLibraries.MOVIES, StoredLibraries.SHOWS), libraries.map { it.id })
         assertEquals(listOf("Movies", "TV Shows"), libraries.map { it.name })
+    }
+
+    /** An image as ImagesDownloaderWorker saves it with a download. */
+    private fun storeImage(itemId: UUID, image: String) {
+        File(context.filesDir, "images/$itemId/$image").apply {
+            parentFile?.mkdirs()
+            writeBytes(byteArrayOf(1))
+        }
+    }
+
+    private suspend fun artwork() =
+        repository.getLibraries().items.associate {
+            it.id to it.images.primary?.path?.removePrefix("/")
+        }
+
+    @Test
+    fun `a stored library shows the artwork of its newest download that has some`() = runBlocking {
+        storeMovie(id(1), "Older", downloadedAt = 1_000L)
+        storeMovie(id(2), "Newer", downloadedAt = 2_000L)
+        storeEpisode()
+        // Nothing stored with the downloads: the blank card, as before.
+        assertEquals(
+            mapOf(StoredLibraries.MOVIES to null, StoredLibraries.SHOWS to null),
+            artwork(),
+        )
+
+        // Only the older one has a backdrop: that one. The show has only its poster.
+        storeImage(id(1), "backdrop")
+        storeImage(id(2), "primary")
+        storeImage(showId, "primary")
+        assertEquals(
+            mapOf(
+                StoredLibraries.MOVIES to "images/${id(1)}/backdrop",
+                StoredLibraries.SHOWS to "images/$showId/primary",
+            ),
+            artwork(),
+        )
+
+        // A backdrop of the newest: that one.
+        storeImage(id(2), "backdrop")
+        assertEquals("images/${id(2)}/backdrop", artwork()[StoredLibraries.MOVIES])
+    }
+
+    @Test
+    fun `an empty image file is no artwork`() = runBlocking {
+        storeMovie(id(1), "Movie", downloadedAt = 1_000L)
+        File(context.filesDir, "images/${id(1)}/backdrop").apply {
+            parentFile?.mkdirs()
+            writeBytes(byteArrayOf())
+        }
+
+        assertEquals(null, artwork()[StoredLibraries.MOVIES])
     }
 
     @Test
@@ -510,8 +569,8 @@ class StoredListsFallbackTest {
         storeMovie(id(3), "Bluey Abandoned", download = Download.NO_SOURCE)
         for (movie in listOf(id(1), id(2), id(3))) userData(movie, favorite = true)
 
-        assertEquals(listOf(id(1)), repository.getFavoriteItems().map { it.id })
-        assertEquals(listOf(id(1)), repository.getSearchItems("bluey", null).map { it.id })
+        assertEquals(listOf(id(1)), repository.getFavoriteItems().items.map { it.id })
+        assertEquals(listOf(id(1)), repository.getSearchItems("bluey", null).items.map { it.id })
         assertEquals(listOf(id(1)), page(StoredLibraries.MOVIES).items.map { it.id })
         assertEquals(1, repository.getItemCount(parentId = StoredLibraries.MOVIES))
     }
@@ -524,17 +583,20 @@ class StoredListsFallbackTest {
             userData(showId, favorite = true)
             userData(episodeId, favorite = true)
 
-            assertEquals(listOf(StoredLibraries.MOVIES), repository.getLibraries().map { it.id })
+            assertEquals(
+                listOf(StoredLibraries.MOVIES),
+                repository.getLibraries().items.map { it.id },
+            )
             assertEquals(emptyList(), page(StoredLibraries.SHOWS).items.map { it.id })
             assertEquals(0, repository.getItemCount(parentId = StoredLibraries.SHOWS))
             // No finished favourite: none downloaded, which Favorites says (#775).
-            assertEquals(emptyList(), repository.getFavoriteItems().map { it.id })
+            assertEquals(emptyList(), repository.getFavoriteItems().items.map { it.id })
             assertTrue(
-                fails { repository.getSearchItems("bluey", listOf(BaseItemKind.SERIES)) },
+                fails { repository.getSearchItems("bluey", listOf(BaseItemKind.SERIES)).items },
                 "no finished show",
             )
             assertTrue(
-                fails { repository.getSearchItems("bluey", listOf(BaseItemKind.EPISODE)) },
+                fails { repository.getSearchItems("bluey", listOf(BaseItemKind.EPISODE)).items },
                 "no finished episode",
             )
         }
@@ -543,7 +605,7 @@ class StoredListsFallbackTest {
     fun `a library with only unfinished downloads does not appear`() = runBlocking {
         storeMovie(id(1), "Writing", download = Download.WRITING)
         storeMovie(id(2), "Abandoned", download = Download.NO_SOURCE)
-        assertTrue(fails { repository.getLibraries() })
+        assertTrue(fails { repository.getLibraries().items })
     }
 
     @Test
@@ -560,18 +622,21 @@ class StoredListsFallbackTest {
         storeMovie(id(3), "Cars")
         storeEpisode(name = "Bluey's Birthday")
 
-        assertEquals(listOf(id(1), showId), repository.getSearchItems("bluey", null).map { it.id })
+        assertEquals(
+            listOf(id(1), showId),
+            repository.getSearchItems("bluey", null).items.map { it.id },
+        )
         assertEquals(
             listOf(episodeId),
-            repository.getSearchItems("bluey", listOf(BaseItemKind.EPISODE)).map { it.id },
+            repository.getSearchItems("bluey", listOf(BaseItemKind.EPISODE)).items.map { it.id },
         )
         assertEquals(
             listOf(id(1)),
-            repository.getSearchItems("BLUEY", listOf(BaseItemKind.MOVIE)).map { it.id },
+            repository.getSearchItems("BLUEY", listOf(BaseItemKind.MOVIE)).items.map { it.id },
         )
         // LIKE's wildcards are taken literally.
-        assertTrue(fails { repository.getSearchItems("%", null) })
-        assertTrue(fails { repository.getSearchItems("nothing", null) })
+        assertTrue(fails { repository.getSearchItems("%", null).items })
+        assertTrue(fails { repository.getSearchItems("nothing", null).items })
     }
 
     @Test
@@ -580,14 +645,19 @@ class StoredListsFallbackTest {
         userData(id(1), favorite = true)
         knownServerState.unreachable = true
 
-        assertEquals(listOf(id(1)), repository.getFavoriteItems().map { it.id })
-        assertEquals(listOf(StoredLibraries.MOVIES), repository.getLibraries().map { it.id })
-        assertEquals(listOf(id(1)), repository.getSearchItems("mov", null).map { it.id })
+        assertEquals(listOf(id(1)), repository.getFavoriteItems().items.map { it.id })
+        assertEquals(listOf(StoredLibraries.MOVIES), repository.getLibraries().items.map { it.id })
+        assertEquals(listOf(id(1)), repository.getSearchItems("mov", null).items.map { it.id })
         assertEquals(3, knownServerState.skipped)
 
         // Nothing stored: the server is asked anyway, and its error surfaces.
-        assertTrue(fails { repository.getSearchItems("nothing", null) })
+        assertTrue(fails { repository.getSearchItems("nothing", null).items })
         assertEquals(3, knownServerState.skipped)
+
+        // CE (#779): the answers say that Room gave them.
+        assertTrue(repository.getFavoriteItems().fromStore)
+        assertTrue(repository.getLibraries().fromStore)
+        assertTrue(repository.getSearchItems("mov", null).fromStore)
     }
 
     private companion object {

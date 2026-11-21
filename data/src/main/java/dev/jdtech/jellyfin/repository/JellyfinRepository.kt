@@ -38,7 +38,8 @@ interface JellyfinRepository {
 
     suspend fun getSeason(itemId: UUID): FindroidSeason
 
-    suspend fun getLibraries(): List<FindroidCollection>
+    /** CE (#779): with where the list came from: Room answers it while the server is away. */
+    suspend fun getLibraries(): ItemsResult<FindroidCollection>
 
     suspend fun getItem(itemId: UUID): FindroidItem?
 
@@ -114,16 +115,18 @@ interface JellyfinRepository {
         limit: Int? = null,
     ): List<FindroidItem>
 
-    suspend fun getFavoriteItems(): List<FindroidItem>
+    /** CE (#779): with where the list came from: Room answers it while the server is away. */
+    suspend fun getFavoriteItems(): ItemsResult<FindroidItem>
 
     /**
      * Searches movies and shows. With [itemKinds], it searches those kinds instead, with a separate
-     * limit per kind so one kind (episodes) can't push the others out (CE, TV search).
+     * limit per kind so one kind (episodes) can't push the others out (CE, TV search). CE (#779):
+     * with where the list came from, as [getFavoriteItems].
      */
     suspend fun getSearchItems(
         query: String,
         itemKinds: List<BaseItemKind>? = null,
-    ): List<FindroidItem>
+    ): ItemsResult<FindroidItem>
 
     suspend fun getSuggestions(): List<FindroidItem>
 

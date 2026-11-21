@@ -12,11 +12,14 @@ import dev.jdtech.jellyfin.models.FindroidEpisode
 import dev.jdtech.jellyfin.models.FindroidMovie
 import dev.jdtech.jellyfin.models.FindroidShow
 import dev.jdtech.jellyfin.models.UiText
+import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.JellyfinRepository
+import dev.jdtech.jellyfin.repository.ReloadPolicy
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,13 +27,27 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @HiltViewModel
-class FavoritesViewModel @Inject constructor(private val repository: JellyfinRepository) :
-    ViewModel() {
+class FavoritesViewModel
+@Inject
+constructor(
+    private val repository: JellyfinRepository,
+    dataChanges: DataChangeEvents = DataChangeEvents(),
+) : ViewModel() {
     private val _state = MutableStateFlow(CollectionState())
     val state = _state.asStateFlow()
 
     private val serverAwayReload = ServerAwayReload()
     private var loadJob: Job? = null
+    private var storeRetryJob: Job? = null
+
+    /**
+     * CE (#782): a sync that finished while the screen was not collecting (the app in the
+     * background) has still made the list out of date: the screen loads on resume when this says.
+     */
+    private val reloadPolicy = ReloadPolicy(dataChanges)
+
+    /** Whether coming back to Favorites needs a load, see [ReloadPolicy]. */
+    fun shouldReload(): Boolean = reloadPolicy.shouldReload()
 
     /**
      * CE (#775): the server went away or came back. With the server away the favourites are the
@@ -47,7 +64,7 @@ class FavoritesViewModel @Inject constructor(private val repository: JellyfinRep
      */
     fun onSynced(): Job {
         loadJob?.cancel()
-        return load(serverAwayReload.begin()).also { loadJob = it }
+        return start()
     }
 
     fun loadItems(): Job {
@@ -55,17 +72,25 @@ class FavoritesViewModel @Inject constructor(private val repository: JellyfinRep
         loadJob?.let { if (it.isActive && serverAwayReload.runningIsCurrent()) return it }
         // A load for the other state makes way, so it cannot land after this one.
         loadJob?.cancel()
-        val away = serverAwayReload.begin()
-        return load(away).also { loadJob = it }
+        return start()
     }
 
-    private fun load(away: Boolean): Job = viewModelScope.launch {
+    private fun start(): Job {
+        // CE (#779): a newer load stands in for the one more try after a stored answer.
+        storeRetryJob?.cancel()
+        serverAwayReload.begin()
+        return load().also { loadJob = it }
+    }
+
+    private fun load(): Job = viewModelScope.launch {
+        val token = reloadPolicy.begin()
         // With content on screen the refresh happens quietly (#251).
         val hasContent = _state.value.sections.isNotEmpty()
         _state.emit(_state.value.copy(isLoading = !hasContent, error = null))
 
         try {
-            val items = repository.getFavoriteItems()
+            val result = repository.getFavoriteItems()
+            val items = result.items
             ensureActive()
 
             val sections = mutableListOf<CollectionSection>()
@@ -103,10 +128,23 @@ class FavoritesViewModel @Inject constructor(private val repository: JellyfinRep
                     }
             }
 
-            // CE (#775): a failed load keeps the list on screen, and with it what it was.
+            // CE (#775): a failed load keeps the list on screen, and with it what it was. CE
+            // (#779): downloads only when Room answered, also before the server is known away.
+            reloadPolicy.complete(token)
             _state.emit(
-                _state.value.copy(isLoading = false, sections = sections, downloadsOnly = away)
+                _state.value.copy(
+                    isLoading = false,
+                    sections = sections,
+                    downloadsOnly = result.fromStore,
+                )
             )
+            if (serverAwayReload.retriesAfterStore(result.fromStore)) {
+                storeRetryJob = viewModelScope.launch {
+                    delay(ServerAwayReload.STORE_RETRY_DELAY_MS)
+                    storeRetryJob = null
+                    loadItems()
+                }
+            }
         } catch (e: CancellationException) {
             // CE (#775): made way for a newer load, which shows its own result.
             throw e

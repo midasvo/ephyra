@@ -1,5 +1,6 @@
 package dev.jdtech.jellyfin.repository
 
+import android.net.Uri
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.CollectionType
 import dev.jdtech.jellyfin.models.FindroidCollection
@@ -83,24 +84,47 @@ internal class StoredLists(private val database: ServerDatabaseDao) {
         database.countDownloadedMoviesOfServer(serverId) > 0 ||
             database.countDownloadedShowsOfServer(serverId) > 0
 
-    /** Each of [StoredLibraries] that holds something. */
-    suspend fun libraries(serverId: String, names: StoredLibraryNames): List<FindroidCollection> =
-        buildList {
-            if (database.countDownloadedMoviesOfServer(serverId) > 0) {
-                add(library(StoredLibraries.MOVIES, CollectionType.Movies, names))
+    /**
+     * Each of [StoredLibraries] that holds something. CE (#781): with the artwork of the most
+     * recently downloaded of its items that has some stored ([storedImage]: whether the file of
+     * that image was saved with the download), a backdrop before a poster, as the wide card of a
+     * real library shows. Without any, the blank card as before.
+     */
+    suspend fun libraries(
+        serverId: String,
+        names: StoredLibraryNames,
+        storedImage: (itemId: UUID, image: String) -> Boolean = { _, _ -> false },
+    ): List<FindroidCollection> {
+        val movies = database.getDownloadedMoviesOfServer(serverId).map { it.id }
+        val shows = database.getDownloadedShowsOfServer(serverId).map { it.id }
+        if (movies.isEmpty() && shows.isEmpty()) return emptyList()
+        val downloaded =
+            database.getDownloadDatesOfServer(serverId).associate { it.itemId to it.date }
+        fun artwork(ids: List<UUID>): FindroidImages {
+            val newestFirst = ids.sortedByDescending { downloaded[it] ?: Long.MIN_VALUE }
+            val image = STORED_IMAGES.firstNotNullOfOrNull { image ->
+                newestFirst.firstOrNull { storedImage(it, image) }?.let { "images/$it/$image" }
             }
-            if (database.countDownloadedShowsOfServer(serverId) > 0) {
-                add(library(StoredLibraries.SHOWS, CollectionType.TvShows, names))
+            return FindroidImages(
+                primary = image?.let { Uri.Builder().appendEncodedPath(it).build() }
+            )
+        }
+        return buildList {
+            if (movies.isNotEmpty()) {
+                add(library(StoredLibraries.MOVIES, CollectionType.Movies, names, artwork(movies)))
+            }
+            if (shows.isNotEmpty()) {
+                add(library(StoredLibraries.SHOWS, CollectionType.TvShows, names, artwork(shows)))
             }
         }
+    }
 
-    private fun library(id: UUID, type: CollectionType, names: StoredLibraryNames) =
-        FindroidCollection(
-            id = id,
-            name = names.nameOf(type),
-            type = type,
-            images = FindroidImages(),
-        )
+    private fun library(
+        id: UUID,
+        type: CollectionType,
+        names: StoredLibraryNames,
+        images: FindroidImages,
+    ) = FindroidCollection(id = id, name = names.nameOf(type), type = type, images = images)
 
     /**
      * The rows of [libraryId], sorted as the server would. Filters Room cannot answer are left out
@@ -245,3 +269,9 @@ internal class StoredLists(private val database: ServerDatabaseDao) {
         fun sortName(name: String) = name.lowercase(Locale.ROOT)
     }
 }
+
+/**
+ * CE (#781): the images a download stores (ImagesDownloaderWorker), in the order a stored library
+ * card takes them: the wide backdrop, then the poster.
+ */
+private val STORED_IMAGES = listOf("backdrop", "primary")
