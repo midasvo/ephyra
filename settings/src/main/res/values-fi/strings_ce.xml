@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Sumentaa kuvan ja piilottaa katsomattomien jaksojen nimen ja kuvauksen. Näytä jakso painamalla sitä pitkään</string>
     <string name="ce_pref_side_backdrop">Taustakuva tekstin vieressä</string>
     <string name="ce_pref_side_backdrop_summary">Näytä tabletilla vaakatilassa kohteen taustakuva sen omassa muodossa otsikon vieressä koko leveyden sijaan</string>
+    <string name="ce_pref_external_ratings">Ulkoiset arviot (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">IMDb-, Rotten Tomatoes-, Metacritic- ja Letterboxd-pisteet omalla MDBList-avaimellasi</string>
+    <string name="ce_external_ratings_switch">Näytä ulkoiset arviot</string>
+    <string name="ce_external_ratings_privacy">Kun tämä on päällä, elokuvan tai sarjan sivun avaaminen lähettää sen IMDb-, TMDB- tai TVDB-tunnisteen ja avaimesi osoitteeseen mdblist.com. Kun se on pois päältä, mitään ei lähetetä.</string>
+    <string name="ce_external_ratings_api_key">MDBList API -avain</string>
+    <string name="ce_external_ratings_get_key">Hanki ilmainen avain osoitteesta mdblist.com: kirjaudu sisään ja valitse Preferences → API</string>
+    <string name="ce_external_ratings_test">Testaa avain</string>
+    <string name="ce_external_ratings_testing">Testataan…</string>
+    <string name="ce_external_ratings_test_valid">Avain toimii</string>
+    <string name="ce_external_ratings_test_invalid">MDBList ei hyväksy tätä avainta</string>
+    <string name="ce_external_ratings_test_rate_limited">Tämä avain on saavuttanut pyyntörajansa. Yritä myöhemmin uudelleen</string>
+    <string name="ce_external_ratings_test_unreachable">MDBListiin ei saatu yhteyttä</string>
 </resources>

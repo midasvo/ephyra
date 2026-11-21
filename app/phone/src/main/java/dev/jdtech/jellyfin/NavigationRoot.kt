@@ -67,6 +67,7 @@ import dev.jdtech.jellyfin.presentation.film.PersonScreen
 import dev.jdtech.jellyfin.presentation.film.SeasonScreen
 import dev.jdtech.jellyfin.presentation.film.ShowScreen
 import dev.jdtech.jellyfin.presentation.settings.AboutScreen
+import dev.jdtech.jellyfin.presentation.settings.ExternalRatingsScreen
 import dev.jdtech.jellyfin.presentation.settings.HomeRowsScreen
 import dev.jdtech.jellyfin.presentation.settings.LicensesScreen
 import dev.jdtech.jellyfin.presentation.settings.SettingsFileEditScreen
@@ -821,8 +822,13 @@ private fun EntryProviderScope<NavKey>.mainEntries(
             navigateToSubtitleStyle = dropUnlessResumed { navigator.navigate(SubtitleStyleRoute) },
             navigateToHomeRows = dropUnlessResumed { navigator.navigate(HomeRowsRoute) },
             navigateToProfilePin = dropUnlessResumed { navigator.navigate(ProfilePinRoute) },
+            navigateToExternalRatings =
+                dropUnlessResumed { navigator.navigate(ExternalRatingsRoute) },
             navigateBack = dropUnlessResumed { navigator.goBack() },
         )
+    }
+    entry<ExternalRatingsRoute> {
+        ExternalRatingsScreen(navigateBack = dropUnlessResumed { navigator.goBack() })
     }
     entry<ProfilePinRoute> {
         ProfilePinScreen(navigateBack = dropUnlessResumed { navigator.goBack() })

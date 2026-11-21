@@ -28,6 +28,7 @@ import dev.jdtech.jellyfin.ce.presentation.pin.TvProfilePinGateScreen
 import dev.jdtech.jellyfin.ce.presentation.pin.TvProfilePinScreen
 import dev.jdtech.jellyfin.ce.presentation.player.TvPlayerScreen
 import dev.jdtech.jellyfin.ce.presentation.settings.HomeRowsScreen
+import dev.jdtech.jellyfin.ce.presentation.settings.TvExternalRatingsScreen
 import dev.jdtech.jellyfin.ce.presentation.settings.about.AboutScreen
 import dev.jdtech.jellyfin.ce.presentation.settings.about.DeviceProfileScreen
 import dev.jdtech.jellyfin.ce.presentation.settings.about.LicenseScreen
@@ -461,6 +462,7 @@ private fun EntryProviderScope<NavKey>.tvEntries(
             navigateToServers = dropUnlessResumed { navigate(ServersRoute) },
             navigateToHomeRows = dropUnlessResumed { navigate(HomeRowsRoute) },
             navigateToProfilePin = dropUnlessResumed { navigate(ProfilePinRoute) },
+            navigateToExternalRatings = dropUnlessResumed { navigate(ExternalRatingsRoute) },
             navigateToAbout = dropUnlessResumed { navigate(AboutRoute) },
             navigateToSubSettings =
                 resumedAction { indexes -> navigate(SettingsSubRoute(indexes = indexes)) },
@@ -473,6 +475,7 @@ private fun EntryProviderScope<NavKey>.tvEntries(
             navigateToServers = dropUnlessResumed { navigate(ServersRoute) },
             navigateToHomeRows = dropUnlessResumed { navigate(HomeRowsRoute) },
             navigateToProfilePin = dropUnlessResumed { navigate(ProfilePinRoute) },
+            navigateToExternalRatings = dropUnlessResumed { navigate(ExternalRatingsRoute) },
             navigateToAbout = dropUnlessResumed { navigate(AboutRoute) },
             navigateToSubSettings =
                 resumedAction { indexes -> navigate(SettingsSubRoute(indexes = indexes)) },
@@ -480,6 +483,7 @@ private fun EntryProviderScope<NavKey>.tvEntries(
     }
     entry<HomeRowsRoute> { HomeRowsScreen() }
     entry<ProfilePinRoute> { TvProfilePinScreen() }
+    entry<ExternalRatingsRoute> { TvExternalRatingsScreen() }
     entry<AboutRoute> {
         AboutScreen(
             navigateToLicenses = dropUnlessResumed { navigate(LicensesRoute) },

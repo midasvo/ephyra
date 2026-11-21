@@ -98,6 +98,17 @@ fun externalLinks(
 fun BaseItemDto.toExternalLinks(): List<FindroidExternalLink> =
     externalLinks(externalUrls, providerIds, type)
 
+/**
+ * CE (#331): the item's ids at outside sites (`imdb`, `tmdb`, `tvdb`, ...), keys in lower case,
+ * without empty values. They come with the item, so they cost no request of their own.
+ */
+fun Map<String, String?>?.toProviderIds(): Map<String, String> =
+    orEmpty()
+        .mapNotNull { (provider, id) ->
+            id?.trim()?.takeIf { it.isNotEmpty() }?.let { provider.lowercase() to it }
+        }
+        .toMap()
+
 /** The studio (movie) or network (show) names, in the server's order. */
 fun BaseItemDto.studioNames(): List<String> =
     studios.orEmpty().mapNotNull { it.name?.takeIf { name -> name.isNotBlank() } }.distinct()

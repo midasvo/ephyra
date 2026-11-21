@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Gör bilden suddig och dölj titel och beskrivning för avsnitt du inte har sett. Tryck länge på ett för att visa det</string>
     <string name="ce_pref_side_backdrop">Bakgrund bredvid texten</string>
     <string name="ce_pref_side_backdrop_summary">På en surfplatta i liggande läge visas ett objekts bakgrund i sin egen form bredvid titeln i stället för över hela bredden</string>
+    <string name="ce_pref_external_ratings">Externa betyg (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Betyg från IMDb, Rotten Tomatoes, Metacritic och Letterboxd, med din egen MDBList-nyckel</string>
+    <string name="ce_external_ratings_switch">Visa externa betyg</string>
+    <string name="ce_external_ratings_privacy">När detta är på skickas filmens eller seriens IMDb-, TMDB- eller TVDB-id och din nyckel till mdblist.com när du öppnar dess sida. Inget skickas när det är av.</string>
+    <string name="ce_external_ratings_api_key">MDBList API-nyckel</string>
+    <string name="ce_external_ratings_get_key">Skaffa en gratis nyckel på mdblist.com: logga in och välj Preferences → API</string>
+    <string name="ce_external_ratings_test">Testa nyckeln</string>
+    <string name="ce_external_ratings_testing">Testar…</string>
+    <string name="ce_external_ratings_test_valid">Nyckeln fungerar</string>
+    <string name="ce_external_ratings_test_invalid">MDBList godtar inte den här nyckeln</string>
+    <string name="ce_external_ratings_test_rate_limited">Den här nyckeln har nått sin gräns för förfrågningar. Försök igen senare</string>
+    <string name="ce_external_ratings_test_unreachable">Det gick inte att nå MDBList</string>
 </resources>

@@ -209,4 +209,16 @@
     <string name="ce_pref_hide_spoilers_summary">Làm mờ hình ảnh và ẩn tên cùng phần tóm tắt của các tập bạn chưa xem. Nhấn giữ một tập để hiện nó</string>
     <string name="ce_pref_side_backdrop">Ảnh nền cạnh văn bản</string>
     <string name="ce_pref_side_backdrop_summary">Trên máy tính bảng ở chế độ ngang, hiển thị ảnh nền của mục theo đúng hình dạng bên cạnh tiêu đề thay vì trải hết chiều rộng</string>
+    <string name="ce_pref_external_ratings">Điểm đánh giá bên ngoài (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Điểm từ IMDb, Rotten Tomatoes, Metacritic và Letterboxd, bằng khóa MDBList của riêng bạn</string>
+    <string name="ce_external_ratings_switch">Hiện điểm đánh giá bên ngoài</string>
+    <string name="ce_external_ratings_privacy">Khi bật, mở trang của một phim hoặc chương trình sẽ gửi ID IMDb, TMDB hoặc TVDB của nó cùng khóa của bạn đến mdblist.com. Khi tắt, không có gì được gửi.</string>
+    <string name="ce_external_ratings_api_key">Khóa API MDBList</string>
+    <string name="ce_external_ratings_get_key">Lấy khóa miễn phí tại mdblist.com: đăng nhập, rồi Preferences → API</string>
+    <string name="ce_external_ratings_test">Kiểm tra khóa</string>
+    <string name="ce_external_ratings_testing">Đang kiểm tra…</string>
+    <string name="ce_external_ratings_test_valid">Khóa hoạt động</string>
+    <string name="ce_external_ratings_test_invalid">MDBList không chấp nhận khóa này</string>
+    <string name="ce_external_ratings_test_rate_limited">Khóa này đã đạt giới hạn yêu cầu. Hãy thử lại sau</string>
+    <string name="ce_external_ratings_test_unreachable">Không thể kết nối với MDBList</string>
 </resources>

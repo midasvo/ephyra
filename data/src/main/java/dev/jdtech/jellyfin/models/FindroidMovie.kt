@@ -46,6 +46,8 @@ data class FindroidMovie(
     val localTrailerCount: Int = 0,
     /** Null when the server didn't say, which is no reason not to ask for the extras. */
     val specialFeatureCount: Int? = null,
+    /** CE (#331): ids at outside sites, see [toProviderIds]. Empty offline. */
+    val providerIds: Map<String, String> = emptyMap(),
     override val images: FindroidImages,
     override val chapters: List<FindroidChapter>,
     override val trickplayInfo: Map<String, FindroidTrickplayInfo>?,
@@ -101,6 +103,7 @@ suspend fun BaseItemDto.toFindroidMovie(
         is3D = video3dFormat != null,
         localTrailerCount = localTrailerCount ?: 0,
         specialFeatureCount = specialFeatureCount,
+        providerIds = providerIds.toProviderIds(),
         images = toFindroidImages(jellyfinRepository),
         chapters = toFindroidChapters(),
         trickplayInfo =

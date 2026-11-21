@@ -300,6 +300,19 @@
     <string name="ce_pref_detail_similar_summary">Similar titles from your library</string>
     <string name="ce_pref_detail_credits">Director and writers</string>
     <string name="ce_pref_detail_credits_summary">Under the overview on movie and show pages</string>
+    <!-- CE (#331): ratings from MDBList on the movie and show pages -->
+    <string name="ce_pref_external_ratings">External ratings (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Scores from IMDb, Rotten Tomatoes, Metacritic and Letterboxd, with your own MDBList key</string>
+    <string name="ce_external_ratings_switch">Show external ratings</string>
+    <string name="ce_external_ratings_privacy">While this is on, opening a movie or show page sends its IMDb, TMDB or TVDB ID and your key to mdblist.com. Nothing is sent while it is off.</string>
+    <string name="ce_external_ratings_api_key">MDBList API key</string>
+    <string name="ce_external_ratings_get_key">Get a free key at mdblist.com: sign in, then Preferences → API</string>
+    <string name="ce_external_ratings_test">Test key</string>
+    <string name="ce_external_ratings_testing">Testing…</string>
+    <string name="ce_external_ratings_test_valid">The key works</string>
+    <string name="ce_external_ratings_test_invalid">MDBList does not accept this key</string>
+    <string name="ce_external_ratings_test_rate_limited">This key has reached its request limit. Try again later</string>
+    <string name="ce_external_ratings_test_unreachable">Could not reach MDBList</string>
     <string name="ce_media_segments_auto_skip_pip">Only in picture-in-picture</string>
     <string name="ce_media_segments_auto_skip_always">Always</string>
     <string name="ce_player_backend_exoplayer" translatable="false">ExoPlayer</string>

@@ -34,6 +34,7 @@ fun SettingsSubScreen(
     navigateToUsers: () -> Unit,
     navigateToHomeRows: () -> Unit,
     navigateToProfilePin: () -> Unit,
+    navigateToExternalRatings: () -> Unit,
     navigateToAbout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -52,6 +53,7 @@ fun SettingsSubScreen(
             is SettingsEvent.NavigateToAbout -> navigateToAbout()
             is SettingsEvent.NavigateToHomeRows -> navigateToHomeRows()
             is SettingsEvent.NavigateToProfilePin -> navigateToProfilePin()
+            is SettingsEvent.NavigateToExternalRatings -> navigateToExternalRatings()
             // TV has no custom subtitle-style screen; route through the standard sub-settings
             // list, which renders the subtitle_style category's nestedPreferenceGroups. The
             // subtitle_style category is nested under the player category, so the full path

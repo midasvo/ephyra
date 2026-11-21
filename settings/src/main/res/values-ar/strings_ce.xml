@@ -219,4 +219,16 @@
     <string name="ce_pref_hide_spoilers_summary">تمويه الصورة وإخفاء عنوان ونبذة الحلقات التي لم تشاهدها. اضغط مطولًا على إحداها لإظهارها</string>
     <string name="ce_pref_side_backdrop">الخلفية بجانب النص</string>
     <string name="ce_pref_side_backdrop_summary">على الجهاز اللوحي في الوضع الأفقي، اعرض خلفية العنصر بشكلها الأصلي بجانب العنوان بدلاً من امتدادها على كامل العرض</string>
+    <string name="ce_pref_external_ratings">التقييمات الخارجية (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">تقييمات من IMDb وRotten Tomatoes وMetacritic وLetterboxd، بمفتاح MDBList الخاص بك</string>
+    <string name="ce_external_ratings_switch">إظهار التقييمات الخارجية</string>
+    <string name="ce_external_ratings_privacy">عند تفعيل هذا الخيار، يؤدي فتح صفحة فيلم أو مسلسل إلى إرسال معرّفه في IMDb أو TMDB أو TVDB ومفتاحك إلى mdblist.com. لا يُرسل أي شيء عند إيقافه.</string>
+    <string name="ce_external_ratings_api_key">مفتاح MDBList API</string>
+    <string name="ce_external_ratings_get_key">احصل على مفتاح مجاني من mdblist.com: سجّل الدخول، ثم Preferences ← API</string>
+    <string name="ce_external_ratings_test">اختبار المفتاح</string>
+    <string name="ce_external_ratings_testing">جارٍ الاختبار…</string>
+    <string name="ce_external_ratings_test_valid">المفتاح يعمل</string>
+    <string name="ce_external_ratings_test_invalid">لا يقبل MDBList هذا المفتاح</string>
+    <string name="ce_external_ratings_test_rate_limited">بلغ هذا المفتاح حد الطلبات. حاول مرة أخرى لاحقًا</string>
+    <string name="ce_external_ratings_test_unreachable">تعذّر الوصول إلى MDBList</string>
 </resources>

@@ -209,4 +209,16 @@
     <string name="ce_pref_hide_spoilers_summary">模糊未睇過嘅集數嘅圖片，並隱藏佢哋嘅標題同簡介。長按一集就會顯示</string>
     <string name="ce_pref_side_backdrop">背景圖喺文字旁邊</string>
     <string name="ce_pref_side_backdrop_summary">平板打橫時，將項目嘅背景圖以原本形狀顯示喺標題旁邊，而唔係鋪滿成個闊度</string>
+    <string name="ce_pref_external_ratings">外部評分（MDBList）</string>
+    <string name="ce_pref_external_ratings_summary">用你自己嘅 MDBList 金鑰顯示 IMDb、Rotten Tomatoes、Metacritic 同 Letterboxd 嘅分數</string>
+    <string name="ce_external_ratings_switch">顯示外部評分</string>
+    <string name="ce_external_ratings_privacy">開咗呢個設定嘅時候，打開電影或者節目頁面會將佢嘅 IMDb、TMDB 或者 TVDB ID 同你嘅金鑰傳送去 mdblist.com。關咗就乜都唔會傳送。</string>
+    <string name="ce_external_ratings_api_key">MDBList API 金鑰</string>
+    <string name="ce_external_ratings_get_key">喺 mdblist.com 攞免費金鑰：登入，然後 Preferences → API</string>
+    <string name="ce_external_ratings_test">測試金鑰</string>
+    <string name="ce_external_ratings_testing">測試緊…</string>
+    <string name="ce_external_ratings_test_valid">金鑰用得</string>
+    <string name="ce_external_ratings_test_invalid">MDBList 唔接受呢個金鑰</string>
+    <string name="ce_external_ratings_test_rate_limited">呢個金鑰已經到咗請求上限。遲啲再試</string>
+    <string name="ce_external_ratings_test_unreachable">連唔到 MDBList</string>
 </resources>

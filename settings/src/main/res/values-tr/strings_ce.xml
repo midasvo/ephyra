@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">İzlemediğiniz bölümlerin görselini bulanıklaştırır, adını ve özetini gizler. Göstermek için birine basılı tutun</string>
     <string name="ce_pref_side_backdrop">Metnin yanında arka plan</string>
     <string name="ce_pref_side_backdrop_summary">Yatay konumdaki tablette, öğenin arka planını tam genişlik yerine kendi biçiminde başlığın yanında göster</string>
+    <string name="ce_pref_external_ratings">Harici puanlar (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Kendi MDBList anahtarınızla IMDb, Rotten Tomatoes, Metacritic ve Letterboxd puanları</string>
+    <string name="ce_external_ratings_switch">Harici puanları göster</string>
+    <string name="ce_external_ratings_privacy">Bu açıkken bir film veya dizi sayfasını açmak, onun IMDb, TMDB veya TVDB kimliğini ve anahtarınızı mdblist.com adresine gönderir. Kapalıyken hiçbir şey gönderilmez.</string>
+    <string name="ce_external_ratings_api_key">MDBList API anahtarı</string>
+    <string name="ce_external_ratings_get_key">mdblist.com adresinden ücretsiz anahtar alın: oturum açın, ardından Preferences → API</string>
+    <string name="ce_external_ratings_test">Anahtarı test et</string>
+    <string name="ce_external_ratings_testing">Test ediliyor…</string>
+    <string name="ce_external_ratings_test_valid">Anahtar çalışıyor</string>
+    <string name="ce_external_ratings_test_invalid">MDBList bu anahtarı kabul etmiyor</string>
+    <string name="ce_external_ratings_test_rate_limited">Bu anahtar istek sınırına ulaştı. Daha sonra tekrar deneyin</string>
+    <string name="ce_external_ratings_test_unreachable">MDBList\'e ulaşılamadı</string>
 </resources>

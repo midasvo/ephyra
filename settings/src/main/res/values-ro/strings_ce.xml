@@ -213,4 +213,16 @@
     <string name="ce_pref_hide_spoilers_summary">Estompează imaginea și ascunde titlul și descrierea episoadelor pe care nu le-ai văzut. Ține apăsat pe unul pentru a-l afișa</string>
     <string name="ce_pref_side_backdrop">Fundal lângă text</string>
     <string name="ce_pref_side_backdrop_summary">Pe o tabletă în modul peisaj, afișează fundalul unui element în forma sa proprie lângă titlu în loc de pe toată lățimea</string>
+    <string name="ce_pref_external_ratings">Evaluări externe (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Scoruri de la IMDb, Rotten Tomatoes, Metacritic și Letterboxd, cu propria cheie MDBList</string>
+    <string name="ce_external_ratings_switch">Afișează evaluările externe</string>
+    <string name="ce_external_ratings_privacy">Cât timp aceasta este activată, deschiderea paginii unui film sau serial trimite ID-ul său IMDb, TMDB sau TVDB și cheia ta către mdblist.com. Nu se trimite nimic cât timp este dezactivată.</string>
+    <string name="ce_external_ratings_api_key">Cheie API MDBList</string>
+    <string name="ce_external_ratings_get_key">Obține o cheie gratuită pe mdblist.com: conectează-te, apoi Preferences → API</string>
+    <string name="ce_external_ratings_test">Testează cheia</string>
+    <string name="ce_external_ratings_testing">Se testează…</string>
+    <string name="ce_external_ratings_test_valid">Cheia funcționează</string>
+    <string name="ce_external_ratings_test_invalid">MDBList nu acceptă această cheie</string>
+    <string name="ce_external_ratings_test_rate_limited">Această cheie a atins limita de cereri. Încearcă din nou mai târziu</string>
+    <string name="ce_external_ratings_test_unreachable">MDBList nu poate fi contactat</string>
 </resources>

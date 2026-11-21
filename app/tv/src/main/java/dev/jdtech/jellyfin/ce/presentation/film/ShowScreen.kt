@@ -310,6 +310,11 @@ private fun ShowScreenContent(
                                         color = Color.White.copy(alpha = .7f),
                                     )
                                 }
+                            // CE (#331)
+                            TvExternalRatings(
+                                state.externalRatings,
+                                Modifier.padding(top = MaterialTheme.spacings.small),
+                            )
                             Spacer(modifier = Modifier.height(MaterialTheme.spacings.medium))
                             TvTagline(show.tagline)
                             // CE (#545): a cut overview takes focus and opens in full on OK.

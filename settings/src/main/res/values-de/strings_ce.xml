@@ -211,4 +211,16 @@
     <string name="ce_pref_hide_spoilers_summary">Bild unscharf machen und Titel und Beschreibung ungesehener Episoden ausblenden. Zum Aufdecken gedrückt halten</string>
     <string name="ce_pref_side_backdrop">Hintergrund neben dem Text</string>
     <string name="ce_pref_side_backdrop_summary">Auf einem Tablet im Querformat den Hintergrund eines Eintrags in seiner eigenen Form neben dem Titel zeigen statt über die volle Breite</string>
+    <string name="ce_pref_external_ratings">Externe Bewertungen (MDBList)</string>
+    <string name="ce_pref_external_ratings_summary">Wertungen von IMDb, Rotten Tomatoes, Metacritic und Letterboxd, mit deinem eigenen MDBList-Schlüssel</string>
+    <string name="ce_external_ratings_switch">Externe Bewertungen anzeigen</string>
+    <string name="ce_external_ratings_privacy">Solange dies an ist, sendet das Öffnen einer Film- oder Serienseite deren IMDb-, TMDB- oder TVDB-ID und deinen Schlüssel an mdblist.com. Solange es aus ist, wird nichts gesendet.</string>
+    <string name="ce_external_ratings_api_key">MDBList-API-Schlüssel</string>
+    <string name="ce_external_ratings_get_key">Hol dir einen kostenlosen Schlüssel auf mdblist.com: anmelden, dann Preferences → API</string>
+    <string name="ce_external_ratings_test">Schlüssel testen</string>
+    <string name="ce_external_ratings_testing">Wird getestet…</string>
+    <string name="ce_external_ratings_test_valid">Der Schlüssel funktioniert</string>
+    <string name="ce_external_ratings_test_invalid">MDBList akzeptiert diesen Schlüssel nicht</string>
+    <string name="ce_external_ratings_test_rate_limited">Dieser Schlüssel hat sein Anfragelimit erreicht. Versuche es später erneut</string>
+    <string name="ce_external_ratings_test_unreachable">MDBList ist nicht erreichbar</string>
 </resources>
