@@ -155,8 +155,8 @@ class MPVPlayer(
         }
 
     /**
-     * mpv's END_FILE carries a reason, but the JNI layer only passes the event id. A file that
-     * never reaches FILE_LOADED failed to open; its error line can come before or after END_FILE
+     * A file that never reaches FILE_LOADED failed to open, unless mpv gives another reason than an
+     * error for its END_FILE ([eventEndFile]); its error line can come before or after END_FILE
      * (#446, see [MpvLoadState]).
      */
     private val logObserver =
@@ -854,6 +854,18 @@ class MPVPlayer(
         }
     }
 
+    /**
+     * CE (#786): mpv's reason for the END_FILE that [event] gets next. libmpv calls this just
+     * before event(MPV_EVENT_END_FILE) on the same thread, and both go through [post], so the
+     * reason is there when the END_FILE branch runs.
+     */
+    override fun eventEndFile(reason: Int, error: Int) {
+        post {
+            Timber.d("mpv END_FILE reason=$reason error=$error")
+            loadState.endFileReason(reason, error)
+        }
+    }
+
     override fun event(eventId: Int) {
         post {
             when (eventId) {
@@ -954,10 +966,13 @@ class MPVPlayer(
         val message = failure.message
         // #446: without an error line the message stays null, so the UI shows its own
         // (localized) text instead of an English sentence from here.
-        Timber.e("mpv could not open the file: ${message ?: "no error logged before END_FILE"}")
+        Timber.e(
+            "mpv could not open the file: ${message ?: "no error logged before END_FILE"}" +
+                " (mpv error ${failure.mpvError})"
+        )
         // #474: a reload after a network error that fails is a network error again.
         // #576: so is a first load that could not connect.
-        val errorCode = errorRecovery.loadErrorCode(message, failure.errors)
+        val errorCode = errorRecovery.loadErrorCode(message, failure.errors, failure.mpvError)
         failPlayback(PlaybackException(message, null, errorCode))
     }
 

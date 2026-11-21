@@ -229,6 +229,22 @@ class PlayerInvariantsTest {
     }
 
     @Test
+    fun `mpv's END_FILE reason reaches the load state before END_FILE`() {
+        // #786: libmpv calls eventEndFile just before event(END_FILE). Only through the same
+        // post() as event() does the reason arrive before the END_FILE branch reads it.
+        val mpvPlayer = source("mpv/MPVPlayer.kt")
+        val endFileReason =
+            Regex("""override fun eventEndFile\(reason: Int, error: Int\) \{[\s\S]*?\n {4}\}""")
+                .find(mpvPlayer)
+        assertTrue(endFileReason != null, message = "MPVPlayer must override eventEndFile (#786)")
+        assertTrue(
+            endFileReason!!.value.contains("post {") &&
+                endFileReason.value.contains("loadState.endFileReason(reason, error)"),
+            message = "eventEndFile must post the reason to MpvLoadState like event() (#786)",
+        )
+    }
+
+    @Test
     fun `the start report waits for the item to load`() {
         // #601: the start went out at the item transition and progress reports followed, so an
         // item that never opened was counted as played, and one without a runtime marked played.

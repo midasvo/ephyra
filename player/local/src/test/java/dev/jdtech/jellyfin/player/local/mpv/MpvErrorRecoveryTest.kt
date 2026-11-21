@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.player.local.mpv
 
 import androidx.media3.common.PlaybackException
+import dev.jdtech.mpv.MPVLib.MpvError
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -81,6 +82,27 @@ class MpvErrorRecoveryTest {
         assertEquals(
             PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED,
             recovery.loadErrorCode("ffmpeg/demuxer: Failed to recognize file format."),
+        )
+    }
+
+    @Test
+    fun `mpv's error code decides when the lines do not (#786)`() {
+        recovery.onPrepare(itemCount = 1)
+
+        // The report did not wait for "Failed to recognize file format".
+        assertEquals(
+            PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED,
+            recovery.loadErrorCode(null, emptyList(), MpvError.MPV_ERROR_UNKNOWN_FORMAT),
+        )
+        // mpv reports a refused connection as a plain loading failure: the line decides.
+        val connect = "ffmpeg: tcp: Connection to tcp://10.0.2.2:8096 failed: Connection refused"
+        assertEquals(
+            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+            recovery.loadErrorCode(connect, listOf(connect), MpvError.MPV_ERROR_LOADING_FAILED),
+        )
+        assertEquals(
+            PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+            recovery.loadErrorCode(null, emptyList(), MpvError.MPV_ERROR_LOADING_FAILED),
         )
     }
 

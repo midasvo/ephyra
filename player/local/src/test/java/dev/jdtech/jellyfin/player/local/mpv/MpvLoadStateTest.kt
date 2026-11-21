@@ -2,6 +2,8 @@ package dev.jdtech.jellyfin.player.local.mpv
 
 import dev.jdtech.jellyfin.player.local.mpv.MpvLoadState.End
 import dev.jdtech.jellyfin.player.local.mpv.MpvLoadState.Logged
+import dev.jdtech.mpv.MPVLib.MpvEndFileReason
+import dev.jdtech.mpv.MPVLib.MpvError
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -218,6 +220,86 @@ class MpvLoadStateTest {
         state.startFile()
 
         assertEquals(End.HOLD, state.endFile(on(0)))
+    }
+
+    @Test
+    fun `an end mpv gives another reason than an error is no failure (#786)`() {
+        // A URL that turns out to be a playlist ends with REDIRECT before FILE_LOADED.
+        state.endFileReason(MpvEndFileReason.MPV_END_FILE_REASON_REDIRECT, 0)
+
+        assertEquals(End.NOT_A_FAILURE, state.endFile { error("not needed") })
+        assertFalse(state.failed)
+
+        state.startFile()
+        state.endFileReason(MpvEndFileReason.MPV_END_FILE_REASON_EOF, 0)
+        assertEquals(End.NOT_A_FAILURE, state.endFile(idle))
+    }
+
+    @Test
+    fun `an end with an error is a failure that keeps mpv's error code (#786)`() {
+        state.errorLogged("stream: Failed to open http://10.0.2.2/...")
+        state.endFileReason(
+            MpvEndFileReason.MPV_END_FILE_REASON_ERROR,
+            MpvError.MPV_ERROR_LOADING_FAILED,
+        )
+
+        assertEquals(End.FAILED, state.endFile(idle))
+        assertEquals(MpvError.MPV_ERROR_LOADING_FAILED, state.failure.mpvError)
+        assertEquals("stream: Failed to open http://10.0.2.2/...", state.failure.message)
+
+        // A new load starts without it.
+        state.newLoad(index = 0)
+        assertNull(state.failure.mpvError)
+    }
+
+    @Test
+    fun `a held failure keeps mpv's error code for the report (#786)`() {
+        state.endFileReason(
+            MpvEndFileReason.MPV_END_FILE_REASON_ERROR,
+            MpvError.MPV_ERROR_UNKNOWN_FORMAT,
+        )
+
+        assertEquals(End.HOLD, state.endFile(idle))
+        assertTrue(state.holdTimedOut())
+        assertNull(state.failure.message)
+        assertEquals(MpvError.MPV_ERROR_UNKNOWN_FORMAT, state.failure.mpvError)
+    }
+
+    @Test
+    fun `a reason belongs to the one END_FILE after it (#786)`() {
+        state.endFileReason(MpvEndFileReason.MPV_END_FILE_REASON_REDIRECT, 0)
+        assertEquals(End.NOT_A_FAILURE, state.endFile(idle))
+
+        // The next end comes without a reason: the rules decide alone again.
+        state.startFile()
+        assertEquals(End.HOLD, state.endFile(idle))
+        assertNull(state.failure.mpvError)
+    }
+
+    @Test
+    fun `an error reason does not turn the entries mpv tries after a failure into failures`() {
+        // #576 still decides these: their ends carry an error too (#786).
+        state.errorLogged("stream: Failed to open episode 2")
+        state.endFileReason(
+            MpvEndFileReason.MPV_END_FILE_REASON_ERROR,
+            MpvError.MPV_ERROR_LOADING_FAILED,
+        )
+        assertEquals(End.FAILED, state.endFile(on(2)))
+
+        state.startFile()
+        state.endFileReason(
+            MpvEndFileReason.MPV_END_FILE_REASON_ERROR,
+            MpvError.MPV_ERROR_LOADING_FAILED,
+        )
+        assertEquals(End.NOT_A_FAILURE, state.endFile(on(3)))
+    }
+
+    @Test
+    fun `an error reason after FILE_LOADED is still no load failure (#786)`() {
+        state.fileLoaded()
+        state.endFileReason(MpvEndFileReason.MPV_END_FILE_REASON_ERROR, MpvError.MPV_ERROR_GENERIC)
+
+        assertEquals(End.NOT_A_FAILURE, state.endFile(idle))
     }
 
     @Test

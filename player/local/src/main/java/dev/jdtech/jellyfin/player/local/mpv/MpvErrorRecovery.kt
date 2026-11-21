@@ -1,6 +1,7 @@
 package dev.jdtech.jellyfin.player.local.mpv
 
 import androidx.media3.common.PlaybackException
+import dev.jdtech.mpv.MPVLib.MpvError
 
 /**
  * CE (#474): what [MPVPlayer.prepare] does after a playback error, and how a load that fails then
@@ -63,14 +64,22 @@ internal class MpvErrorRecovery {
 
     /**
      * The error code for a file that failed to open. [message] is the last error mpv logged for it
-     * and [errors] all of them, oldest first.
+     * and [errors] all of them, oldest first. [mpvError] is mpv's error code for the end, if any:
+     * the lines decide first, since mpv reports a refused connection as a plain loading failure.
      */
-    fun loadErrorCode(message: String?, errors: List<String> = listOfNotNull(message)): Int =
+    fun loadErrorCode(
+        message: String?,
+        errors: List<String> = listOfNotNull(message),
+        mpvError: Int? = null,
+    ): Int =
         when {
             reloadingAfterNetworkError -> PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
             errors.any(::isConnectionError) ->
                 PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
             message?.contains("recognize file format") == true ->
+                PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED
+            // #786: the same, when the report did not wait for that line.
+            mpvError == MpvError.MPV_ERROR_UNKNOWN_FORMAT ->
                 PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED
             else -> PlaybackException.ERROR_CODE_IO_UNSPECIFIED
         }
