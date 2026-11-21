@@ -42,7 +42,7 @@ ktfmt = "0.27.0"
 # left their own main red on the format check. Move to 0.64 only together with a tree-wide
 # ktfmtFormat. Plugin 0.28.0 moves to ktfmt 0.65's new coordinates and can't run 0.62.
 ktfmt-formatter = "0.62"
-libmpv = "1.2.0"
+libmpv = "1.3.0"
 material = "1.14.0"
 media3-ffmpeg-decoder = "1.9.0+1"
 okhttp = "5.5.1"
