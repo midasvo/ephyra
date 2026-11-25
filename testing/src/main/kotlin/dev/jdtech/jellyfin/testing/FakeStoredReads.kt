@@ -119,6 +119,9 @@ class FakeStoredItemSources : StoredItemSources {
         any.value = sources.values.any { it.isNotEmpty() }
     }
 
+    override suspend fun allSourcesOfServer(itemId: ItemId, serverId: ServerId): List<ItemSource> =
+        sources[serverId to itemId].orEmpty()
+
     override suspend fun completedSourcesOfServer(
         itemId: ItemId,
         serverId: ServerId,

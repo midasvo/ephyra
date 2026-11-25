@@ -8,9 +8,9 @@ import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 
 /**
- * #966: [MediaRepositoryImpl] over the Room stores of [database] and the downloaded files of
- * [context], the same parts Hilt hands it (`MediaRepositoryModule`, `DatabaseModule`). For the
- * tests that build the repository with a real database; the app gets it from Hilt.
+ * #966: [MediaRepositoryImpl] (in `application`) over the Room stores of [database] and the files
+ * of [context], as Hilt builds it: for the tests here that check the repository and Room together.
+ * The repository's own tests are in `application`, over fakes.
  */
 fun roomMediaRepository(
     context: Context,
@@ -30,7 +30,6 @@ fun roomMediaRepository(
         storedItems = downloads,
         storedLists = downloads,
         storedSources = downloads,
-        downloadSources = downloads,
         storedSegments = downloads,
         storedUserData = downloads,
         trackPreferences = servers,

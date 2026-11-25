@@ -1,22 +1,16 @@
 package dev.jdtech.jellyfin.player.local.domain
 
-import android.content.ContextWrapper
-import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.Chapter
 import dev.jdtech.jellyfin.models.Episode
 import dev.jdtech.jellyfin.models.ItemKind
 import dev.jdtech.jellyfin.models.ServerException
-import dev.jdtech.jellyfin.repository.roomMediaRepository
 import dev.jdtech.jellyfin.testing.ContractLibrary
 import dev.jdtech.jellyfin.testing.FakeLibrary
 import dev.jdtech.jellyfin.testing.FakeMediaServer
-import dev.jdtech.jellyfin.testing.FakeResumeThresholdsStore
-import dev.jdtech.jellyfin.testing.fakeProxy
-import dev.jdtech.jellyfin.testing.kotlinName
+import dev.jdtech.jellyfin.testing.FakeRepositoryStores
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 
@@ -71,27 +65,7 @@ class PlaylistManagerNextUpTest {
         assertNull(item.trickplayInfo)
     }
 
-    private fun repository() =
-        roomMediaRepository(
-            context = ContextWrapper(null),
-            server = server,
-            database = noDownloads(),
-            // Every setting at its default: no current server, no Next Up limit.
-            currentServer = { null },
-            nextUpMaxDays = { 0 },
-            resumeThresholds = FakeResumeThresholdsStore(),
-        )
-
-    /** No downloads: with no current server set, the repository only asks whether there are any. */
-    private fun noDownloads(): ServerDatabaseDao =
-        fakeProxy(
-            ServerDatabaseDao::class.java.classLoader,
-            arrayOf(ServerDatabaseDao::class.java),
-        ) { _, method, _ ->
-            when (method.kotlinName) {
-                "observeHasSources" -> flowOf(false)
-                else -> throw NotImplementedError("ServerDatabaseDao.${method.kotlinName}")
-            }
-        }
-            as ServerDatabaseDao
+    // #966: the repository over stores that hold nothing; every setting at its default (no current
+    // server, no Next Up limit).
+    private fun repository() = FakeRepositoryStores().repository(server)
 }

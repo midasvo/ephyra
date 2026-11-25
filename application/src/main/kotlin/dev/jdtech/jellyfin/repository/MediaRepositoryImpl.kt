@@ -43,21 +43,19 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 /**
  * The server in use composed with the stores: every role of the repository in one class (#967),
  * because the roles share its state (the play sessions, the resume settings, whether anything is
- * downloaded). Hilt binds each role to the one instance (`MediaRepositoryModule`); nothing outside
- * `data` names this class. #966: it reads and writes the database through the store roles only and
- * the downloaded files through [DownloadedFiles]; it takes no `Context`.
+ * downloaded). Hilt binds each role to the one instance (`MediaRepositoryModule` in `core`);
+ * nothing else names this class. #966: pure Kotlin, over the parts of [MediaServer] and the store
+ * roles; the downloaded files are [DownloadedFiles], the log is [log] and [fallbackLog].
  */
 class MediaRepositoryImpl(
     private val server: MediaServer,
     private val storedItems: StoredItems,
     private val storedLists: StoredItemLists,
     private val storedSources: StoredItemSources,
-    private val downloadSources: DownloadSources,
     private val storedSegments: DownloadSegmentsAndTrickplay,
     private val storedUserData: DownloadUserData,
     private val trackPreferences: StoredTrackPreferences,
@@ -70,6 +68,9 @@ class MediaRepositoryImpl(
     private val syncRequester: UserDataSyncRequester = UserDataSyncRequester.NONE,
     private val knownServerState: KnownServerState = KnownServerState.NONE,
     private val storedLibraryNames: StoredLibraryNames = StoredLibraryNames.ENGLISH,
+    /** Why a stored copy answered (#899: Timber in the app, as before), and what it reports. */
+    private val fallbackLog: FallbackLog = FallbackLog.NONE,
+    private val log: RepositoryLog = RepositoryLog.NONE,
 ) :
     CurrentAccount,
     ItemCatalog,
@@ -108,7 +109,7 @@ class MediaRepositoryImpl(
                         read()
                     }
                 },
-                TimberFallbackLog,
+                fallbackLog,
                 server,
             )
         return ItemsResult(items, fromStore)
@@ -148,7 +149,7 @@ class MediaRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.w(e, "Could not read the server's resume settings")
+            log.warn(e, "Could not read the server's resume settings")
         }
     }
 
@@ -172,7 +173,7 @@ class MediaRepositoryImpl(
             val stored = currentServerId()?.let { storedItems.episodeOfServer(itemId, it) }
             serverOrStored(
                 stored?.let { row -> suspend { row.load(currentUserId) } },
-                log = TimberFallbackLog,
+                log = fallbackLog,
             ) {
                 server.items.episode(itemId).withLocalSources(localSourcesFor(listOf(itemId)))
             }
@@ -183,7 +184,7 @@ class MediaRepositoryImpl(
             val stored = currentServerId()?.let { storedItems.movieOfServer(itemId, it) }
             serverOrStored(
                 stored?.let { row -> suspend { row.load(currentUserId) } },
-                log = TimberFallbackLog,
+                log = fallbackLog,
             ) {
                 server.items.movie(itemId).withLocalSources(localSourcesFor(listOf(itemId)))
             }
@@ -194,7 +195,7 @@ class MediaRepositoryImpl(
             val stored = currentServerId()?.let { storedItems.showOfServer(itemId, it) }
             serverOrStored(
                 stored?.let { row -> suspend { row.load(currentUserId) } },
-                log = TimberFallbackLog,
+                log = fallbackLog,
             ) {
                 server.items.show(itemId)
             }
@@ -205,7 +206,7 @@ class MediaRepositoryImpl(
             val stored = currentServerId()?.let { storedItems.seasonOfServer(itemId, it) }
             serverOrStored(
                 stored?.let { row -> suspend { row.load(currentUserId) } },
-                log = TimberFallbackLog,
+                log = fallbackLog,
             ) {
                 server.items.season(itemId)
             }
@@ -224,9 +225,7 @@ class MediaRepositoryImpl(
 
     override suspend fun getItem(itemId: ItemId): Item? =
         withContext(Dispatchers.IO) {
-            serverOrStored(storedItem(itemId), log = TimberFallbackLog) {
-                server.items.item(itemId)
-            }
+            serverOrStored(storedItem(itemId), log = fallbackLog) { server.items.item(itemId) }
         }
 
     /**
@@ -507,11 +506,7 @@ class MediaRepositoryImpl(
             )
             // CE (#718): the current server's download of the item, not another server's.
             currentServerId()?.let { serverId ->
-                sources.addAll(
-                    downloadSources.sourcesOfServer(itemId, serverId).map {
-                        downloadSources.itemSource(it)
-                    }
-                )
+                sources.addAll(storedSources.allSourcesOfServer(itemId, serverId))
             }
             sources
         }
@@ -585,7 +580,7 @@ class MediaRepositoryImpl(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e)
+                log.error(e)
                 return@withContext emptyList()
             }
         }
@@ -605,7 +600,7 @@ class MediaRepositoryImpl(
                         return@withContext it
                     }
                 } catch (e: Exception) {
-                    Timber.e(e, "Failed to read local trickplay data")
+                    log.error(e, "Failed to read local trickplay data")
                 }
 
                 // #769: the player and the downloads ask here; without trickplay they get none.
@@ -630,7 +625,7 @@ class MediaRepositoryImpl(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Timber.e(e)
+                log.error(e)
                 null
             }
         }
@@ -661,7 +656,7 @@ class MediaRepositoryImpl(
     ) {
         // CE (#599): Transcode with the transcode's play session, see PlaySessions.playReport.
         val report = playSessions.playReport(itemId, transcoded)
-        Timber.d(
+        log.debug(
             "Sending start ${itemId.asString()} at $positionTicks, transcoded: ${report.transcoded}"
         )
         withContext(Dispatchers.IO) {
@@ -689,7 +684,7 @@ class MediaRepositoryImpl(
         positionTicks: Long,
         playedPercentage: Int?,
     ) {
-        Timber.d("Sending stop ${itemId.asString()}")
+        log.debug("Sending stop ${itemId.asString()}")
         withContext(Dispatchers.IO) {
             // CE (#637): the server applies its resume settings to this stop; the local copy
             // follows them.
@@ -736,7 +731,7 @@ class MediaRepositoryImpl(
         isPaused: Boolean,
         transcoded: Boolean,
     ) {
-        Timber.d("Posting progress of ${itemId.asString()}, position: $positionTicks")
+        log.debug("Posting progress of ${itemId.asString()}, position: $positionTicks")
         val report = playSessions.playReport(itemId, transcoded)
         withContext(Dispatchers.IO) {
             reportUserData(
@@ -854,7 +849,7 @@ class MediaRepositoryImpl(
         storedSources
             .observeHasSources()
             .map<Boolean, Boolean?> { it }
-            .catch { Timber.w(it, "Couldn't observe the sources table") }
+            .catch { log.warn(it, "Couldn't observe the sources table") }
             .stateIn(CoroutineScope(SupervisorJob() + Dispatchers.IO), SharingStarted.Eagerly, null)
 
     /**

@@ -3,6 +3,9 @@ package dev.jdtech.jellyfin.repository
 import android.content.Context
 import android.provider.Settings
 import dev.jdtech.jellyfin.api.JellyfinApi
+import dev.jdtech.jellyfin.data.files.DownloadedFilesOnDisk
+import dev.jdtech.jellyfin.database.RoomDownloadStore
+import dev.jdtech.jellyfin.database.RoomServerStore
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.models.PlaybackTarget
@@ -220,12 +223,22 @@ internal fun StandInServer.repository(
             userId = StandInServer.USER_ID.toUuid()
         }
     val jellyfin = JellyfinMediaServer(api, JellyfinDeviceProfiles(DeviceCodecProbe(context)))
-    return roomMediaRepository(
-        context,
-        object : MediaServer by jellyfin {
-            override val capabilities = capabilities
-        },
-        database,
+    // #966: the repository is in application; the stores are data's, over [database].
+    val downloads = RoomDownloadStore(database)
+    val servers = RoomServerStore(database)
+    return MediaRepositoryImpl(
+        server =
+            object : MediaServer by jellyfin {
+                override val capabilities = capabilities
+            },
+        storedItems = downloads,
+        storedLists = downloads,
+        storedSources = downloads,
+        storedSegments = downloads,
+        storedUserData = downloads,
+        trackPreferences = servers,
+        storedUsers = servers,
+        downloadedFiles = DownloadedFilesOnDisk(context),
         currentServer = { preferences.currentServerId() },
         nextUpMaxDays = { preferences.getValue(preferences.homeNextUpMaxDays) },
         resumeThresholds = FakeResumeThresholdsStore(),

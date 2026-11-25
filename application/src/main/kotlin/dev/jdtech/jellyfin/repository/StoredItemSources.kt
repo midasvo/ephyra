@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.Flow
  * of the download store; `RoomDownloadStore` in `data` implements them all.
  */
 interface StoredItemSources {
+    /** Every local source of [itemId] stored for [serverId], finished or not, with its streams. */
+    suspend fun allSourcesOfServer(itemId: ItemId, serverId: ServerId): List<ItemSource>
+
     /** The finished downloads of [itemId] stored for [serverId] (#454: no partial file). */
     suspend fun completedSourcesOfServer(itemId: ItemId, serverId: ServerId): List<ItemSource>
 
