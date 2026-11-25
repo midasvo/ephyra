@@ -1,6 +1,5 @@
-package dev.jdtech.jellyfin.repository
+package dev.jdtech.jellyfin.database
 
-import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.CollectionType
 import dev.jdtech.jellyfin.models.EpisodeEntity
 import dev.jdtech.jellyfin.models.Item
@@ -19,46 +18,39 @@ import dev.jdtech.jellyfin.models.UserId
 import dev.jdtech.jellyfin.models.getLocalSourcesForItems
 import dev.jdtech.jellyfin.models.localImagePath
 import dev.jdtech.jellyfin.models.toEpisode
-import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toMovie
 import dev.jdtech.jellyfin.models.toShow
+import dev.jdtech.jellyfin.repository.StoredItemLists
+import dev.jdtech.jellyfin.repository.StoredLibraries
+import dev.jdtech.jellyfin.repository.StoredLibraryNames
+import dev.jdtech.jellyfin.repository.StoredRows
 import java.time.LocalDateTime
 import java.util.Locale
 
 /**
- * CE (#775): the two libraries the Media tab shows while the server is away, holding the downloaded
- * movies and shows. Room does not know which server library a download came from. The server does
- * not know these ids, so whatever asks for their contents gets Room's answer.
+ * CE (#775): the lists Room answers while the server is away ([StoredItemLists]). The lists are
+ * what is downloaded, so they are sorted and filtered in memory, on the rows before they are
+ * mapped. #966: was `StoredLists`, which the repository built over the DAO itself;
+ * [RoomDownloadStore] implements the role with it.
  */
-object StoredLibraries {
-    val MOVIES: ItemId = "a1b2c3d4-0000-0000-0000-000000000001".toItemId()
-    val SHOWS: ItemId = "a1b2c3d4-0000-0000-0000-000000000002".toItemId()
+internal class RoomStoredLists(private val database: ServerDatabaseDao) : StoredItemLists {
+    override suspend fun favorites(serverId: ServerId, userId: UserId): StoredRows<Item> =
+        rows(
+            serverId,
+            database.getFavoriteMoviesOfServer(serverId, userId) +
+                database.getFavoriteShowsOfServer(serverId, userId) +
+                database.getFavoriteEpisodesOfServer(serverId, userId),
+        )
 
-    fun isStored(id: ItemId?): Boolean = id == MOVIES || id == SHOWS
-}
-
-/**
- * CE (#775): the lists Room answers while the server is away: downloaded favourites, search results
- * and [StoredLibraries]. Only the rows of the given server and the user data of the given user
- * (#718), and only what has a finished download: something that can play. The lists are what is
- * downloaded, so they are sorted and filtered in memory, on the rows before they are mapped.
- */
-internal class StoredLists(private val database: ServerDatabaseDao) {
-    suspend fun favorites(serverId: ServerId, userId: UserId): List<Any> =
-        database.getFavoriteMoviesOfServer(serverId, userId) +
-            database.getFavoriteShowsOfServer(serverId, userId) +
-            database.getFavoriteEpisodesOfServer(serverId, userId)
-
-    /** By name, as the server's search: movies and shows unless [kinds] says otherwise. */
-    suspend fun search(
+    override suspend fun search(
         serverId: ServerId,
         query: String,
         kinds: List<ItemKind>?,
         limitPerKind: Int,
-    ): List<Any> {
+    ): StoredRows<Item> {
         val pattern = "%" + query.trim().replace(LIKE_SPECIAL) { "\\" + it.value } + "%"
         val wanted = kinds ?: listOf(ItemKind.MOVIE, ItemKind.SERIES)
-        return buildList {
+        val found = buildList {
             if (ItemKind.MOVIE in wanted) {
                 addAll(database.searchMoviesOfServer(serverId, pattern).take(limitPerKind))
             }
@@ -69,23 +61,21 @@ internal class StoredLists(private val database: ServerDatabaseDao) {
                 addAll(database.searchEpisodesOfServer(serverId, pattern).take(limitPerKind))
             }
         }
+        return rows(serverId, found)
     }
 
-    /** Whether anything of the server is downloaded (finished), favourite or not. */
-    suspend fun hasDownloads(serverId: ServerId): Boolean =
+    override suspend fun hasDownloads(serverId: ServerId): Boolean =
         database.countDownloadedMoviesOfServer(serverId) > 0 ||
             database.countDownloadedShowsOfServer(serverId) > 0
 
     /**
-     * Each of [StoredLibraries] that holds something. CE (#781): with the artwork of the most
-     * recently downloaded of its items that has some stored ([storedImage]: whether the file of
-     * that image was saved with the download), a backdrop before a poster, as the wide card of a
-     * real library shows. Without any, the blank card as before.
+     * As the wide card of a real library shows, a backdrop before a poster. Without any, the blank
+     * card as before.
      */
-    suspend fun libraries(
+    override suspend fun libraries(
         serverId: ServerId,
         names: StoredLibraryNames,
-        storedImage: (itemId: ItemId, image: String) -> Boolean = { _, _ -> false },
+        storedImage: (itemId: ItemId, image: String) -> Boolean,
     ): List<Library> {
         val movies = database.getDownloadedMoviesOfServer(serverId).map { it.id }
         val shows = database.getDownloadedShowsOfServer(serverId).map { it.id }
@@ -118,25 +108,22 @@ internal class StoredLists(private val database: ServerDatabaseDao) {
         images: ItemImages,
     ) = Library(id = id, name = names.nameOf(type), type = type, images = images)
 
-    /**
-     * The rows of [libraryId], sorted as the server would. Filters Room cannot answer are left out
-     * rather than failing the grid; so are sorts it has no data for (critic rating), which fall
-     * back to the name.
-     */
-    suspend fun libraryContents(
+    override suspend fun libraryContents(
         serverId: ServerId,
         userId: UserId,
         libraryId: ItemId,
         sortBy: SortBy,
         sortOrder: SortOrder,
         filters: Set<ItemFilter>,
-    ): List<Any> =
-        sorted(entries(serverId, userId, libraryId, filters), serverId, userId, sortBy)
-            .let { if (sortOrder == SortOrder.DESCENDING) it.asReversed() else it }
-            .map { it.dto }
+    ): StoredRows<Item> =
+        rows(
+            serverId,
+            sorted(entries(serverId, userId, libraryId, filters), serverId, userId, sortBy)
+                .let { if (sortOrder == SortOrder.DESCENDING) it.asReversed() else it }
+                .map { it.dto },
+        )
 
-    /** How many rows of [libraryId] sort before [nameLessThan], for the A–Z bar. */
-    suspend fun libraryCount(
+    override suspend fun libraryCount(
         serverId: ServerId,
         userId: UserId,
         libraryId: ItemId,
@@ -149,7 +136,11 @@ internal class StoredLists(private val database: ServerDatabaseDao) {
         return entries.count { it.sortName < boundary }
     }
 
-    suspend fun toItems(dtos: List<Any>, serverId: ServerId, userId: UserId): List<Item> {
+    /** [dtos] of [serverId], made into items only when they are loaded. */
+    private fun rows(serverId: ServerId, dtos: List<Any>): StoredRows<Item> =
+        RoomStoredRows(dtos) { page, userId -> toItems(page, serverId, userId) }
+
+    private suspend fun toItems(dtos: List<Any>, serverId: ServerId, userId: UserId): List<Item> {
         val local =
             database.getLocalSourcesForItems(
                 dtos.mapNotNull {
@@ -263,3 +254,23 @@ internal class StoredLists(private val database: ServerDatabaseDao) {
  * card takes them: the wide backdrop, then the poster.
  */
 private val STORED_IMAGES = listOf("backdrop", "primary")
+
+/**
+ * #966: rows Room has read, mapped by [toModels] only when they are loaded ([StoredRows]); a slice
+ * keeps the mapping and maps only its own rows.
+ */
+internal class RoomStoredRows<E, T>(
+    private val rows: List<E>,
+    private val toModels: suspend (rows: List<E>, userId: UserId) -> List<T>,
+) : StoredRows<T> {
+    override val size: Int
+        get() = rows.size
+
+    override fun slice(startIndex: Int, limit: Int?): StoredRows<T> =
+        RoomStoredRows(
+            rows.drop(startIndex).let { if (limit != null) it.take(limit) else it },
+            toModels,
+        )
+
+    override suspend fun load(userId: UserId): List<T> = toModels(rows, userId)
+}

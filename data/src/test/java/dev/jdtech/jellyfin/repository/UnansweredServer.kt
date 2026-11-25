@@ -1,12 +1,15 @@
 package dev.jdtech.jellyfin.repository
 
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort
+import dev.jdtech.jellyfin.domain.ports.ItemPort
 import dev.jdtech.jellyfin.domain.ports.ItemQuery
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackPort
 import dev.jdtech.jellyfin.domain.ports.PlaybackReport
 import dev.jdtech.jellyfin.domain.ports.PlaybackRequest
 import dev.jdtech.jellyfin.domain.ports.RequestWatcher
+import dev.jdtech.jellyfin.domain.ports.ServerInfoPort
 import dev.jdtech.jellyfin.domain.ports.ServerSession
 import dev.jdtech.jellyfin.domain.ports.UserDataPort
 import dev.jdtech.jellyfin.domain.ports.UserImage
@@ -79,8 +82,8 @@ internal class UnansweredServer(
             override suspend fun currentUserImage(): UserImage = fail()
         }
 
-    override val catalog =
-        object : CatalogPort {
+    private val catalog =
+        object : ItemPort, ItemListPort, ItemExtrasPort, ServerInfoPort {
             override suspend fun serverInfo(): ServerInfo = fail()
 
             override suspend fun libraries(): List<Library> = fail()
@@ -153,6 +156,11 @@ internal class UnansweredServer(
 
             override suspend fun themeSongUrl(itemId: ItemId): String? = fail()
         }
+
+    override val items: ItemPort = catalog
+    override val itemLists: ItemListPort = catalog
+    override val itemExtras: ItemExtrasPort = catalog
+    override val info: ServerInfoPort = catalog
 
     override val userData =
         object : UserDataPort {

@@ -15,6 +15,9 @@ import dev.jdtech.jellyfin.models.ServerId
  * the download store was split into (#967); `RoomDownloadStore` in `data` implements them all.
  */
 interface DownloadSegmentsAndTrickplay {
+    /** #966: the stored segments of [itemId], none when nothing is stored for it. */
+    suspend fun segments(itemId: ItemId): List<Segment>
+
     /** Replaces the stored segments of [itemId] with [segments], in one transaction. */
     suspend fun replaceSegments(itemId: ItemId, segments: List<Segment>)
 

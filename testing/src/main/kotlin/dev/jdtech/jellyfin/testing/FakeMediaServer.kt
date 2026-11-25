@@ -1,14 +1,17 @@
 package dev.jdtech.jellyfin.testing
 
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
-import dev.jdtech.jellyfin.domain.ports.CatalogPort.Companion.SEARCH_LIMIT
-import dev.jdtech.jellyfin.domain.ports.CatalogPort.Companion.SEARCH_LIMIT_PER_KIND
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort.Companion.SEARCH_LIMIT
+import dev.jdtech.jellyfin.domain.ports.ItemListPort.Companion.SEARCH_LIMIT_PER_KIND
+import dev.jdtech.jellyfin.domain.ports.ItemPort
 import dev.jdtech.jellyfin.domain.ports.ItemQuery
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackPort
 import dev.jdtech.jellyfin.domain.ports.PlaybackReport
 import dev.jdtech.jellyfin.domain.ports.PlaybackRequest
 import dev.jdtech.jellyfin.domain.ports.RequestWatcher
+import dev.jdtech.jellyfin.domain.ports.ServerInfoPort
 import dev.jdtech.jellyfin.domain.ports.ServerSession
 import dev.jdtech.jellyfin.domain.ports.UserDataPort
 import dev.jdtech.jellyfin.domain.ports.UserImage
@@ -255,7 +258,8 @@ class FakeMediaServer(
             )
     }
 
-    private inner class Catalog : CatalogPort {
+    /** #967: all four parts of the catalog, as the Jellyfin adapter has them. */
+    private inner class Catalog : ItemPort, ItemListPort, ItemExtrasPort, ServerInfoPort {
         override suspend fun serverInfo(): ServerInfo = call("serverInfo") { library.server }
 
         override suspend fun libraries(): List<Library> = call("libraries") { library.libraries }
@@ -627,7 +631,11 @@ class FakeMediaServer(
     }
 
     override val session: Session = Session()
-    override val catalog: CatalogPort = Catalog()
+    private val catalog = Catalog()
+    override val items: ItemPort = catalog
+    override val itemLists: ItemListPort = catalog
+    override val itemExtras: ItemExtrasPort = catalog
+    override val info: ServerInfoPort = catalog
     override val userData: UserDataPort = UserData()
     override val playback: PlaybackPort = Playback()
 

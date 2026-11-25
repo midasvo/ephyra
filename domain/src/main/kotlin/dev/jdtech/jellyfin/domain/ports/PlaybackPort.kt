@@ -51,7 +51,7 @@ data class PlaybackReport(
  * Playback on a media server: its sources, what the player shows alongside, and the reports (#757).
  * Knows nothing about downloads. A failure the adapter recognizes as the server's (an error status,
  * a timeout, a TLS failure) is thrown as `ServerException` with the original as its cause; any
- * other exception, such as a reset connection, leaves as it is, as with [CatalogPort].
+ * other exception, such as a reset connection, leaves as it is, as with [ItemPort].
  */
 interface PlaybackPort {
     /**

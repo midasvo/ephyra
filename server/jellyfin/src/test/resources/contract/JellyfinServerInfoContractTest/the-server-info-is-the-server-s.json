@@ -1,0 +1,16 @@
+[
+    {
+        "request": "GET /System/Info/Public",
+        "status": 200,
+        "contentType": "application/json; charset=utf-8",
+        "json": {
+            "LocalAddress": "http://server.invalid",
+            "ServerName": "Ephyra Test",
+            "Version": "12.4.0",
+            "ProductName": "Jellyfin Server",
+            "OperatingSystem": "",
+            "Id": "00000000000000000000000000000002",
+            "StartupWizardCompleted": true
+        }
+    }
+]

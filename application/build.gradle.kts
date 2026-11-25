@@ -13,6 +13,9 @@ dependencies {
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotlin.test)
+    // #966: the fakes of the server and the stores, for the repository's tests.
+    testImplementation(projects.testing)
+    testImplementation(libs.kotlinx.serialization.json)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 

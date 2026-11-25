@@ -39,7 +39,7 @@ app/phone, app/tv   (composition root, screens)
    │
    ├─► modes/film, setup, settings, player/*, core, downloads ─► application ─► domain
    │                                                                  ▲
-   ├─► data  (Room: the stores and MediaRepositoryImpl) ──────────────┘
+   ├─► data  (Room: the stores, the downloaded files) ─────────────────┘
    ├─► server/jellyfin  (the server ports, the only module with the SDK) ───► application, domain
    ├─► ratings/mdblist  (the ratings ports: MDBList over HTTP, a file cache) ─► application, domain
    └─► device  (the device ports: the codec probe, connectivity) ──────────────► application, domain
@@ -47,16 +47,17 @@ app/phone, app/tv   (composition root, screens)
 
 - `domain` (pure Kotlin): the models without the `Findroid` prefix (`Item`, `Movie`, `ItemSource`,
   `Library`, …), the ids as value classes (`ItemId`, `UserId`, `ServerId`, `MediaSourceId`), the
-  server ports (`MediaServer` with `ServerSession`, `CatalogPort`, `UserDataPort`, `PlaybackPort`;
+  server ports (`MediaServer` with `ServerSession`, the catalog by role as `ItemPort`, `ItemListPort`,
+  `ItemExtrasPort` and `ServerInfoPort` (#967), `UserDataPort`, `PlaybackPort`;
   `ServerConnector`, `UserDataSyncPort`), `ActiveServer`, `ServerCapabilities`, and the two domain
   models with rules: `PlayState` (marks, stops, the sync's merge) and `DownloadState`. `Ticks` for
   the unit conversions.
-- `application` (pure Kotlin): the repository's roles (#967: `CurrentAccount`, `ItemCatalog`, `ItemLists`, `ItemExtras`, `UserDataUpdates`, `SeriesTrackPreferences`, `PlaybackMedia`, `PlaybackReports`), the event flows, and the store ports
-  of the server store (`StoredServers`, `ServerAddresses`, `StoredUsers`, `UserLocks`, keyed by `ServerId` and `UserId`), of the download store (`DownloadList`, `DownloadedItemRows`, `DownloadSources`, `DownloadMediaStreams`, `DownloadSegmentsAndTrickplay`, `DownloadUserData`, `QueuedDownloads`: source rows by `ServerId`, user queries by `AccountKey(serverId, userId)`) and `PendingUserDataStore` (by `AccountKey`),
+- `application` (pure Kotlin): the repository's roles (#967: `CurrentAccount`, `ItemCatalog`, `ItemLists`, `ItemExtras`, `UserDataUpdates`, `SeriesTrackPreferences`, `PlaybackMedia`, `PlaybackReports`) and, since #966, their implementation `MediaRepositoryImpl`, which composes the server in use with the store roles (stored fallback, local sources, write then report; Hilt binds each role to its one instance in `MediaRepositoryModule` in `core`), the event flows, and the store ports
+  of the server store (`StoredServers`, `ServerAddresses`, `StoredUsers`, `UserLocks`, keyed by `ServerId` and `UserId`), of the download store (`DownloadList`, `DownloadedItemRows`, `DownloadSources`, `DownloadMediaStreams`, `DownloadSegmentsAndTrickplay`, `DownloadUserData`, `QueuedDownloads`, and since #966 the stored fallback's reads `StoredItems`, `StoredItemSources`, `StoredItemLists`: source rows by `ServerId`, user queries by `AccountKey(serverId, userId)`), `StoredTrackPreferences`, `DownloadedFiles` (the downloaded images and trickplay sheets) and `PendingUserDataStore` (by `AccountKey`),
   and the settings the adapters read (#918), which `core` implements over `AppPreferences`.
-- `data`: Room, the three `Room*Store` and `MediaRepositoryImpl`, which composes the server in use
-  with Room (stored fallback, local sources, write then report) and implements every role; Hilt binds
-  each role to its one instance (`MediaRepositoryModule`).
+- `data`: Room, the three `Room*Store` behind the store ports, and `DownloadedFilesOnDisk` (the
+  downloaded images and trickplay sheets). The repository was here until #966 moved it to
+  `application`; no adapter names a port of another adapter (R22).
 - `server/jellyfin`: the SDK, `JellyfinApi`, the mappers, the port implementations, the device
   profiles. `CurrentMediaServer` in `core` picks the adapter by the active server's type.
 - `ratings/mdblist` (#331): the external ratings of the movie and show pages from MDBList, behind
@@ -82,8 +83,8 @@ ids opaque and renamed the repository and the models at once.
 one fails, fix the code. `architecture/baseline/` has one allowlist, not debt: `uuid-imports.txt`
 (files that may name `java.util.UUID`, for a random value the app makes itself; empty since #918).
 The others are exceptions with an issue each: `pure-kotlin-*.txt` (R19) and
-`room-adapter-imports.txt` (R20), both empty since #968, and `wide-ports.txt` (R21: `CatalogPort`,
-which the third PR of #967 splits). A line is added only with its reason,
+`room-adapter-imports.txt` (R20), both empty since #968, and `wide-ports.txt` (R21), empty since the third PR of #967 split
+the server's catalog port. A line is added only with its reason,
 given in the PR.
 
 | Rule | Says |
@@ -108,6 +109,7 @@ given in the PR.
 | R19 | `domain` and `application` import only Kotlin, kotlinx, the JDK and their own code, and declare no library but kotlinx (an allowlist, empty since #968 moved the library pagers to `modes/film`) |
 | R20 | `data` is Room and nothing else: of Android it imports only Room, SQLite and `android.content.Context` (an allowlist, empty since #968) |
 | R21 | No port (an interface in `domain/.../ports/` or in `application`) declares more than fifteen functions and properties, inherited ones included (#967: a wide port is split into roles) |
+| R22 | No file of an adapter (`data`, `server/jellyfin`, `ratings/mdblist`, `device`) names a port another adapter implements: what uses two adapters is in `application` (#966; one exception in the test, `DeviceCodecs` in `server/jellyfin`, #1012) |
 
 ## Not done
 

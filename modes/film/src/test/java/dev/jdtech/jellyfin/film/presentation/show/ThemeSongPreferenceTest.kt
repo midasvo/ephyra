@@ -5,16 +5,14 @@ import android.content.ContextWrapper
 import android.content.SharedPreferences
 import androidx.lifecycle.viewModelScope
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
-import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.di.AppPreferencesDownloadSettings
 import dev.jdtech.jellyfin.models.ServerCapabilities
 import dev.jdtech.jellyfin.repository.DownloadSources
-import dev.jdtech.jellyfin.repository.MediaRepositoryImpl
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.testing.ContractLibrary
 import dev.jdtech.jellyfin.testing.FakeLibrary
 import dev.jdtech.jellyfin.testing.FakeMediaServer
-import dev.jdtech.jellyfin.testing.FakeResumeThresholdsStore
+import dev.jdtech.jellyfin.testing.FakeRepositoryStores
 import dev.jdtech.jellyfin.testing.fakeProxy
 import dev.jdtech.jellyfin.testing.kotlinName
 import dev.jdtech.jellyfin.utils.CoreDownloadTexts
@@ -22,7 +20,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -113,16 +110,8 @@ class ThemeSongPreferenceTest {
         capabilities: ServerCapabilities = ServerCapabilities.ALL,
     ): ShowViewModel {
         server = FakeMediaServer(library, capabilities)
-        val repository =
-            MediaRepositoryImpl(
-                context = ContextWrapper(null),
-                server = server,
-                database = noDownloads(),
-                // Every setting the repository reads at its default.
-                currentServer = { null },
-                nextUpMaxDays = { 0 },
-                resumeThresholds = FakeResumeThresholdsStore(),
-            )
+        // #966: stores that hold nothing, every setting the repository reads at its default.
+        val repository = FakeRepositoryStores().repository(server)
         return ShowViewModel(
             catalog = repository,
             userData = repository,
@@ -141,19 +130,6 @@ class ThemeSongPreferenceTest {
             downloadList = unused(),
         )
     }
-
-    /** No downloads: with no current server set, the repository only asks whether there are any. */
-    private fun noDownloads(): ServerDatabaseDao =
-        fakeProxy(
-            ServerDatabaseDao::class.java.classLoader,
-            arrayOf(ServerDatabaseDao::class.java),
-        ) { _, method, _ ->
-            when (method.kotlinName) {
-                "observeHasSources" -> flowOf(false)
-                else -> throw NotImplementedError("ServerDatabaseDao.${method.kotlinName}")
-            }
-        }
-            as ServerDatabaseDao
 
     /** Preferences where only the theme music switch may be stored; null means never touched. */
     private fun appPreferences(stored: Boolean?): AppPreferences {

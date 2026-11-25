@@ -28,7 +28,7 @@ private fun fakes(capabilities: ServerCapabilities) =
         fun stalling(): MediaServer = FakeMediaServer(capabilities = capabilities).apply { stall() }
     }
 
-class FakeMediaServerContractTest : CatalogContract() {
+class FakeMediaServerItemContractTest : ItemContract() {
     private val fakes = fakes(ServerCapabilities.ALL)
 
     override fun server() = fakes.server()
@@ -40,7 +40,79 @@ class FakeMediaServerContractTest : CatalogContract() {
     override fun stallingServer() = fakes.stalling()
 }
 
-class FakeMediaServerWithoutFeaturesContractTest : CatalogContract() {
+class FakeMediaServerItemWithoutFeaturesContractTest : ItemContract() {
+    private val fakes = fakes(NONE)
+
+    override fun server() = fakes.server()
+
+    override fun failingServer() = fakes.failing()
+
+    override fun unreachableServer() = fakes.unreachable()
+
+    override fun stallingServer() = fakes.stalling()
+}
+
+class FakeMediaServerItemListContractTest : ItemListContract() {
+    private val fakes = fakes(ServerCapabilities.ALL)
+
+    override fun server() = fakes.server()
+
+    override fun failingServer() = fakes.failing()
+
+    override fun unreachableServer() = fakes.unreachable()
+
+    override fun stallingServer() = fakes.stalling()
+}
+
+class FakeMediaServerItemListWithoutFeaturesContractTest : ItemListContract() {
+    private val fakes = fakes(NONE)
+
+    override fun server() = fakes.server()
+
+    override fun failingServer() = fakes.failing()
+
+    override fun unreachableServer() = fakes.unreachable()
+
+    override fun stallingServer() = fakes.stalling()
+}
+
+class FakeMediaServerItemExtrasContractTest : ItemExtrasContract() {
+    private val fakes = fakes(ServerCapabilities.ALL)
+
+    override fun server() = fakes.server()
+
+    override fun failingServer() = fakes.failing()
+
+    override fun unreachableServer() = fakes.unreachable()
+
+    override fun stallingServer() = fakes.stalling()
+}
+
+class FakeMediaServerItemExtrasWithoutFeaturesContractTest : ItemExtrasContract() {
+    private val fakes = fakes(NONE)
+
+    override fun server() = fakes.server()
+
+    override fun failingServer() = fakes.failing()
+
+    override fun unreachableServer() = fakes.unreachable()
+
+    override fun stallingServer() = fakes.stalling()
+}
+
+class FakeMediaServerServerInfoContractTest : ServerInfoContract() {
+    private val fakes = fakes(ServerCapabilities.ALL)
+
+    override fun server() = fakes.server()
+
+    override fun failingServer() = fakes.failing()
+
+    override fun unreachableServer() = fakes.unreachable()
+
+    override fun stallingServer() = fakes.stalling()
+}
+
+class FakeMediaServerServerInfoWithoutFeaturesContractTest : ServerInfoContract() {
     private val fakes = fakes(NONE)
 
     override fun server() = fakes.server()

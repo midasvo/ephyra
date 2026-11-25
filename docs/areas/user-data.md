@@ -5,7 +5,7 @@ Status: works on phone and TV; no open bugs known. As of 2026-11-23 (`main` at `
 ## Start here
 
 - The rules (played, favourite, resume position, last played, who wins in a sync) are `PlayState`, `PlayStop` and `SyncMerge` in `domain/.../domain/userdata/` and nowhere else (rule R14). Times are parameters; nothing there reads a clock.
-- The writes are in `MediaRepositoryImpl` (`markAsPlayed`, `markAsUnplayed`, `markAsFavorite` of the role `UserDataUpdates`; `postPlaybackProgress`, `postPlaybackStop` of the role `PlaybackReports`, #967), through `reportUserData` and `writeAndReport` (`UserDataReport.kt`): write the row, mark it `toBeSynced`, ask the server, unmark when it answered.
+- The writes are in `MediaRepositoryImpl` (`markAsPlayed`, `markAsUnplayed`, `markAsFavorite` of the role `UserDataUpdates`; `postPlaybackProgress`, `postPlaybackStop` of the role `PlaybackReports`, #967), through `reportUserData` and `writeAndReport` (`UserDataReport.kt` in `application`, over the store role `DownloadUserData` since #966): write the row, mark it `toBeSynced`, ask the server, unmark when it answered.
 - What is owed to the server is `PendingUserDataStore` (port in `application`, Room in `data`). `UserDataSync` and `SyncWorker` in `core` send it, through `UserDataSyncPort` (`JellyfinUserDataSync`). The current user's marks go through `UserDataPort` (`JellyfinUserData`).
 - Only downloads have a row; for any other item a write is the server call alone. State is per user: `AccountKey(serverId, userId)`.
 - Test fast: `./gradlew :domain:test :data:testDebugUnitTest`, and `./gradlew :core:testLibreDebugUnitTest --tests '*Sync*'`.
@@ -24,8 +24,9 @@ Playback reports are the other flow: [playback-reporting](playback-reporting.md)
 |---|---|
 | [`domain/.../domain/userdata/PlayState.kt`](../../domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/PlayState.kt) | `markedPlayed`, `markedUnplayed`, `afterUnplayedReport`, `withFavorite`, `progressed`, `stopped` |
 | [`domain/.../domain/userdata/PlayStop.kt`](../../domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/PlayStop.kt), [`SyncMerge.kt`](../../domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/SyncMerge.kt) | What a stop writes; `mergeWithServer`, `refreshedFromServer` |
-| [`data/.../repository/MediaRepositoryImpl.kt`](../../data/src/main/java/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt) | The writes, `reportUserData`, `currentUserId` |
-| [`data/.../repository/UserDataReport.kt`](../../data/src/main/java/dev/jdtech/jellyfin/repository/UserDataReport.kt) | `writeAndReport` |
+| [`application/.../repository/MediaRepositoryImpl.kt`](../../application/src/main/kotlin/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt) | The writes, `reportUserData`, `currentUserId` |
+| [`application/.../repository/UserDataReport.kt`](../../application/src/main/kotlin/dev/jdtech/jellyfin/repository/UserDataReport.kt) | `writeAndReport`, over the role `DownloadUserData` (#966) |
+| [`application/.../repository/DownloadUserData.kt`](../../application/src/main/kotlin/dev/jdtech/jellyfin/repository/DownloadUserData.kt) | `writeAndMarkToBeSynced` (one transaction, gives `MarkedUserData`), `markToBeSynced`, `clearToBeSynced`, `updatePlayState`; Room in `RoomDownloadStore` |
 | [`data/.../database/ServerDatabaseDao.kt`](../../data/src/main/java/dev/jdtech/jellyfin/database/ServerDatabaseDao.kt) | `updatePlayState`, `writeAndMarkToBeSynced`, `clearUserDataToBeSynced` |
 | [`application/.../repository/PendingUserDataStore.kt`](../../application/src/main/kotlin/dev/jdtech/jellyfin/repository/PendingUserDataStore.kt) | The sync's store port; Room in [`data/.../database/RoomPendingUserDataStore.kt`](../../data/src/main/java/dev/jdtech/jellyfin/database/RoomPendingUserDataStore.kt) |
 | [`core/.../work/UserDataSync.kt`](../../core/src/main/java/dev/jdtech/jellyfin/work/UserDataSync.kt) | The `UserDataSyncRequester`: unique work, restart when the server is back |
@@ -38,7 +39,7 @@ Playback reports are the other flow: [playback-reporting](playback-reporting.md)
 
 - **R14**: the play state rules are declared in `domain` alone; `data` and the sync compare no dates. A new rule goes into `PlayState`.
 - **R12**: tick conversions are `Ticks`. **R10**: ids are value classes.
-- **R4, R9**: only `data` imports `ServerDatabaseDao`; only the apps depend on `data`. The sync reaches Room through `PendingUserDataStore`.
+- **R4, R9**: only `data` imports `ServerDatabaseDao`; only the apps depend on `data`. The sync reaches Room through `PendingUserDataStore`, the repository through `DownloadUserData` (#966: `MediaRepositoryImpl` is in `application` and names no DAO).
 - **R1, R2**: no SDK and no `JellyfinApi` outside `server/jellyfin`.
 - A Room migration gets an independent review when no bot reviewed the PR (`CLAUDE.md`).
 
@@ -46,6 +47,7 @@ Playback reports are the other flow: [playback-reporting](playback-reporting.md)
 
 ```bash
 ./gradlew :domain:test :application:test :architecture:test   # PlayStateTest, PlayStopTest, SyncMergeTest, R14
+./gradlew :application:test --tests '*MediaRepositoryImplTest'   # the writes over fakes
 ./gradlew :data:testDebugUnitTest --tests '*PlayStateWritesTest' --tests '*PendingUserDataSyncTest' --tests '*UserDataReportTest'
 ./gradlew :core:testLibreDebugUnitTest --tests '*Sync*'       # SyncWorkerRunTest, SyncWorkerDecisionsTest, LastPlayedDateSyncTest
 ```

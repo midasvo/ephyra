@@ -7,7 +7,7 @@
 model {
   extend ephyra.domain {
     mediaServer = port 'MediaServer' {
-      description 'One server: session, catalog, userData, playback. domain/ports/MediaServer.kt'
+      description 'One server: session, the catalog by role (items, itemLists, itemExtras, info), userData, playback. domain/ports/MediaServer.kt'
       link https://github.com/midasvo/ephyra/blob/main/domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/MediaServer.kt 'Source'
     }
     playbackPort = port 'PlaybackPort' {
@@ -38,6 +38,10 @@ model {
   }
 
   extend ephyra.application {
+    mediaRepositoryImpl = component 'MediaRepositoryImpl' {
+      description 'The server in use with the stores (#966: in application): stored fallback, local sources, write then report. repository/MediaRepositoryImpl.kt'
+      link https://github.com/midasvo/ephyra/blob/main/application/src/main/kotlin/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt 'Source'
+    }
     itemCatalog = port 'ItemCatalog' {
       description 'A role of the repository (#967): one item, the seasons and episodes of a show, people. repository/ItemCatalog.kt'
       link https://github.com/midasvo/ephyra/blob/main/application/src/main/kotlin/dev/jdtech/jellyfin/repository/ItemCatalog.kt 'Source'
@@ -220,10 +224,6 @@ model {
   ephyra.serverJellyfin.jellyfinServerConnector -> ephyra.domain.serverConnector 'implements'
 
   extend ephyra.data {
-    mediaRepositoryImpl = component 'MediaRepositoryImpl' {
-      description 'The server in use with Room: stored fallback, local sources, write then report. repository/MediaRepositoryImpl.kt'
-      link https://github.com/midasvo/ephyra/blob/main/data/src/main/java/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt 'Source'
-    }
     roomServerStore = component 'RoomServerStore' {
       description 'The roles of the server store over Room. database/RoomServerStore.kt'
       link https://github.com/midasvo/ephyra/blob/main/data/src/main/java/dev/jdtech/jellyfin/database/RoomServerStore.kt 'Source'
@@ -238,13 +238,13 @@ model {
     }
   }
 
-  ephyra.data.mediaRepositoryImpl -> ephyra.application.itemCatalog 'implements'
-  ephyra.data.mediaRepositoryImpl -> ephyra.application.itemLists 'implements'
-  ephyra.data.mediaRepositoryImpl -> ephyra.application.playbackMedia 'implements'
-  ephyra.data.mediaRepositoryImpl -> ephyra.application.playbackReports 'implements'
-  ephyra.data.mediaRepositoryImpl -> ephyra.application.seriesTrackPreferences 'implements'
-  ephyra.data.mediaRepositoryImpl -> ephyra.domain.mediaServer 'calls the server in use'
-  ephyra.data.mediaRepositoryImpl -> ephyra.domain.playState 'user data rules'
+  ephyra.application.mediaRepositoryImpl -> ephyra.application.itemCatalog 'implements'
+  ephyra.application.mediaRepositoryImpl -> ephyra.application.itemLists 'implements'
+  ephyra.application.mediaRepositoryImpl -> ephyra.application.playbackMedia 'implements'
+  ephyra.application.mediaRepositoryImpl -> ephyra.application.playbackReports 'implements'
+  ephyra.application.mediaRepositoryImpl -> ephyra.application.seriesTrackPreferences 'implements'
+  ephyra.application.mediaRepositoryImpl -> ephyra.domain.mediaServer 'calls the server in use'
+  ephyra.application.mediaRepositoryImpl -> ephyra.domain.playState 'user data rules'
   ephyra.data.roomServerStore -> ephyra.application.storedUsers 'implements'
   ephyra.data.roomDownloadStore -> ephyra.application.downloadedItemRows 'implements'
   ephyra.data.roomPendingUserDataStore -> ephyra.application.pendingUserDataStore 'implements'

@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.room3.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
+import dev.jdtech.jellyfin.data.files.DownloadedFilesOnDisk
 import dev.jdtech.jellyfin.database.RoomDownloadStore
 import dev.jdtech.jellyfin.database.ServerDatabase
 import dev.jdtech.jellyfin.domain.ports.MediaServer
@@ -14,9 +15,8 @@ import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toMediaSourceId
 import dev.jdtech.jellyfin.repository.CurrentAccount
 import dev.jdtech.jellyfin.repository.ItemCatalog
-import dev.jdtech.jellyfin.repository.MediaRepositoryImpl
 import dev.jdtech.jellyfin.repository.PlaybackMedia
-import dev.jdtech.jellyfin.testing.FakeResumeThresholdsStore
+import dev.jdtech.jellyfin.testing.FakeRepositoryStores
 import dev.jdtech.jellyfin.testing.FakeRoles
 import dev.jdtech.jellyfin.testing.fakeProxy
 import dev.jdtech.jellyfin.testing.kotlinName
@@ -233,15 +233,10 @@ class TrickplayDownloadTest {
                 throw IllegalStateException("MediaServer.${method.kotlinName}")
             }
                 as MediaServer
+        // #966: the sheets the download wrote, through the files port; nothing else is stored.
         val repository =
-            MediaRepositoryImpl(
-                context,
-                away,
-                room.getServerDatabaseDao(),
-                currentServer = { null },
-                nextUpMaxDays = { 0 },
-                resumeThresholds = FakeResumeThresholdsStore(),
-            )
+            FakeRepositoryStores()
+                .repository(away, downloadedFiles = DownloadedFilesOnDisk(context))
         return runBlocking {
                 repository.getTrickplayData(itemId, info.width, index, version?.toMediaSourceId())
             }

@@ -150,7 +150,7 @@ class StoredItemFallbackTest {
     private val repository: MediaRepositoryImpl by lazy {
         val context = RuntimeEnvironment.getApplication()
         // Every request to the server fails, as with the server unreachable.
-        MediaRepositoryImpl(
+        roomMediaRepository(
             context,
             UnansweredServer(userId),
             database,

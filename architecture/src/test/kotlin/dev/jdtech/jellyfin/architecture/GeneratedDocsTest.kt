@@ -171,7 +171,7 @@ object ArchitectureModel {
             "application" to
                 Module(
                     Layer.APPLICATION,
-                    "Pure Kotlin: the repository's roles (ItemCatalog, ItemLists, PlaybackMedia, …), the store ports (the roles of the server and download stores, PendingUserDataStore) and the event flows (DataChangeEvents, ReloadPolicy, …).",
+                    "Pure Kotlin: the repository's roles (ItemCatalog, ItemLists, PlaybackMedia, …) and their implementation MediaRepositoryImpl over the server's ports and the stores, the store ports (the roles of the server and download stores, PendingUserDataStore) and the event flows (DataChangeEvents, ReloadPolicy, …).",
                 ),
             "domain" to
                 Module(
@@ -181,7 +181,7 @@ object ArchitectureModel {
             "data" to
                 Module(
                     Layer.ADAPTER,
-                    "Room: the database, the stores (Room*Store) and MediaRepositoryImpl over the server's ports; no SDK, and of Android only Room (R20).",
+                    "Room: the database and the stores (Room*Store) behind the store ports, and the downloaded files (DownloadedFilesOnDisk); no SDK, and of Android only Room (R20).",
                 ),
             "server/jellyfin" to
                 Module(

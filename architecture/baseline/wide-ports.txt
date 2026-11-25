@@ -1,6 +1,4 @@
 # R21 (#967): the ports that declare more than fifteen functions and properties (PortSizeTest).
 # One fully qualified interface name per line. Exact: a line that no longer applies fails until it
 # is deleted. A new line needs its issue and reason here, given in the PR that adds it.
-
-# #967, PR 3: the server's catalog port, split by role in a PR of its own.
-dev.jdtech.jellyfin.domain.ports.CatalogPort
+# #967 split the last one (the server's catalog port), so no port is listed now.

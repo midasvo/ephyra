@@ -8,6 +8,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dev.jdtech.jellyfin.data.files.DownloadedFilesOnDisk
 import dev.jdtech.jellyfin.database.MIGRATION_6_7
 import dev.jdtech.jellyfin.database.RoomDownloadStore
 import dev.jdtech.jellyfin.database.RoomPendingUserDataStore
@@ -20,11 +21,16 @@ import dev.jdtech.jellyfin.repository.DownloadMediaStreams
 import dev.jdtech.jellyfin.repository.DownloadSegmentsAndTrickplay
 import dev.jdtech.jellyfin.repository.DownloadSources
 import dev.jdtech.jellyfin.repository.DownloadUserData
+import dev.jdtech.jellyfin.repository.DownloadedFiles
 import dev.jdtech.jellyfin.repository.DownloadedItemRows
 import dev.jdtech.jellyfin.repository.PendingUserDataStore
 import dev.jdtech.jellyfin.repository.QueuedDownloads
 import dev.jdtech.jellyfin.repository.ServerAddresses
+import dev.jdtech.jellyfin.repository.StoredItemLists
+import dev.jdtech.jellyfin.repository.StoredItemSources
+import dev.jdtech.jellyfin.repository.StoredItems
 import dev.jdtech.jellyfin.repository.StoredServers
+import dev.jdtech.jellyfin.repository.StoredTrackPreferences
 import dev.jdtech.jellyfin.repository.StoredUsers
 import dev.jdtech.jellyfin.repository.UserLocks
 import javax.inject.Singleton
@@ -70,6 +76,9 @@ object DatabaseModule {
 
     @Provides fun provideUserLocks(store: RoomServerStore): UserLocks = store
 
+    @Provides
+    fun provideStoredTrackPreferences(store: RoomServerStore): StoredTrackPreferences = store
+
     // CE (#299): one per process, so an unlocked profile stays unlocked across screens.
     @Singleton
     @Provides
@@ -101,4 +110,16 @@ object DatabaseModule {
     @Provides fun provideDownloadUserData(store: RoomDownloadStore): DownloadUserData = store
 
     @Provides fun provideQueuedDownloads(store: RoomDownloadStore): QueuedDownloads = store
+
+    // #966: what the repository's stored fallback reads.
+    @Provides fun provideStoredItems(store: RoomDownloadStore): StoredItems = store
+
+    @Provides fun provideStoredItemSources(store: RoomDownloadStore): StoredItemSources = store
+
+    @Provides fun provideStoredItemLists(store: RoomDownloadStore): StoredItemLists = store
+
+    /** #966: the images and trickplay sheets a download keeps in the app's files directory. */
+    @Provides
+    fun provideDownloadedFiles(@ApplicationContext context: Context): DownloadedFiles =
+        DownloadedFilesOnDisk(context)
 }
