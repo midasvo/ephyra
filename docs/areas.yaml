@@ -325,12 +325,15 @@ areas:
   - id: translations
     title: Translations
     summary: "CE strings in 36 languages, next to upstream's Weblate files."
-    keywords: [translation, translations, translate, string, strings, strings_ce, ce_ key, app language, locale, weblate, plural, plurals, text, label, check-translations]
+    keywords: [translation, translations, translate, string, strings, strings_ce, strings_ce.xml, string_arrays, locales_config, ce_ key, ce_, app language, language picker, locale, weblate, plural, plurals, placeholder, placeholders, rtl, app_name, text, label, check-translations]
     paths:
       - .claude/skills/translate-strings/SKILL.md
       - .claude/skills/translate-strings/scripts/check-translations.py
       - core/src/main/res/values/strings.xml
       - core/src/main/res/values-nl/strings_ce.xml
+      - core/src/main/res/xml/locales_config.xml
+      - settings/src/main/res/values/strings.xml
+      - settings/src/main/res/values/string_arrays.xml
       - player/local/src/main/res/values/strings.xml
     docs: [.claude/skills/translate-strings/SKILL.md]
 
