@@ -190,32 +190,36 @@ areas:
 
   - id: search
     title: Search
-    summary: "Searching the server's catalog, on phone and TV."
-    keywords: [search, search bar, find, query, results, SearchViewModel, SearchBar, MediaScreen]
+    summary: "Searching the server's catalog (and downloaded items while away on phone), on phone and TV."
+    keywords: [search, search bar, find, query, results, SearchViewModel, FilmSearchBar, SearchScreen, MediaScreen, MediaSearch, getSearchItems, ItemListPort, RoomStoredLists, docked search, downloads only]
     paths:
       - modes/film/src/main/java/dev/jdtech/jellyfin/film/presentation/search/SearchViewModel.kt
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/MediaScreen.kt
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/components/SearchBar.kt
       - app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/film/SearchScreen.kt
       - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/ItemListPort.kt
+      - application/src/main/kotlin/dev/jdtech/jellyfin/repository/ItemLists.kt
       - server/jellyfin/src/main/java/dev/jdtech/jellyfin/server/jellyfin/JellyfinCatalog.kt
-    rules: [R1, R2]
+      - data/src/main/java/dev/jdtech/jellyfin/database/RoomStoredLists.kt
+    rules: [R1, R2, R4, R10]
     tests:
-      - ./gradlew :modes:film:testDebugUnitTest --tests '*Search*'
-      - ./gradlew :app:phone:testLibreDebugUnitTest --tests '*Search*'
+      - ./gradlew :modes:film:testDebugUnitTest --tests '*Search*' --tests '*ServerAwayReloadTest*'
+      - ./gradlew :app:phone:testLibreDebugUnitTest --tests '*Search*' :app:tv:testLibreDebugUnitTest --tests '*Search*'
 
   - id: settings
     title: Settings
     summary: "`AppPreferences` (over SharedPreferences), the settings tree and its screens on phone and TV."
-    keywords: [settings, setting, add a setting, preference, preferences, option, toggle, datastore, AppPreferences, SettingsViewModel, AppPreferencesPorts]
+    keywords: [settings, setting, add a setting, preference, preferences, option, toggle, datastore, SharedPreferences, AppPreferences, SettingsViewModel, AppPreferencesPorts, AppVariant, ServerFeature, AppCaches, IntPreferenceBounds, VideoQualities, subtitle style, external ratings, about, clear cache, permissions, mpv.conf]
     paths:
       - settings/src/main/java/dev/jdtech/jellyfin/settings/domain/AppPreferences.kt
       - settings/src/main/java/dev/jdtech/jellyfin/settings/presentation/settings/SettingsViewModel.kt
       - settings/src/main/java/dev/jdtech/jellyfin/settings/presentation/models/
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/settings/SettingsScreen.kt
+      - app/tv/src/main/java/dev/jdtech/jellyfin/presentation/settings/SettingsScreen.kt
       - app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/settings/TvSettingsLayout.kt
       - core/src/main/java/dev/jdtech/jellyfin/di/AppPreferencesPorts.kt
-    rules: [R17]
+    docs: [docs/tv-research/adr/0008-tv-flag-in-shared-modules.md]
+    rules: [R17, R18, R1, R2, R10]
     tests:
       - ./gradlew :settings:testDebugUnitTest
       - ./gradlew :app:tv:testLibreDebugUnitTest --tests '*Settings*'
@@ -292,7 +296,7 @@ areas:
   - id: test-environment
     title: Test server and emulators
     summary: "Setting up a machine (what to install, scripts/doctor.sh), the throwaway Jellyfin test server and the emulators the app is tested on."
-    keywords: [test server, testserver, test user, jellyfin server, docker, wsl, emulator, emulators, avd, device, test device, phone emulator, tv emulator, iptables, forward.py, set up, development environment, test-server, test-devices, get started, getting started, doctor, install, new machine, jdk, android sdk, android_home, local.properties, cloud, devcontainer, testcontainers]
+    keywords: [test server, testserver, test user, jellyfin server, docker, wsl, emulator, emulators, avd, device, test device, phone emulator, tv emulator, iptables, forward.py, caddy, caddy-tls, tls, https, client certificate, mtls, reverse proxy, tunnel, cloudflared, make-track-test-series, set up, development environment, test-server, test-devices, get started, getting started, doctor, install, new machine, jdk, android sdk, android_home, local.properties, cloud, devcontainer, testcontainers]
     paths:
       - scripts/doctor.sh
       - tools/test-server/setup.sh
