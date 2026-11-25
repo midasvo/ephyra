@@ -104,11 +104,7 @@ private class FilteringStateFlow(
             if (predicate(item)) {
                 synchronized(lock) {
                     val current = delegate.value
-                    if (current == item) {
-                        lastAccepted = item
-                    } else if (predicate(current)) {
-                        lastAccepted = current
-                    }
+                    lastAccepted = if (predicate(current)) current else item
                 }
                 first = false
                 collector.emit(item)

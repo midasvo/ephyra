@@ -13,7 +13,11 @@ import java.util.Collections
 import kotlin.test.assertEquals
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -222,6 +226,84 @@ class SocketUnreadableMessageTest {
 
             val firstState = withTimeout(2_000) { wrapped.state.first() }
             assertEquals(SocketConnectionState.Message(VALID_PLAYSTATE), firstState)
+        }
+
+    @OptIn(ExperimentalForInheritanceCoroutinesApi::class)
+    @Test
+    fun `an accepted state is retained for replay when delegate becomes unreadable before lastAccepted updates`() =
+        runBlocking {
+            val nextEmission = MutableSharedFlow<SocketConnectionState>(extraBufferCapacity = 1)
+            val racyState =
+                object : StateFlow<SocketConnectionState> {
+                    @Volatile
+                    var current: SocketConnectionState = SocketConnectionState.Disconnected()
+
+                    override val replayCache: List<SocketConnectionState>
+                        get() = listOf(value)
+
+                    override val value: SocketConnectionState
+                        get() = current
+
+                    override suspend fun collect(
+                        collector: FlowCollector<SocketConnectionState>
+                    ): Nothing {
+                        collector.emit(current)
+                        nextEmission.collect { collector.emit(it) }
+                    }
+                }
+            val racyFactory =
+                object : SocketConnectionFactory {
+                    override fun create(
+                        clientOptions: HttpClientOptions,
+                        scope: CoroutineScope,
+                    ): SocketConnection =
+                        object : SocketConnection {
+                            override val state: StateFlow<SocketConnectionState> = racyState
+
+                            override suspend fun connect(
+                                url: String,
+                                clientName: String,
+                                clientVersion: String,
+                                deviceId: String,
+                                deviceName: String,
+                                accessToken: String,
+                                languages: List<String>,
+                            ): Boolean = true
+
+                            override suspend fun send(message: String): Boolean = true
+
+                            override suspend fun disconnect() = Unit
+                        }
+                }
+
+            val wrapped = SafeSocketConnectionFactory(racyFactory).create(HttpClientOptions(), this)
+            val accepted = SocketConnectionState.Message(VALID_PLAYSTATE)
+            val unreadable =
+                SocketConnectionState.Message(
+                    """{"MessageType":"SomethingNewer","MessageId":"00000000000000000000000000000007","Data":{}}"""
+                )
+            val collected = Channel<SocketConnectionState>(Channel.UNLIMITED)
+            val collector1 = launch { wrapped.state.collect { collected.send(it) } }
+            try {
+                assertEquals(
+                    SocketConnectionState.Disconnected(),
+                    withTimeout(2_000) { collected.receive() },
+                )
+                withTimeout(2_000) { nextEmission.subscriptionCount.first { it > 0 } }
+
+                // Simulate delegate transitioning to an unreadable message after `accepted` is
+                // delivered to collect() and before `lastAccepted` is updated under the lock.
+                racyState.current = unreadable
+                check(nextEmission.tryEmit(accepted))
+
+                assertEquals(accepted, withTimeout(2_000) { collected.receive() })
+                assertEquals(accepted, wrapped.state.value)
+
+                val replayed = withTimeout(2_000) { wrapped.state.first() }
+                assertEquals(accepted, replayed)
+            } finally {
+                collector1.cancel()
+            }
         }
 
     private class FakeSockets : SocketConnectionFactory {
