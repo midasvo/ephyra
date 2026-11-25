@@ -6,7 +6,9 @@ import dev.jdtech.jellyfin.player.cast.models.Device
 import kotlinx.coroutines.flow.StateFlow
 
 interface CastSessionManager {
-    /** Read again whenever it is shown: it follows the settings and the current server. */
+    /**
+     * Read again whenever it is shown: it follows the Cast setting and Play Services availability.
+     */
     val availability: CastAvailability
 
     val isSupported: Boolean

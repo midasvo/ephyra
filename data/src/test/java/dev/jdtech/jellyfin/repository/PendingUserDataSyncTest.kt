@@ -191,7 +191,7 @@ class PendingUserDataSyncTest {
 
         val lastPlayed = pending().single().lastPlayedDate
         assertNotNull(lastPlayed)
-        assertTrue(lastPlayed!! in before..System.currentTimeMillis())
+        assertTrue(lastPlayed in before..System.currentTimeMillis())
     }
 
     @Test
