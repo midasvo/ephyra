@@ -94,6 +94,7 @@ jobs:
               summary_lines.append("")
               summary_lines.append("### Failing tests")
               summary_lines.extend(f"- `{name}`" for name in failing[:25])
+          print("\n".join(summary_lines))
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
               summary.write("\n".join(summary_lines) + "\n")
           with open(os.environ["GITHUB_OUTPUT"], "a") as out:
