@@ -35,7 +35,7 @@ abstract class ItemContract : MediaServerContract() {
         val movie = items().movie(expected.id)
 
         assertEquals(expected.id, movie.id)
-        assertEquals("intentionally-broken", movie.name)
+        assertEquals(expected.name, movie.name)
         assertEquals(expected.runtimeTicks, movie.runtimeTicks)
         assertEquals(expected.playbackPositionTicks, movie.playbackPositionTicks)
         assertFalse(movie.played)
