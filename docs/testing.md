@@ -121,7 +121,7 @@ once per subclass, so more tests run than are written.
 | A user-data rule (played, favourite, resume position, the sync's merge) | The rule goes into `PlayState`, with a test in `PlayStateTest`, `PlayStopTest` or `SyncMergeTest`. R14 (`PlayStateRulesTest`) fails if the rule is written elsewhere. See [user-data](areas/user-data.md) |
 | A new method on a server port | A test in the port's contract suite, an implementation in `FakeMediaServer` and in the Jellyfin adapter, and a recording for the adapter's run. Both runs must pass |
 | A new port | The interface in `domain/.../domain/ports/`, a fake in `testing`, and a suite there when more than one implementation is expected |
-| A new adapter for a server type | Subclass the four suites as `JellyfinContractTests.kt` does. Add mapping tests of its own for what the suites cannot see (the exact request, odd answers) |
+| A new adapter for a server type | Subclass every suite (the seven server suites of the table above) as `JellyfinContractTests.kt` does. Add mapping tests of its own for what the suites cannot see (the exact request, odd answers) |
 | A store (Room behind a port of `application`) | A Robolectric test in `data/src/test/` on an in-memory database, as `RoomServerStoreTest` and `PendingUserDataSyncTest` do |
 | A new Room schema version | `ServerDatabaseMigrationTest`: its target is the highest schema in `data/schemas/`, so a version without a migration fails it. Add the rows the new version must keep |
 | A ViewModel | A test in the same module with `FakeMediaServer` or a small fake, `setMain` and `runTest`: `SearchViewModelTest`, `HomeViewModelUserSwitchTest` |
