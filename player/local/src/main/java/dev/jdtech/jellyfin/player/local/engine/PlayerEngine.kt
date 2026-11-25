@@ -53,8 +53,9 @@ interface EnginePlayer {
 
     /**
      * True when preparing the player again can recover from [error] (ExoPlayer has ruled out the
-     * audio decoder that failed). The caller then calls `player.prepare()` and stops handling the
-     * error; the engine does not retry itself. False for everything else.
+     * audio decoder that failed, or turned tunneling off for an audio track the tunnel output
+     * refused, #924). The caller then calls `player.prepare()` and stops handling the error; the
+     * engine does not retry itself. False for everything else.
      */
     fun onPlayerError(error: PlaybackException): Boolean = false
 }
