@@ -1,5 +1,6 @@
 // The download engine, the queue and its scheduling (#901, docs/architecture/5-hexagonal-ddd.md
-// T9): out of `core`, over the ports of `application` (`DownloadStore`, `MediaRepository`). It does
+// T9): out of `core`, over the store and repository roles of `application` (`DownloadList`,
+// `DownloadSources`, `ItemCatalog`, `PlaybackMedia`, …; #967, #1006). It does
 // not depend on `data`, `server/jellyfin`, the apps or `core` (rule R15 in the architecture
 // module): `core` depends on it, and gives it the texts of its resources through `DownloadTexts`.
 plugins {
