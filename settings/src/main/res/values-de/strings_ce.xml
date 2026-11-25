@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">Auf einem Tablet im Querformat den Hintergrund eines Eintrags in seiner eigenen Form neben dem Titel zeigen statt über die volle Breite</string>
     <string name="ce_pref_player_quality_group">Streaming-Qualität</string>
     <string name="ce_pref_player_quality_wifi">Im WLAN</string>
-    <string name="ce_pref_player_quality_wifi_summary">WLAN, Ethernet und andere nicht getaktete Netzwerke. Dateien unterhalb des Limits werden unverändert abgespielt, wenn Ihr Gerät sie unterstützt. Eine im Player gewählte Qualität wird für die Art von Netzwerk gespeichert, in der du gerade bist</string>
+    <string name="ce_pref_player_quality_wifi_summary">WLAN, Ethernet und andere nicht getaktete Netzwerke. Dateien unterhalb des Limits werden unverändert abgespielt, wenn dein Gerät sie unterstützt. Eine im Player gewählte Qualität wird für die Art von Netzwerk gespeichert, in der du gerade bist</string>
     <string name="ce_pref_player_quality_mobile">Mit mobilen Daten</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobile Daten und andere getaktete Netzwerke, etwa der Hotspot eines Handys oder ein als getaktet markiertes Netzwerk. Dateien unterhalb des Limits werden unverändert abgespielt, wenn Ihr Gerät sie unterstützt</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobile Daten und andere getaktete Netzwerke, etwa der Hotspot eines Handys oder ein als getaktet markiertes Netzwerk. Dateien unterhalb des Limits werden unverändert abgespielt, wenn dein Gerät sie unterstützt</string>
     <string name="ce_pref_player_quality_original">Originalqualität</string>
 </resources>

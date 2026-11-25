@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">Näita tahvelarvutil rõhtpaigutuses üksuse tausta selle enda kujul pealkirja kõrval, mitte kogu laiuses</string>
     <string name="ce_pref_player_quality_group">Voogedastuse kvaliteet</string>
     <string name="ce_pref_player_quality_wifi">WiFi-võrgus</string>
-    <string name="ce_pref_player_quality_wifi_summary">WiFi, Ethernet ja muud võrgud, mis pole mahupõhised. Piirist väiksemad failid esitatakse muutmata kujul, kui teie seade neid toetab. Pleieris valitud kvaliteet salvestatakse võrgutüübi jaoks, milles parajasti oled</string>
+    <string name="ce_pref_player_quality_wifi_summary">WiFi, Ethernet ja muud võrgud, mis pole mahupõhised. Piirist väiksemad failid esitatakse muutmata kujul, kui su seade neid toetab. Pleieris valitud kvaliteet salvestatakse võrgutüübi jaoks, milles parajasti oled</string>
     <string name="ce_pref_player_quality_mobile">Mobiilse andmesidega</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobiilne andmeside ja muud mahupõhised võrgud, näiteks telefoni kuumkoht või mahupõhiseks märgitud võrk. Piirist väiksemad failid esitatakse muutmata kujul, kui teie seade neid toetab</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobiilne andmeside ja muud mahupõhised võrgud, näiteks telefoni kuumkoht või mahupõhiseks märgitud võrk. Piirist väiksemad failid esitatakse muutmata kujul, kui su seade neid toetab</string>
     <string name="ce_pref_player_quality_original">Originaalkvaliteet</string>
 </resources>
