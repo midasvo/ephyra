@@ -174,7 +174,7 @@ areas:
   - id: home-and-library
     title: Home and library
     summary: "The home rows, the libraries and collections, and the item screens (movie, show, season, episode, person)."
-    keywords: [home, home screen, home rows, continue watching, next up, latest, carousel, library, libraries, collection, movie, show, series, season, episode, item screen, details, person, actor, favourites screen, sort, letter index, paging, pager, PagingSource, IndexedItemsPagingSource, poster, artwork, film, HomeViewModel, LibraryViewModel, ShowViewModel, ItemButtonsBar, ItemPort, ItemListPort, ItemExtrasPort, ratings, external ratings, imdb, rotten tomatoes, metacritic, letterboxd, mdblist, beoordelingen, ExternalRatingsLoader, ExternalRatings]
+    keywords: [home, home screen, home rows, continue watching, next up, latest, carousel, library, libraries, collection, movie, show, series, season, episode, item screen, details, person, actor, director, writer, credits, favorites, favourites screen, my media, extras, trailers, similar, more like this, theme music, theme song, sort, letter index, paging, pager, PagingSource, IndexedItemsPagingSource, poster, artwork, film, HomeViewModel, LibraryViewModel, ShowViewModel, MovieViewModel, SeasonViewModel, EpisodeViewModel, MediaViewModel, FavoritesViewModel, CollectionViewModel, PersonViewModel, HomeRowsViewModel, HomeRows, HomeCache, LetterIndex, RelatedItems, DetailSections, ReloadPolicy, ItemButtonsBar, ItemCatalog, ItemLists, ItemExtras, ItemPort, ItemListPort, ItemExtrasPort, ratings, external ratings, imdb, rotten tomatoes, metacritic, letterboxd, mdblist, beoordelingen, ExternalRatingsLoader, ExternalRatings, MdbListClient, FileRatingsCache]
     paths:
       - modes/film/src/main/java/dev/jdtech/jellyfin/film/presentation/home/HomeViewModel.kt
       - modes/film/src/main/java/dev/jdtech/jellyfin/film/presentation/library/LibraryViewModel.kt
@@ -184,9 +184,10 @@ areas:
       - application/src/main/kotlin/dev/jdtech/jellyfin/repository/ItemCatalog.kt
       - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/ItemPort.kt
       - server/jellyfin/src/main/java/dev/jdtech/jellyfin/server/jellyfin/JellyfinCatalog.kt
-    rules: [R1, R2, R4, R10]
+    rules: [R1, R2, R4, R9, R10]
     tests:
       - ./gradlew :modes:film:testDebugUnitTest
+      - ./gradlew :ratings:mdblist:testDebugUnitTest
 
   - id: search
     title: Search
