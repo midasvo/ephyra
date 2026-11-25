@@ -53,11 +53,13 @@ app/phone, app/tv   (composition root, screens)
   models with rules: `PlayState` (marks, stops, the sync's merge) and `DownloadState`. `Ticks` for
   the unit conversions.
 - `application` (pure Kotlin): the repository's roles (#967: `CurrentAccount`, `ItemCatalog`, `ItemLists`, `ItemExtras`, `UserDataUpdates`, `SeriesTrackPreferences`, `PlaybackMedia`, `PlaybackReports`), the event flows, and the store ports
-  of the server store (`StoredServers`, `ServerAddresses`, `StoredUsers`, `UserLocks`, keyed by `ServerId` and `UserId`), of the download store (`DownloadList`, `DownloadedItemRows`, `DownloadSources`, `DownloadMediaStreams`, `DownloadSegmentsAndTrickplay`, `DownloadUserData`, `QueuedDownloads`: source rows by `ServerId`, user queries by `AccountKey(serverId, userId)`) and `PendingUserDataStore` (by `AccountKey`),
+  of the server store (`StoredServers`, `ServerAddresses`, `StoredUsers`, `UserLocks`, keyed by `ServerId` and `UserId`), of the download store (`DownloadList`, `DownloadedItemRows`, `DownloadSources`, `DownloadMediaStreams`, `DownloadSegmentsAndTrickplay`, `DownloadUserData`, `QueuedDownloads`, and since #966 the stored fallback's reads `StoredItems`, `StoredItemSources`, `StoredItemLists`: source rows by `ServerId`, user queries by `AccountKey(serverId, userId)`), `StoredTrackPreferences`, `DownloadedFiles` (the downloaded images and trickplay sheets) and `PendingUserDataStore` (by `AccountKey`),
   and the settings the adapters read (#918), which `core` implements over `AppPreferences`.
-- `data`: Room, the three `Room*Store` and `MediaRepositoryImpl`, which composes the server in use
-  with Room (stored fallback, local sources, write then report) and implements every role; Hilt binds
-  each role to its one instance (`MediaRepositoryModule`).
+- `data`: Room, the three `Room*Store`, `DownloadedFilesOnDisk` and `MediaRepositoryImpl`, which
+  composes the server in use with the store roles (stored fallback, local sources, write then
+  report) and implements every role; Hilt binds each role to its one instance
+  (`MediaRepositoryModule`). Since #966 it names no DAO and takes no `Context`; moving it to
+  `application` is the rest of #966.
 - `server/jellyfin`: the SDK, `JellyfinApi`, the mappers, the port implementations, the device
   profiles. `CurrentMediaServer` in `core` picks the adapter by the active server's type.
 - `ratings/mdblist` (#331): the external ratings of the movie and show pages from MDBList, behind

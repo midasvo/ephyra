@@ -105,7 +105,7 @@ areas:
       - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/PlayState.kt
       - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/SyncMerge.kt
       - data/src/main/java/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt
-      - data/src/main/java/dev/jdtech/jellyfin/repository/UserDataReport.kt
+      - application/src/main/kotlin/dev/jdtech/jellyfin/repository/UserDataReport.kt
       - application/src/main/kotlin/dev/jdtech/jellyfin/repository/PendingUserDataStore.kt
       - core/src/main/java/dev/jdtech/jellyfin/work/UserDataSync.kt
       - core/src/main/java/dev/jdtech/jellyfin/work/SyncWorker.kt
