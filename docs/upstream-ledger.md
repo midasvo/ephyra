@@ -47,7 +47,7 @@ in the [changelog](../CHANGELOG.md) under **From Findroid**.
 | [`ba318d178`](https://github.com/jarnedemeulemeester/findroid/commit/ba318d178) | 2026-11-21 | refactoring | Reformats 115 Kotlin files with trailing commas (a newer ktfmt) | skipped | Ephyra formats with ktfmt 0.62. Moving to Findroid's formatter reformats the whole tree and is its own change |
 | [`c83c0d964`](https://github.com/jarnedemeulemeester/findroid/commit/c83c0d964) | 2026-11-21 | dependency | Ruby 4.0.10 | taken | |
 | [`2258aa9f0`](https://github.com/jarnedemeulemeester/findroid/commit/2258aa9f0) | 2026-11-21 | dependency | ktfmt Gradle plugin 0.28.0 | skipped | 0.28.0 cannot run the 0.62 formatter. Goes with the reformat above |
-| [`17ae155b1`](https://github.com/jarnedemeulemeester/findroid/commit/17ae155b1) | 2026-11-21 | dependency | libmpv 1.1.0 | covered | Ephyra builds its own `io.github.midasvo:libmpv`, at 1.3.0 |
+| [`17ae155b1`](https://github.com/jarnedemeulemeester/findroid/commit/17ae155b1) | 2026-11-21 | dependency | libmpv 1.1.0 | covered | Ephyra builds its own `io.github.midasvo:libmpv`, at 1.4.0 |
 | [`bf4236a3c`](https://github.com/jarnedemeulemeester/findroid/commit/bf4236a3c) | 2026-11-20 | dependency | Android Gradle Plugin 9.5.2, lifecycle 2.11.1, navigation3 1.2.2, Gradle 9.9.2 | taken | |
 | [`951eb51af`](https://github.com/jarnedemeulemeester/findroid/commit/951eb51af) | 2026-11-16 | dependency | Gradle 9.9.1 | taken | Superseded by 9.9.2 |
 | [`3a06420d5`](https://github.com/jarnedemeulemeester/findroid/commit/3a06420d5) | 2026-11-15 | dependency | kotlinx-serialization 1.13.0, KSP 2.3.14 | covered | Ephyra's own Renovate had both already |
