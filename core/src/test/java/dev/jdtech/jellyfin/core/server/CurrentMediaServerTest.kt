@@ -3,9 +3,12 @@ package dev.jdtech.jellyfin.core.server
 import dev.jdtech.jellyfin.core.presentation.session.NoServerSession
 import dev.jdtech.jellyfin.domain.ports.ActiveServer
 import dev.jdtech.jellyfin.domain.ports.ActiveServerHolder
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort
+import dev.jdtech.jellyfin.domain.ports.ItemPort
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackPort
+import dev.jdtech.jellyfin.domain.ports.ServerInfoPort
 import dev.jdtech.jellyfin.domain.ports.ServerSession
 import dev.jdtech.jellyfin.domain.ports.UnsupportedServerTypeException
 import dev.jdtech.jellyfin.domain.ports.UserDataPort
@@ -42,7 +45,10 @@ class CurrentMediaServerTest {
         assertEquals(ServerType.EMBY, server.type)
         assertSame(emby.capabilities, server.capabilities)
         assertSame(emby.session, server.session)
-        assertSame(emby.catalog, server.catalog)
+        assertSame(emby.items, server.items)
+        assertSame(emby.itemLists, server.itemLists)
+        assertSame(emby.itemExtras, server.itemExtras)
+        assertSame(emby.info, server.info)
         assertSame(emby.userData, server.userData)
         assertSame(emby.playback, server.playback)
     }
@@ -55,17 +61,17 @@ class CurrentMediaServerTest {
                 active,
             )
         active.switchTo(ActiveServer(type = "jellyfin"))
-        val startedOnJellyfin = server.catalog
+        val startedOnJellyfin = server.items
 
         active.switchTo(ActiveServer(type = "emby"))
 
-        assertSame(jellyfin.catalog, startedOnJellyfin)
-        assertSame(emby.catalog, server.catalog)
+        assertSame(jellyfin.items, startedOnJellyfin)
+        assertSame(emby.items, server.items)
         assertEquals(ServerType.EMBY, server.type)
 
         active.switchTo(ActiveServer(type = "jellyfin"))
 
-        assertSame(jellyfin.catalog, server.catalog)
+        assertSame(jellyfin.items, server.items)
     }
 
     @Test
@@ -73,7 +79,7 @@ class CurrentMediaServerTest {
         val server = CurrentMediaServer(mapOf(ServerType.JELLYFIN to jellyfin), active)
 
         assertNull(active.value.type)
-        assertSame(jellyfin.catalog, server.catalog)
+        assertSame(jellyfin.items, server.items)
         assertSame(jellyfin.session, server.session)
     }
 
@@ -90,7 +96,14 @@ class CurrentMediaServerTest {
             assertNull(server.playback.seasonBackdropUrl(ITEM))
             val failures =
                 listOf(
-                    assertFailsWith<UnsupportedServerTypeException> { server.catalog.movie(ITEM) },
+                    assertFailsWith<UnsupportedServerTypeException> { server.items.movie(ITEM) },
+                    assertFailsWith<UnsupportedServerTypeException> {
+                        server.itemLists.libraries()
+                    },
+                    assertFailsWith<UnsupportedServerTypeException> {
+                        server.itemExtras.similar(ITEM, limit = 12)
+                    },
+                    assertFailsWith<UnsupportedServerTypeException> { server.info.serverInfo() },
                     assertFailsWith<UnsupportedServerTypeException> {
                         server.userData.setPlayed(ITEM, true)
                     },
@@ -109,7 +122,10 @@ class CurrentMediaServerTest {
         override val capabilities: ServerCapabilities,
     ) : MediaServer {
         override val session: ServerSession = uncalled()
-        override val catalog: CatalogPort = uncalled()
+        override val items: ItemPort = uncalled()
+        override val itemLists: ItemListPort = uncalled()
+        override val itemExtras: ItemExtrasPort = uncalled()
+        override val info: ServerInfoPort = uncalled()
         override val userData: UserDataPort = uncalled()
         override val playback: PlaybackPort = uncalled()
     }

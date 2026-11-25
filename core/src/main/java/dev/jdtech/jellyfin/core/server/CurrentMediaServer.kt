@@ -1,9 +1,12 @@
 package dev.jdtech.jellyfin.core.server
 
 import dev.jdtech.jellyfin.domain.ports.ActiveServerHolder
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort
+import dev.jdtech.jellyfin.domain.ports.ItemPort
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackPort
+import dev.jdtech.jellyfin.domain.ports.ServerInfoPort
 import dev.jdtech.jellyfin.domain.ports.ServerSession
 import dev.jdtech.jellyfin.domain.ports.UserDataPort
 import dev.jdtech.jellyfin.models.ServerCapabilities
@@ -43,8 +46,17 @@ class CurrentMediaServer(
     override val session: ServerSession
         get() = current().session
 
-    override val catalog: CatalogPort
-        get() = current().catalog
+    override val items: ItemPort
+        get() = current().items
+
+    override val itemLists: ItemListPort
+        get() = current().itemLists
+
+    override val itemExtras: ItemExtrasPort
+        get() = current().itemExtras
+
+    override val info: ServerInfoPort
+        get() = current().info
 
     override val userData: UserDataPort
         get() = current().userData

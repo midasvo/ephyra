@@ -2,10 +2,13 @@ package dev.jdtech.jellyfin.server.jellyfin
 
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.domain.ports.ActiveServer
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
-import dev.jdtech.jellyfin.domain.ports.CatalogPort.Companion.SEARCH_LIMIT
-import dev.jdtech.jellyfin.domain.ports.CatalogPort.Companion.SEARCH_LIMIT_PER_KIND
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort.Companion.SEARCH_LIMIT
+import dev.jdtech.jellyfin.domain.ports.ItemListPort.Companion.SEARCH_LIMIT_PER_KIND
+import dev.jdtech.jellyfin.domain.ports.ItemPort
 import dev.jdtech.jellyfin.domain.ports.ItemQuery
+import dev.jdtech.jellyfin.domain.ports.ServerInfoPort
 import dev.jdtech.jellyfin.models.Episode
 import dev.jdtech.jellyfin.models.EpisodeField
 import dev.jdtech.jellyfin.models.Item
@@ -42,15 +45,17 @@ import org.jellyfin.sdk.model.api.MediaType
 import org.jellyfin.sdk.model.api.SortOrder as SdkSortOrder
 
 /**
- * [CatalogPort] over the Jellyfin SDK (#756). No Room: movies and episodes carry only the server's
- * sources, the repository adds the downloaded ones. Throws [ServerException] for every failure the
- * SDK reports as one (see [asServerException]); anything else leaves as it is.
+ * The catalog's ports over the Jellyfin SDK (#756): [ItemPort], [ItemListPort], [ItemExtrasPort]
+ * and [ServerInfoPort], one class because they share the client, the pin and the mapping (#967). No
+ * Room: movies and episodes carry only the server's sources, the repository adds the downloaded
+ * ones. Throws [ServerException] for every failure the SDK reports as one (see
+ * [asServerException]); anything else leaves as it is.
  *
  * #899: with a [pin], every call talks to that value's server as its user, whatever is switched to
  * meanwhile; without one, to the holder's value at each read.
  */
 class JellyfinCatalog(private val api: JellyfinApi, private val pin: ActiveServer? = null) :
-    CatalogPort {
+    ItemPort, ItemListPort, ItemExtrasPort, ServerInfoPort {
     /** #899: every call of this port goes through here, held to [pin]. */
     private suspend fun <T> call(block: suspend CoroutineScope.() -> T): T =
         api.pinnedCall(pin, block)

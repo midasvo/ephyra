@@ -12,7 +12,8 @@ import kotlin.test.assertTrue
  * the settings ports) declares more than [MAX_MEMBERS] functions and properties. A port that needs
  * more is two roles: split it, as #967 split `MediaRepository` (52 members) into `CurrentAccount`,
  * `ItemCatalog`, `ItemLists`, `ItemExtras`, `UserDataUpdates`, `SeriesTrackPreferences`,
- * `PlaybackMedia` and `PlaybackReports`.
+ * `PlaybackMedia` and `PlaybackReports`, and the server's catalog port (25) into `ItemPort`,
+ * `ItemListPort`, `ItemExtrasPort` and `ServerInfoPort`.
  *
  * What is counted is what the interface declares itself: its functions and properties, with or
  * without a default body, and not those of a companion object or a nested type. A port that
@@ -24,8 +25,9 @@ import kotlin.test.assertTrue
  * R19 leaves no other) is not counted. A parent that can still be more than one interface fails the
  * rule rather than be guessed. An interface inherited along two paths counts once.
  *
- * The ports still over the limit are in `architecture/baseline/wide-ports.txt`, each with its
- * issue, and the check is exact: a port that is split fails until its line is deleted.
+ * A port over the limit would be listed in `architecture/baseline/wide-ports.txt` with its issue
+ * (none is since #967), and the check is exact: a port that is split fails until its line is
+ * deleted.
  */
 class PortSizeTest {
 
@@ -39,9 +41,9 @@ class PortSizeTest {
         val sizes = sizesOf(files) { path -> PORT_FOLDERS.any { path.startsWith(it) } }
         assertTrue(
             "dev.jdtech.jellyfin.repository.ItemCatalog" in sizes &&
-                "dev.jdtech.jellyfin.domain.ports.CatalogPort" in sizes &&
+                "dev.jdtech.jellyfin.domain.ports.ItemListPort" in sizes &&
                 "dev.jdtech.jellyfin.models.Item" !in sizes,
-            "R21 does not see ItemCatalog and CatalogPort, so it reads the wrong files: $sizes",
+            "R21 does not see ItemCatalog and ItemListPort, so it reads the wrong files: $sizes",
         )
         val wide = sizes.filterValues { it > MAX_MEMBERS }
         BASELINE.assertExactly(

@@ -10,11 +10,14 @@ import dev.jdtech.jellyfin.server.jellyfin.JellyfinDeviceProfiles
 import dev.jdtech.jellyfin.server.jellyfin.JellyfinMediaServer
 import dev.jdtech.jellyfin.server.jellyfin.JellyfinServerConnector
 import dev.jdtech.jellyfin.server.jellyfin.toUuid
-import dev.jdtech.jellyfin.testing.CatalogContract
 import dev.jdtech.jellyfin.testing.ContractLibrary
 import dev.jdtech.jellyfin.testing.ContractLibrary.Part
+import dev.jdtech.jellyfin.testing.ItemContract
+import dev.jdtech.jellyfin.testing.ItemExtrasContract
+import dev.jdtech.jellyfin.testing.ItemListContract
 import dev.jdtech.jellyfin.testing.PlaybackContract
 import dev.jdtech.jellyfin.testing.ServerConnectorContract
+import dev.jdtech.jellyfin.testing.ServerInfoContract
 import dev.jdtech.jellyfin.testing.UserDataContract
 import java.io.Closeable
 import org.junit.After
@@ -64,7 +67,67 @@ private class FailingServers : Closeable {
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
-class JellyfinCatalogContractTest : CatalogContract() {
+class JellyfinItemContractTest : ItemContract() {
+    @get:Rule val contract = ContractServer()
+    private val servers = FailingServers()
+
+    override val notOnServer: Set<Part>
+        get() = contract.notOnServer
+
+    override fun server(): MediaServer = jellyfinAt(contract.baseUrl)
+
+    override fun failingServer(): MediaServer = jellyfinAt(servers.failing.baseUrl)
+
+    override fun unreachableServer(): MediaServer = jellyfinAt(servers.unreachable)
+
+    override fun stallingServer(): MediaServer = jellyfinAt(servers.stalling.baseUrl)
+
+    @After fun stop() = servers.close()
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
+class JellyfinItemListContractTest : ItemListContract() {
+    @get:Rule val contract = ContractServer()
+    private val servers = FailingServers()
+
+    override val notOnServer: Set<Part>
+        get() = contract.notOnServer
+
+    override fun server(): MediaServer = jellyfinAt(contract.baseUrl)
+
+    override fun failingServer(): MediaServer = jellyfinAt(servers.failing.baseUrl)
+
+    override fun unreachableServer(): MediaServer = jellyfinAt(servers.unreachable)
+
+    override fun stallingServer(): MediaServer = jellyfinAt(servers.stalling.baseUrl)
+
+    @After fun stop() = servers.close()
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
+class JellyfinItemExtrasContractTest : ItemExtrasContract() {
+    @get:Rule val contract = ContractServer()
+    private val servers = FailingServers()
+
+    override val notOnServer: Set<Part>
+        get() = contract.notOnServer
+
+    override fun server(): MediaServer = jellyfinAt(contract.baseUrl)
+
+    override fun failingServer(): MediaServer = jellyfinAt(servers.failing.baseUrl)
+
+    override fun unreachableServer(): MediaServer = jellyfinAt(servers.unreachable)
+
+    override fun stallingServer(): MediaServer = jellyfinAt(servers.stalling.baseUrl)
+
+    @After fun stop() = servers.close()
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
+class JellyfinServerInfoContractTest : ServerInfoContract() {
     @get:Rule val contract = ContractServer()
     private val servers = FailingServers()
 

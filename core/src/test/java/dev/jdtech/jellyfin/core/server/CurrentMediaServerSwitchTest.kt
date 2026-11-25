@@ -2,9 +2,12 @@ package dev.jdtech.jellyfin.core.server
 
 import dev.jdtech.jellyfin.domain.ports.ActiveServer
 import dev.jdtech.jellyfin.domain.ports.ActiveServerHolder
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort
+import dev.jdtech.jellyfin.domain.ports.ItemPort
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackPort
+import dev.jdtech.jellyfin.domain.ports.ServerInfoPort
 import dev.jdtech.jellyfin.domain.ports.ServerSession
 import dev.jdtech.jellyfin.domain.ports.UserDataPort
 import dev.jdtech.jellyfin.models.Library
@@ -40,7 +43,7 @@ class CurrentMediaServerSwitchTest {
     private var gate = CompletableDeferred<Unit>()
 
     /**
-     * An adapter whose one request ([CatalogPort.libraries]) waits at [gate] and then reads the
+     * An adapter whose one request ([ItemListPort.libraries]) waits at [gate] and then reads the
      * address and the token: of the value it was handed with [MediaServer.at], or, with
      * [followsHolder], of the holder at that moment, as the client read its fields before.
      */
@@ -53,9 +56,12 @@ class CurrentMediaServerSwitchTest {
         override val session: ServerSession = uncalled()
         override val userData: UserDataPort = uncalled()
         override val playback: PlaybackPort = uncalled()
+        override val items: ItemPort = uncalled()
+        override val itemExtras: ItemExtrasPort = uncalled()
+        override val info: ServerInfoPort = uncalled()
 
-        override val catalog: CatalogPort =
-            object : CatalogPort by uncalled() {
+        override val itemLists: ItemListPort =
+            object : ItemListPort by uncalled() {
                 override suspend fun libraries(): List<Library> {
                     gate.await()
                     val server = if (followsHolder) active.value else checkNotNull(handed)
@@ -80,7 +86,7 @@ class CurrentMediaServerSwitchTest {
     /** Starts a request on [server], switches to [EMBY_B] while it waits, then lets it go. */
     private fun requestAcrossASwitch(server: MediaServer) = runBlocking {
         active.switchTo(JELLYFIN_A)
-        val request = async(start = CoroutineStart.UNDISPATCHED) { server.catalog.libraries() }
+        val request = async(start = CoroutineStart.UNDISPATCHED) { server.itemLists.libraries() }
 
         active.switchTo(EMBY_B)
         gate.complete(Unit)
@@ -102,7 +108,7 @@ class CurrentMediaServerSwitchTest {
         requestAcrossASwitch(server)
         sent.clear()
 
-        server.catalog.libraries()
+        server.itemLists.libraries()
 
         assertEquals(listOf(Sent(ServerType.EMBY, B, "token-b")), sent.toList())
     }

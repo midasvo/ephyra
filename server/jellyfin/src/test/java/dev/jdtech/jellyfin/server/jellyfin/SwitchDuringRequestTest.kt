@@ -4,7 +4,7 @@ import android.app.Application
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.domain.ports.ActiveServer
 import dev.jdtech.jellyfin.domain.ports.ActiveServerHolder
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
 import dev.jdtech.jellyfin.models.ServerType
 import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toServerId
@@ -80,10 +80,10 @@ class SwitchDuringRequestTest {
             userId = user.toUserId(),
         )
 
-    /** Asks [catalog] for the theme song while the app switches from A to B. */
-    private fun themeSongAcrossASwitch(catalog: () -> CatalogPort): String? = runBlocking {
+    /** Asks [extras] for the theme song while the app switches from A to B. */
+    private fun themeSongAcrossASwitch(extras: () -> ItemExtrasPort): String? = runBlocking {
         active.switchTo(on(serverA, "token-a", "a"))
-        val port = catalog()
+        val port = extras()
         val song = async(Dispatchers.IO) { port.themeSongUrl(SERIES.toItemId()) }
 
         assertTrue(asked.await(5, TimeUnit.SECONDS), "The song was not asked of A")
@@ -94,7 +94,7 @@ class SwitchDuringRequestTest {
 
     @Test
     fun `a call keeps the server, the token and the address it started with`() {
-        val url = assertNotNull(themeSongAcrossASwitch { jellyfin.at(active.value).catalog })
+        val url = assertNotNull(themeSongAcrossASwitch { jellyfin.at(active.value).itemExtras })
 
         assertTrue(url.startsWith(serverA.baseUrl), url)
         val request = serverA.requests.single()
@@ -106,11 +106,11 @@ class SwitchDuringRequestTest {
     @Test
     fun `ports taken before a switch to another user ask with the user and token they were taken with`() {
         active.switchTo(on(serverA, "token-a", "a"))
-        val catalog = jellyfin.at(active.value).catalog
+        val extras = jellyfin.at(active.value).itemExtras
         active.switchTo(on(serverB, "token-b", "b", user = OTHER_USER))
         switched.countDown()
 
-        val url = assertNotNull(runBlocking { catalog.themeSongUrl(SERIES.toItemId()) })
+        val url = assertNotNull(runBlocking { extras.themeSongUrl(SERIES.toItemId()) })
 
         assertTrue(url.startsWith(serverA.baseUrl), url)
         val request = serverA.requests.single()
@@ -122,7 +122,7 @@ class SwitchDuringRequestTest {
     @Test
     fun `without a value the second step follows the switch`() {
         // What the check above rules out: the song from A, its URL on B.
-        val url = assertNotNull(themeSongAcrossASwitch { jellyfin.catalog })
+        val url = assertNotNull(themeSongAcrossASwitch { jellyfin.itemExtras })
 
         assertTrue(url.startsWith(serverB.baseUrl), url)
     }

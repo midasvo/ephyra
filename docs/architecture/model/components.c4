@@ -7,7 +7,7 @@
 model {
   extend ephyra.domain {
     mediaServer = port 'MediaServer' {
-      description 'One server: session, catalog, userData, playback. domain/ports/MediaServer.kt'
+      description 'One server: session, the catalog by role (items, itemLists, itemExtras, info), userData, playback. domain/ports/MediaServer.kt'
       link https://github.com/midasvo/ephyra/blob/main/domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/MediaServer.kt 'Source'
     }
     playbackPort = port 'PlaybackPort' {
