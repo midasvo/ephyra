@@ -118,7 +118,7 @@ data. Nothing prints them.
 python3 tools/test-server/user.py list
 python3 tools/test-server/user.py add alice              # --no-download, --no-password
 python3 tools/test-server/user.py rotate alice
-python3 tools/test-server/user.py remove alice
+python3 tools/test-server/user.py remove alice           # deletes user, its server data, and creds.env entry (refuses setup users)
 ```
 
 Watched state and resume positions belong to a user. When two people or agents test at the same

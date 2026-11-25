@@ -39,7 +39,9 @@ Read it first; `docs/get-started.md` has what to install. This file is how to ac
   (`sed -n 's/^JF_TESTER_PASS=//p' creds.env`), without echoing it. If one does end up in output,
   rotate it: `python3 tools/test-server/user.py rotate <name>`.
 - **Your own user when others test too.** Watched state and resume positions are per user. With
-  parallel agents or emulators: `python3 tools/test-server/user.py add <name>` for each.
+  parallel agents or emulators: `python3 tools/test-server/user.py add <name>` for each, and
+  `python3 tools/test-server/user.py remove <name>` when done (deletes the user, its server data,
+  and its `creds.env` entry; refuses built-in setup users).
 - **Never log in to the app as `admin`,** and give a script of your own its own `DeviceId` in the
   `Authorization` header: a second login with a `DeviceId` ends the first one's session, which
   signs an emulator out in the middle of someone's test.

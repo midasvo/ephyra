@@ -4,7 +4,9 @@
 user.py list
 user.py add <name> [--no-download] [--no-password]   a new user; KEY in creds.env is JF_<NAME>
 user.py rotate <name>                                a new password for an existing user
-user.py remove <name>
+user.py remove <name>                                delete the user, its server data (watched state,
+                                                     resume positions, favourites), and its creds.env
+                                                     entry; refuses built-in setup users
 
 Give every agent or emulator that tests at the same time its own user, so their watched state
 and resume positions do not mix.
@@ -74,8 +76,13 @@ def main():
         call("POST", "/Users/AuthenticateByName", {"Username": name, "Pw": password})
         print(f"rotated {name} and verified the new login; {key}_PASS in {jf.CREDS_PATH}")
     else:
-        if name == CREDS["JF_ADMIN_USER"]:
-            sys.exit("not removing the admin")
+        protected = {
+            CREDS[k]
+            for k in ("JF_ADMIN_USER", "JF_TESTER_USER", "JF_NODL_USER", "JF_SECOND_USER", "JF_NOPASS_USER")
+            if k in CREDS
+        } | {"admin", "tester", "nodownload", "second", "nopass"}
+        if name in protected:
+            sys.exit(f"refusing to remove built-in setup user {name}")
         call("DELETE", f"/Users/{uid}")
         write_creds(key, None, None)
         print(f"removed {name}")
