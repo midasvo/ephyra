@@ -190,19 +190,21 @@ areas:
 
   - id: search
     title: Search
-    summary: "Searching the server's catalog, on phone and TV."
-    keywords: [search, search bar, find, query, results, SearchViewModel, SearchBar, MediaScreen]
+    summary: "Searching the server's catalog (and downloaded items while away on phone), on phone and TV."
+    keywords: [search, search bar, find, query, results, SearchViewModel, FilmSearchBar, SearchScreen, MediaScreen, MediaSearch, getSearchItems, ItemListPort, RoomStoredLists, docked search, downloads only]
     paths:
       - modes/film/src/main/java/dev/jdtech/jellyfin/film/presentation/search/SearchViewModel.kt
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/MediaScreen.kt
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/components/SearchBar.kt
       - app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/film/SearchScreen.kt
       - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/ItemListPort.kt
+      - application/src/main/kotlin/dev/jdtech/jellyfin/repository/ItemLists.kt
       - server/jellyfin/src/main/java/dev/jdtech/jellyfin/server/jellyfin/JellyfinCatalog.kt
-    rules: [R1, R2]
+      - data/src/main/java/dev/jdtech/jellyfin/database/RoomStoredLists.kt
+    rules: [R1, R2, R4, R10]
     tests:
-      - ./gradlew :modes:film:testDebugUnitTest --tests '*Search*'
-      - ./gradlew :app:phone:testLibreDebugUnitTest --tests '*Search*'
+      - ./gradlew :modes:film:testDebugUnitTest --tests '*Search*' --tests '*ServerAwayReloadTest*'
+      - ./gradlew :app:phone:testLibreDebugUnitTest --tests '*Search*' :app:tv:testLibreDebugUnitTest --tests '*Search*'
 
   - id: settings
     title: Settings
