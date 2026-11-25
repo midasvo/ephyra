@@ -45,7 +45,7 @@ Branding and variant names stay separated from Weblate keys:
 - **Plurals**: include every required CLDR quantity for each language as enforced by `PLURAL_REQUIRED_QUANTITIES` in [`check-translations.py`](../../.claude/skills/translate-strings/scripts/check-translations.py).
 - **String arrays**: translate the `<string>` keys referenced by label arrays; keep value arrays `translatable="false"` with the exact same item count and order as their label array.
 - **English changes and upstream sync collisions**: when an English CE string changes, update all 36 `strings_ce.xml` files. When an upstream sync adds a key that already exists in `strings_ce.xml`, delete that key from `strings_ce.xml` across all 36 languages so Weblate's translation takes over; when upstream removes or renames a key Ephyra still uses, preserve it as a `ce_` key in `strings_ce.xml`.
-- **CI triggers**: [`.github/workflows/build.yaml`](../../.github/workflows/build.yaml) excludes `docs/**` and `.claude/**` from builds, then re-includes `.claude/skills/translate-strings/**` so changes to the checker or skill still run `Verify CE translations`. `check-guides-follow.py` ignores `/res/values-<lang>/`, while edits to default `values/strings.xml` or `SKILL.md` require updating or explaining the guide.
+- **CI triggers**: [`.github/workflows/build.yaml`](../../.github/workflows/build.yaml) excludes `docs/**` and `.claude/**` from builds, then re-includes `.claude/skills/translate-strings/**` so changes to the checker or skill still run `Verify CE translations`. `check-guides-follow.py` ignores `/res/values-<lang>/`, while edits to the counted paths indexed under `translations` in [`docs/areas.yaml`](../areas.yaml) (`core/src/main/res/values/strings.xml`, `settings/src/main/res/values/strings.xml`, `settings/src/main/res/values/string_arrays.xml`, `player/local/src/main/res/values/strings.xml`, `core/src/main/res/xml/locales_config.xml`, `.claude/skills/translate-strings/SKILL.md`, and `.claude/skills/translate-strings/scripts/check-translations.py` — not unindexed `values/strings.xml` files such as `downloads`, `modes/film`, or `setup`) require updating or explaining the guide.
 
 ## How to test it
 
@@ -81,6 +81,11 @@ If keys were added, renamed, or removed across modules or `string_arrays.xml`, c
 python3 .claude/skills/translate-strings/scripts/check-translations.py
 ./gradlew :app:phone:compileLibreDebugKotlin :app:tv:compileLibreDebugKotlin
 python3 .claude/skills/start-work/scripts/check-docs.py
+```
+
+Commit your changes before running `check-guides-follow.py` (and re-run it after any new commit): it compares `origin/main...HEAD` and ignores staged or unstaged edits:
+
+```bash
 python3 .claude/skills/start-work/scripts/check-guides-follow.py
 ```
 
