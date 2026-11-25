@@ -155,7 +155,7 @@ areas:
   - id: profiles
     title: Profiles and PIN
     summary: "The users on one device as profiles: switching between them and the PIN or pattern lock."
-    keywords: [profile, profiles, profile switch, switch profile, profile picker, pin, pin code, pattern, lock, profile lock, locked, kids, ProfileLock, ProfilePinHasher, ProfilePinGateViewModel, ProfileBottomSheet]
+    keywords: [profile, profiles, profile switch, switch profile, profile picker, pin, pin code, pattern, lock, profile lock, locked, kids, ProfileLock, ProfilePinHasher, ProfilePattern, ProfilePinGateViewModel, ProfilePinSettingsViewModel, ProfileBottomSheet, UserLocks, EphyraAvatar, TvPinPad, askUserOnStart]
     paths:
       - application/src/main/kotlin/dev/jdtech/jellyfin/profilelock/ProfileLock.kt
       - application/src/main/kotlin/dev/jdtech/jellyfin/profilelock/ProfilePinHasher.kt
@@ -169,6 +169,7 @@ areas:
     rules: [R4, R9, R10]
     tests:
       - ./gradlew :application:test
+      - ./gradlew :data:testDebugUnitTest --tests '*ProfileLockTest*'
       - ./gradlew :setup:testDebugUnitTest --tests '*Pin*'
 
   - id: home-and-library
