@@ -319,4 +319,15 @@ class RoomStoredReadsTest {
             assertTrue(row.load(userId).favorite)
             assertFalse(row.load(other).favorite)
         }
+
+    @Test
+    fun `allSourcesOfServer returns sources for the storing server only`() = runBlocking {
+        storeMovie(movie)
+        storeMovie(favorite, path = "/movies/partial.mkv.download")
+
+        assertEquals(1, store.allSourcesOfServer(movie.id, serverId).size)
+        assertEquals(1, store.allSourcesOfServer(favorite.id, serverId).size)
+        assertTrue(store.allSourcesOfServer(movie.id, otherServer).isEmpty())
+        assertTrue(store.allSourcesOfServer(favorite.id, otherServer).isEmpty())
+    }
 }
