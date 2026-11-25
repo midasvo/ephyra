@@ -10,9 +10,12 @@ import dev.jdtech.jellyfin.models.toServerId
 import dev.jdtech.jellyfin.models.toUserId
 import dev.jdtech.jellyfin.repository.StandInServer
 import java.util.Collections
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -23,6 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import org.jellyfin.sdk.api.client.HttpClientOptions
 import org.jellyfin.sdk.api.client.util.ApiSerializer
@@ -210,18 +215,22 @@ class SocketUnreadableMessageTest {
             }
         }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `a new collector starting during an unreadable message receives the previously accepted state`() =
-        runBlocking {
-            val wrapped = SafeSocketConnectionFactory(sockets).create(HttpClientOptions(), this)
+        runTest {
+            val wrapped =
+                SafeSocketConnectionFactory(sockets).create(HttpClientOptions(), backgroundScope)
             val rawConn = sockets.made.single()
 
             rawConn.receive(VALID_PLAYSTATE)
+            runCurrent()
             assertEquals(SocketConnectionState.Message(VALID_PLAYSTATE), wrapped.state.value)
 
             val unreadable =
                 """{"MessageType":"SomethingNewer","MessageId":"00000000000000000000000000000006","Data":{}}"""
             rawConn.receive(unreadable)
+            runCurrent()
             assertEquals(SocketConnectionState.Message(unreadable), rawConn.state.value)
 
             val firstState = withTimeout(2_000) { wrapped.state.first() }
@@ -231,7 +240,7 @@ class SocketUnreadableMessageTest {
     @OptIn(ExperimentalForInheritanceCoroutinesApi::class)
     @Test
     fun `an accepted state is retained for replay when delegate becomes unreadable before lastAccepted updates`() =
-        runBlocking {
+        runTest {
             val nextEmission = MutableSharedFlow<SocketConnectionState>(extraBufferCapacity = 1)
             val racyState =
                 object : StateFlow<SocketConnectionState> {
@@ -276,7 +285,9 @@ class SocketUnreadableMessageTest {
                         }
                 }
 
-            val wrapped = SafeSocketConnectionFactory(racyFactory).create(HttpClientOptions(), this)
+            val wrapped =
+                SafeSocketConnectionFactory(racyFactory)
+                    .create(HttpClientOptions(), backgroundScope)
             val accepted = SocketConnectionState.Message(VALID_PLAYSTATE)
             val unreadable =
                 SocketConnectionState.Message(
@@ -303,6 +314,111 @@ class SocketUnreadableMessageTest {
                 assertEquals(accepted, replayed)
             } finally {
                 collector1.cancel()
+            }
+        }
+
+    @OptIn(ExperimentalCoroutinesApi::class, ExperimentalForInheritanceCoroutinesApi::class)
+    @Test
+    fun `concurrent slow collector at Connecting does not overwrite newer accepted Message when unreadable arrives`() =
+        runTest {
+            val delegateState =
+                MutableStateFlow<SocketConnectionState>(SocketConnectionState.Disconnected())
+            val collectCalls = AtomicInteger(0)
+            val countedState =
+                object : StateFlow<SocketConnectionState> by delegateState {
+                    override suspend fun collect(
+                        collector: FlowCollector<SocketConnectionState>
+                    ): Nothing {
+                        collectCalls.incrementAndGet()
+                        delegateState.collect(collector)
+                    }
+                }
+            val countingFactory =
+                object : SocketConnectionFactory {
+                    override fun create(
+                        clientOptions: HttpClientOptions,
+                        scope: CoroutineScope,
+                    ): SocketConnection =
+                        object : SocketConnection {
+                            override val state: StateFlow<SocketConnectionState> = countedState
+
+                            override suspend fun connect(
+                                url: String,
+                                clientName: String,
+                                clientVersion: String,
+                                deviceId: String,
+                                deviceName: String,
+                                accessToken: String,
+                                languages: List<String>,
+                            ): Boolean = true
+
+                            override suspend fun send(message: String): Boolean = true
+
+                            override suspend fun disconnect() = Unit
+                        }
+                }
+
+            val wrapped =
+                SafeSocketConnectionFactory(countingFactory)
+                    .create(HttpClientOptions(), backgroundScope)
+            assertEquals(1, collectCalls.get())
+
+            val slowGate = CompletableDeferred<Unit>()
+            val slowReceived = mutableListOf<SocketConnectionState>()
+            val fastReceived = mutableListOf<SocketConnectionState>()
+
+            val slowCollector = launch {
+                wrapped.state.collect { item ->
+                    slowReceived += item
+                    if (item is SocketConnectionState.Connecting) {
+                        slowGate.await()
+                    }
+                }
+            }
+            val fastCollector = launch { wrapped.state.collect { fastReceived += it } }
+            try {
+                runCurrent()
+                delegateState.value = SocketConnectionState.Connecting
+                runCurrent()
+
+                val accepted = SocketConnectionState.Message(VALID_PLAYSTATE)
+                delegateState.value = accepted
+                runCurrent()
+
+                val unreadable =
+                    SocketConnectionState.Message(
+                        """{"MessageType":"SomethingNewer","MessageId":"00000000000000000000000000000008","Data":{}}"""
+                    )
+                delegateState.value = unreadable
+                runCurrent()
+
+                assertEquals(accepted, wrapped.state.value)
+                assertEquals(accepted, withTimeout(2_000) { wrapped.state.first() })
+                assertEquals(
+                    listOf(
+                        SocketConnectionState.Disconnected(),
+                        SocketConnectionState.Connecting,
+                        accepted,
+                    ),
+                    fastReceived,
+                )
+
+                slowGate.complete(Unit)
+                runCurrent()
+
+                assertEquals(accepted, wrapped.state.value)
+                assertEquals(
+                    listOf(
+                        SocketConnectionState.Disconnected(),
+                        SocketConnectionState.Connecting,
+                        accepted,
+                    ),
+                    slowReceived,
+                )
+                assertEquals(1, collectCalls.get())
+            } finally {
+                slowCollector.cancel()
+                fastCollector.cancel()
             }
         }
 

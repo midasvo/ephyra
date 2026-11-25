@@ -1,9 +1,12 @@
 package dev.jdtech.jellyfin.api
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
@@ -23,12 +26,13 @@ import timber.log.Timber
 internal class SafeSocketConnectionFactory(private val delegate: SocketConnectionFactory) :
     SocketConnectionFactory {
     override fun create(clientOptions: HttpClientOptions, scope: CoroutineScope): SocketConnection =
-        SafeSocketConnection(delegate.create(clientOptions, scope))
+        SafeSocketConnection(delegate.create(clientOptions, scope), scope)
 }
 
-private class SafeSocketConnection(private val delegate: SocketConnection) : SocketConnection {
+private class SafeSocketConnection(private val delegate: SocketConnection, scope: CoroutineScope) :
+    SocketConnection {
     override val state: StateFlow<SocketConnectionState> =
-        FilteringStateFlow(delegate.state) { item ->
+        FilteringStateFlow(delegate.state, scope) { item ->
             if (item !is SocketConnectionState.Message) true else canDecode(item.message)
         }
 
@@ -76,42 +80,34 @@ private class SafeSocketConnection(private val delegate: SocketConnection) : Soc
 @OptIn(ExperimentalForInheritanceCoroutinesApi::class)
 private class FilteringStateFlow(
     private val delegate: StateFlow<SocketConnectionState>,
+    scope: CoroutineScope,
     private val predicate: (SocketConnectionState) -> Boolean,
 ) : StateFlow<SocketConnectionState> {
-    private val lock = Any()
-
-    private var lastAccepted: SocketConnectionState =
+    private val initialAccepted: SocketConnectionState =
         delegate.value.takeIf(predicate) ?: SocketConnectionState.Disconnected()
+
+    private val shared =
+        MutableSharedFlow<SocketConnectionState>(replay = 1, extraBufferCapacity = 64)
+
+    init {
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            delegate.collect { item ->
+                if (predicate(item)) {
+                    shared.emit(item)
+                } else if (shared.replayCache.isEmpty()) {
+                    shared.emit(initialAccepted)
+                }
+            }
+        }
+    }
 
     override val replayCache: List<SocketConnectionState>
         get() = listOf(value)
 
     override val value: SocketConnectionState
-        get() =
-            synchronized(lock) {
-                val current = delegate.value
-                if (predicate(current)) {
-                    lastAccepted = current
-                    current
-                } else {
-                    lastAccepted
-                }
-            }
+        get() = shared.replayCache.lastOrNull() ?: initialAccepted
 
     override suspend fun collect(collector: FlowCollector<SocketConnectionState>): Nothing {
-        var first = true
-        delegate.collect { item ->
-            if (predicate(item)) {
-                synchronized(lock) {
-                    val current = delegate.value
-                    lastAccepted = if (predicate(current)) current else item
-                }
-                first = false
-                collector.emit(item)
-            } else if (first) {
-                first = false
-                collector.emit(synchronized(lock) { lastAccepted })
-            }
-        }
+        shared.collect(collector)
     }
 }
