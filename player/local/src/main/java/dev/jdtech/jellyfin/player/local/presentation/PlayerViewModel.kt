@@ -1548,8 +1548,9 @@ constructor(
     override fun onPlayerError(error: PlaybackException) {
         Timber.e(error, "Player error: ${error.errorCodeName}")
         if (enginePlayer.onPlayerError(error)) {
-            // Stays on the same item and position, and keeps playing if it was.
-            Timber.w("Audio decoder failed, continuing without it")
+            // Stays on the same item and position, and keeps playing if it was. The engine logs
+            // what it changed (a failed audio decoder ruled out, tunneling off, #924).
+            Timber.w("The engine can recover from the error, preparing again")
             player.prepare()
             return
         }

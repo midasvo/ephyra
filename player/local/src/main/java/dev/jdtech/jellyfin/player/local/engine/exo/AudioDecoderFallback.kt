@@ -6,6 +6,7 @@ import androidx.media3.exoplayer.mediacodec.MediaCodecDecoderException
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import androidx.media3.exoplayer.mediacodec.MediaCodecRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
+import timber.log.Timber
 
 /**
  * Takes platform audio decoders that failed during playback out of ExoPlayer's selection, so the
@@ -63,8 +64,12 @@ class AudioDecoderFallback(
      *   ruled out once and there are finitely many, so this cannot retry forever. `false` for
      *   anything else, including a failure in ffmpeg itself.
      */
-    fun onPlayerError(error: PlaybackException): Boolean =
-        failedAudioDecoder(error)?.let { markBroken(it) } ?: false
+    fun onPlayerError(error: PlaybackException): Boolean {
+        val decoder = failedAudioDecoder(error) ?: return false
+        if (!markBroken(decoder)) return false
+        Timber.w("Audio decoder $decoder failed, continuing without it")
+        return true
+    }
 
     internal fun isBroken(decoderName: String): Boolean = key(decoderName) in broken
 

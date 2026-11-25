@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Looper
+import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -96,17 +97,38 @@ constructor(private val application: Application, private val appPreferences: Ap
                 )
                 .setPauseAtEndOfMediaItems(true)
                 .build()
-        return ExoEnginePlayer(player, audioDecoderFallback)
+        val tunnelingFallback =
+            TunnelingFallback(
+                tunnelingEnabled = { trackSelector.parameters.tunnelingEnabled },
+                setTunnelingEnabled = { enabled ->
+                    trackSelector.setParameters(
+                        trackSelector.buildUponParameters().setTunnelingEnabled(enabled)
+                    )
+                },
+            )
+        return ExoEnginePlayer(player, audioDecoderFallback, tunnelingFallback)
     }
 }
 
 private class ExoEnginePlayer(
     override val player: Player,
     private val audioDecoderFallback: AudioDecoderFallback,
+    private val tunnelingFallback: TunnelingFallback,
 ) : EnginePlayer {
+    init {
+        player.addListener(
+            object : Player.Listener {
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    tunnelingFallback.onMediaItemTransition(mediaItem?.mediaId)
+                }
+            }
+        )
+    }
+
     /** [SubtitleOffsetRenderer] reads the delay through [PlayerEngineConfig.subtitleDelayUs]. */
     override fun setSubtitleDelayMs(delayMs: Int) = Unit
 
     override fun onPlayerError(error: PlaybackException): Boolean =
-        audioDecoderFallback.onPlayerError(error)
+        audioDecoderFallback.onPlayerError(error) ||
+            tunnelingFallback.onPlayerError(error.errorCode, player.currentMediaItem?.mediaId)
 }
