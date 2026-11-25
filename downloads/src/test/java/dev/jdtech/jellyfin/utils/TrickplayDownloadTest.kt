@@ -14,8 +14,8 @@ import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toMediaSourceId
 import dev.jdtech.jellyfin.repository.CurrentAccount
 import dev.jdtech.jellyfin.repository.ItemCatalog
-import dev.jdtech.jellyfin.repository.MediaRepositoryImpl
 import dev.jdtech.jellyfin.repository.PlaybackMedia
+import dev.jdtech.jellyfin.repository.roomMediaRepository
 import dev.jdtech.jellyfin.testing.FakeResumeThresholdsStore
 import dev.jdtech.jellyfin.testing.FakeRoles
 import dev.jdtech.jellyfin.testing.fakeProxy
@@ -234,7 +234,7 @@ class TrickplayDownloadTest {
             }
                 as MediaServer
         val repository =
-            MediaRepositoryImpl(
+            roomMediaRepository(
                 context,
                 away,
                 room.getServerDatabaseDao(),

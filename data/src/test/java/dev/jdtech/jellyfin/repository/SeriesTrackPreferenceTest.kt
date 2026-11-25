@@ -41,7 +41,7 @@ class SeriesTrackPreferenceTest {
     private val server = UnansweredServer(userId)
 
     private val repository: MediaRepositoryImpl by lazy {
-        MediaRepositoryImpl(
+        roomMediaRepository(
             context,
             server,
             database,

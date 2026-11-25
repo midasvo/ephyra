@@ -69,7 +69,7 @@ class UnfinishedDownloadPlaybackTest {
     fun `online, an unfinished download is not played and the server is asked instead`() =
         runBlocking {
             val repository =
-                MediaRepositoryImpl(
+                roomMediaRepository(
                     context,
                     UnansweredServer(userId),
                     database,

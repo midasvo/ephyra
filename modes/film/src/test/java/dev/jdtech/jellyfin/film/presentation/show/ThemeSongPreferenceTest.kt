@@ -9,7 +9,7 @@ import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.di.AppPreferencesDownloadSettings
 import dev.jdtech.jellyfin.models.ServerCapabilities
 import dev.jdtech.jellyfin.repository.DownloadSources
-import dev.jdtech.jellyfin.repository.MediaRepositoryImpl
+import dev.jdtech.jellyfin.repository.roomMediaRepository
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.testing.ContractLibrary
 import dev.jdtech.jellyfin.testing.FakeLibrary
@@ -114,7 +114,7 @@ class ThemeSongPreferenceTest {
     ): ShowViewModel {
         server = FakeMediaServer(library, capabilities)
         val repository =
-            MediaRepositoryImpl(
+            roomMediaRepository(
                 context = ContextWrapper(null),
                 server = server,
                 database = noDownloads(),

@@ -1,5 +1,7 @@
 package dev.jdtech.jellyfin.database
 
+import dev.jdtech.jellyfin.models.ItemId
+import dev.jdtech.jellyfin.models.SeriesTrackPreference
 import dev.jdtech.jellyfin.models.Server
 import dev.jdtech.jellyfin.models.ServerAddress
 import dev.jdtech.jellyfin.models.ServerAddressId
@@ -8,6 +10,8 @@ import dev.jdtech.jellyfin.models.ServerWithAddressAndUser
 import dev.jdtech.jellyfin.models.ServerWithAddresses
 import dev.jdtech.jellyfin.models.User
 import dev.jdtech.jellyfin.models.UserId
+import dev.jdtech.jellyfin.models.toSeriesTrackPreference
+import dev.jdtech.jellyfin.models.toSeriesTrackPreferenceDto
 import dev.jdtech.jellyfin.models.toServer
 import dev.jdtech.jellyfin.models.toServerAddress
 import dev.jdtech.jellyfin.models.toServerAddressEntity
@@ -18,6 +22,7 @@ import dev.jdtech.jellyfin.models.toUser
 import dev.jdtech.jellyfin.models.toUserEntity
 import dev.jdtech.jellyfin.repository.ServerAddresses
 import dev.jdtech.jellyfin.repository.StoredServers
+import dev.jdtech.jellyfin.repository.StoredTrackPreferences
 import dev.jdtech.jellyfin.repository.StoredUsers
 import dev.jdtech.jellyfin.repository.UserLocks
 import kotlinx.coroutines.flow.Flow
@@ -25,10 +30,11 @@ import kotlinx.coroutines.flow.map
 
 /**
  * #899: the server store over the Room tables; each method is the DAO call its callers made. #967:
- * its roles are [StoredServers], [ServerAddresses], [StoredUsers] and [UserLocks].
+ * its roles are [StoredServers], [ServerAddresses], [StoredUsers] and [UserLocks]; #966: and
+ * [StoredTrackPreferences], the tracks each user picked by hand in a series.
  */
 class RoomServerStore(private val database: ServerDatabaseDao) :
-    StoredServers, ServerAddresses, StoredUsers, UserLocks {
+    StoredServers, ServerAddresses, StoredUsers, UserLocks, StoredTrackPreferences {
     override suspend fun server(id: ServerId): Server? = database.getServer(id)?.toServer()
 
     override fun observeServer(id: ServerId): Flow<Server?> =
@@ -111,4 +117,13 @@ class RoomServerStore(private val database: ServerDatabaseDao) :
 
     override suspend fun setUserPinOnStart(id: UserId, pinOnStart: Boolean) =
         database.updateUserPinOnStart(id, pinOnStart)
+
+    override suspend fun trackPreferences(
+        userId: UserId,
+        seriesId: ItemId,
+    ): List<SeriesTrackPreference> =
+        database.getSeriesTrackPreferences(userId, seriesId).map { it.toSeriesTrackPreference() }
+
+    override suspend fun saveTrackPreference(preference: SeriesTrackPreference) =
+        database.insertSeriesTrackPreference(preference.toSeriesTrackPreferenceDto())
 }
