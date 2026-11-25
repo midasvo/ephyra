@@ -245,19 +245,19 @@ areas:
   - id: tablet-layouts
     title: Tablet layouts
     summary: "The phone app at tablet and foldable width: wide item layouts, grids, content widths."
-    keywords: [tablet, foldable, fold, large screen, wide, wide layout, width, landscape, grid, columns, two pane, list detail, max width, WidthClass, useWideItemLayout, WideWindow]
+    keywords: [tablet, foldable, fold, large screen, wide, wide layout, width, landscape, grid, columns, two pane, list detail, max width, WidthClass, useWideItemLayout, useDockedSearch, useSeasonListDetail, isCompactHeight, WideWindow, ItemHeroHeader, EpisodeWideLayout, PlayerOrientation, PlayerEpisodeSheet, side backdrop, LocalSideBackdrop, docked search, keep landscape, tabletop, GridCellsAdaptiveWithMinColumns]
     paths:
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/utils/Layout.kt
-      - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/utils/GridCellsAdaptiveWithMinColumns.kt
-      - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/components/CollectionGrid.kt
+      - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/components/ItemHeroHeader.kt
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/MovieWideLayout.kt
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/ShowWideLayout.kt
+      - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/EpisodeWideLayout.kt
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/SeasonWideLayout.kt
       - settings/src/main/java/dev/jdtech/jellyfin/settings/domain/WideWindow.kt
-      - scripts/tablet-avds.sh
+      - scripts/avds.sh
     docs: [docs/tablet/4-design.md, docs/tablet/6-test-matrix.md, docs/tablet/README.md]
     tests:
-      - ./gradlew :app:phone:testLibreDebugUnitTest --tests '*Layout*'
+      - ./gradlew :app:phone:testLibreDebugUnitTest --tests '*Layout*' --tests '*HeroBackdropWidth*' --tests '*ItemHeroHeader*' --tests '*SeasonListState*' --tests '*DownloadsWidthCap*' --tests '*SearchBarDocked*' --tests '*HomeCarouselPages*' --tests '*PlayerOrientation*' --tests '*KeepLandscapeSetting*' --tests '*PlayerLetterbox*'
 
   - id: performance
     title: Performance
