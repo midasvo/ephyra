@@ -16,9 +16,9 @@ abstract class UserDataContract : MediaServerContract() {
         val id = library.movieWithResume.id
 
         server.userData.setFavorite(id, true)
-        assertEquals(true, server.catalog.item(id)?.favorite)
+        assertEquals(true, server.items.item(id)?.favorite)
         server.userData.setFavorite(id, false)
-        assertEquals(false, server.catalog.item(id)?.favorite)
+        assertEquals(false, server.items.item(id)?.favorite)
     }
 
     @Test
@@ -27,9 +27,9 @@ abstract class UserDataContract : MediaServerContract() {
         val id = library.favoriteMovie.id
 
         server.userData.setPlayed(id, true)
-        assertEquals(true, server.catalog.item(id)?.played)
+        assertEquals(true, server.items.item(id)?.played)
         server.userData.setPlayed(id, false)
-        assertEquals(false, server.catalog.item(id)?.played)
+        assertEquals(false, server.items.item(id)?.played)
     }
 
     @Test
@@ -38,7 +38,7 @@ abstract class UserDataContract : MediaServerContract() {
         val next = library.nextUp.id
 
         server.userData.setPlayed(next, true)
-        val after = server.catalog.nextUp(library.series.id, dateCutoff = null).firstOrNull()?.id
+        val after = server.items.nextUp(library.series.id, dateCutoff = null).firstOrNull()?.id
         server.userData.setPlayed(next, false)
 
         assertEquals(library.season1Episodes[2].id, after)

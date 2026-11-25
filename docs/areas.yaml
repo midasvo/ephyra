@@ -173,7 +173,7 @@ areas:
   - id: home-and-library
     title: Home and library
     summary: "The home rows, the libraries and collections, and the item screens (movie, show, season, episode, person)."
-    keywords: [home, home screen, home rows, continue watching, next up, latest, carousel, library, libraries, collection, movie, show, series, season, episode, item screen, details, person, actor, favourites screen, sort, letter index, paging, pager, PagingSource, IndexedItemsPagingSource, poster, artwork, film, HomeViewModel, LibraryViewModel, ShowViewModel, ItemButtonsBar, CatalogPort, ratings, external ratings, imdb, rotten tomatoes, metacritic, letterboxd, mdblist, beoordelingen, ExternalRatingsLoader, ExternalRatings]
+    keywords: [home, home screen, home rows, continue watching, next up, latest, carousel, library, libraries, collection, movie, show, series, season, episode, item screen, details, person, actor, favourites screen, sort, letter index, paging, pager, PagingSource, IndexedItemsPagingSource, poster, artwork, film, HomeViewModel, LibraryViewModel, ShowViewModel, ItemButtonsBar, ItemPort, ItemListPort, ItemExtrasPort, ratings, external ratings, imdb, rotten tomatoes, metacritic, letterboxd, mdblist, beoordelingen, ExternalRatingsLoader, ExternalRatings]
     paths:
       - modes/film/src/main/java/dev/jdtech/jellyfin/film/presentation/home/HomeViewModel.kt
       - modes/film/src/main/java/dev/jdtech/jellyfin/film/presentation/library/LibraryViewModel.kt
@@ -181,7 +181,7 @@ areas:
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/HomeScreen.kt
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/components/ItemButtonsBar.kt
       - application/src/main/kotlin/dev/jdtech/jellyfin/repository/ItemCatalog.kt
-      - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/CatalogPort.kt
+      - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/ItemPort.kt
       - server/jellyfin/src/main/java/dev/jdtech/jellyfin/server/jellyfin/JellyfinCatalog.kt
     rules: [R1, R2, R4, R10]
     tests:
@@ -196,7 +196,7 @@ areas:
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/MediaScreen.kt
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/film/components/SearchBar.kt
       - app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/film/SearchScreen.kt
-      - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/CatalogPort.kt
+      - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/ItemListPort.kt
       - server/jellyfin/src/main/java/dev/jdtech/jellyfin/server/jellyfin/JellyfinCatalog.kt
     rules: [R1, R2]
     tests:

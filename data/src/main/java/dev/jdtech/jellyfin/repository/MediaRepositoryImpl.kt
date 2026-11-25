@@ -2,7 +2,7 @@ package dev.jdtech.jellyfin.repository
 
 import android.content.Context
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort
 import dev.jdtech.jellyfin.domain.ports.ItemQuery
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackReport
@@ -85,9 +85,6 @@ class MediaRepositoryImpl(
     private val capabilities: ServerCapabilities
         get() = server.capabilities
 
-    private val catalog: CatalogPort
-        get() = server.catalog
-
     private val playSessions = PlaySessions()
 
     private val storedLists = StoredLists(database)
@@ -168,9 +165,9 @@ class MediaRepositoryImpl(
                     "No authenticated user. userId is null — session may have expired."
                 )
 
-    override suspend fun getServerInfo(): ServerInfo = catalog.serverInfo()
+    override suspend fun getServerInfo(): ServerInfo = server.info.serverInfo()
 
-    override suspend fun getUserViews(): List<Library> = catalog.userViews()
+    override suspend fun getUserViews(): List<Library> = server.itemLists.userViews()
 
     // CE (#281): the item getters fall back to the copy in Room (a download, or the show and season
     // of a downloaded episode) when the server fails or is slow, see serverOrStored. CE (#718):
@@ -183,7 +180,7 @@ class MediaRepositoryImpl(
                 stored?.let { dto -> suspend { dto.toEpisode(database, currentUserId) } },
                 log = TimberFallbackLog,
             ) {
-                catalog.episode(itemId).withLocalSources(localSourcesFor(listOf(itemId)))
+                server.items.episode(itemId).withLocalSources(localSourcesFor(listOf(itemId)))
             }
         }
 
@@ -194,7 +191,7 @@ class MediaRepositoryImpl(
                 stored?.let { dto -> suspend { dto.toMovie(database, currentUserId) } },
                 log = TimberFallbackLog,
             ) {
-                catalog.movie(itemId).withLocalSources(localSourcesFor(listOf(itemId)))
+                server.items.movie(itemId).withLocalSources(localSourcesFor(listOf(itemId)))
             }
         }
 
@@ -205,7 +202,7 @@ class MediaRepositoryImpl(
                 stored?.let { dto -> suspend { dto.toShow(database, currentUserId) } },
                 log = TimberFallbackLog,
             ) {
-                catalog.show(itemId)
+                server.items.show(itemId)
             }
         }
 
@@ -216,7 +213,7 @@ class MediaRepositoryImpl(
                 stored?.let { dto -> suspend { dto.toSeason(database, currentUserId) } },
                 log = TimberFallbackLog,
             ) {
-                catalog.season(itemId)
+                server.items.season(itemId)
             }
         }
 
@@ -228,12 +225,14 @@ class MediaRepositoryImpl(
             val stored = serverId?.let { id ->
                 suspend { storedLists.libraries(id, storedLibraryNames, ::hasStoredImage) }
             }
-            serverOrStoredItems(stored) { catalog.libraries() }
+            serverOrStoredItems(stored) { server.itemLists.libraries() }
         }
 
     override suspend fun getItem(itemId: ItemId): Item? =
         withContext(Dispatchers.IO) {
-            serverOrStored(storedItem(itemId), log = TimberFallbackLog) { catalog.item(itemId) }
+            serverOrStored(storedItem(itemId), log = TimberFallbackLog) {
+                server.items.item(itemId)
+            }
         }
 
     /**
@@ -305,7 +304,7 @@ class MediaRepositoryImpl(
                 )
             }
             val page =
-                catalog.items(
+                server.itemLists.items(
                     ItemQuery(
                         parentId = parentId,
                         kinds = includeTypes,
@@ -350,7 +349,7 @@ class MediaRepositoryImpl(
         limit: Int,
     ): List<Item> =
         withContext(Dispatchers.IO) {
-            catalog.randomItemsWithBackdrop(includeTypes, limit).withLocalSources()
+            server.itemLists.randomItemsWithBackdrop(includeTypes, limit).withLocalSources()
         }
 
     override suspend fun getItemCount(
@@ -372,7 +371,7 @@ class MediaRepositoryImpl(
                     nameLessThan,
                 )
             }
-            catalog.itemCount(
+            server.itemLists.itemCount(
                 ItemQuery(
                     parentId = parentId,
                     kinds = includeTypes,
@@ -383,7 +382,7 @@ class MediaRepositoryImpl(
             )
         }
 
-    override suspend fun getPerson(personId: ItemId): Person = catalog.person(personId)
+    override suspend fun getPerson(personId: ItemId): Person = server.items.person(personId)
 
     override suspend fun getPersonItems(
         personIds: List<ItemId>,
@@ -392,7 +391,7 @@ class MediaRepositoryImpl(
         limit: Int?,
     ): List<Item> =
         withContext(Dispatchers.IO) {
-            catalog.personItems(personIds, includeTypes, recursive, limit).withLocalSources()
+            server.items.personItems(personIds, includeTypes, recursive, limit).withLocalSources()
         }
 
     override suspend fun getFavoriteItems(): ItemsResult<Item> =
@@ -406,7 +405,7 @@ class MediaRepositoryImpl(
             val noneIsAnAnswer =
                 serverId != null && stored.isEmpty() && storedLists.hasDownloads(serverId)
             serverOrStoredItems(storedItems(serverId, stored, emptyIsAnAnswer = noneIsAnAnswer)) {
-                catalog.favorites().withLocalSources()
+                server.itemLists.favorites().withLocalSources()
             }
         }
 
@@ -424,34 +423,34 @@ class MediaRepositoryImpl(
                             it,
                             query,
                             itemKinds,
-                            if (itemKinds == null) CatalogPort.SEARCH_LIMIT
-                            else CatalogPort.SEARCH_LIMIT_PER_KIND,
+                            if (itemKinds == null) ItemListPort.SEARCH_LIMIT
+                            else ItemListPort.SEARCH_LIMIT_PER_KIND,
                         )
                     }
                     .orEmpty()
             serverOrStoredItems(storedItems(serverId, stored)) {
-                catalog.search(query, itemKinds).withLocalSources()
+                server.itemLists.search(query, itemKinds).withLocalSources()
             }
         }
 
     override suspend fun getSuggestions(): List<Item> =
-        withContext(Dispatchers.IO) { catalog.suggestions().withLocalSources() }
+        withContext(Dispatchers.IO) { server.itemLists.suggestions().withLocalSources() }
 
     override suspend fun getResumeItems(): List<Item> =
-        withContext(Dispatchers.IO) { catalog.resumeItems().withLocalSources() }
+        withContext(Dispatchers.IO) { server.itemLists.resumeItems().withLocalSources() }
 
     override suspend fun getLatestMedia(
         parentId: ItemId,
         includeItemTypes: List<ItemKind>?,
     ): List<Item> =
         withContext(Dispatchers.IO) {
-            catalog.latest(parentId, includeItemTypes).withLocalSources()
+            server.itemLists.latest(parentId, includeItemTypes).withLocalSources()
         }
 
     override suspend fun getSeasons(seriesId: ItemId, offline: Boolean): List<Season> =
         withContext(Dispatchers.IO) {
             if (!offline) {
-                catalog.seasons(seriesId)
+                server.items.seasons(seriesId)
             } else {
                 // CE (#718): the current server's stored seasons only.
                 val serverId = currentServerId() ?: return@withContext emptyList()
@@ -463,7 +462,7 @@ class MediaRepositoryImpl(
 
     override suspend fun getNextUp(seriesId: ItemId?): List<Episode> =
         withContext(Dispatchers.IO) {
-            catalog.nextUp(
+            server.items.nextUp(
                 seriesId,
                 dateCutoff =
                     nextUpDateCutoff(
@@ -484,7 +483,7 @@ class MediaRepositoryImpl(
     ): List<Episode> =
         withContext(Dispatchers.IO) {
             if (!offline) {
-                val episodes = catalog.episodes(seriesId, seasonId, fields, startItemId, limit)
+                val episodes = server.items.episodes(seriesId, seasonId, fields, startItemId, limit)
                 val local = localSourcesFor(episodes.map { it.id })
                 episodes.map { it.withLocalSources(local) }
             } else {
@@ -655,7 +654,7 @@ class MediaRepositoryImpl(
     override suspend fun getThemeSongUrl(itemId: ItemId): String? =
         withContext(Dispatchers.IO) {
             try {
-                catalog.themeSongUrl(itemId)
+                server.itemExtras.themeSongUrl(itemId)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -665,16 +664,16 @@ class MediaRepositoryImpl(
         }
 
     override suspend fun getSimilarItems(itemId: ItemId, limit: Int): List<Item> =
-        withContext(Dispatchers.IO) { catalog.similar(itemId, limit).withLocalSources() }
+        withContext(Dispatchers.IO) { server.itemExtras.similar(itemId, limit).withLocalSources() }
 
     override suspend fun getExtras(
         itemId: ItemId,
         localTrailers: Boolean,
         specialFeatures: Boolean,
-    ): List<Movie> = catalog.extras(itemId, localTrailers, specialFeatures)
+    ): List<Movie> = server.itemExtras.extras(itemId, localTrailers, specialFeatures)
 
     override suspend fun getItemCollections(itemId: ItemId): List<Item> =
-        withContext(Dispatchers.IO) { catalog.collectionsOf(itemId).withLocalSources() }
+        withContext(Dispatchers.IO) { server.itemExtras.collectionsOf(itemId).withLocalSources() }
 
     override fun setPlaySession(
         itemId: ItemId,

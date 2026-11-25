@@ -1,14 +1,14 @@
 # Architecture
 
-Status: built (ADR 0001 and ADR 0002); Jellyfin is the only server adapter. As of 2026-11-24 (`main` at `a10f3f006`, with the `device` module of #965).
+Status: built (ADR 0001 and ADR 0002); Jellyfin is the only server adapter. As of 2026-11-25 (`main` at `07d28476c`, with the catalog port split by role in #967).
 
 ## Start here
 
 - This guide is the "how do I make this change" part. What was built and why is [`docs/architecture/README.md`](../architecture/README.md); the rules are [`rules.md`](../architecture/rules.md), the modules [`modules.md`](../architecture/modules.md). Both are generated: never edit them by hand.
-- Server ports are in `domain/.../domain/ports/` (`MediaServer` with `CatalogPort`, `UserDataPort`, `PlaybackPort`, `ServerSession`; `ServerConnector`; `UserDataSyncPort`). The Jellyfin adapter is `server/jellyfin`, bound in `JellyfinServerModule`.
+- Server ports are in `domain/.../domain/ports/` (`MediaServer` with `ServerSession`, the catalog by role since #967 (`ItemPort`, `ItemListPort`, `ItemExtrasPort`, `ServerInfoPort`), `UserDataPort`, `PlaybackPort`; `ServerConnector`; `UserDataSyncPort`). The Jellyfin adapter is `server/jellyfin`, bound in `JellyfinServerModule`.
 - Store ports are in `application/.../repository/` (`PendingUserDataStore`, and since #967 the roles of the server store, `StoredServers`, `ServerAddresses`, `StoredUsers`, `UserLocks`, and of the download store, `DownloadList`, `DownloadedItemRows`, `DownloadSources`, `DownloadMediaStreams`, `DownloadSegmentsAndTrickplay`, `DownloadUserData`, `QueuedDownloads`), implemented over Room in `data/.../database/` and bound in `DatabaseModule`.
 - The rules are tests in `architecture/` (`./gradlew :architecture:test`). When one fails, fix the code. Never add a line to `architecture/baseline/` to get past it.
-- The fakes and the contract suites are in `testing/` (`FakeMediaServer`, `FakeServerConnector`, `CatalogContract`, …). The fake and the Jellyfin adapter pass the same suites.
+- The fakes and the contract suites are in `testing/` (`FakeMediaServer`, `FakeServerConnector`, `ItemContract`, …). The fake and the Jellyfin adapter pass the same suites.
 - Test fast: `./gradlew :domain:test :application:test :architecture:test` (seconds, no Android), then `./gradlew :testing:test`.
 
 ## What it does
@@ -36,12 +36,12 @@ The apps (`app/phone`, `app/tv`) are the composition root. Features take the rol
 
 ## Recipe 1: an operation on a port, or a new port
 
-An operation on an existing server port (say `CatalogPort`):
+An operation on an existing server port (say `ItemListPort`):
 
 1. Declare it in the port's file in `domain/.../domain/ports/`. Use our own types only: models of `domain`, ids as `ItemId`, `UserId`, `ServerId`, `MediaSourceId`. Say in the KDoc how it fails. Forgotten: R5 fails on an Android or SDK import, R10 on an id typed as `String`.
 2. Implement it in the adapter class (`JellyfinCatalog`, `JellyfinUserData`, `JellyfinPlayback`). Run the request inside the class's `call { … }`, which is `pinnedCall` from `JellyfinCalls.kt`: it holds the request to one `ActiveServer` and turns the SDK's failures into `ServerException` (`asServerException` in `SdkErrors.kt`). Map SDK types in `mappers/`, ids through `SdkIds.kt`, enums through `SdkEnums.kt`. Forgotten: the adapter does not compile. An SDK type in the port's signature fails R1.
 3. Implement it in every other implementation. The compiler names them: `FakeMediaServer` in `testing`, `UnsupportedMediaServer` in `core` (it throws), `UnansweredServer` in `data`'s tests, and test doubles such as those in `CurrentMediaServerTest`. In `FakeMediaServer`, go through its private `call(name)` so that `failWith`, `stall` and the `calls` list work for the new operation.
-4. Add tests to the port's contract suite in `testing` (`CatalogContract`, `UserDataContract`, `PlaybackContract`, `ServerConnectorContract`): what it returns for `ContractLibrary`, and its line in the suite's failure tests (a failing, an unreachable and a stalling server). `./gradlew :testing:test` runs them on the fake.
+4. Add tests to the port's contract suite in `testing` (`ItemContract`, `ItemListContract`, `ItemExtrasContract`, `ServerInfoContract`, `UserDataContract`, `PlaybackContract`, `ServerConnectorContract`): what it returns for `ContractLibrary`, and its line in the suite's failure tests (a failing, an unreachable and a stalling server). `./gradlew :testing:test` runs them on the fake.
 5. Record the adapter's answers. `ContractServer` replays `server/jellyfin/src/test/resources/contract/` and fails a test on a request without a recording. With the Docker test server running (`test-server` skill): `EPHYRA_TEST_SERVER=http://localhost:8096 ./gradlew :server:jellyfin:testDebugUnitTest --tests '*Contract*' -Dcontract.record=true`, as the user `contract` (see [setup-and-servers](setup-and-servers.md), "How to test it"). What the test server does not hold is a `ContractLibrary.Part`, with a recording written by hand (`"handwritten": true`). `ContractRecordingsTest` fails when a recording holds an id, a token or an address of the machine.
 6. If not every server can do it, add a field to `ServerCapabilities` and gate the call on it: no version checks (ADR 0001, decision 9). `FakeMediaServerContractTest.kt` runs the suites with every feature and with none (`NONE` there lists every field).
 7. Call it from `MediaRepositoryImpl` (and declare it on the role it belongs to, recipe 6), or inject the port. A ViewModel never names an adapter class.
@@ -107,7 +107,7 @@ The ones you are most likely to trip:
 - **R1, R2** (`SdkBoundaryTest`): a file outside `server/jellyfin` mentions the SDK's package or imports `JellyfinApi`. Add the operation to a port (recipe 1).
 - **R9, R4** (`DataDependencyTest`, `SdkBoundaryTest`): a feature takes `data` with `implementation`, or imports `ServerDatabaseDao`. Use a store port (recipe 2); for a test, `testImplementation`.
 
-- **R21** (`PortSizeTest`): a port declares more than fifteen functions and properties, its inherited ones included. Split it by role (recipe 6). `architecture/baseline/wide-ports.txt` lists the ports still over, each with its issue.
+- **R21** (`PortSizeTest`): a port declares more than fifteen functions and properties, its inherited ones included. Split it by role (recipe 6). `architecture/baseline/wide-ports.txt` would list a port still over, with its issue; it is empty since #967 split the server's catalog port, the last one.
 
 Also common: R11 for a type named `Jellyfin…` outside the adapter (`NamesTest`), and R17 for `AppPreferences` in `data`, `server/jellyfin`, `ratings/mdblist`, `device` or `downloads` (`AdapterSettingsTest`), and R18 for an adapter that takes a feature module (`AdapterDependencyTest`).
 
@@ -168,6 +168,7 @@ python3 .claude/skills/start-work/scripts/check-docs.py
 - **Not everything is per server type yet.** `ServerSession`, `MediaHttpClient` and `DeviceReportSource` are bound once, to Jellyfin, in `JellyfinServerModule`; `MediaServer`, `ServerConnector` and the sync ports are maps by `ServerType` ([README](../architecture/README.md), "Not done").
 - **A fake built with a proxy and an id.** Ids are value classes, so a function that takes one has a mangled JVM name and a `String` parameter. A fake made with `java.lang.reflect.Proxy` that switches on the method name stops matching without an error: use `fakeProxy` from `ProxyCalls.kt` (#773).
 - **The contract suites are JUnit 4**, because the adapter's subclasses need Robolectric (#699, `testing/build.gradle.kts`). The tests of `domain`, `application` and `architecture` are JUnit Jupiter.
+- **The catalog's parts are one object in the Jellyfin adapter.** `JellyfinMediaServer`, `FakeMediaServer`, `UnsupportedMediaServer` and `UnansweredServer` hand one object as `items`, `itemLists`, `itemExtras` and `info`; another adapter may use four. A test double of `MediaServer` needs all four properties, and `CurrentMediaServerTest` compares each (#967).
 - **A request pinned to a server.** A port a caller takes from `CurrentMediaServer` is held to the `ActiveServer` of that moment (`MediaServer.at`, #899). An adapter call that skips `pinnedCall` follows whatever server is switched to while it runs.
 - **`architecture/` paths are relative to the root.** Agents work in worktrees under `.claude`, so every absolute path there contains `.claude`; a filter on the absolute path would drop every file (`ProjectTree`).
 - **A green `check-docs.py` says that nothing named is gone**, not that a sentence is true (`AGENTS.md`). It does not check that an arrow in the model is the right one, only that the source of A names B.

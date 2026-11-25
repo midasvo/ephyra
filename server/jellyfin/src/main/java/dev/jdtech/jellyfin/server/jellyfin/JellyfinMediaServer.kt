@@ -2,9 +2,12 @@ package dev.jdtech.jellyfin.server.jellyfin
 
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.domain.ports.ActiveServer
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort
+import dev.jdtech.jellyfin.domain.ports.ItemPort
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackPort
+import dev.jdtech.jellyfin.domain.ports.ServerInfoPort
 import dev.jdtech.jellyfin.domain.ports.ServerSession
 import dev.jdtech.jellyfin.domain.ports.UserDataPort
 import dev.jdtech.jellyfin.models.ServerCapabilities
@@ -27,7 +30,12 @@ class JellyfinMediaServer(
     /** #769: Jellyfin has every feature the app knows. */
     override val capabilities: ServerCapabilities = ServerCapabilities.ALL
 
-    override val catalog: CatalogPort = JellyfinCatalog(api, pin)
+    /** #967: one [JellyfinCatalog] is all four parts of the catalog. */
+    private val catalog = JellyfinCatalog(api, pin)
+    override val items: ItemPort = catalog
+    override val itemLists: ItemListPort = catalog
+    override val itemExtras: ItemExtrasPort = catalog
+    override val info: ServerInfoPort = catalog
     override val userData: UserDataPort = JellyfinUserData(api, pin)
     override val playback: PlaybackPort = JellyfinPlayback(api, deviceProfiles, pin)
 

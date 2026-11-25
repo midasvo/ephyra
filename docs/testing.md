@@ -15,7 +15,7 @@ see [What the unit tests do not cover](#what-the-unit-tests-do-not-cover).
 | Pure Kotlin | `domain/src/test/`, `application/src/test/` | The rules and the models, with no Android: `PlayStateTest`, `SyncMergeTest`, `TicksTest`, `IdsTest`, `ReloadPolicyTest` |
 | Architecture rules | `architecture/src/test/` | R1 to R17 of [rules.md](architecture/rules.md), read from the source tree with Konsist and plain file reading. Nothing is compiled first |
 | Generated docs | `GeneratedDocsTest` in `architecture` | That `docs/architecture/modules.md`, `rules.md` and `model/modules.generated.c4` match the build files and the rule tests |
-| Contract suites | `testing/src/main/` | What every implementation of a server port must do: `CatalogContract`, `UserDataContract`, `PlaybackContract` (all three extend `MediaServerContract`) and `ServerConnectorContract` |
+| Contract suites | `testing/src/main/` | What every implementation of a server port must do: `ItemContract`, `ItemListContract`, `ItemExtrasContract`, `ServerInfoContract` (the catalog's roles, #967), `UserDataContract`, `PlaybackContract` (all extend `MediaServerContract`) and `ServerConnectorContract` |
 | Adapter tests | `server/jellyfin/src/test/` | The Jellyfin adapter: the contract suites, the requests it sends, the mapping of SDK types (`ItemMapperGoldenTest`) |
 | Room and repository | `data/src/test/` | The stores and `MediaRepositoryImpl` on an in-memory database, and the migrations (`ServerDatabaseMigrationTest`) |
 | ViewModel and logic | `modes/film`, `setup`, `settings`, `core`, `downloads`, `player/local`, `player/cast`, `ratings/mdblist` | ViewModels with fakes, the download queue, the playlist, both player engines' own logic |
@@ -121,7 +121,7 @@ once per subclass, so more tests run than are written.
 | A user-data rule (played, favourite, resume position, the sync's merge) | The rule goes into `PlayState`, with a test in `PlayStateTest`, `PlayStopTest` or `SyncMergeTest`. R14 (`PlayStateRulesTest`) fails if the rule is written elsewhere. See [user-data](areas/user-data.md) |
 | A new method on a server port | A test in the port's contract suite, an implementation in `FakeMediaServer` and in the Jellyfin adapter, and a recording for the adapter's run. Both runs must pass |
 | A new port | The interface in `domain/.../domain/ports/`, a fake in `testing`, and a suite there when more than one implementation is expected |
-| A new adapter for a server type | Subclass the four suites as `JellyfinContractTests.kt` does. Add mapping tests of its own for what the suites cannot see (the exact request, odd answers) |
+| A new adapter for a server type | Subclass every suite (the seven server suites of the table above) as `JellyfinContractTests.kt` does. Add mapping tests of its own for what the suites cannot see (the exact request, odd answers) |
 | A store (Room behind a port of `application`) | A Robolectric test in `data/src/test/` on an in-memory database, as `RoomServerStoreTest` and `PendingUserDataSyncTest` do |
 | A new Room schema version | `ServerDatabaseMigrationTest`: its target is the highest schema in `data/schemas/`, so a version without a migration fails it. Add the rows the new version must keep |
 | A ViewModel | A test in the same module with `FakeMediaServer` or a small fake, `setMain` and `runTest`: `SearchViewModelTest`, `HomeViewModelUserSwitchTest` |

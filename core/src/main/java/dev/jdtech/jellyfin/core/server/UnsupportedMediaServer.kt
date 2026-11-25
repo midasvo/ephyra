@@ -1,12 +1,15 @@
 package dev.jdtech.jellyfin.core.server
 
 import dev.jdtech.jellyfin.core.presentation.session.NoServerSession
-import dev.jdtech.jellyfin.domain.ports.CatalogPort
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
+import dev.jdtech.jellyfin.domain.ports.ItemListPort
+import dev.jdtech.jellyfin.domain.ports.ItemPort
 import dev.jdtech.jellyfin.domain.ports.ItemQuery
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackPort
 import dev.jdtech.jellyfin.domain.ports.PlaybackReport
 import dev.jdtech.jellyfin.domain.ports.PlaybackRequest
+import dev.jdtech.jellyfin.domain.ports.ServerInfoPort
 import dev.jdtech.jellyfin.domain.ports.ServerSession
 import dev.jdtech.jellyfin.domain.ports.UnsupportedServerTypeException
 import dev.jdtech.jellyfin.domain.ports.UserDataPort
@@ -48,8 +51,9 @@ internal class UnsupportedMediaServer(private val storedType: String) : MediaSer
 
     override val session: ServerSession = NoServerSession
 
-    override val catalog: CatalogPort =
-        object : CatalogPort {
+    /** Every part of the catalog, failing alike. */
+    private val catalog =
+        object : ItemPort, ItemListPort, ItemExtrasPort, ServerInfoPort {
             override suspend fun serverInfo(): ServerInfo = unsupported()
 
             override suspend fun libraries(): List<Library> = unsupported()
@@ -125,6 +129,11 @@ internal class UnsupportedMediaServer(private val storedType: String) : MediaSer
 
             override suspend fun themeSongUrl(itemId: ItemId): String? = unsupported()
         }
+
+    override val items: ItemPort = catalog
+    override val itemLists: ItemListPort = catalog
+    override val itemExtras: ItemExtrasPort = catalog
+    override val info: ServerInfoPort = catalog
 
     override val userData: UserDataPort =
         object : UserDataPort {

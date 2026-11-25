@@ -11,7 +11,16 @@ interface MediaServer {
     val capabilities: ServerCapabilities
 
     val session: ServerSession
-    val catalog: CatalogPort
+
+    /**
+     * #967: the catalog by role, each one port an adapter can implement on its own (the Jellyfin
+     * adapter implements all four with one class).
+     */
+    val items: ItemPort
+    val itemLists: ItemListPort
+    val itemExtras: ItemExtrasPort
+    val info: ServerInfoPort
+
     val userData: UserDataPort
     val playback: PlaybackPort
 

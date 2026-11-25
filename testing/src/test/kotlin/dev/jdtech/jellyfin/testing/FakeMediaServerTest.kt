@@ -29,7 +29,7 @@ class FakeMediaServerTest {
         val refused = async { server.session.unauthorized.first() }
         yield()
 
-        runCatching { server.catalog.item(library.movieWithResume.id) }
+        runCatching { server.items.item(library.movieWithResume.id) }
 
         assertEquals(FakeMediaServer.TOKEN, refused.await())
     }

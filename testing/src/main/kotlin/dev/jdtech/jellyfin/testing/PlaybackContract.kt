@@ -142,7 +142,7 @@ abstract class PlaybackContract : MediaServerContract() {
         server.playback.reportStart(report(movie.id, movie.playbackPositionTicks))
         server.playback.reportStopped(report(movie.id, halfway))
 
-        val position = server.catalog.movie(movie.id).playbackPositionTicks
+        val position = server.items.movie(movie.id).playbackPositionTicks
         // A server may round it to its own resolution.
         assertTrue(kotlin.math.abs(position - halfway) < 10_000_000L, "position $position")
     }

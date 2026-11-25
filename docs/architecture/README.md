@@ -47,7 +47,8 @@ app/phone, app/tv   (composition root, screens)
 
 - `domain` (pure Kotlin): the models without the `Findroid` prefix (`Item`, `Movie`, `ItemSource`,
   `Library`, …), the ids as value classes (`ItemId`, `UserId`, `ServerId`, `MediaSourceId`), the
-  server ports (`MediaServer` with `ServerSession`, `CatalogPort`, `UserDataPort`, `PlaybackPort`;
+  server ports (`MediaServer` with `ServerSession`, the catalog by role as `ItemPort`, `ItemListPort`,
+  `ItemExtrasPort` and `ServerInfoPort` (#967), `UserDataPort`, `PlaybackPort`;
   `ServerConnector`, `UserDataSyncPort`), `ActiveServer`, `ServerCapabilities`, and the two domain
   models with rules: `PlayState` (marks, stops, the sync's merge) and `DownloadState`. `Ticks` for
   the unit conversions.
@@ -82,8 +83,8 @@ ids opaque and renamed the repository and the models at once.
 one fails, fix the code. `architecture/baseline/` has one allowlist, not debt: `uuid-imports.txt`
 (files that may name `java.util.UUID`, for a random value the app makes itself; empty since #918).
 The others are exceptions with an issue each: `pure-kotlin-*.txt` (R19) and
-`room-adapter-imports.txt` (R20), both empty since #968, and `wide-ports.txt` (R21: `CatalogPort`,
-which the third PR of #967 splits). A line is added only with its reason,
+`room-adapter-imports.txt` (R20), both empty since #968, and `wide-ports.txt` (R21), empty since the third PR of #967 split
+the server's catalog port. A line is added only with its reason,
 given in the PR.
 
 | Rule | Says |

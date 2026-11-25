@@ -173,7 +173,7 @@ the stores the downloads and the sync need.
 
 | Context | What it owns | Where it is now | Where it should be |
 |---|---|---|---|
-| Catalog | items, libraries, people, search, home rows | `domain/models`, `CatalogPort`, the read side of `JellyfinRepositoryImpl`, `modes/film` | unchanged |
+| Catalog | items, libraries, people, search, home rows | `domain/models`, the catalog's ports (split by role in #967: `ItemPort`, `ItemListPort`, `ItemExtrasPort`, `ServerInfoPort`), the read side of `JellyfinRepositoryImpl`, `modes/film` | unchanged |
 | Playback | what plays, with which source, the queue, reports, play sessions | `player/*`, `PlaybackPort`, `PlaySessions`, `ResumeThresholds` | unchanged after #766 |
 | User data and sync | played, favourite, position, last played, the pending marks | `domain` + `data` + `core/work` | rules in `domain` (`PlayState`), store behind a port |
 | Downloads | asked, queued, stored items and files, storage | `core/presentation/downloader`, `core/utils/DownloaderImpl`, `data` tables, `modes/film/.../downloads` | state in `domain` (`DownloadState`), store behind a port; a module of its own is optional (T9) |
