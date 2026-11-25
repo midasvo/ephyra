@@ -113,7 +113,7 @@ areas:
       - server/jellyfin/src/main/java/dev/jdtech/jellyfin/server/jellyfin/JellyfinUserData.kt
     rules: [R14, R12, R4, R9]
     tests:
-      - ./gradlew :domain:test :data:testDebugUnitTest
+      - ./gradlew :domain:test :application:test :data:testDebugUnitTest
       - ./gradlew :core:testLibreDebugUnitTest --tests '*Sync*'
 
   - id: cast

@@ -68,6 +68,7 @@ Unit tests, no device (`player/local`, `data` and `server/jellyfin` have no flav
 ```bash
 ./gradlew :player:local:testDebugUnitTest --tests '*Subtitle*' --tests '*Track*' --tests '*StreamSwitches*' --tests '*AudioChoice*' --tests '*SwitchFailureText*' --tests '*PlayerInvariantsTest'
 ./gradlew :application:test --tests '*MediaRepositoryImplTest'
+./gradlew :data:testDebugUnitTest --tests '*RoomStoredReadsTest'
 ./gradlew :server:jellyfin:testDebugUnitTest --tests '*JellyfinDeviceProfilesTest' --tests '*PlaybackSourceMappingTest'
 ./gradlew :core:testLibreDebugUnitTest --tests '*SubtitleStyleTest'
 ```
@@ -92,7 +93,7 @@ The mpv checklist asks for the same item on both backends: resume with the audio
 ```bash
 ./gradlew ktfmtCheck
 ./gradlew :architecture:test
-./gradlew :player:local:testDebugUnitTest :data:testDebugUnitTest :server:jellyfin:testDebugUnitTest
+./gradlew :application:test :player:local:testDebugUnitTest :data:testDebugUnitTest :server:jellyfin:testDebugUnitTest
 ./gradlew :app:phone:compileLibreDebugKotlin :app:tv:compileLibreDebugKotlin
 python3 .claude/skills/translate-strings/scripts/check-translations.py   # when strings changed
 ```
