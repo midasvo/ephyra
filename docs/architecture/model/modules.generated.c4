@@ -12,7 +12,7 @@ model {
       link https://github.com/midasvo/ephyra/tree/main/app/tv 'Source'
     }
     application = application 'application' {
-      description 'Pure Kotlin: the repository\'s roles (ItemCatalog, ItemLists, PlaybackMedia, …), the store ports (the roles of the server and download stores, PendingUserDataStore) and the event flows (DataChangeEvents, ReloadPolicy, …).'
+      description 'Pure Kotlin: the repository\'s roles (ItemCatalog, ItemLists, PlaybackMedia, …) and their implementation MediaRepositoryImpl over the server\'s ports and the stores, the store ports (the roles of the server and download stores, PendingUserDataStore) and the event flows (DataChangeEvents, ReloadPolicy, …).'
       link https://github.com/midasvo/ephyra/tree/main/application 'Source'
     }
     architecture = tooling 'architecture' {
@@ -32,7 +32,7 @@ model {
       link https://github.com/midasvo/ephyra/tree/main/core 'Source'
     }
     data = adapter 'data' {
-      description 'Room: the database, the stores (Room*Store) and MediaRepositoryImpl over the server\'s ports; no SDK, and of Android only Room (R20).'
+      description 'Room: the database and the stores (Room*Store) behind the store ports, and the downloaded files (DownloadedFilesOnDisk); no SDK, and of Android only Room (R20).'
       link https://github.com/midasvo/ephyra/tree/main/data 'Source'
     }
     device = adapter 'device' {
@@ -120,6 +120,7 @@ model {
     appTv -> setup
     appTv -[test]-> testing
     application -> domain
+    application -[test]-> testing
     baselineprofile -> appPhone
     baselineprofileTv -> appTv
     core -> application

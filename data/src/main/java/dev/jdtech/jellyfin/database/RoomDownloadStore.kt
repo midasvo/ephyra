@@ -372,6 +372,9 @@ class RoomDownloadStore(private val database: ServerDatabaseDao) :
 
     override suspend fun runtimeTicks(itemId: ItemId): Long? = database.getRuntimeTicks(itemId)
 
+    override suspend fun allSourcesOfServer(itemId: ItemId, serverId: ServerId): List<ItemSource> =
+        database.getSourcesOfServer(itemId, serverId).map { it.toItemSource(database) }
+
     override suspend fun completedSourcesOfServer(
         itemId: ItemId,
         serverId: ServerId,

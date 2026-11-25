@@ -3,6 +3,7 @@ package dev.jdtech.jellyfin.database
 import android.app.Application
 import androidx.room3.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
+import dev.jdtech.jellyfin.models.ItemFilter
 import dev.jdtech.jellyfin.models.ItemKind
 import dev.jdtech.jellyfin.models.Movie
 import dev.jdtech.jellyfin.models.Segment
@@ -11,6 +12,7 @@ import dev.jdtech.jellyfin.models.SeriesTrackPreference
 import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
 import dev.jdtech.jellyfin.models.toServerId
+import dev.jdtech.jellyfin.models.toUserId
 import dev.jdtech.jellyfin.repository.StoredLibraries
 import dev.jdtech.jellyfin.repository.StoredLibraryNames
 import dev.jdtech.jellyfin.testing.ContractLibrary
@@ -223,4 +225,98 @@ class RoomStoredReadsTest {
             servers.trackPreferences(userId, ContractLibrary.series.id),
         )
     }
+
+    /**
+     * The review of #1010: each read asked for another server gives nothing, with the same read for
+     * the storing server as the control; and the reads of a user's data answer per user.
+     */
+    @Test
+    fun `every stored read of another server gives nothing`() = runBlocking {
+        storeMovie(movie)
+        storeMovie(favorite)
+        storeEpisodes()
+        val series = ContractLibrary.series.id
+        val season = ContractLibrary.season1.id
+        val movies = StoredLibraries.MOVIES
+
+        for ((server, expected) in listOf(serverId to true, otherServer to false)) {
+            val what = "for ${server.value}"
+            assertEquals(expected, store.seasonOfServer(season, server) != null, what)
+            assertEquals(expected, store.seasonsOfShow(series, server).size > 0, what)
+            assertEquals(expected, store.episodesOfSeason(season, server).size > 0, what)
+            assertEquals(expected, store.moviesOfServer(server).size > 0, what)
+            assertEquals(expected, store.showsOfServer(server).size > 0, what)
+            assertEquals(expected, store.search(server, "movie", null, 10).size > 0, what)
+            assertEquals(
+                expected,
+                store.libraries(server, StoredLibraryNames.ENGLISH) { _, _ -> false }.isNotEmpty(),
+                what,
+            )
+            assertEquals(
+                expected,
+                store
+                    .libraryContents(
+                        server,
+                        userId,
+                        movies,
+                        SortBy.NAME,
+                        SortOrder.ASCENDING,
+                        setOf(),
+                    )
+                    .size > 0,
+                what,
+            )
+            assertEquals(
+                expected,
+                store.libraryCount(server, userId, movies, emptySet(), null) > 0,
+                what,
+            )
+        }
+    }
+
+    @Test
+    fun `the favourites, the unplayed filter and the loaded user data are per user`() =
+        runBlocking {
+            storeMovie(movie)
+            storeMovie(favorite)
+            val other = "00000000-0000-0000-0000-0000000000b2".toUserId()
+            store.updatePlayState(userId, movie.id) { it.copy(played = true) }
+            val unplayed = setOf(ItemFilter.IS_UNPLAYED)
+            val movies = StoredLibraries.MOVIES
+
+            assertEquals(1, store.favorites(serverId, userId).size)
+            assertEquals(0, store.favorites(serverId, other).size)
+            assertEquals(
+                listOf(favorite.id),
+                store
+                    .libraryContents(
+                        serverId,
+                        userId,
+                        movies,
+                        SortBy.NAME,
+                        SortOrder.ASCENDING,
+                        unplayed,
+                    )
+                    .load(userId)
+                    .map { it.id },
+            )
+            assertEquals(
+                2,
+                store
+                    .libraryContents(
+                        serverId,
+                        other,
+                        movies,
+                        SortBy.NAME,
+                        SortOrder.ASCENDING,
+                        unplayed,
+                    )
+                    .size,
+            )
+            assertEquals(1, store.libraryCount(serverId, userId, movies, unplayed, null))
+            assertEquals(2, store.libraryCount(serverId, other, movies, unplayed, null))
+            val row = assertNotNull(store.movieOfServer(favorite.id, serverId))
+            assertTrue(row.load(userId).favorite)
+            assertFalse(row.load(other).favorite)
+        }
 }

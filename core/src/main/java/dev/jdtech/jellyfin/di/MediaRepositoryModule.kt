@@ -1,4 +1,4 @@
-package dev.jdtech.jellyfin.data.di
+package dev.jdtech.jellyfin.di
 
 import dagger.Module
 import dagger.Provides
@@ -8,7 +8,6 @@ import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.repository.CurrentAccount
 import dev.jdtech.jellyfin.repository.CurrentServerId
 import dev.jdtech.jellyfin.repository.DownloadSegmentsAndTrickplay
-import dev.jdtech.jellyfin.repository.DownloadSources
 import dev.jdtech.jellyfin.repository.DownloadUserData
 import dev.jdtech.jellyfin.repository.DownloadedFiles
 import dev.jdtech.jellyfin.repository.ItemCatalog
@@ -29,25 +28,23 @@ import dev.jdtech.jellyfin.repository.StoredTrackPreferences
 import dev.jdtech.jellyfin.repository.StoredUsers
 import dev.jdtech.jellyfin.repository.UserDataSyncRequester
 import dev.jdtech.jellyfin.repository.UserDataUpdates
+import dev.jdtech.jellyfin.utils.TimberFallbackLog
+import dev.jdtech.jellyfin.utils.TimberRepositoryLog
 import javax.inject.Singleton
 
 /**
- * The repository over the server in use and Room (#899: moved from `core`'s `RepositoryModule`).
- * What it takes from `core` comes through the ports `core` binds: [UserDataSyncRequester] (the user
- * data sync), [KnownServerState] (the server reachability), [StoredLibraryNames] (the app's
- * strings) and, #918, what it reads of the settings ([CurrentServerId], [NextUpMaxDays],
- * [ResumeThresholdsStore]). The codec probe that was bound here is in `device` (#965). #966: the
- * database through the store roles `DatabaseModule` binds, the downloaded files through
- * [DownloadedFiles]; no DAO and no `Context`.
+ * The repository over the server in use and the stores (#899; #966: here, since the repository is
+ * in `application` and `data` is Room only). It takes the server's parts through [MediaServer]
+ * (`ServerModule`: the adapter of the active server's type), the store roles `DatabaseModule` in
+ * `data` binds, and what `core` binds: [UserDataSyncRequester] (the user data sync),
+ * [KnownServerState] (the server reachability), [StoredLibraryNames] (the app's strings) and, #918,
+ * what it reads of the settings ([CurrentServerId], [NextUpMaxDays], [ResumeThresholdsStore]). It
+ * logs to Timber.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 object MediaRepositoryModule {
 
-    /**
-     * The repository over the server in use: the adapter of its type (#770: `ServerModule`, over
-     * what `JellyfinServerModule` in `server/jellyfin` provides, #758).
-     */
     @Singleton
     @Provides
     fun provideMediaRepositoryImpl(
@@ -55,7 +52,6 @@ object MediaRepositoryModule {
         storedItems: StoredItems,
         storedLists: StoredItemLists,
         storedSources: StoredItemSources,
-        downloadSources: DownloadSources,
         storedSegments: DownloadSegmentsAndTrickplay,
         storedUserData: DownloadUserData,
         trackPreferences: StoredTrackPreferences,
@@ -67,13 +63,12 @@ object MediaRepositoryModule {
         syncRequester: UserDataSyncRequester,
         knownServerState: KnownServerState,
         storedLibraryNames: StoredLibraryNames,
-    ): MediaRepositoryImpl {
-        return MediaRepositoryImpl(
+    ): MediaRepositoryImpl =
+        MediaRepositoryImpl(
             server = server,
             storedItems = storedItems,
             storedLists = storedLists,
             storedSources = storedSources,
-            downloadSources = downloadSources,
             storedSegments = storedSegments,
             storedUserData = storedUserData,
             trackPreferences = trackPreferences,
@@ -85,13 +80,13 @@ object MediaRepositoryModule {
             syncRequester = syncRequester,
             knownServerState = knownServerState,
             storedLibraryNames = storedLibraryNames,
+            fallbackLog = TimberFallbackLog,
+            log = TimberRepositoryLog,
         )
-    }
 
     // #967: one repository, bound as each of its roles. Each binding hands out the one instance
     // above, which holds the play sessions and the resume settings. CE (#281): downloaded items
-    // fall
-    // back to Room when the server is away.
+    // fall back to the stores when the server is away.
 
     @Provides fun provideCurrentAccount(impl: MediaRepositoryImpl): CurrentAccount = impl
 
