@@ -78,7 +78,8 @@ private class FilteringStateFlow(
     private val delegate: StateFlow<SocketConnectionState>,
     private val predicate: (SocketConnectionState) -> Boolean,
 ) : StateFlow<SocketConnectionState> {
-    @Volatile
+    private val lock = Any()
+
     private var lastAccepted: SocketConnectionState =
         delegate.value.takeIf(predicate) ?: SocketConnectionState.Disconnected()
 
@@ -86,20 +87,34 @@ private class FilteringStateFlow(
         get() = listOf(value)
 
     override val value: SocketConnectionState
-        get() {
-            val current = delegate.value
-            if (predicate(current)) {
-                lastAccepted = current
-                return current
+        get() =
+            synchronized(lock) {
+                val current = delegate.value
+                if (predicate(current)) {
+                    lastAccepted = current
+                    current
+                } else {
+                    lastAccepted
+                }
             }
-            return lastAccepted
-        }
 
     override suspend fun collect(collector: FlowCollector<SocketConnectionState>): Nothing {
+        var first = true
         delegate.collect { item ->
             if (predicate(item)) {
-                lastAccepted = item
+                synchronized(lock) {
+                    val current = delegate.value
+                    if (current == item) {
+                        lastAccepted = item
+                    } else if (predicate(current)) {
+                        lastAccepted = current
+                    }
+                }
+                first = false
                 collector.emit(item)
+            } else if (first) {
+                first = false
+                collector.emit(synchronized(lock) { lastAccepted })
             }
         }
     }

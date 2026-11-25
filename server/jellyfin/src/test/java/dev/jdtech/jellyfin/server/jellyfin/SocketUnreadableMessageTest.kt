@@ -2,6 +2,7 @@ package dev.jdtech.jellyfin.server.jellyfin
 
 import android.app.Application
 import dev.jdtech.jellyfin.api.JellyfinApi
+import dev.jdtech.jellyfin.api.SafeSocketConnectionFactory
 import dev.jdtech.jellyfin.domain.ports.ActiveServer
 import dev.jdtech.jellyfin.domain.ports.ActiveServerHolder
 import dev.jdtech.jellyfin.models.ServerType
@@ -203,6 +204,24 @@ class SocketUnreadableMessageTest {
             } finally {
                 keeper.cancel()
             }
+        }
+
+    @Test
+    fun `a new collector starting during an unreadable message receives the previously accepted state`() =
+        runBlocking {
+            val wrapped = SafeSocketConnectionFactory(sockets).create(HttpClientOptions(), this)
+            val rawConn = sockets.made.single()
+
+            rawConn.receive(VALID_PLAYSTATE)
+            assertEquals(SocketConnectionState.Message(VALID_PLAYSTATE), wrapped.state.value)
+
+            val unreadable =
+                """{"MessageType":"SomethingNewer","MessageId":"00000000000000000000000000000006","Data":{}}"""
+            rawConn.receive(unreadable)
+            assertEquals(SocketConnectionState.Message(unreadable), rawConn.state.value)
+
+            val firstState = withTimeout(2_000) { wrapped.state.first() }
+            assertEquals(SocketConnectionState.Message(VALID_PLAYSTATE), firstState)
         }
 
     private class FakeSockets : SocketConnectionFactory {
