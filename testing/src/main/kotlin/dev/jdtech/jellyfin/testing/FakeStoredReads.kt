@@ -228,12 +228,7 @@ class FakeDownloadedFiles : DownloadedFiles {
         index: Int,
     ): ByteArray? {
         // The version whose sheets are read, as on disk: the one asked for, or the first stored.
-        val version =
-            if (mediaSourceId != null)
-                mediaSourceId.takeIf { v ->
-                    sheets.keys.any { it.first == itemId && it.second == v }
-                }
-            else sheets.keys.firstOrNull { it.first == itemId }?.second
+        val version = mediaSourceId ?: sheets.keys.firstOrNull { it.first == itemId }?.second
         val stored = sheets.keys.any { it.first == itemId && it.second == version }
         if (!stored) return null
         // Sheets are stored for that version, but not this one: a read that fails, as on disk.
