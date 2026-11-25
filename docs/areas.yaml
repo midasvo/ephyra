@@ -207,15 +207,17 @@ areas:
   - id: settings
     title: Settings
     summary: "`AppPreferences` (over SharedPreferences), the settings tree and its screens on phone and TV."
-    keywords: [settings, setting, add a setting, preference, preferences, option, toggle, datastore, AppPreferences, SettingsViewModel, AppPreferencesPorts]
+    keywords: [settings, setting, add a setting, preference, preferences, option, toggle, datastore, SharedPreferences, AppPreferences, SettingsViewModel, AppPreferencesPorts, AppVariant, ServerFeature, AppCaches, IntPreferenceBounds, VideoQualities, subtitle style, external ratings, about, clear cache, permissions, mpv.conf]
     paths:
       - settings/src/main/java/dev/jdtech/jellyfin/settings/domain/AppPreferences.kt
       - settings/src/main/java/dev/jdtech/jellyfin/settings/presentation/settings/SettingsViewModel.kt
       - settings/src/main/java/dev/jdtech/jellyfin/settings/presentation/models/
       - app/phone/src/main/java/dev/jdtech/jellyfin/presentation/settings/SettingsScreen.kt
+      - app/tv/src/main/java/dev/jdtech/jellyfin/presentation/settings/SettingsScreen.kt
       - app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/settings/TvSettingsLayout.kt
       - core/src/main/java/dev/jdtech/jellyfin/di/AppPreferencesPorts.kt
-    rules: [R17]
+    docs: [docs/tv-research/adr/0008-tv-flag-in-shared-modules.md]
+    rules: [R17, R18, R1, R2, R10]
     tests:
       - ./gradlew :settings:testDebugUnitTest
       - ./gradlew :app:tv:testLibreDebugUnitTest --tests '*Settings*'
