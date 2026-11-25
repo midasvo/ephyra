@@ -59,7 +59,7 @@ class FakeDownloadUserData : DownloadUserData {
     override suspend fun writeAndMarkToBeSynced(
         userId: UserId,
         itemId: ItemId,
-        change: (PlayState) -> PlayState?,
+        change: (PlayState) -> PlayState,
     ): MarkedUserData {
         updatePlayState(userId, itemId, change)
         val row = rows[userId to itemId] ?: return MarkedUserData(marked = false, written = null)
