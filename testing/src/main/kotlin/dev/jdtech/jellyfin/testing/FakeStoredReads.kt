@@ -85,13 +85,20 @@ class FakeStoredItems : StoredItems {
         seasonId: ItemId,
         serverId: ServerId,
     ): StoredRows<Episode> =
-        FakeStoredRows(of<Episode>(serverId).filter { it.seasonId == seasonId })
+        FakeStoredRows(
+            of<Episode>(serverId).filter { it.seasonId == seasonId }.sortedBy { it.indexNumber }
+        )
 
     override suspend fun episodesOfSeries(
         seriesId: ItemId,
         serverId: ServerId,
     ): StoredRows<Episode> =
-        FakeStoredRows(of<Episode>(serverId).filter { it.seriesId == seriesId })
+        FakeStoredRows(
+            of<Episode>(serverId)
+                .filter { it.seriesId == seriesId }
+                // Season by season, as Room orders them.
+                .sortedWith(compareBy({ it.parentIndexNumber }, { it.indexNumber }))
+        )
 
     override suspend fun moviesOfServer(serverId: ServerId): StoredRows<Movie> =
         FakeStoredRows(of<Movie>(serverId).sortedBy { it.name })
@@ -202,8 +209,9 @@ class FakeStoredTrackPreferences : StoredTrackPreferences {
 }
 
 /**
- * #966: [DownloadedFiles] in memory: the images and the trickplay sheets a test puts. A sheet put
- * without a version is found for any version asked for none.
+ * #966: [DownloadedFiles] in memory: the images and the trickplay sheets a test puts, by item,
+ * version and index. Asked for no version, the first version with sheets is read. A version with
+ * none gives null; a version with sheets but not the one asked for fails, as a read on disk does.
  */
 class FakeDownloadedFiles : DownloadedFiles {
     val images = mutableSetOf<Pair<ItemId, String>>()
@@ -215,11 +223,18 @@ class FakeDownloadedFiles : DownloadedFiles {
         itemId: ItemId,
         mediaSourceId: MediaSourceId?,
         index: Int,
-    ): ByteArray? =
-        sheets[Triple(itemId, mediaSourceId, index)]
-            ?: if (mediaSourceId == null) {
-                sheets.entries
-                    .firstOrNull { it.key.first == itemId && it.key.third == index }
-                    ?.value
-            } else null
+    ): ByteArray? {
+        // The version whose sheets are read, as on disk: the one asked for, or the first stored.
+        val version =
+            if (mediaSourceId != null)
+                mediaSourceId.takeIf { v ->
+                    sheets.keys.any { it.first == itemId && it.second == v }
+                }
+            else sheets.keys.firstOrNull { it.first == itemId }?.second
+        val stored = sheets.keys.any { it.first == itemId && it.second == version }
+        if (!stored) return null
+        // Sheets are stored for that version, but not this one: a read that fails, as on disk.
+        return sheets[Triple(itemId, version, index)]
+            ?: throw java.io.FileNotFoundException("No sheet $index of ${itemId.value}")
+    }
 }

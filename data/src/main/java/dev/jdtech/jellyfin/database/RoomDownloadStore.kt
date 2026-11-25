@@ -281,7 +281,7 @@ class RoomDownloadStore(private val database: ServerDatabaseDao) :
     override suspend fun writeAndMarkToBeSynced(
         userId: UserId,
         itemId: ItemId,
-        change: (PlayState) -> PlayState?,
+        change: (PlayState) -> PlayState,
     ): MarkedUserData {
         var written: PlayState? = null
         val marked =
