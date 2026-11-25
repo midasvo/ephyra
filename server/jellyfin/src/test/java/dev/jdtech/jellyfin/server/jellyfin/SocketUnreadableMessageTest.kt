@@ -26,6 +26,7 @@ import org.jellyfin.sdk.api.sockets.SocketConnectionFactory
 import org.jellyfin.sdk.api.sockets.SocketConnectionState
 import org.jellyfin.sdk.api.sockets.subscribe
 import org.jellyfin.sdk.model.api.PlaystateMessage
+import org.jellyfin.sdk.model.api.SessionsMessage
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -174,6 +175,36 @@ class SocketUnreadableMessageTest {
         }
     }
 
+    @Test
+    fun `a start-required subscription after a rejected message still sends its start request`() =
+        runBlocking {
+            val keeper = launch(Dispatchers.IO) { session.keepAlive().collect {} }
+            try {
+                sockets.awaitConnects(1)
+                val conn = sockets.made.single()
+                conn.receive(VALID_PLAYSTATE)
+                delay(50)
+                conn.receive(
+                    """{"MessageType":"SomethingNewer","MessageId":"00000000000000000000000000000005","Data":{}}"""
+                )
+                delay(50)
+
+                val sessionsCollector = launch {
+                    api.api.webSocket.subscribe<SessionsMessage>().collect {}
+                }
+                try {
+                    withTimeout(2_000) {
+                        while (conn.sent.none { it.contains("SessionsStart") }) delay(10)
+                    }
+                    assertEquals(0, conn.disconnects)
+                } finally {
+                    sessionsCollector.cancel()
+                }
+            } finally {
+                keeper.cancel()
+            }
+        }
+
     private class FakeSockets : SocketConnectionFactory {
         val made: MutableList<Connection> = Collections.synchronizedList(mutableListOf())
         val connects: MutableList<String> = Collections.synchronizedList(mutableListOf())
@@ -191,6 +222,7 @@ class SocketUnreadableMessageTest {
                 MutableStateFlow<SocketConnectionState>(SocketConnectionState.Disconnected())
             override val state: StateFlow<SocketConnectionState> = _state
 
+            val sent: MutableList<String> = Collections.synchronizedList(mutableListOf())
             @Volatile var disconnects = 0
             @Volatile private var open = false
 
@@ -214,7 +246,10 @@ class SocketUnreadableMessageTest {
                 _state.value = SocketConnectionState.Message(raw)
             }
 
-            override suspend fun send(message: String): Boolean = true
+            override suspend fun send(message: String): Boolean {
+                sent += message
+                return true
+            }
 
             override suspend fun disconnect() {
                 if (!open) return

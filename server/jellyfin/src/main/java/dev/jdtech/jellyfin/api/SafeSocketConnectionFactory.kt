@@ -78,13 +78,29 @@ private class FilteringStateFlow(
     private val delegate: StateFlow<SocketConnectionState>,
     private val predicate: (SocketConnectionState) -> Boolean,
 ) : StateFlow<SocketConnectionState> {
+    @Volatile
+    private var lastAccepted: SocketConnectionState =
+        delegate.value.takeIf(predicate) ?: SocketConnectionState.Disconnected()
+
     override val replayCache: List<SocketConnectionState>
         get() = listOf(value)
 
     override val value: SocketConnectionState
-        get() = delegate.value.takeIf(predicate) ?: SocketConnectionState.Connecting
+        get() {
+            val current = delegate.value
+            if (predicate(current)) {
+                lastAccepted = current
+                return current
+            }
+            return lastAccepted
+        }
 
     override suspend fun collect(collector: FlowCollector<SocketConnectionState>): Nothing {
-        delegate.collect { item -> if (predicate(item)) collector.emit(item) }
+        delegate.collect { item ->
+            if (predicate(item)) {
+                lastAccepted = item
+                collector.emit(item)
+            }
+        }
     }
 }
