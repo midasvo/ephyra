@@ -22,8 +22,8 @@ import dev.jdtech.jellyfin.models.Item
 import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
-import dev.jdtech.jellyfin.presentation.utils.ReloadAfterSync
 import dev.jdtech.jellyfin.presentation.utils.ReloadWhenServerAwayChanges
+import dev.jdtech.jellyfin.utils.ReloadAfterSync
 
 @Composable
 fun FavoritesScreen(

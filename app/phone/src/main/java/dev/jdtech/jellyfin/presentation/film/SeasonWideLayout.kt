@@ -114,9 +114,9 @@ import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.presentation.utils.LightStatusBarOverArtwork
 import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
-import dev.jdtech.jellyfin.presentation.utils.ReloadOnResume
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import dev.jdtech.jellyfin.utils.ObserveAsEvents
+import dev.jdtech.jellyfin.utils.ReloadOnResume
 import dev.jdtech.jellyfin.utils.copyOnLongClick
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first

@@ -70,9 +70,9 @@ import dev.jdtech.jellyfin.presentation.film.components.TopContentScrim
 import dev.jdtech.jellyfin.presentation.film.components.showsServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
-import dev.jdtech.jellyfin.presentation.utils.ReloadOnResume
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import dev.jdtech.jellyfin.presentation.utils.showsServerIndicator
+import dev.jdtech.jellyfin.utils.ReloadOnResume
 import kotlinx.coroutines.launch
 
 @Composable

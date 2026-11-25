@@ -82,6 +82,7 @@ import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.ui.components.Direction
 import dev.jdtech.jellyfin.ui.components.ItemCard
 import dev.jdtech.jellyfin.utils.AfterFirstFrame
+import dev.jdtech.jellyfin.utils.ReloadOnResume
 import dev.jdtech.jellyfin.utils.getShowDateString
 import kotlinx.coroutines.launch
 
@@ -103,10 +104,11 @@ fun ShowScreen(
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(true) {
-        if (viewModel.shouldReload(showId)) viewModel.loadShow(showId)
-        viewModel.loadThemeSong(showId)
-    }
+    // On entry, on each return to the page and (CE #660) when the TV wakes from standby or the
+    // screensaver with the page still open, so Next Up and the unplayed counts follow what was
+    // watched elsewhere. Each time only when the page is out of date (ReloadPolicy).
+    ReloadOnResume(shouldReload = { viewModel.shouldReload(showId) }) { viewModel.loadShow(showId) }
+    LaunchedEffect(true) { viewModel.loadThemeSong(showId) }
     val themeMusic = rememberThemeMusic(state.themeSongUrl)
 
     // CE (#332): the rows below the page only once the show is on screen.

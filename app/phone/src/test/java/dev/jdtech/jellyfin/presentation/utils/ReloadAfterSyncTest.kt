@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import dev.jdtech.jellyfin.utils.LocalPlaybackStopped
+import dev.jdtech.jellyfin.utils.ReloadAfterSync
 import kotlin.test.assertEquals
 import kotlinx.coroutines.flow.MutableSharedFlow
 import org.junit.Rule

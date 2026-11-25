@@ -132,18 +132,19 @@ constructor(
      * @param seriesId the season's series, when the caller knows it. Then the season, its episodes
      *   and the series' seasons are all requested at once (#252). Without it, the series is taken
      *   from the season already on screen, or else from the season once it has loaded.
+     * @return the load, so a caller can wait for it (the TV season page on wake, CE #660).
      */
     fun loadSeason(
         seasonId: ItemId,
         downloadsOnly: Boolean = this.downloadsOnly,
         includeSeriesSeasons: Boolean = this.includeSeriesSeasons,
         seriesId: ItemId? = null,
-    ) {
+    ): Job {
         seasonIdOrNull = seasonId
         this.downloadsOnly = downloadsOnly
         this.includeSeriesSeasons = includeSeriesSeasons
         loadJob?.cancel()
-        loadJob = viewModelScope.launch {
+        val job = viewModelScope.launch {
             val token = reloadPolicy.begin()
             val previous = _state.value
             // #769: read on every load, as the server may have changed since.
@@ -229,6 +230,8 @@ constructor(
                 _state.emit(_state.value.copy(error = e, isLoading = false))
             }
         }
+        loadJob = job
+        return job
     }
 
     /**

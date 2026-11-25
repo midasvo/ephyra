@@ -24,7 +24,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,10 +59,13 @@ import coil3.compose.AsyncImage
 import dev.jdtech.jellyfin.ce.ui.PersonCard
 import dev.jdtech.jellyfin.ce.ui.components.TvLoadError
 import dev.jdtech.jellyfin.ce.ui.components.TvOverviewText
+import dev.jdtech.jellyfin.ce.ui.focus.HandOffFocusWhenGone
 import dev.jdtech.jellyfin.ce.ui.focus.NoBringIntoView
 import dev.jdtech.jellyfin.ce.ui.focus.RestoreFocus
 import dev.jdtech.jellyfin.ce.ui.focus.ephyraButtonBorder
 import dev.jdtech.jellyfin.ce.ui.focus.focusPosition
+import dev.jdtech.jellyfin.ce.ui.focus.handsOffFocus
+import dev.jdtech.jellyfin.ce.ui.focus.rememberFocusHandOff
 import dev.jdtech.jellyfin.ce.ui.focus.rememberFocusPosition
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
@@ -83,6 +85,7 @@ import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
 import dev.jdtech.jellyfin.ui.components.Direction
 import dev.jdtech.jellyfin.utils.AfterFirstFrame
+import dev.jdtech.jellyfin.utils.ReloadOnResume
 import dev.jdtech.jellyfin.utils.format
 import kotlinx.coroutines.launch
 
@@ -104,8 +107,11 @@ fun MovieScreen(
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(movieId) {
-        if (viewModel.shouldReload(movieId)) viewModel.loadMovie(movieId = movieId)
+    // On entry, on each return to the page and (CE #660) when the TV wakes from standby or the
+    // screensaver with the page still open, so progress made on another device shows. Each time
+    // only when the page is out of date (ReloadPolicy).
+    ReloadOnResume(shouldReload = { viewModel.shouldReload(movieId) }) {
+        viewModel.loadMovie(movieId = movieId)
     }
 
     // CE (#332): the rows below the page only once the movie is on screen.
@@ -377,12 +383,19 @@ private fun MovieScreenContent(
                                             )
                                     )
                                 }
+                                // CE (#660): a reload on wake can end the progress under Restart.
+                                val restartFocus = rememberFocusHandOff()
+                                HandOffFocusWhenGone(restartFocus, shown = inProgress) {
+                                    focusPosition.save(ROW_BUTTONS, 0)
+                                    focusPosition.requestFocus()
+                                }
                                 if (inProgress) {
                                     Button(
                                         border = ephyraButtonBorder(),
                                         onClick = { play(true) },
                                         modifier =
-                                            Modifier.focusPosition(focusPosition, ROW_BUTTONS, 1),
+                                            Modifier.focusPosition(focusPosition, ROW_BUTTONS, 1)
+                                                .handsOffFocus(restartFocus),
                                     ) {
                                         Icon(
                                             painter =
