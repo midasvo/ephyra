@@ -1,0 +1,133 @@
+name: Live Contract Suites
+
+# Weekly run of the Jellyfin adapter contract suites against a live throwaway Jellyfin server
+# (#952), using tools/test-server/setup.sh and the latest stable Jellyfin Docker image.
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Jellyfin Docker image to test against"
+        required: false
+        default: "jellyfin/jellyfin:latest"
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: live-contracts-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live-contracts:
+    name: Live contract suites
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Start throwaway Jellyfin test server
+        env:
+          EPHYRA_TEST_SERVER_IMAGE: ${{ inputs.image || 'jellyfin/jellyfin:latest' }}
+        run: bash tools/test-server/setup.sh
+
+      - name: Record Jellyfin server version
+        id: server-version
+        shell: python3 {0}
+        run: |
+          import json, os, urllib.request
+          with urllib.request.urlopen("http://localhost:8096/System/Info/Public", timeout=10) as resp:
+              info = json.load(resp)
+          version = info.get("Version", "unknown")
+          image = os.environ.get("EPHYRA_TEST_SERVER_IMAGE", "jellyfin/jellyfin:latest")
+          print(f"Jellyfin version: {version} (image: {image})")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"version={version}\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write(f"### Jellyfin server\n- Image: `{image}`\n- Version: `{version}`\n\n")
+        env:
+          EPHYRA_TEST_SERVER_IMAGE: ${{ inputs.image || 'jellyfin/jellyfin:latest' }}
+
+      - name: Run contract suites live
+        env:
+          EPHYRA_TEST_SERVER: http://localhost:8096
+        run: ./gradlew :server:jellyfin:testDebugUnitTest --tests '*Contract*'
+
+      - name: Summarize test results
+        if: always()
+        shell: python3 {0}
+        run: |
+          import glob, os, xml.etree.ElementTree as ET
+          from collections import Counter
+          totals = Counter()
+          failing = []
+          for path in sorted(glob.glob("server/jellyfin/build/test-results/*/TEST-*.xml")):
+              suite = ET.parse(path).getroot()
+              for key in ("tests", "failures", "errors", "skipped"):
+                  totals[key] += int(suite.get(key, 0))
+              for tc in suite.findall("testcase"):
+                  if tc.find("failure") is not None or tc.find("error") is not None:
+                      failing.append(f"{tc.get('classname')}.{tc.get('name')}")
+          summary_lines = [
+              "| Tests | Failed | Skipped |",
+              "|---:|---:|---:|",
+              f"| {totals['tests']} | {totals['failures'] + totals['errors']} | {totals['skipped']} |",
+          ]
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write("\n".join(summary_lines) + "\n")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("failing_count=" + str(len(failing)) + "\n")
+              out.write("failing_list<<EOF\n" + "\n".join(failing[:25]) + "\nEOF\n")
+        id: results
+
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: live-contract-test-reports
+          path: |
+            server/jellyfin/build/reports/tests/
+            server/jellyfin/build/test-results/
+          retention-days: 7
+
+      - name: Open or update issue on scheduled failure
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JF_VERSION: ${{ steps.server-version.outputs.version }}
+          FAILING: ${{ steps.results.outputs.failing_list }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          TITLE="ci: weekly live contract suites failed"
+          BODY=$(cat <<EOF
+          The weekly live contract suites run failed against Jellyfin \`$JF_VERSION\`.
+
+          - Run: $RUN_URL
+          - Failing tests:
+          \`\`\`
+          $FAILING
+          \`\`\`
+          EOF
+          )
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
+          fi
+
+      - name: Stop throwaway Jellyfin test server
+        if: always()
+        run: bash tools/test-server/setup.sh stop || true
