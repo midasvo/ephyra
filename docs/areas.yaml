@@ -38,7 +38,7 @@ areas:
     rules: [R6, R1, R2, R3, R4, R10, R12]
     tests:
       - ./gradlew :player:local:testDebugUnitTest --tests '*Subtitle*' --tests '*Track*'
-      - ./gradlew :data:testDebugUnitTest --tests '*SeriesTrackPreferenceTest'
+      - ./gradlew :application:test --tests '*MediaRepositoryImplTest'
 
   - id: player
     title: Player
@@ -95,7 +95,8 @@ areas:
     rules: [R13, R15, R9, R4, R10, R1, R2]
     tests:
       - ./gradlew :downloads:testDebugUnitTest
-      - ./gradlew :data:testDebugUnitTest --tests '*StoredFallbackTest' --tests '*StoredItemFallbackTest'
+      - ./gradlew :application:test --tests '*StoredFallbackTest' --tests '*MediaRepositoryImplTest'
+      - ./gradlew :data:testDebugUnitTest --tests '*StoredItemFallbackTest'
 
   - id: user-data
     title: User data and sync

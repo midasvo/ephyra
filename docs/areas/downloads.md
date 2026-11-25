@@ -58,7 +58,8 @@ Unit tests, pure modules first:
 ```bash
 ./gradlew :domain:test :application:test :architecture:test   # DownloadStateTest, R13, R15
 ./gradlew :downloads:testDebugUnitTest                         # DownloadQueue*Test, MediaDownloadEngine*Test, ResumeValidatorsTest, SmartDownloadPlannerTest, OrphanSweep*Test
-./gradlew :data:testDebugUnitTest                              # StoredFallbackTest, StoredItemFallbackTest, UnfinishedDownloadPlaybackTest
+./gradlew :application:test                                    # StoredFallbackTest, MediaRepositoryImplTest (the repository over fakes)
+./gradlew :data:testDebugUnitTest                              # StoredItemFallbackTest, UnfinishedDownloadPlaybackTest (the repository over Room)
 ./gradlew :modes:film:testDebugUnitTest                        # DownloadsViewModelUserSwitchTest, QueueCountsTest, EpisodeDownloadSelectionTest
 ./gradlew :core:testLibreDebugUnitTest                         # DownloadErrorTextTest (core has a libre flavour)
 ./gradlew :app:phone:testLibreDebugUnitTest                    # DownloadQualityDialogTest, DownloadStatusTextTest, ServerUnreachableTest

@@ -1,5 +1,8 @@
 package dev.jdtech.jellyfin.repository
 
+import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
+import dev.jdtech.jellyfin.domain.ports.MediaServer
+import dev.jdtech.jellyfin.domain.ports.PlaybackPort
 import dev.jdtech.jellyfin.domain.userdata.PlayState
 import dev.jdtech.jellyfin.models.ItemSourceType
 import dev.jdtech.jellyfin.models.Library
@@ -14,6 +17,9 @@ import dev.jdtech.jellyfin.models.toUserId
 import dev.jdtech.jellyfin.testing.ContractLibrary
 import dev.jdtech.jellyfin.testing.FakeMediaServer
 import dev.jdtech.jellyfin.testing.FakeRepositoryStores
+import dev.jdtech.jellyfin.testing.fakeRole
+import dev.jdtech.jellyfin.testing.kotlinName
+import java.lang.reflect.Method
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -290,6 +296,36 @@ class MediaRepositoryImplTest {
             assertFailsWith<CancellationException> {
                 withTimeout(100) { repository.getTrickplayData(episode.id, 320, 0) }
             }
+        }
+
+    /**
+     * CE (#821): a cancellation the server's call raises while the caller is still active comes
+     * through as it is. A timeout alone could not show it: `withTimeout` throws whatever the block
+     * returns once it has timed out.
+     */
+    @Test
+    fun `a cancellation the server raises is not swallowed`() =
+        runBlocking<Unit> {
+            val throwing: (Method) -> Nothing = { throw CancellationException(it.kotlinName) }
+            val cancelling =
+                object : MediaServer by server {
+                    override val itemExtras: ItemExtrasPort = fakeRole { _, method, _ ->
+                        throwing(method)
+                    }
+                    override val playback: PlaybackPort = fakeRole { _, method, _ ->
+                        throwing(method)
+                    }
+                }
+            val repository = FakeRepositoryStores().repository(cancelling)
+
+            // The coroutines' stack trace recovery may hand a copy: the message says which call.
+            fun cancelledBy(call: String, block: suspend () -> Any?) = runBlocking {
+                val error = assertFailsWith<CancellationException> { block() }
+                assertEquals(call, error.message)
+            }
+            cancelledBy("themeSongUrl") { repository.getThemeSongUrl(episode.id) }
+            cancelledBy("segments") { repository.getServerSegments(episode.id) }
+            cancelledBy("trickplayTile") { repository.getTrickplayData(episode.id, 320, 0) }
         }
 
     private companion object {

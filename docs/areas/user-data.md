@@ -47,6 +47,7 @@ Playback reports are the other flow: [playback-reporting](playback-reporting.md)
 
 ```bash
 ./gradlew :domain:test :application:test :architecture:test   # PlayStateTest, PlayStopTest, SyncMergeTest, R14
+./gradlew :application:test --tests '*MediaRepositoryImplTest'   # the writes over fakes
 ./gradlew :data:testDebugUnitTest --tests '*PlayStateWritesTest' --tests '*PendingUserDataSyncTest' --tests '*UserDataReportTest'
 ./gradlew :core:testLibreDebugUnitTest --tests '*Sync*'       # SyncWorkerRunTest, SyncWorkerDecisionsTest, LastPlayedDateSyncTest
 ```

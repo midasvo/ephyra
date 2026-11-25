@@ -67,12 +67,12 @@ Unit tests, no device (`player/local`, `data` and `server/jellyfin` have no flav
 
 ```bash
 ./gradlew :player:local:testDebugUnitTest --tests '*Subtitle*' --tests '*Track*' --tests '*StreamSwitches*' --tests '*AudioChoice*' --tests '*SwitchFailureText*' --tests '*PlayerInvariantsTest'
-./gradlew :data:testDebugUnitTest --tests '*SeriesTrackPreferenceTest'
+./gradlew :application:test --tests '*MediaRepositoryImplTest'
 ./gradlew :server:jellyfin:testDebugUnitTest --tests '*JellyfinDeviceProfilesTest' --tests '*PlaybackSourceMappingTest'
 ./gradlew :core:testLibreDebugUnitTest --tests '*SubtitleStyleTest'
 ```
 
-They cover: series matching (`SeriesTrackPreferenceTest`, `SessionTrackPicksTest`, `PlaylistManagerAudioChoiceTest`), names (`TrackNamesTest`), files (`SubtitleFilesTest`, `ImageSubtitleFilesTest` with `src/test/resources/subtitles/`, `SubtitleFileMediaPeriodTest`, `MpvSubtitleFilesTest`), delay (`SubtitleDelayMediaPeriodTest`, `SubtitleReplaySampleStreamTest`), sync cues (`AutoSyncSubtitleCueParserTest`), mpv style (`MpvSubtitleOptionsTest`).
+They cover: series matching (`MediaRepositoryImplTest`, `RoomStoredReadsTest`, `SessionTrackPicksTest`, `PlaylistManagerAudioChoiceTest`), names (`TrackNamesTest`), files (`SubtitleFilesTest`, `ImageSubtitleFilesTest` with `src/test/resources/subtitles/`, `SubtitleFileMediaPeriodTest`, `MpvSubtitleFilesTest`), delay (`SubtitleDelayMediaPeriodTest`, `SubtitleReplaySampleStreamTest`), sync cues (`AutoSyncSubtitleCueParserTest`), mpv style (`MpvSubtitleOptionsTest`).
 
 On the test server ([docs/dev-environment.md](../dev-environment.md), `tools/test-server/setup.sh`, the `test-server` skill):
 
