@@ -54,8 +54,11 @@ See [dev-environment.md](../dev-environment.md) for the full media table, AVD ta
 Checks that run anywhere (no Docker or emulators needed):
 
 ```bash
-bash -n scripts/doctor.sh scripts/avds.sh scripts/tv-dpad.sh scripts/make-track-test-series.sh \
-  tools/test-server/setup.sh tools/test-server/caddy-tls.sh
+for script in scripts/doctor.sh scripts/avds.sh scripts/tv-dpad.sh \
+  scripts/make-track-test-series.sh tools/test-server/setup.sh \
+  tools/test-server/caddy-tls.sh; do
+  bash -n "$script" || exit "$?"
+done
 python3 -m py_compile tools/test-server/configure.py tools/test-server/jf.py \
   tools/test-server/pgs.py tools/test-server/user.py tools/test-server/forward.py
 bash scripts/doctor.sh --help
