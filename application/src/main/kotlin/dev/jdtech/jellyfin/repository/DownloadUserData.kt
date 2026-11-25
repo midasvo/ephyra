@@ -34,14 +34,15 @@ interface DownloadUserData {
     /**
      * #966: applies [change] to the user data of [itemId] for [userId] and marks it to be sent to
      * the server, in one transaction, so the sync's refresh from the server (which leaves marked
-     * rows alone) cannot land in between (CE, #635). Without a row (the item is not stored) or when
-     * [change] answers null, nothing is written. Says whether a row was marked, and what it holds
-     * after the write.
+     * rows alone) cannot land in between (CE, #635). Without a row (the item is not stored) nothing
+     * is written or marked. Says whether a row was marked, and what it holds after the write.
+     * [change] always answers a state: a write that may change nothing would still mark the row,
+     * and a marked row is sent as it is and skipped by the refresh from the server.
      */
     suspend fun writeAndMarkToBeSynced(
         userId: UserId,
         itemId: ItemId,
-        change: (PlayState) -> PlayState?,
+        change: (PlayState) -> PlayState,
     ): MarkedUserData
 
     /** #966: marks the user data of [itemId] for [userId] to be sent; false without a row. */

@@ -27,7 +27,7 @@ suspend fun writeAndReport(
     syncRequester: UserDataSyncRequester,
     userId: UserId,
     itemId: ItemId,
-    change: (PlayState) -> PlayState?,
+    change: (PlayState) -> PlayState,
     report: suspend () -> Unit,
 ): Boolean {
     val marked = userData.writeAndMarkToBeSynced(userId, itemId, change)

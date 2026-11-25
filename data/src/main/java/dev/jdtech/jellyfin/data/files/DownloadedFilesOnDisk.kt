@@ -29,7 +29,9 @@ class DownloadedFilesOnDisk(private val context: Context) : DownloadedFiles {
                 File(context.filesDir, "trickplay/${itemId.asString()}/${mediaSourceId.asString()}")
                     .takeIf { it.isDirectory }
             } else {
-                File(context.filesDir, "trickplay/${itemId.asString()}").listFiles()?.first()
+                // An empty folder holds no sheets (#966: it threw before, and the server was asked
+                // after an error in the log; now the server is asked without one).
+                File(context.filesDir, "trickplay/${itemId.asString()}").listFiles()?.firstOrNull()
             } ?: return null
         return File(source, index.toString()).readBytes()
     }
