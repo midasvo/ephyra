@@ -229,8 +229,8 @@
     <string name="ce_pref_side_backdrop_summary">Na tablete na šírku zobraziť pozadie položky v jeho vlastnom tvare vedľa názvu namiesto cez celú šírku</string>
     <string name="ce_pref_player_quality_group">Kvalita streamovania</string>
     <string name="ce_pref_player_quality_wifi">Na Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet a ďalšie siete, ktoré nie sú merané. Súbory pod limitom sa prehrajú bez zmeny. Kvalita zvolená v prehrávači sa uloží pre typ siete, v ktorej ste</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet a ďalšie siete, ktoré nie sú merané. Súbory pod limitom sa prehrajú bez zmeny, ak ich vaše zariadenie podporuje. Kvalita zvolená v prehrávači sa uloží pre typ siete, v ktorej ste</string>
     <string name="ce_pref_player_quality_mobile">Na mobilných dátach</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobilné dáta a ďalšie merané siete, napríklad hotspot telefónu alebo sieť označená ako meraná. Súbory pod limitom sa prehrajú bez zmeny</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobilné dáta a ďalšie merané siete, napríklad hotspot telefónu alebo sieť označená ako meraná. Súbory pod limitom sa prehrajú bez zmeny, ak ich vaše zariadenie podporuje</string>
     <string name="ce_pref_player_quality_original">Pôvodná kvalita</string>
 </resources>

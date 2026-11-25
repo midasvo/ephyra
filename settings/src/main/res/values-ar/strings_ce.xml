@@ -233,8 +233,8 @@
     <string name="ce_pref_side_backdrop_summary">على الجهاز اللوحي في الوضع الأفقي، اعرض خلفية العنصر بشكلها الأصلي بجانب العنوان بدلاً من امتدادها على كامل العرض</string>
     <string name="ce_pref_player_quality_group">جودة البث</string>
     <string name="ce_pref_player_quality_wifi">على Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi وEthernet والشبكات الأخرى غير المحدودة الاستخدام. الملفات الأقل من الحد تُشغَّل دون تغيير. الجودة التي تختارها في المشغّل تُحفظ لنوع الشبكة التي تستخدمها</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi وEthernet والشبكات الأخرى غير المحدودة الاستخدام. الملفات الأقل من الحد تُشغَّل دون تغيير عندما يدعمها جهازك. الجودة التي تختارها في المشغّل تُحفظ لنوع الشبكة التي تستخدمها</string>
     <string name="ce_pref_player_quality_mobile">على بيانات الجوّال</string>
-    <string name="ce_pref_player_quality_mobile_summary">بيانات الجوّال والشبكات الأخرى محدودة الاستخدام، مثل نقطة اتصال هاتف أو شبكة محددة كمحدودة الاستخدام. الملفات الأقل من الحد تُشغَّل دون تغيير</string>
+    <string name="ce_pref_player_quality_mobile_summary">بيانات الجوّال والشبكات الأخرى محدودة الاستخدام، مثل نقطة اتصال هاتف أو شبكة محددة كمحدودة الاستخدام. الملفات الأقل من الحد تُشغَّل دون تغيير عندما يدعمها جهازك</string>
     <string name="ce_pref_player_quality_original">الجودة الأصلية</string>
 </resources>

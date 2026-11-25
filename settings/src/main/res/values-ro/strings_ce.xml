@@ -227,8 +227,8 @@
     <string name="ce_pref_side_backdrop_summary">Pe o tabletă în modul peisaj, afișează fundalul unui element în forma sa proprie lângă titlu în loc de pe toată lățimea</string>
     <string name="ce_pref_player_quality_group">Calitatea streamingului</string>
     <string name="ce_pref_player_quality_wifi">Pe Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet și alte rețele care nu sunt contorizate. Fișierele sub limită sunt redate fără modificări. Calitatea aleasă în player se salvează pentru tipul de rețea pe care ești</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet și alte rețele care nu sunt contorizate. Fișierele sub limită sunt redate fără modificări atunci când dispozitivul le acceptă. Calitatea aleasă în player se salvează pentru tipul de rețea pe care ești</string>
     <string name="ce_pref_player_quality_mobile">Pe date mobile</string>
-    <string name="ce_pref_player_quality_mobile_summary">Date mobile și alte rețele contorizate, cum ar fi hotspotul unui telefon sau o rețea marcată ca contorizată. Fișierele sub limită sunt redate fără modificări</string>
+    <string name="ce_pref_player_quality_mobile_summary">Date mobile și alte rețele contorizate, cum ar fi hotspotul unui telefon sau o rețea marcată ca contorizată. Fișierele sub limită sunt redate fără modificări atunci când dispozitivul le acceptă</string>
     <string name="ce_pref_player_quality_original">Calitate originală</string>
 </resources>

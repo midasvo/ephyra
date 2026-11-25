@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">Planşet üfüqi vəziyyətdə olanda elementin fon şəklini bütün en boyu deyil, öz formasında başlığın yanında göstər</string>
     <string name="ce_pref_player_quality_group">Yayım keyfiyyəti</string>
     <string name="ce_pref_player_quality_wifi">Wi-Fi-da</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet və ölçülməyən digər şəbəkələr. Limitdən aşağı olan fayllar dəyişdirilmədən oxudulur. Pleyerdə seçilən keyfiyyət qoşulduğunuz şəbəkə növü üçün yadda saxlanılır</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet və ölçülməyən digər şəbəkələr. Limitdən aşağı olan fayllar cihazınız dəstəklədikdə dəyişdirilmədən oxudulur. Pleyerdə seçilən keyfiyyət qoşulduğunuz şəbəkə növü üçün yadda saxlanılır</string>
     <string name="ce_pref_player_quality_mobile">Mobil internetdə</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobil internet və ölçülən digər şəbəkələr, məsələn telefonun hotspotu və ya ölçülən kimi qeyd edilmiş şəbəkə. Limitdən aşağı olan fayllar dəyişdirilmədən oxudulur</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobil internet və ölçülən digər şəbəkələr, məsələn telefonun hotspotu və ya ölçülən kimi qeyd edilmiş şəbəkə. Limitdən aşağı olan fayllar cihazınız dəstəklədikdə dəyişdirilmədən oxudulur</string>
     <string name="ce_pref_player_quality_original">Orijinal keyfiyyət</string>
 </resources>

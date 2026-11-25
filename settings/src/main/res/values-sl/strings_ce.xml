@@ -229,8 +229,8 @@
     <string name="ce_pref_side_backdrop_summary">Na tabličnem računalniku v ležečem načinu prikaži ozadje elementa v njegovi obliki ob naslovu namesto čez celo širino</string>
     <string name="ce_pref_player_quality_group">Kakovost pretakanja</string>
     <string name="ce_pref_player_quality_wifi">Na Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet in druga omrežja, ki niso omejena. Datoteke pod omejitvijo se predvajajo nespremenjeno. Kakovost, izbrana v predvajalniku, se shrani za vrsto omrežja, v katerem ste</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet in druga omrežja, ki niso omejena. Datoteke pod omejitvijo se predvajajo nespremenjeno, če jih vaša naprava podpira. Kakovost, izbrana v predvajalniku, se shrani za vrsto omrežja, v katerem ste</string>
     <string name="ce_pref_player_quality_mobile">Na mobilnih podatkih</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobilni podatki in druga omejena omrežja, na primer dostopna točka telefona ali omrežje, označeno kot omejeno. Datoteke pod omejitvijo se predvajajo nespremenjeno</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobilni podatki in druga omejena omrežja, na primer dostopna točka telefona ali omrežje, označeno kot omejeno. Datoteke pod omejitvijo se predvajajo nespremenjeno, če jih vaša naprava podpira</string>
     <string name="ce_pref_player_quality_original">Izvirna kakovost</string>
 </resources>

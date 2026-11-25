@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">En una tableta en horizontal, muestra el fondo de un elemento con su propia forma junto al título en lugar de a todo el ancho</string>
     <string name="ce_pref_player_quality_group">Calidad de transmisión</string>
     <string name="ce_pref_player_quality_wifi">Con Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet y otras redes que no son de uso medido. Los archivos por debajo del límite se reproducen sin cambios. La calidad que elijas en el reproductor se guarda para el tipo de red en el que estás</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet y otras redes que no son de uso medido. Los archivos por debajo del límite se reproducen sin cambios cuando tu dispositivo los admite. La calidad que elijas en el reproductor se guarda para el tipo de red en el que estás</string>
     <string name="ce_pref_player_quality_mobile">Con datos móviles</string>
-    <string name="ce_pref_player_quality_mobile_summary">Datos móviles y otras redes de uso medido, como el hotspot de un teléfono o una red marcada como de uso medido. Los archivos por debajo del límite se reproducen sin cambios</string>
+    <string name="ce_pref_player_quality_mobile_summary">Datos móviles y otras redes de uso medido, como el hotspot de un teléfono o una red marcada como de uso medido. Los archivos por debajo del límite se reproducen sin cambios cuando tu dispositivo los admite</string>
     <string name="ce_pref_player_quality_original">Calidad original</string>
 </resources>

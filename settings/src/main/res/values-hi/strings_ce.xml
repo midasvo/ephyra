@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">लैंडस्केप में टैबलेट पर, आइटम का बैकड्रॉप पूरी चौड़ाई के बजाय उसके अपने आकार में शीर्षक के बगल में दिखाएँ</string>
     <string name="ce_pref_player_quality_group">स्ट्रीमिंग गुणवत्ता</string>
     <string name="ce_pref_player_quality_wifi">वाई-फ़ाई पर</string>
-    <string name="ce_pref_player_quality_wifi_summary">वाई-फ़ाई, ईथरनेट और दूसरे नेटवर्क जो मीटर्ड नहीं हैं. सीमा से कम बिटरेट वाली फ़ाइलें बिना बदलाव के चलती हैं. प्लेयर में चुनी गई गुणवत्ता उस तरह के नेटवर्क के लिए सहेजी जाती है जिस पर आप हैं</string>
+    <string name="ce_pref_player_quality_wifi_summary">वाई-फ़ाई, ईथरनेट और दूसरे नेटवर्क जो मीटर्ड नहीं हैं. सीमा से कम बिटरेट वाली फ़ाइलें बिना बदलाव के चलती हैं जब आपका डिवाइस उन्हें सपोर्ट करता है. प्लेयर में चुनी गई गुणवत्ता उस तरह के नेटवर्क के लिए सहेजी जाती है जिस पर आप हैं</string>
     <string name="ce_pref_player_quality_mobile">मोबाइल डेटा पर</string>
-    <string name="ce_pref_player_quality_mobile_summary">मोबाइल डेटा और दूसरे मीटर्ड नेटवर्क, जैसे किसी फ़ोन का हॉटस्पॉट या मीटर्ड के रूप में चिह्नित नेटवर्क. सीमा से कम बिटरेट वाली फ़ाइलें बिना बदलाव के चलती हैं</string>
+    <string name="ce_pref_player_quality_mobile_summary">मोबाइल डेटा और दूसरे मीटर्ड नेटवर्क, जैसे किसी फ़ोन का हॉटस्पॉट या मीटर्ड के रूप में चिह्नित नेटवर्क. सीमा से कम बिटरेट वाली फ़ाइलें बिना बदलाव के चलती हैं जब आपका डिवाइस उन्हें सपोर्ट करता है</string>
     <string name="ce_pref_player_quality_original">मूल गुणवत्ता</string>
 </resources>

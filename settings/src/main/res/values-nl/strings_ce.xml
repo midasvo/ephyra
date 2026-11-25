@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">Toon op een tablet in liggende stand de achtergrond van een item in zijn eigen vorm naast de titel in plaats van over de volle breedte</string>
     <string name="ce_pref_player_quality_group">Streamingkwaliteit</string>
     <string name="ce_pref_player_quality_wifi">Op wifi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wifi, ethernet en andere netwerken waarvoor je niet per gebruik betaalt. Bestanden onder de limiet worden ongewijzigd afgespeeld. Een kwaliteit die je in de speler kiest, wordt bewaard voor het soort netwerk waarop je dan zit</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wifi, ethernet en andere netwerken waarvoor je niet per gebruik betaalt. Bestanden onder de limiet worden ongewijzigd afgespeeld als je apparaat ze ondersteunt. Een kwaliteit die je in de speler kiest, wordt bewaard voor het soort netwerk waarop je dan zit</string>
     <string name="ce_pref_player_quality_mobile">Op mobiele data</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobiele data en andere betaalde netwerken, zoals de hotspot van een telefoon of een netwerk dat als betaald netwerk is gemarkeerd. Bestanden onder de limiet worden ongewijzigd afgespeeld</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobiele data en andere betaalde netwerken, zoals de hotspot van een telefoon of een netwerk dat als betaald netwerk is gemarkeerd. Bestanden onder de limiet worden ongewijzigd afgespeeld als je apparaat ze ondersteunt</string>
     <string name="ce_pref_player_quality_original">Originele kwaliteit</string>
 </resources>
