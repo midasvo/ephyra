@@ -5,6 +5,9 @@ name: Live Contract Suites
 on:
   schedule:
     - cron: "0 4 * * 1"
+  pull_request:
+    paths:
+      - ".github/workflows/live-contracts.yml"
   workflow_dispatch:
     inputs:
       image:
@@ -85,6 +88,10 @@ jobs:
               "|---:|---:|---:|",
               f"| {totals['tests']} | {totals['failures'] + totals['errors']} | {totals['skipped']} |",
           ]
+          if failing:
+              summary_lines.append("")
+              summary_lines.append("### Failing tests")
+              summary_lines.extend(f"- `{name}`" for name in failing[:25])
           with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
               summary.write("\n".join(summary_lines) + "\n")
           with open(os.environ["GITHUB_OUTPUT"], "a") as out:
@@ -109,24 +116,28 @@ jobs:
           JF_VERSION: ${{ steps.server-version.outputs.version }}
           FAILING: ${{ steps.results.outputs.failing_list }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: python3 {0}
         run: |
-          TITLE="ci: weekly live contract suites failed"
-          BODY=$(cat <<EOF
-          The weekly live contract suites run failed against Jellyfin \`$JF_VERSION\`.
-
-          - Run: $RUN_URL
-          - Failing tests:
-          \`\`\`
-          $FAILING
-          \`\`\`
-          EOF
+          import json, os, subprocess
+          repo = os.environ["GITHUB_REPOSITORY"]
+          version = os.environ.get("JF_VERSION") or "unknown (setup failed)"
+          failing = (os.environ.get("FAILING") or "").strip() or "(no test results — setup or build failed before tests ran)"
+          run_url = os.environ["RUN_URL"]
+          title = "ci: weekly live contract suites failed"
+          body = (
+              f"The weekly live contract suites run failed against Jellyfin `{version}`.\n\n"
+              f"- Run: {run_url}\n"
+              f"- Failing tests:\n```\n{failing}\n```\n"
           )
-          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number // empty')
-          if [ -n "$EXISTING" ]; then
-            gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body "$BODY"
-          else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
-          fi
+          existing = subprocess.run(
+              ["gh", "issue", "list", "--repo", repo, "--state", "open", "--search", f'in:title "{title}"', "--json", "number"],
+              capture_output=True, text=True, check=True,
+          ).stdout
+          issues = json.loads(existing)
+          if issues:
+              subprocess.run(["gh", "issue", "comment", str(issues[0]["number"]), "--repo", repo, "--body", body], check=True)
+          else:
+              subprocess.run(["gh", "issue", "create", "--repo", repo, "--title", title, "--body", body], check=True)
 
       - name: Stop throwaway Jellyfin test server
         if: always()
