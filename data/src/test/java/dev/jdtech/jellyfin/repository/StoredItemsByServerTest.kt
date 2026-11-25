@@ -60,7 +60,7 @@ class StoredItemsByServerTest {
     private var currentServerId: ServerId? = null
 
     private val repository: MediaRepositoryImpl by lazy {
-        MediaRepositoryImpl(
+        roomMediaRepository(
             context,
             UnansweredServer(userId),
             database,

@@ -1,7 +1,5 @@
 package dev.jdtech.jellyfin.repository
 
-import android.content.Context
-import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.domain.ports.ItemListPort
 import dev.jdtech.jellyfin.domain.ports.ItemQuery
 import dev.jdtech.jellyfin.domain.ports.MediaServer
@@ -32,16 +30,6 @@ import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
 import dev.jdtech.jellyfin.models.UserId
 import dev.jdtech.jellyfin.models.asString
-import dev.jdtech.jellyfin.models.getLocalSourcesForItems
-import dev.jdtech.jellyfin.models.toEpisode
-import dev.jdtech.jellyfin.models.toItemSource
-import dev.jdtech.jellyfin.models.toMovie
-import dev.jdtech.jellyfin.models.toSeason
-import dev.jdtech.jellyfin.models.toSegment
-import dev.jdtech.jellyfin.models.toSeriesTrackPreference
-import dev.jdtech.jellyfin.models.toSeriesTrackPreferenceDto
-import dev.jdtech.jellyfin.models.toShow
-import java.io.File
 import java.time.LocalDateTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -58,14 +46,23 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 /**
- * The server in use composed with Room: every role of the repository in one class (#967), because
- * the roles share its state (the play sessions, the stored lists, the resume settings). Hilt binds
- * each role to the one instance (`MediaRepositoryModule`); nothing outside `data` names this class.
+ * The server in use composed with the stores: every role of the repository in one class (#967),
+ * because the roles share its state (the play sessions, the resume settings, whether anything is
+ * downloaded). Hilt binds each role to the one instance (`MediaRepositoryModule`); nothing outside
+ * `data` names this class. #966: it reads and writes the database through the store roles only and
+ * the downloaded files through [DownloadedFiles]; it takes no `Context`.
  */
 class MediaRepositoryImpl(
-    private val context: Context,
     private val server: MediaServer,
-    private val database: ServerDatabaseDao,
+    private val storedItems: StoredItems,
+    private val storedLists: StoredItemLists,
+    private val storedSources: StoredItemSources,
+    private val downloadSources: DownloadSources,
+    private val storedSegments: DownloadSegmentsAndTrickplay,
+    private val storedUserData: DownloadUserData,
+    private val trackPreferences: StoredTrackPreferences,
+    private val storedUsers: StoredUsers,
+    private val downloadedFiles: DownloadedFiles,
     private val currentServer: CurrentServerId,
     private val nextUpMaxDays: NextUpMaxDays,
     /** CE (#637): the resume settings read from each server, kept for the stops made offline. */
@@ -86,8 +83,6 @@ class MediaRepositoryImpl(
         get() = server.capabilities
 
     private val playSessions = PlaySessions()
-
-    private val storedLists = StoredLists(database)
 
     /**
      * CE (#775): a list Room can answer: straight from Room while the server is known to be away,
@@ -119,24 +114,23 @@ class MediaRepositoryImpl(
         return ItemsResult(items, fromStore)
     }
 
-    /** CE (#781): whether a download saved [image] of [itemId] (ImagesDownloaderWorker). */
-    private fun hasStoredImage(itemId: ItemId, image: String): Boolean =
-        File(context.filesDir, "images/${itemId.asString()}/$image").length() > 0
-
     /**
      * CE (#775): maps stored rows only when they are needed; null when there are none, so the
      * server's error comes through. With [emptyIsAnAnswer] no stored rows is an answer too: the
      * favourites can say "none downloaded", which an empty library or search could not.
      */
     private fun storedItems(
-        serverId: ServerId?,
-        dtos: List<Any>,
+        rows: StoredRows<Item>?,
         emptyIsAnAnswer: Boolean = false,
     ): (suspend () -> List<Item>)? {
-        if (serverId == null) return null
-        if (dtos.isEmpty()) return if (emptyIsAnAnswer) suspend { emptyList() } else null
-        return suspend { storedLists.toItems(dtos, serverId, currentUserId) }
+        if (rows == null) return null
+        if (rows.size == 0) return if (emptyIsAnAnswer) suspend { emptyList() } else null
+        return suspend { rows.load(currentUserId) }
     }
+
+    /** #966: the rows for the current user, read only when there are any, as a map over them. */
+    private suspend fun <T> StoredRows<T>.forCurrentUser(): List<T> =
+        if (size == 0) emptyList() else load(currentUserId)
 
     private fun currentServerId(): ServerId? = currentServer.get()
 
@@ -175,9 +169,9 @@ class MediaRepositoryImpl(
     // a copy stored for the current server: another server can have the same item ids.
     override suspend fun getEpisode(itemId: ItemId): Episode =
         withContext(Dispatchers.IO) {
-            val stored = currentServerId()?.let { database.getEpisodeOfServer(itemId, it) }
+            val stored = currentServerId()?.let { storedItems.episodeOfServer(itemId, it) }
             serverOrStored(
-                stored?.let { dto -> suspend { dto.toEpisode(database, currentUserId) } },
+                stored?.let { row -> suspend { row.load(currentUserId) } },
                 log = TimberFallbackLog,
             ) {
                 server.items.episode(itemId).withLocalSources(localSourcesFor(listOf(itemId)))
@@ -186,9 +180,9 @@ class MediaRepositoryImpl(
 
     override suspend fun getMovie(itemId: ItemId): Movie =
         withContext(Dispatchers.IO) {
-            val stored = currentServerId()?.let { database.getMovieOfServer(itemId, it) }
+            val stored = currentServerId()?.let { storedItems.movieOfServer(itemId, it) }
             serverOrStored(
-                stored?.let { dto -> suspend { dto.toMovie(database, currentUserId) } },
+                stored?.let { row -> suspend { row.load(currentUserId) } },
                 log = TimberFallbackLog,
             ) {
                 server.items.movie(itemId).withLocalSources(localSourcesFor(listOf(itemId)))
@@ -197,9 +191,9 @@ class MediaRepositoryImpl(
 
     override suspend fun getShow(itemId: ItemId): Show =
         withContext(Dispatchers.IO) {
-            val stored = currentServerId()?.let { database.getShowOfServer(itemId, it) }
+            val stored = currentServerId()?.let { storedItems.showOfServer(itemId, it) }
             serverOrStored(
-                stored?.let { dto -> suspend { dto.toShow(database, currentUserId) } },
+                stored?.let { row -> suspend { row.load(currentUserId) } },
                 log = TimberFallbackLog,
             ) {
                 server.items.show(itemId)
@@ -208,9 +202,9 @@ class MediaRepositoryImpl(
 
     override suspend fun getSeason(itemId: ItemId): Season =
         withContext(Dispatchers.IO) {
-            val stored = currentServerId()?.let { database.getSeasonOfServer(itemId, it) }
+            val stored = currentServerId()?.let { storedItems.seasonOfServer(itemId, it) }
             serverOrStored(
-                stored?.let { dto -> suspend { dto.toSeason(database, currentUserId) } },
+                stored?.let { row -> suspend { row.load(currentUserId) } },
                 log = TimberFallbackLog,
             ) {
                 server.items.season(itemId)
@@ -223,7 +217,7 @@ class MediaRepositoryImpl(
             // CE (#781): built only when Room answers, as they look for their artwork.
             val serverId = currentServerId()?.takeIf { storedLists.hasDownloads(it) }
             val stored = serverId?.let { id ->
-                suspend { storedLists.libraries(id, storedLibraryNames, ::hasStoredImage) }
+                suspend { storedLists.libraries(id, storedLibraryNames, downloadedFiles::hasImage) }
             }
             serverOrStoredItems(stored) { server.itemLists.libraries() }
         }
@@ -241,17 +235,17 @@ class MediaRepositoryImpl(
      */
     private suspend fun storedItem(itemId: ItemId): (suspend () -> Item)? {
         val serverId = currentServerId() ?: return null
-        database.getMovieOfServer(itemId, serverId)?.let {
-            return suspend { it.toMovie(database, currentUserId) }
+        storedItems.movieOfServer(itemId, serverId)?.let {
+            return suspend { it.load(currentUserId) }
         }
-        database.getEpisodeOfServer(itemId, serverId)?.let {
-            return suspend { it.toEpisode(database, currentUserId) }
+        storedItems.episodeOfServer(itemId, serverId)?.let {
+            return suspend { it.load(currentUserId) }
         }
-        database.getShowOfServer(itemId, serverId)?.let {
-            return suspend { it.toShow(database, currentUserId) }
+        storedItems.showOfServer(itemId, serverId)?.let {
+            return suspend { it.load(currentUserId) }
         }
-        database.getSeasonOfServer(itemId, serverId)?.let {
-            return suspend { it.toSeason(database, currentUserId) }
+        storedItems.seasonOfServer(itemId, serverId)?.let {
+            return suspend { it.load(currentUserId) }
         }
         return null
     }
@@ -337,9 +331,9 @@ class MediaRepositoryImpl(
         val userId = currentUserId
         val all =
             storedLists.libraryContents(serverId, userId, libraryId, sortBy, sortOrder, filters)
-        val page = all.drop(startIndex ?: 0).let { if (limit != null) it.take(limit) else it }
+        val page = all.slice(startIndex ?: 0, limit)
         return ItemsPage(
-            items = storedLists.toItems(page, serverId, userId),
+            items = page.load(userId),
             totalRecordCount = if (includeTotal) all.size else null,
         )
     }
@@ -401,10 +395,10 @@ class MediaRepositoryImpl(
             // nothing downloaded at all (TV, a phone without downloads) the server's error comes
             // through, as before.
             val serverId = currentServerId()
-            val stored = serverId?.let { storedLists.favorites(it, currentUserId) }.orEmpty()
+            val stored = serverId?.let { storedLists.favorites(it, currentUserId) }
             val noneIsAnAnswer =
-                serverId != null && stored.isEmpty() && storedLists.hasDownloads(serverId)
-            serverOrStoredItems(storedItems(serverId, stored, emptyIsAnAnswer = noneIsAnAnswer)) {
+                serverId != null && stored?.size == 0 && storedLists.hasDownloads(serverId)
+            serverOrStoredItems(storedItems(stored, emptyIsAnAnswer = noneIsAnAnswer)) {
                 server.itemLists.favorites().withLocalSources()
             }
         }
@@ -416,19 +410,16 @@ class MediaRepositoryImpl(
         withContext(Dispatchers.IO) {
             // CE (#775): without the server, the downloads by name.
             val serverId = currentServerId()
-            val stored =
-                serverId
-                    ?.let {
-                        storedLists.search(
-                            it,
-                            query,
-                            itemKinds,
-                            if (itemKinds == null) ItemListPort.SEARCH_LIMIT
-                            else ItemListPort.SEARCH_LIMIT_PER_KIND,
-                        )
-                    }
-                    .orEmpty()
-            serverOrStoredItems(storedItems(serverId, stored)) {
+            val stored = serverId?.let {
+                storedLists.search(
+                    it,
+                    query,
+                    itemKinds,
+                    if (itemKinds == null) ItemListPort.SEARCH_LIMIT
+                    else ItemListPort.SEARCH_LIMIT_PER_KIND,
+                )
+            }
+            serverOrStoredItems(storedItems(stored)) {
                 server.itemLists.search(query, itemKinds).withLocalSources()
             }
         }
@@ -454,9 +445,7 @@ class MediaRepositoryImpl(
             } else {
                 // CE (#718): the current server's stored seasons only.
                 val serverId = currentServerId() ?: return@withContext emptyList()
-                database.getSeasonsByShowIdOfServer(seriesId, serverId).map {
-                    it.toSeason(database, currentUserId)
-                }
+                storedItems.seasonsOfShow(seriesId, serverId).forCurrentUser()
             }
         }
 
@@ -490,9 +479,9 @@ class MediaRepositoryImpl(
                 // CE (#718): the current server's stored episodes only.
                 val serverId = currentServerId() ?: return@withContext emptyList()
                 val episodes =
-                    if (seasonId != null) database.getEpisodesBySeasonIdOfServer(seasonId, serverId)
-                    else database.getEpisodesByShowIdOfServer(seriesId, serverId)
-                episodes.map { it.toEpisode(database, currentUserId) }
+                    if (seasonId != null) storedItems.episodesOfSeason(seasonId, serverId)
+                    else storedItems.episodesOfSeries(seriesId, serverId)
+                episodes.forCurrentUser()
             }
         }
 
@@ -519,7 +508,9 @@ class MediaRepositoryImpl(
             // CE (#718): the current server's download of the item, not another server's.
             currentServerId()?.let { serverId ->
                 sources.addAll(
-                    database.getSourcesOfServer(itemId, serverId).map { it.toItemSource(database) }
+                    downloadSources.sourcesOfServer(itemId, serverId).map {
+                        downloadSources.itemSource(it)
+                    }
                 )
             }
             sources
@@ -540,9 +531,8 @@ class MediaRepositoryImpl(
             // and only a download stored for the current server.
             val localSources =
                 currentServerId()
-                    ?.let { database.getCompletedSources(itemId, it) }
+                    ?.let { storedSources.completedSourcesOfServer(itemId, it) }
                     .orEmpty()
-                    .map { it.toItemSource(database) }
             if (
                 localSources.isNotEmpty() &&
                     (mediaSourceId == null || localSources.any { it.id == mediaSourceId })
@@ -568,22 +558,16 @@ class MediaRepositoryImpl(
         }
 
     override suspend fun getSeriesTrackPreferences(seriesId: ItemId): List<SeriesTrackPreference> =
-        withContext(Dispatchers.IO) {
-            database.getSeriesTrackPreferences(currentUserId, seriesId).map {
-                it.toSeriesTrackPreference()
-            }
-        }
+        withContext(Dispatchers.IO) { trackPreferences.trackPreferences(currentUserId, seriesId) }
 
     override suspend fun saveSeriesTrackPreference(preference: SeriesTrackPreference) =
         withContext(Dispatchers.IO) {
-            database.insertSeriesTrackPreference(
-                preference.copy(userId = currentUserId).toSeriesTrackPreferenceDto()
-            )
+            trackPreferences.saveTrackPreference(preference.copy(userId = currentUserId))
         }
 
     override suspend fun getSegments(itemId: ItemId): List<Segment> =
         withContext(Dispatchers.IO) {
-            val databaseSegments = database.getSegments(itemId).map { it.toSegment() }
+            val databaseSegments = storedSegments.segments(itemId)
 
             if (databaseSegments.isNotEmpty()) {
                 return@withContext databaseSegments
@@ -617,20 +601,8 @@ class MediaRepositoryImpl(
                 try {
                     // CE (#860): the sheets of the version asked for, not those of whichever
                     // version the folder lists first; a version not downloaded goes to the server.
-                    val source =
-                        if (mediaSourceId != null) {
-                            File(
-                                    context.filesDir,
-                                    "trickplay/${itemId.asString()}/${mediaSourceId.asString()}",
-                                )
-                                .takeIf { it.isDirectory }
-                        } else {
-                            File(context.filesDir, "trickplay/${itemId.asString()}")
-                                .listFiles()
-                                ?.first()
-                        }
-                    if (source != null) {
-                        return@withContext File(source, index.toString()).readBytes()
+                    downloadedFiles.trickplaySheet(itemId, mediaSourceId, index)?.let {
+                        return@withContext it
                     }
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to read local trickplay data")
@@ -725,7 +697,7 @@ class MediaRepositoryImpl(
                 PlayStop.of(
                     positionTicks,
                     playedPercentage,
-                    runtimeTicks = database.getRuntimeTicks(itemId),
+                    runtimeTicks = storedItems.runtimeTicks(itemId),
                     thresholds = resumeThresholds.get(currentServerId()),
                 )
             val stop = suspend {
@@ -826,7 +798,7 @@ class MediaRepositoryImpl(
                 ) {
                     it.markedUnplayed(markedAt)
                 }
-            database.updatePlayState(userId, itemId) { it.afterUnplayedReport(reached) }
+            storedUserData.updatePlayState(userId, itemId) { it.afterUnplayedReport(reached) }
         }
     }
 
@@ -841,14 +813,7 @@ class MediaRepositoryImpl(
         userId: UserId = currentUserId,
         change: (PlayState) -> PlayState,
     ): Boolean {
-        return writeAndReport(
-            database,
-            syncRequester,
-            userId,
-            itemId,
-            { updatePlayState(userId, itemId, change) },
-            report,
-        )
+        return writeAndReport(storedUserData, syncRequester, userId, itemId, change, report)
     }
 
     override fun chapterImageUrl(itemId: ItemId, chapterIndex: Int, tag: String) =
@@ -860,7 +825,7 @@ class MediaRepositoryImpl(
         // The row of the user the server answered for, which is the one whose token went out: a
         // switch of user around the request cannot give the tag to another user's row.
         val image = server.session.currentUserImage()
-        withContext(Dispatchers.IO) { database.updateUserPrimaryImageTag(image.userId, image.tag) }
+        withContext(Dispatchers.IO) { storedUsers.setUserImageTag(image.userId, image.tag) }
     }
 
     // #769: the player asks here; a server without the setting has none, as the interface says.
@@ -871,12 +836,8 @@ class MediaRepositoryImpl(
         withContext(Dispatchers.IO) {
             val serverId = currentServer.get() ?: return@withContext emptyList()
             val items = mutableListOf<Item>()
-            items.addAll(
-                database.getMoviesByServerId(serverId).map { it.toMovie(database, currentUserId) }
-            )
-            items.addAll(
-                database.getShowsByServerId(serverId).map { it.toShow(database, currentUserId) }
-            )
+            items.addAll(storedItems.moviesOfServer(serverId).forCurrentUser())
+            items.addAll(storedItems.showsOfServer(serverId).forCurrentUser())
             items
         }
 
@@ -890,7 +851,7 @@ class MediaRepositoryImpl(
      * first value arrives.
      */
     private val hasLocalSources: StateFlow<Boolean?> =
-        database
+        storedSources
             .observeHasSources()
             .map<Boolean, Boolean?> { it }
             .catch { Timber.w(it, "Couldn't observe the sources table") }
@@ -903,8 +864,8 @@ class MediaRepositoryImpl(
      */
     private suspend fun localSourcesFor(itemIds: List<ItemId>): Map<ItemId, List<ItemSource>> {
         val serverId = currentServerId() ?: return emptyMap()
-        val any = hasLocalSources.value ?: database.hasSources()
-        return if (any) database.getLocalSourcesForItems(itemIds, serverId) else emptyMap()
+        val any = hasLocalSources.value ?: storedSources.hasSources()
+        return if (any) storedSources.localSourcesOfServer(itemIds, serverId) else emptyMap()
     }
 
     /**

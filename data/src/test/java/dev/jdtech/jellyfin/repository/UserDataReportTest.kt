@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.room3.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
+import dev.jdtech.jellyfin.database.RoomDownloadStore
 import dev.jdtech.jellyfin.database.ServerDatabase
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
 import dev.jdtech.jellyfin.models.ItemId
@@ -85,11 +86,11 @@ class UserDataReportTest {
         request: suspend () -> Unit = {},
     ): Boolean =
         writeAndReport(
-            database,
+            RoomDownloadStore(database),
             syncRequester,
             userId,
             itemId,
-            write = { setPlaybackPositionTicks(itemId, userId, positionTicks) },
+            change = { it.copy(positionTicks = positionTicks) },
             report = request,
         )
 

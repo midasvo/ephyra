@@ -220,7 +220,7 @@ internal fun StandInServer.repository(
             userId = StandInServer.USER_ID.toUuid()
         }
     val jellyfin = JellyfinMediaServer(api, JellyfinDeviceProfiles(DeviceCodecProbe(context)))
-    return MediaRepositoryImpl(
+    return roomMediaRepository(
         context,
         object : MediaServer by jellyfin {
             override val capabilities = capabilities

@@ -6,7 +6,7 @@ import dev.jdtech.jellyfin.models.Chapter
 import dev.jdtech.jellyfin.models.Episode
 import dev.jdtech.jellyfin.models.ItemKind
 import dev.jdtech.jellyfin.models.ServerException
-import dev.jdtech.jellyfin.repository.MediaRepositoryImpl
+import dev.jdtech.jellyfin.repository.roomMediaRepository
 import dev.jdtech.jellyfin.testing.ContractLibrary
 import dev.jdtech.jellyfin.testing.FakeLibrary
 import dev.jdtech.jellyfin.testing.FakeMediaServer
@@ -72,7 +72,7 @@ class PlaylistManagerNextUpTest {
     }
 
     private fun repository() =
-        MediaRepositoryImpl(
+        roomMediaRepository(
             context = ContextWrapper(null),
             server = server,
             database = noDownloads(),
