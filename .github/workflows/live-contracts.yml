@@ -68,7 +68,7 @@ jobs:
       - name: Run contract suites live
         env:
           EPHYRA_TEST_SERVER: http://localhost:8096
-        run: ./gradlew :server:jellyfin:testDebugUnitTest --tests '*Contract*'
+        run: ./gradlew :server:jellyfin:testDebugUnitTest --tests '*Contract*' --rerun
 
       - name: Summarize test results
         if: always()
