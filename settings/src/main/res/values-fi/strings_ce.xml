@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">Näytä tabletilla vaakatilassa kohteen taustakuva sen omassa muodossa otsikon vieressä koko leveyden sijaan</string>
     <string name="ce_pref_player_quality_group">Suoratoiston laatu</string>
     <string name="ce_pref_player_quality_wifi">Wi-Fi-yhteydellä</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet ja muut verkot, jotka eivät ole käyttöpohjaisia. Soittimessa valittu laatu tallennetaan sen tyyppiselle verkolle, jossa olet</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet ja muut verkot, jotka eivät ole käyttöpohjaisia. Rajan alle jäävät tiedostot toistetaan sellaisinaan, kun laitteesi tukee niitä. Soittimessa valittu laatu tallennetaan sen tyyppiselle verkolle, jossa olet</string>
     <string name="ce_pref_player_quality_mobile">Mobiilidatalla</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobiilidata ja muut käyttöpohjaiset verkot, kuten puhelimen hotspot tai käyttöpohjaiseksi merkitty verkko</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobiilidata ja muut käyttöpohjaiset verkot, kuten puhelimen hotspot tai käyttöpohjaiseksi merkitty verkko. Rajan alle jäävät tiedostot toistetaan sellaisinaan, kun laitteesi tukee niitä</string>
     <string name="ce_pref_player_quality_original">Alkuperäinen laatu</string>
 </resources>

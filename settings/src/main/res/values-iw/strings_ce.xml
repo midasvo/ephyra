@@ -227,8 +227,8 @@
     <string name="ce_pref_side_backdrop_summary">בטאבלט במצב לרוחב, הצג את הרקע של פריט בצורתו המקורית לצד הכותרת במקום לכל הרוחב</string>
     <string name="ce_pref_player_quality_group">איכות סטרימינג</string>
     <string name="ce_pref_player_quality_wifi">ב-Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet ורשתות אחרות שאינן מוגבלות. איכות שנבחרה בנגן נשמרת עבור סוג הרשת שבה אתה נמצא</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet ורשתות אחרות שאינן מוגבלות. קבצים מתחת למגבלה מנוגנים ללא שינוי כשהמכשיר תומך בהם. איכות שנבחרה בנגן נשמרת עבור סוג הרשת שבה אתה נמצא</string>
     <string name="ce_pref_player_quality_mobile">בחבילת גלישה</string>
-    <string name="ce_pref_player_quality_mobile_summary">חבילת גלישה ורשתות מוגבלות אחרות, כמו נקודה חמה של טלפון או רשת שמסומנת כמוגבלת</string>
+    <string name="ce_pref_player_quality_mobile_summary">חבילת גלישה ורשתות מוגבלות אחרות, כמו נקודה חמה של טלפון או רשת שמסומנת כמוגבלת. קבצים מתחת למגבלה מנוגנים ללא שינוי כשהמכשיר תומך בהם</string>
     <string name="ce_pref_player_quality_original">איכות מקורית</string>
 </resources>

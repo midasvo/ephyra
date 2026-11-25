@@ -114,7 +114,7 @@ private fun SettingsIntSelectCardPreview() {
                                 UiText.StringResource(
                                     SettingsR.string.ce_pref_player_quality_original
                                 ),
-                            8_000_000 to UiText.DynamicString("720p - 8 Mbps"),
+                            8_000_000 to UiText.DynamicString("8 Mbps"),
                         ),
                     value = 8_000_000,
                 ),

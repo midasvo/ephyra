@@ -223,8 +223,8 @@
     <string name="ce_pref_side_backdrop_summary">Di tablet dalam mode lanskap, tampilkan latar item dalam bentuk aslinya di samping judul, bukan selebar layar</string>
     <string name="ce_pref_player_quality_group">Kualitas streaming</string>
     <string name="ce_pref_player_quality_wifi">Di Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet, dan jaringan lain yang tidak berkuota. Kualitas yang dipilih di pemutar disimpan untuk jenis jaringan yang sedang Anda gunakan</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet, dan jaringan lain yang tidak berkuota. Berkas di bawah batas diputar tanpa perubahan bila perangkat Anda mendukungnya. Kualitas yang dipilih di pemutar disimpan untuk jenis jaringan yang sedang Anda gunakan</string>
     <string name="ce_pref_player_quality_mobile">Di data seluler</string>
-    <string name="ce_pref_player_quality_mobile_summary">Data seluler dan jaringan berkuota lainnya, seperti hotspot ponsel atau jaringan yang ditandai sebagai berkuota</string>
+    <string name="ce_pref_player_quality_mobile_summary">Data seluler dan jaringan berkuota lainnya, seperti hotspot ponsel atau jaringan yang ditandai sebagai berkuota. Berkas di bawah batas diputar tanpa perubahan bila perangkat Anda mendukungnya</string>
     <string name="ce_pref_player_quality_original">Kualitas asli</string>
 </resources>

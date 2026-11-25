@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">På en tablet i liggende format vises et elements baggrund i sin egen form ved siden af titlen i stedet for i fuld bredde</string>
     <string name="ce_pref_player_quality_group">Streamingkvalitet</string>
     <string name="ce_pref_player_quality_wifi">På wi-fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-fi, Ethernet og andre netværk uden forbrugsafregning. En kvalitet valgt i afspilleren gemmes for den type netværk, du er på</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-fi, Ethernet og andre netværk uden forbrugsafregning. Filer under grænsen afspilles uændret, når din enhed understøtter dem. En kvalitet valgt i afspilleren gemmes for den type netværk, du er på</string>
     <string name="ce_pref_player_quality_mobile">På mobildata</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobildata og andre netværk med forbrugsafregning, f.eks. en telefons hotspot eller et netværk markeret som forbrugsafregnet</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobildata og andre netværk med forbrugsafregning, f.eks. en telefons hotspot eller et netværk markeret som forbrugsafregnet. Filer under grænsen afspilles uændret, når din enhed understøtter dem</string>
     <string name="ce_pref_player_quality_original">Original kvalitet</string>
 </resources>

@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">На таблет в хоризонтален режим показвай фона на елемента в собствената му форма до заглавието вместо по цялата ширина</string>
     <string name="ce_pref_player_quality_group">Качество на поточното видео</string>
     <string name="ce_pref_player_quality_wifi">При Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet и други мрежи, които не са отчитани. Качеството, избрано в плейъра, се запазва за вида мрежа, в която сте</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet и други мрежи, които не са отчитани. Файловете под ограничението се възпроизвеждат без промяна, когато устройството ви ги поддържа. Качеството, избрано в плейъра, се запазва за вида мрежа, в която сте</string>
     <string name="ce_pref_player_quality_mobile">При мобилни данни</string>
-    <string name="ce_pref_player_quality_mobile_summary">Мобилни данни и други отчитани мрежи, например точка за достъп от телефон или мрежа, отбелязана като отчитана</string>
+    <string name="ce_pref_player_quality_mobile_summary">Мобилни данни и други отчитани мрежи, например точка за достъп от телефон или мрежа, отбелязана като отчитана. Файловете под ограничението се възпроизвеждат без промяна, когато устройството ви ги поддържа</string>
     <string name="ce_pref_player_quality_original">Оригинално качество</string>
 </resources>

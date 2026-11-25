@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">En una tauleta en horitzontal, mostra el fons d\'un element amb la seva forma pròpia al costat del títol en lloc d\'ocupar tota l\'amplada</string>
     <string name="ce_pref_player_quality_group">Qualitat de reproducció en línia</string>
     <string name="ce_pref_player_quality_wifi">Amb Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet i altres xarxes que no són d\'ús mesurat. La qualitat que triïs al reproductor es desa per al tipus de xarxa on ets</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet i altres xarxes que no són d\'ús mesurat. Els fitxers per sota del límit es reprodueixen sense canvis quan el dispositiu els admet. La qualitat que triïs al reproductor es desa per al tipus de xarxa on ets</string>
     <string name="ce_pref_player_quality_mobile">Amb dades mòbils</string>
-    <string name="ce_pref_player_quality_mobile_summary">Dades mòbils i altres xarxes d\'ús mesurat, com el punt d\'accés d\'un telèfon o una xarxa marcada com a d\'ús mesurat</string>
+    <string name="ce_pref_player_quality_mobile_summary">Dades mòbils i altres xarxes d\'ús mesurat, com el punt d\'accés d\'un telèfon o una xarxa marcada com a d\'ús mesurat. Els fitxers per sota del límit es reprodueixen sense canvis quan el dispositiu els admet</string>
     <string name="ce_pref_player_quality_original">Qualitat original</string>
 </resources>

@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">På nettbrett i liggjande format, vis bakgrunnen til eit element i si eiga form ved sida av tittelen i staden for over heile breidda</string>
     <string name="ce_pref_player_quality_group">Strøymekvalitet</string>
     <string name="ce_pref_player_quality_wifi">På Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet og andre nettverk som ikkje er forbruksmålte. Ein kvalitet du vel i avspelaren, blir lagra for den typen nettverk du er på</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet og andre nettverk som ikkje er forbruksmålte. Filer under grensa blir spelte av uendra når eininga di støttar dei. Ein kvalitet du vel i avspelaren, blir lagra for den typen nettverk du er på</string>
     <string name="ce_pref_player_quality_mobile">På mobildata</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobildata og andre forbruksmålte nettverk, til dømes tilgangspunktet på ein telefon eller eit nettverk merkt som forbruksmålt</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobildata og andre forbruksmålte nettverk, til dømes tilgangspunktet på ein telefon eller eit nettverk merkt som forbruksmålt. Filer under grensa blir spelte av uendra når eininga di støttar dei</string>
     <string name="ce_pref_player_quality_original">Original kvalitet</string>
 </resources>

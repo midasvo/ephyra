@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">Yatay konumdaki tablette, öğenin arka planını tam genişlik yerine kendi biçiminde başlığın yanında göster</string>
     <string name="ce_pref_player_quality_group">Akış kalitesi</string>
     <string name="ce_pref_player_quality_wifi">Wi-Fi\'da</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet ve sınırlı olmayan diğer ağlar. Oynatıcıda seçilen kalite, o anda bağlı olduğunuz ağ türü için kaydedilir</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet ve sınırlı olmayan diğer ağlar. Sınırın altındaki dosyalar cihazınız desteklediğinde değiştirilmeden oynatılır. Oynatıcıda seçilen kalite, o anda bağlı olduğunuz ağ türü için kaydedilir</string>
     <string name="ce_pref_player_quality_mobile">Mobil veride</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobil veri ve sınırlı diğer ağlar, örneğin bir telefonun erişim noktası veya sınırlı olarak işaretlenmiş bir ağ</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobil veri ve sınırlı diğer ağlar, örneğin bir telefonun erişim noktası veya sınırlı olarak işaretlenmiş bir ağ. Sınırın altındaki dosyalar cihazınız desteklediğinde değiştirilmeden oynatılır</string>
     <string name="ce_pref_player_quality_original">Orijinal kalite</string>
 </resources>

@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">Num tablet na horizontal, mostrar o fundo de um item na sua própria forma ao lado do título em vez de em toda a largura</string>
     <string name="ce_pref_player_quality_group">Qualidade de streaming</string>
     <string name="ce_pref_player_quality_wifi">Em Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet e outras redes que não são limitadas. A qualidade escolhida no leitor é guardada para o tipo de rede em que está</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet e outras redes que não são limitadas. Os ficheiros abaixo do limite são reproduzidos sem alterações quando o seu dispositivo os suporta. A qualidade escolhida no leitor é guardada para o tipo de rede em que está</string>
     <string name="ce_pref_player_quality_mobile">Em dados móveis</string>
-    <string name="ce_pref_player_quality_mobile_summary">Dados móveis e outras redes limitadas, como o hotspot de um telemóvel ou uma rede marcada como limitada</string>
+    <string name="ce_pref_player_quality_mobile_summary">Dados móveis e outras redes limitadas, como o hotspot de um telemóvel ou uma rede marcada como limitada. Os ficheiros abaixo do limite são reproduzidos sem alterações quando o seu dispositivo os suporta</string>
     <string name="ce_pref_player_quality_original">Qualidade original</string>
 </resources>

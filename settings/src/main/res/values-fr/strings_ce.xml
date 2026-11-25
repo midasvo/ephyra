@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">Sur une tablette en paysage, afficher l\'arrière-plan d\'un élément dans sa propre forme à côté du titre au lieu de toute la largeur</string>
     <string name="ce_pref_player_quality_group">Qualité du streaming</string>
     <string name="ce_pref_player_quality_wifi">En Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet et autres réseaux non limités. Une qualité choisie dans le lecteur est enregistrée pour le type de réseau sur lequel vous êtes</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet et autres réseaux non limités. Les fichiers en dessous de la limite sont lus sans modification lorsque votre appareil les prend en charge. Une qualité choisie dans le lecteur est enregistrée pour le type de réseau sur lequel vous êtes</string>
     <string name="ce_pref_player_quality_mobile">Sur les données mobiles</string>
-    <string name="ce_pref_player_quality_mobile_summary">Données mobiles et autres réseaux limités, comme le point d\'accès d\'un téléphone ou un réseau marqué comme limité</string>
+    <string name="ce_pref_player_quality_mobile_summary">Données mobiles et autres réseaux limités, comme le point d\'accès d\'un téléphone ou un réseau marqué comme limité. Les fichiers en dessous de la limite sont lus sans modification lorsque votre appareil les prend en charge</string>
     <string name="ce_pref_player_quality_original">Qualité d\'origine</string>
 </resources>

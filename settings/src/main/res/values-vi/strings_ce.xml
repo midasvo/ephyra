@@ -223,8 +223,8 @@
     <string name="ce_pref_side_backdrop_summary">Trên máy tính bảng ở chế độ ngang, hiển thị ảnh nền của mục theo đúng hình dạng bên cạnh tiêu đề thay vì trải hết chiều rộng</string>
     <string name="ce_pref_player_quality_group">Chất lượng phát trực tuyến</string>
     <string name="ce_pref_player_quality_wifi">Khi dùng Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet và các mạng khác không đo lượng dữ liệu. Chất lượng chọn trong trình phát được lưu cho loại mạng bạn đang dùng</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet và các mạng khác không đo lượng dữ liệu. Các tệp dưới mức giới hạn sẽ phát nguyên bản khi thiết bị hỗ trợ. Chất lượng chọn trong trình phát được lưu cho loại mạng bạn đang dùng</string>
     <string name="ce_pref_player_quality_mobile">Khi dùng dữ liệu di động</string>
-    <string name="ce_pref_player_quality_mobile_summary">Dữ liệu di động và các mạng đo lượng dữ liệu khác, như điểm phát sóng của điện thoại hoặc mạng được đánh dấu là mạng đo lượng dữ liệu</string>
+    <string name="ce_pref_player_quality_mobile_summary">Dữ liệu di động và các mạng đo lượng dữ liệu khác, như điểm phát sóng của điện thoại hoặc mạng được đánh dấu là mạng đo lượng dữ liệu. Các tệp dưới mức giới hạn sẽ phát nguyên bản khi thiết bị hỗ trợ</string>
     <string name="ce_pref_player_quality_original">Chất lượng gốc</string>
 </resources>

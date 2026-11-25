@@ -229,8 +229,8 @@
     <string name="ce_pref_side_backdrop_summary">Na tablecie w poziomie pokazuj tło elementu w jego własnym kształcie obok tytułu zamiast na całą szerokość</string>
     <string name="ce_pref_player_quality_group">Jakość strumieniowania</string>
     <string name="ce_pref_player_quality_wifi">Przez Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet i inne sieci, które nie są taryfowe. Jakość wybrana w odtwarzaczu jest zapisywana dla rodzaju sieci, w której jesteś</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet i inne sieci, które nie są taryfowe. Pliki poniżej limitu są odtwarzane bez zmian, jeśli urządzenie je obsługuje. Jakość wybrana w odtwarzaczu jest zapisywana dla rodzaju sieci, w której jesteś</string>
     <string name="ce_pref_player_quality_mobile">Przez dane komórkowe</string>
-    <string name="ce_pref_player_quality_mobile_summary">Dane komórkowe i inne sieci taryfowe, na przykład hotspot telefonu lub sieć oznaczona jako taryfowa</string>
+    <string name="ce_pref_player_quality_mobile_summary">Dane komórkowe i inne sieci taryfowe, na przykład hotspot telefonu lub sieć oznaczona jako taryfowa. Pliki poniżej limitu są odtwarzane bez zmian, jeśli urządzenie je obsługuje</string>
     <string name="ce_pref_player_quality_original">Oryginalna jakość</string>
 </resources>

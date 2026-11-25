@@ -223,8 +223,8 @@
     <string name="ce_pref_side_backdrop_summary">横向きのタブレットで、アイテムの背景画像を全幅ではなく元の形のままタイトルの横に表示します</string>
     <string name="ce_pref_player_quality_group">ストリーミング画質</string>
     <string name="ce_pref_player_quality_wifi">Wi-Fi 接続時</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi、イーサネットなど従量制ではないネットワーク。プレーヤーで選んだ画質は、そのとき接続しているネットワークの種類用に保存されます</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi、イーサネットなど従量制ではないネットワーク。上限以下のファイルは、デバイスが対応している場合は変換されずに再生されます。プレーヤーで選んだ画質は、そのとき接続しているネットワークの種類用に保存されます</string>
     <string name="ce_pref_player_quality_mobile">モバイルデータ通信時</string>
-    <string name="ce_pref_player_quality_mobile_summary">モバイルデータ通信など従量制のネットワーク。スマートフォンのテザリングや、従量制に設定したネットワークも含みます</string>
+    <string name="ce_pref_player_quality_mobile_summary">モバイルデータ通信など従量制のネットワーク。スマートフォンのテザリングや、従量制に設定したネットワークも含みます。上限以下のファイルは、デバイスが対応している場合は変換されずに再生されます</string>
     <string name="ce_pref_player_quality_original">オリジナル画質</string>
 </resources>
