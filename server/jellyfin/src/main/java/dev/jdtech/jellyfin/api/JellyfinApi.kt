@@ -236,7 +236,7 @@ class JellyfinApi(
     val api: ApiClient =
         ActiveServerClient(
             jellyfin = jellyfin,
-            socketConnections = socketConnections ?: okHttpFactory,
+            socketConnections = SafeSocketConnectionFactory(socketConnections ?: okHttpFactory),
             httpClientOptions =
                 HttpClientOptions(
                     requestTimeout = requestTimeout.toDuration(DurationUnit.MILLISECONDS),
