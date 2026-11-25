@@ -141,6 +141,39 @@ class SocketUnreadableMessageTest {
             }
         }
 
+    @Test
+    fun `identical valid messages separated by an unreadable message both arrive`() = runBlocking {
+        val keeper = launch(Dispatchers.IO) { session.keepAlive().collect {} }
+        try {
+            sockets.awaitConnects(1)
+            val conn = sockets.made.single()
+            val received = Collections.synchronizedList(mutableListOf<PlaystateMessage>())
+            val collector = launch {
+                api.api.webSocket.subscribe<PlaystateMessage>().collect { received += it }
+            }
+            try {
+                delay(50)
+                conn.receive(VALID_PLAYSTATE)
+                withTimeout(2_000) { while (received.size < 1) delay(10) }
+
+                conn.receive(
+                    """{"MessageType":"SomethingNewer","MessageId":"00000000000000000000000000000004","Data":{}}"""
+                )
+                delay(50)
+
+                conn.receive(VALID_PLAYSTATE)
+                withTimeout(2_000) { while (received.size < 2) delay(10) }
+
+                assertEquals(2, received.size)
+                assertEquals(0, conn.disconnects)
+            } finally {
+                collector.cancel()
+            }
+        } finally {
+            keeper.cancel()
+        }
+    }
+
     private class FakeSockets : SocketConnectionFactory {
         val made: MutableList<Connection> = Collections.synchronizedList(mutableListOf())
         val connects: MutableList<String> = Collections.synchronizedList(mutableListOf())

@@ -1,10 +1,9 @@
 package dev.jdtech.jellyfin.api
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
@@ -24,18 +23,14 @@ import timber.log.Timber
 internal class SafeSocketConnectionFactory(private val delegate: SocketConnectionFactory) :
     SocketConnectionFactory {
     override fun create(clientOptions: HttpClientOptions, scope: CoroutineScope): SocketConnection =
-        SafeSocketConnection(delegate.create(clientOptions, scope), scope)
+        SafeSocketConnection(delegate.create(clientOptions, scope))
 }
 
-private class SafeSocketConnection(private val delegate: SocketConnection, scope: CoroutineScope) :
-    SocketConnection {
+private class SafeSocketConnection(private val delegate: SocketConnection) : SocketConnection {
     override val state: StateFlow<SocketConnectionState> =
-        delegate.state
-            .filter { item ->
-                if (item !is SocketConnectionState.Message) return@filter true
-                canDecode(item.message)
-            }
-            .stateIn(scope, SharingStarted.Eagerly, delegate.state.value)
+        FilteringStateFlow(delegate.state) { item ->
+            if (item !is SocketConnectionState.Message) true else canDecode(item.message)
+        }
 
     override suspend fun connect(
         url: String,
@@ -76,4 +71,20 @@ private class SafeSocketConnection(private val delegate: SocketConnection, scope
         } catch (_: Exception) {
             "unknown"
         }
+}
+
+@OptIn(ExperimentalForInheritanceCoroutinesApi::class)
+private class FilteringStateFlow(
+    private val delegate: StateFlow<SocketConnectionState>,
+    private val predicate: (SocketConnectionState) -> Boolean,
+) : StateFlow<SocketConnectionState> {
+    override val replayCache: List<SocketConnectionState>
+        get() = listOf(value)
+
+    override val value: SocketConnectionState
+        get() = delegate.value.takeIf(predicate) ?: SocketConnectionState.Connecting
+
+    override suspend fun collect(collector: FlowCollector<SocketConnectionState>): Nothing {
+        delegate.collect { item -> if (predicate(item)) collector.emit(item) }
+    }
 }
