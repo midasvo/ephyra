@@ -229,8 +229,8 @@
     <string name="ce_pref_side_backdrop_summary">На планшете в альбомной ориентации показывать фон элемента в его собственной форме рядом с названием, а не во всю ширину</string>
     <string name="ce_pref_player_quality_group">Качество потокового видео</string>
     <string name="ce_pref_player_quality_wifi">По Wi-Fi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet и другие безлимитные сети. Качество, выбранное в плеере, сохраняется для того типа сети, в которой вы находитесь</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet и другие безлимитные сети. Файлы ниже этого предела воспроизводятся без изменений. Качество, выбранное в плеере, сохраняется для того типа сети, в которой вы находитесь</string>
     <string name="ce_pref_player_quality_mobile">По мобильной сети</string>
-    <string name="ce_pref_player_quality_mobile_summary">Мобильная сеть и другие лимитные сети, например точка доступа телефона или сеть, отмеченная как лимитная</string>
+    <string name="ce_pref_player_quality_mobile_summary">Мобильная сеть и другие лимитные сети, например точка доступа телефона или сеть, отмеченная как лимитная. Файлы ниже этого предела воспроизводятся без изменений</string>
     <string name="ce_pref_player_quality_original">Исходное качество</string>
 </resources>

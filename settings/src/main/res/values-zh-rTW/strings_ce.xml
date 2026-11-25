@@ -223,8 +223,8 @@
     <string name="ce_pref_side_backdrop_summary">在橫向平板上，將項目的背景圖以原始比例顯示在標題旁邊，而不是填滿整個寬度</string>
     <string name="ce_pref_player_quality_group">串流畫質</string>
     <string name="ce_pref_player_quality_wifi">使用 Wi-Fi 時</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi、乙太網路和其他非計量付費的網路。在播放器中選擇的畫質會儲存給目前所在的網路類型</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi、乙太網路和其他非計量付費的網路。低於此限制的檔案會原樣播放。在播放器中選擇的畫質會儲存給目前所在的網路類型</string>
     <string name="ce_pref_player_quality_mobile">使用行動數據時</string>
-    <string name="ce_pref_player_quality_mobile_summary">行動數據和其他計量付費的網路，例如手機熱點或標示為計量付費的網路</string>
+    <string name="ce_pref_player_quality_mobile_summary">行動數據和其他計量付費的網路，例如手機熱點或標示為計量付費的網路。低於此限制的檔案會原樣播放</string>
     <string name="ce_pref_player_quality_original">原始畫質</string>
 </resources>

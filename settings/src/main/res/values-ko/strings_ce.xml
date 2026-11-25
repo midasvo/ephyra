@@ -223,8 +223,8 @@
     <string name="ce_pref_side_backdrop_summary">가로 모드 태블릿에서 항목의 배경을 전체 너비 대신 원래 모양 그대로 제목 옆에 표시합니다</string>
     <string name="ce_pref_player_quality_group">스트리밍 화질</string>
     <string name="ce_pref_player_quality_wifi">Wi-Fi 사용 시</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, 이더넷 등 데이터 전송량 제한이 없는 네트워크입니다. 플레이어에서 고른 화질은 현재 연결된 네트워크 종류에 저장됩니다</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, 이더넷 등 데이터 전송량 제한이 없는 네트워크입니다. 제한 이하의 파일은 변경 없이 재생됩니다. 플레이어에서 고른 화질은 현재 연결된 네트워크 종류에 저장됩니다</string>
     <string name="ce_pref_player_quality_mobile">모바일 데이터 사용 시</string>
-    <string name="ce_pref_player_quality_mobile_summary">모바일 데이터 등 데이터 전송량 제한 네트워크입니다. 휴대전화 핫스팟이나 데이터 전송량 제한으로 표시된 네트워크도 포함됩니다</string>
+    <string name="ce_pref_player_quality_mobile_summary">모바일 데이터 등 데이터 전송량 제한 네트워크입니다. 휴대전화 핫스팟이나 데이터 전송량 제한으로 표시된 네트워크도 포함됩니다. 제한 이하의 파일은 변경 없이 재생됩니다</string>
     <string name="ce_pref_player_quality_original">원본 화질</string>
 </resources>

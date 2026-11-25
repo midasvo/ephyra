@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">På en surfplatta i liggande läge visas ett objekts bakgrund i sin egen form bredvid titeln i stället för över hela bredden</string>
     <string name="ce_pref_player_quality_group">Streamingkvalitet</string>
     <string name="ce_pref_player_quality_wifi">På wifi</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wifi, Ethernet och andra nätverk utan datapriser. En kvalitet du väljer i spelaren sparas för den typ av nätverk du är på</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wifi, Ethernet och andra nätverk utan datapriser. Filer under gränsen spelas upp oförändrade. En kvalitet du väljer i spelaren sparas för den typ av nätverk du är på</string>
     <string name="ce_pref_player_quality_mobile">På mobildata</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobildata och andra nätverk med datapriser, till exempel en telefons surfzon eller ett nätverk som är markerat som med datapriser</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobildata och andra nätverk med datapriser, till exempel en telefons surfzon eller ett nätverk som är markerat som med datapriser. Filer under gränsen spelas upp oförändrade</string>
     <string name="ce_pref_player_quality_original">Originalkvalitet</string>
 </resources>

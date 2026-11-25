@@ -223,8 +223,8 @@
     <string name="ce_pref_side_backdrop_summary">在横屏平板上，将项目的背景图以原始比例显示在标题旁边，而不是铺满整个宽度</string>
     <string name="ce_pref_player_quality_group">流媒体画质</string>
     <string name="ce_pref_player_quality_wifi">使用 WLAN 时</string>
-    <string name="ce_pref_player_quality_wifi_summary">WLAN、以太网和其他不按流量计费的网络。在播放器中选择的画质会保存给当前所在的网络类型</string>
+    <string name="ce_pref_player_quality_wifi_summary">WLAN、以太网和其他不按流量计费的网络。低于此限制的文件将原样播放。在播放器中选择的画质会保存给当前所在的网络类型</string>
     <string name="ce_pref_player_quality_mobile">使用移动数据时</string>
-    <string name="ce_pref_player_quality_mobile_summary">移动数据和其他按流量计费的网络，例如手机热点或标记为按流量计费的网络</string>
+    <string name="ce_pref_player_quality_mobile_summary">移动数据和其他按流量计费的网络，例如手机热点或标记为按流量计费的网络。低于此限制的文件将原样播放</string>
     <string name="ce_pref_player_quality_original">原始画质</string>
 </resources>

@@ -225,8 +225,8 @@
     <string name="ce_pref_side_backdrop_summary">Fekvő tájolású táblagépen az elem háttérképe a saját formájában jelenjen meg a cím mellett a teljes szélesség helyett</string>
     <string name="ce_pref_player_quality_group">Streamelési minőség</string>
     <string name="ce_pref_player_quality_wifi">Wi-Fi-n</string>
-    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet és más, nem forgalomkorlátos hálózatok. A lejátszóban választott minőség annál a hálózattípusnál marad meg, amelyen éppen vagy</string>
+    <string name="ce_pref_player_quality_wifi_summary">Wi-Fi, Ethernet és más, nem forgalomkorlátos hálózatok. A korlát alatti fájlok változatlanul játszódnak le. A lejátszóban választott minőség annál a hálózattípusnál marad meg, amelyen éppen vagy</string>
     <string name="ce_pref_player_quality_mobile">Mobiladat-kapcsolaton</string>
-    <string name="ce_pref_player_quality_mobile_summary">Mobiladat és más forgalomkorlátos hálózatok, például egy telefon hotspotja vagy forgalomkorlátosnak jelölt hálózat</string>
+    <string name="ce_pref_player_quality_mobile_summary">Mobiladat és más forgalomkorlátos hálózatok, például egy telefon hotspotja vagy forgalomkorlátosnak jelölt hálózat. A korlát alatti fájlok változatlanul játszódnak le</string>
     <string name="ce_pref_player_quality_original">Eredeti minőség</string>
 </resources>
