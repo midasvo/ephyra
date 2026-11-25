@@ -29,7 +29,7 @@ import kotlin.test.assertTrue
 class AdapterPortsTest {
 
     @Test
-    fun `R22 no adapter file names a port of another adapter`() {
+    fun `R22 no adapter file names a port of another adapter, but the Jellyfin adapter names DeviceCodecs until #1012`() {
         val ports = portNames(ProjectTree.productionKotlinFiles.filterKeys(::isPortFile))
         val owners = ownersOf(ports)
         assertTrue(

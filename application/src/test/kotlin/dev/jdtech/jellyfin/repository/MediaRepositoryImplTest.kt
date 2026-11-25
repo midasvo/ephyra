@@ -87,7 +87,7 @@ class MediaRepositoryImplTest {
 
     @Test
     fun `a list known to be away comes from the store without asking the server`() = runBlocking {
-        stores.lists.favorites[serverId] = listOf(movie)
+        stores.lists.favorites[serverId to userId] = listOf(movie)
         knownAway = true
 
         val result = repository.getFavoriteItems()
@@ -98,8 +98,26 @@ class MediaRepositoryImplTest {
     }
 
     @Test
+    fun `stored items and lists are the current user's`() = runBlocking {
+        val other = "00000000-0000-0000-0000-000000000002".toUserId()
+        stores.items.put(serverId, movie)
+        stores.items.putForUser(userId, movie.copy(favorite = true))
+        stores.items.putForUser(other, movie.copy(favorite = false, played = true))
+        stores.lists.favorites[serverId to other] = listOf(episode)
+        // Something is downloaded, so no favourites downloaded is an answer of its own.
+        stores.lists.libraries[serverId] = listOf(ContractLibrary.moviesLibrary)
+        away()
+
+        val stored = repository.getMovie(movie.id)
+        assertTrue(stored.favorite)
+        assertFalse(stored.played)
+        knownAway = true
+        assertTrue(repository.getFavoriteItems().items.isEmpty(), "another user's favourites")
+    }
+
+    @Test
     fun `a list the server answers is the server's`() = runBlocking {
-        stores.lists.favorites[serverId] = listOf(movie)
+        stores.lists.favorites[serverId to userId] = listOf(movie)
 
         val result = repository.getFavoriteItems()
 
@@ -110,7 +128,7 @@ class MediaRepositoryImplTest {
     @Test
     fun `the stored libraries are paged from the store`() = runBlocking {
         val stored = ContractLibrary.season1Episodes.take(3)
-        stores.lists.libraryContents[StoredLibraries.SHOWS] = stored
+        stores.lists.libraryContents[serverId to StoredLibraries.SHOWS] = stored
 
         val page =
             repository.getItemsPage(

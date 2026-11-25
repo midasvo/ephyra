@@ -30,10 +30,17 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
- * #966: [StoredRows] over models a test already has: loading gives them as they are, whatever the
- * user. [loads] counts the loads, so a test sees whether the rows were mapped at all.
+ * #966: [StoredRows] over models a test already has. Loading makes each one for the user it is
+ * loaded for with [forUser] (as Room adds that user's data), and rows read for one user ([readFor],
+ * the favourites and the stored libraries) fail when they are loaded for another: a repository that
+ * mixes up users does not pass. [loads] counts the loads, so a test sees whether the rows were
+ * mapped at all.
  */
-class FakeStoredRows<T>(private val items: List<T>) : StoredRows<T> {
+class FakeStoredRows<T>(
+    private val items: List<T>,
+    private val readFor: UserId? = null,
+    private val forUser: (T, UserId) -> T = { item, _ -> item },
+) : StoredRows<T> {
     var loads = 0
         private set
 
@@ -41,30 +48,51 @@ class FakeStoredRows<T>(private val items: List<T>) : StoredRows<T> {
         get() = items.size
 
     override fun slice(startIndex: Int, limit: Int?): StoredRows<T> =
-        FakeStoredRows(items.drop(startIndex).let { if (limit != null) it.take(limit) else it })
+        FakeStoredRows(
+            items.drop(startIndex).let { if (limit != null) it.take(limit) else it },
+            readFor,
+            forUser,
+        )
 
     override suspend fun load(userId: UserId): List<T> {
+        check(readFor == null || readFor == userId) {
+            "Rows read for user ${readFor?.value} were loaded for user ${userId.value}"
+        }
         loads++
-        return items
+        return items.map { forUser(it, userId) }
     }
 }
 
 /**
- * #966: [StoredItems] in memory, per server: a test puts the models a download would have stored.
- * The seasons and episodes of a show are those put with its id, in the order they were put.
+ * #966: [StoredItems] in memory, per server: a test puts the models a download would have stored,
+ * and with [putForUser] how one user sees one of them (its user data); loaded for another user, an
+ * item is as [put]. The reads order as Room's queries do.
  */
 class FakeStoredItems : StoredItems {
     private val items = mutableMapOf<Pair<ServerId, ItemId>, Item>()
+    private val ofUser = mutableMapOf<Pair<UserId, ItemId>, Item>()
 
     fun put(serverId: ServerId, vararg stored: Item) {
         stored.forEach { items[serverId to it.id] = it }
     }
 
+    /** [item] as [userId] sees it: the same stored item with that user's data. */
+    fun putForUser(userId: UserId, item: Item) {
+        ofUser[userId to item.id] = item
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Item> forUser(item: T, userId: UserId): T =
+        (ofUser[userId to item.id] as? T) ?: item
+
+    private fun <T : Item> rows(list: List<T>): StoredRows<T> =
+        FakeStoredRows(list, forUser = ::forUser)
+
     private inline fun <reified T : Item> of(serverId: ServerId): List<T> =
         items.filterKeys { it.first == serverId }.values.filterIsInstance<T>()
 
     private inline fun <reified T : Item> row(id: ItemId, serverId: ServerId): StoredRow<T>? =
-        (items[serverId to id] as? T)?.let { item -> StoredRow { item } }
+        (items[serverId to id] as? T)?.let { item -> StoredRow { forUser(item, it) } }
 
     override suspend fun movieOfServer(id: ItemId, serverId: ServerId): StoredRow<Movie>? =
         row(id, serverId)
@@ -79,21 +107,20 @@ class FakeStoredItems : StoredItems {
         row(id, serverId)
 
     override suspend fun seasonsOfShow(showId: ItemId, serverId: ServerId): StoredRows<Season> =
-        FakeStoredRows(of<Season>(serverId).filter { it.seriesId == showId })
+        // By index number, as Room orders them.
+        rows(of<Season>(serverId).filter { it.seriesId == showId }.sortedBy { it.indexNumber })
 
     override suspend fun episodesOfSeason(
         seasonId: ItemId,
         serverId: ServerId,
     ): StoredRows<Episode> =
-        FakeStoredRows(
-            of<Episode>(serverId).filter { it.seasonId == seasonId }.sortedBy { it.indexNumber }
-        )
+        rows(of<Episode>(serverId).filter { it.seasonId == seasonId }.sortedBy { it.indexNumber })
 
     override suspend fun episodesOfSeries(
         seriesId: ItemId,
         serverId: ServerId,
     ): StoredRows<Episode> =
-        FakeStoredRows(
+        rows(
             of<Episode>(serverId)
                 .filter { it.seriesId == seriesId }
                 // Season by season, as Room orders them.
@@ -101,10 +128,10 @@ class FakeStoredItems : StoredItems {
         )
 
     override suspend fun moviesOfServer(serverId: ServerId): StoredRows<Movie> =
-        FakeStoredRows(of<Movie>(serverId).sortedBy { it.name })
+        rows(of<Movie>(serverId).sortedBy { it.name })
 
     override suspend fun showsOfServer(serverId: ServerId): StoredRows<Show> =
-        FakeStoredRows(of<Show>(serverId).sortedBy { it.name })
+        rows(of<Show>(serverId).sortedBy { it.name })
 
     override suspend fun runtimeTicks(itemId: ItemId): Long? =
         items.entries
@@ -147,17 +174,23 @@ class FakeStoredItemSources : StoredItemSources {
 }
 
 /**
- * #966: [StoredItemLists] in memory: a test puts what each list answers for a server. A stored
- * library's contents are its items as put, a count is of those whose name sorts before the bound.
+ * #966: [StoredItemLists] in memory: a test puts what each list answers, per server and, where Room
+ * reads a user's data, per user: the favourites by (server, user), a stored library's contents by
+ * (server, library) with [played] for the unplayed filter. A library is sorted by name only, either
+ * way, as Room sorts it; another sort fails here rather than being ignored. Rows read for a user
+ * fail when loaded for another ([FakeStoredRows]).
  */
 class FakeStoredItemLists : StoredItemLists {
-    val favorites = mutableMapOf<ServerId, List<Item>>()
+    val favorites = mutableMapOf<Pair<ServerId, UserId>, List<Item>>()
     val searchResults = mutableMapOf<ServerId, List<Item>>()
     val libraries = mutableMapOf<ServerId, List<Library>>()
-    val libraryContents = mutableMapOf<ItemId, List<Item>>()
+    val libraryContents = mutableMapOf<Pair<ServerId, ItemId>, List<Item>>()
+
+    /** What each user has played, for [ItemFilter.IS_UNPLAYED]. */
+    val played = mutableSetOf<Pair<UserId, ItemId>>()
 
     override suspend fun favorites(serverId: ServerId, userId: UserId): StoredRows<Item> =
-        FakeStoredRows(favorites[serverId].orEmpty())
+        FakeStoredRows(favorites[serverId to userId].orEmpty(), readFor = userId)
 
     override suspend fun search(
         serverId: ServerId,
@@ -182,7 +215,14 @@ class FakeStoredItemLists : StoredItemLists {
         sortBy: SortBy,
         sortOrder: SortOrder,
         filters: Set<ItemFilter>,
-    ): StoredRows<Item> = FakeStoredRows(libraryContents[libraryId].orEmpty())
+    ): StoredRows<Item> {
+        check(sortBy == SortBy.NAME) { "FakeStoredItemLists sorts a library by name only: $sortBy" }
+        val sorted = entries(serverId, userId, libraryId, filters)
+        return FakeStoredRows(
+            if (sortOrder == SortOrder.DESCENDING) sorted.asReversed() else sorted,
+            readFor = userId,
+        )
+    }
 
     override suspend fun libraryCount(
         serverId: ServerId,
@@ -191,9 +231,27 @@ class FakeStoredItemLists : StoredItemLists {
         filters: Set<ItemFilter>,
         nameLessThan: String?,
     ): Int =
-        libraryContents[libraryId].orEmpty().count {
+        entries(serverId, userId, libraryId, filters).count {
             nameLessThan == null || it.name.lowercase() < nameLessThan.lowercase()
         }
+
+    /** The library's items of [serverId], filtered for [userId], by name as Room sorts them. */
+    private fun entries(
+        serverId: ServerId,
+        userId: UserId,
+        libraryId: ItemId,
+        filters: Set<ItemFilter>,
+    ): List<Item> =
+        libraryContents[serverId to libraryId]
+            .orEmpty()
+            .filter { item ->
+                filters.all { filter ->
+                    when (filter) {
+                        ItemFilter.IS_UNPLAYED -> (userId to item.id) !in played
+                    }
+                }
+            }
+            .sortedWith(compareBy({ it.name.lowercase() }, { it.id.value }))
 }
 
 /** #966: [StoredTrackPreferences] in memory, one per user, series and track type. */
