@@ -24,7 +24,7 @@ Playback reports are the other flow: [playback-reporting](playback-reporting.md)
 |---|---|
 | [`domain/.../domain/userdata/PlayState.kt`](../../domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/PlayState.kt) | `markedPlayed`, `markedUnplayed`, `afterUnplayedReport`, `withFavorite`, `progressed`, `stopped` |
 | [`domain/.../domain/userdata/PlayStop.kt`](../../domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/PlayStop.kt), [`SyncMerge.kt`](../../domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/SyncMerge.kt) | What a stop writes; `mergeWithServer`, `refreshedFromServer` |
-| [`data/.../repository/MediaRepositoryImpl.kt`](../../data/src/main/java/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt) | The writes, `reportUserData`, `currentUserId` |
+| [`application/.../repository/MediaRepositoryImpl.kt`](../../application/src/main/kotlin/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt) | The writes, `reportUserData`, `currentUserId` |
 | [`application/.../repository/UserDataReport.kt`](../../application/src/main/kotlin/dev/jdtech/jellyfin/repository/UserDataReport.kt) | `writeAndReport`, over the role `DownloadUserData` (#966) |
 | [`application/.../repository/DownloadUserData.kt`](../../application/src/main/kotlin/dev/jdtech/jellyfin/repository/DownloadUserData.kt) | `writeAndMarkToBeSynced` (one transaction, gives `MarkedUserData`), `markToBeSynced`, `clearToBeSynced`, `updatePlayState`; Room in `RoomDownloadStore` |
 | [`data/.../database/ServerDatabaseDao.kt`](../../data/src/main/java/dev/jdtech/jellyfin/database/ServerDatabaseDao.kt) | `updatePlayState`, `writeAndMarkToBeSynced`, `clearUserDataToBeSynced` |
@@ -39,7 +39,7 @@ Playback reports are the other flow: [playback-reporting](playback-reporting.md)
 
 - **R14**: the play state rules are declared in `domain` alone; `data` and the sync compare no dates. A new rule goes into `PlayState`.
 - **R12**: tick conversions are `Ticks`. **R10**: ids are value classes.
-- **R4, R9**: only `data` imports `ServerDatabaseDao`; only the apps depend on `data`. The sync reaches Room through `PendingUserDataStore`, the repository through `DownloadUserData` (#966: `MediaRepositoryImpl` names no DAO).
+- **R4, R9**: only `data` imports `ServerDatabaseDao`; only the apps depend on `data`. The sync reaches Room through `PendingUserDataStore`, the repository through `DownloadUserData` (#966: `MediaRepositoryImpl` is in `application` and names no DAO).
 - **R1, R2**: no SDK and no `JellyfinApi` outside `server/jellyfin`.
 - A Room migration gets an independent review when no bot reviewed the PR (`CLAUDE.md`).
 

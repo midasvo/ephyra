@@ -69,7 +69,7 @@ areas:
       - player/local/src/main/java/dev/jdtech/jellyfin/player/local/domain/PlaybackStopReport.kt
       - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/PlaybackPort.kt
       - server/jellyfin/src/main/java/dev/jdtech/jellyfin/server/jellyfin/JellyfinPlayback.kt
-      - data/src/main/java/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt
+      - application/src/main/kotlin/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt
       - player/local/src/main/java/dev/jdtech/jellyfin/player/local/presentation/PlayerViewModel.kt
       - domain/src/main/kotlin/dev/jdtech/jellyfin/repository/PlaySessions.kt
     docs: [docs/mpv-checklist.md]
@@ -104,7 +104,7 @@ areas:
     paths:
       - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/PlayState.kt
       - domain/src/main/kotlin/dev/jdtech/jellyfin/domain/userdata/SyncMerge.kt
-      - data/src/main/java/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt
+      - application/src/main/kotlin/dev/jdtech/jellyfin/repository/MediaRepositoryImpl.kt
       - application/src/main/kotlin/dev/jdtech/jellyfin/repository/UserDataReport.kt
       - application/src/main/kotlin/dev/jdtech/jellyfin/repository/PendingUserDataStore.kt
       - core/src/main/java/dev/jdtech/jellyfin/work/UserDataSync.kt
