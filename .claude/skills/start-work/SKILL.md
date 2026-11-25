@@ -95,5 +95,6 @@ editing the map or a guide; CI runs it on every pull request.
 The `Docs` workflow also checks that a pull request which changes a file an area with a guide
 lists (its `paths`) changes that guide or its map entry, or says in its description
 `Docs: no change needed — <reason>` (`scripts/check-guides-follow.py`; run it locally against
-`origin/main` before opening the PR). When you finish the work, say in the report what the guide
+`origin/main` before opening the PR, passing `--body FILE`, `--body-text TEXT`, or `--pr NUMBER`
+when using a `Docs: no change needed` line). When you finish the work, say in the report what the guide
 missed, and fix it in the same PR.

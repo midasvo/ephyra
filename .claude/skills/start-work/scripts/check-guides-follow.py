@@ -14,8 +14,8 @@ Not counted: areas without a guide, test sources (src/test, src/androidTest), tr
 named sync/…). A changed file can match several areas; the message names each guide and the
 paths that matched.
 
-Locally, against origin/main, with an optional description in a file:
-    python3 .claude/skills/start-work/scripts/check-guides-follow.py [--body FILE]
+Locally, against origin/main, with an optional description in a file, inline text, or from a PR:
+    python3 .claude/skills/start-work/scripts/check-guides-follow.py [--body FILE | --body-text TEXT | --pr NUMBER]
 In CI (.github/workflows/docs.yml) it reads the pull request's files as JSON lines
 ({"filename", "previous_filename", "patch"}, from the GitHub API) with --files, and the
 description, author and branch from the environment (PR_BODY, PR_AUTHOR, PR_BRANCH).
@@ -132,7 +132,10 @@ def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser()
     parser.add_argument("--files", help="JSON lines of the pull request's files (default: git)")
-    parser.add_argument("--body", help="a file with the pull request's description")
+    body_group = parser.add_mutually_exclusive_group()
+    body_group.add_argument("--body", help="a file with the pull request's description")
+    body_group.add_argument("--body-text", help="the pull request's description as inline text")
+    body_group.add_argument("--pr", type=int, help="pull request number to read the description from via gh pr view")
     parser.add_argument(
         "--map",
         help="docs/areas.yaml as the pull request's head has it, so its line numbers match the patch "
@@ -151,7 +154,25 @@ def main() -> int:
         files = [json.loads(line) for line in text.splitlines() if line.strip()]
     else:
         files = local_files()
-    body = Path(args.body).read_text(encoding="utf-8") if args.body else os.environ.get("PR_BODY", "")
+    if args.body:
+        body = Path(args.body).read_text(encoding="utf-8")
+    elif args.body_text is not None:
+        body = args.body_text
+    elif args.pr is not None:
+        try:
+            out = subprocess.run(
+                ["gh", "pr", "view", str(args.pr), "--json", "body"],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout
+        except (OSError, subprocess.CalledProcessError) as exc:
+            detail = exc.stderr.strip() if isinstance(exc, subprocess.CalledProcessError) and exc.stderr else str(exc)
+            sys.exit(f"failed to read PR #{args.pr} via gh pr view: {detail}")
+        body = json.loads(out).get("body") or ""
+    else:
+        body = os.environ.get("PR_BODY", "")
 
     names = {f["filename"] for f in files} | {f["previous_filename"] for f in files if f.get("previous_filename")}
     counted = [n for n in sorted(names) if not any(p.search(n) for p in NOT_COUNTED)]
