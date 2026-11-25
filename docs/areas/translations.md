@@ -83,10 +83,14 @@ python3 .claude/skills/translate-strings/scripts/check-translations.py
 python3 .claude/skills/start-work/scripts/check-docs.py
 ```
 
-Commit your changes before running `check-guides-follow.py` (and re-run it after any new commit): it compares `origin/main...HEAD` and ignores staged or unstaged edits:
+Commit your changes before running `check-guides-follow.py` (and re-run it after any new commit): it compares `origin/main...HEAD` and ignores staged or unstaged edits. If the PR uses a `Docs: no change needed — <reason>` explanation in its description, pass the description with `--body FILE`, `--body-text TEXT`, or `--pr NUMBER` so the local check can read it:
 
 ```bash
 python3 .claude/skills/start-work/scripts/check-guides-follow.py
+# Or when checking with a PR description containing "Docs: no change needed — <reason>":
+python3 .claude/skills/start-work/scripts/check-guides-follow.py --body FILE
+python3 .claude/skills/start-work/scripts/check-guides-follow.py --body-text "Docs: no change needed — <reason>"
+python3 .claude/skills/start-work/scripts/check-guides-follow.py --pr NUMBER
 ```
 
 - Verify that every edited English string had all 36 `strings_ce.xml` files updated and that new sentences match neighbouring address forms and terminology.
