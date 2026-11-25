@@ -44,7 +44,9 @@ jobs:
       - name: Start throwaway Jellyfin test server
         env:
           EPHYRA_TEST_SERVER_IMAGE: ${{ inputs.image || 'jellyfin/jellyfin:latest' }}
-        run: bash tools/test-server/setup.sh
+        run: |
+          bash tools/test-server/setup.sh
+          python3 tools/test-server/user.py add contract --no-password
 
       - name: Record Jellyfin server version
         id: server-version
