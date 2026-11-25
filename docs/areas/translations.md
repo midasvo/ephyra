@@ -26,7 +26,7 @@ Branding and variant names stay separated from Weblate keys:
 | Path | What |
 |---|---|
 | [`.claude/skills/translate-strings/SKILL.md`](../../.claude/skills/translate-strings/SKILL.md) | Translation procedure, rules, and the canonical list of 36 supported languages |
-| [`.claude/skills/translate-strings/scripts/check-translations.py`](../../.claude/skills/translate-strings/scripts/check-translations.py) | Verifies every CE-only `<string>` and `<plurals>` across all 36 languages, placeholders, and CLDR plural quantities |
+| [`.claude/skills/translate-strings/scripts/check-translations.py`](../../.claude/skills/translate-strings/scripts/check-translations.py) | Verifies every CE-only `<string>` and `<plurals>` across all 36 languages, `<string>` placeholders (not `<plurals>` placeholders), and CLDR plural quantities |
 | [`core/src/main/res/xml/locales_config.xml`](../../core/src/main/res/xml/locales_config.xml) | The 25 locales shown in the in-app language picker (referenced by [`app/phone/src/main/AndroidManifest.xml`](../../app/phone/src/main/AndroidManifest.xml)) |
 | [`core/src/main/res/values/strings.xml`](../../core/src/main/res/values/strings.xml), [`core/src/debug/res/values/strings.xml`](../../core/src/debug/res/values/strings.xml), [`core/src/staging/res/values/strings.xml`](../../core/src/staging/res/values/strings.xml) | Core English strings and `app_name` per build type |
 | [`settings/src/main/res/values/strings.xml`](../../settings/src/main/res/values/strings.xml), [`settings/src/main/res/values/string_arrays.xml`](../../settings/src/main/res/values/string_arrays.xml), [`core/src/main/res/values/string_arrays.xml`](../../core/src/main/res/values/string_arrays.xml) | Settings strings (largest CE string set) and `@string/` option arrays / `translatable="false"` value arrays |
@@ -66,6 +66,7 @@ If keys were added, renamed, or removed across modules or `string_arrays.xml`, c
 ```
 
 **What `check-translations.py` does NOT cover:**
+- **Placeholders inside `<plurals>`**: placeholder comparison (`%s`, `%d`, `%1$s`, …) runs only on `<string>` entries; the `<plurals>` check verifies only key presence and required CLDR quantities, so missing or mismatched placeholders in plural items pass unnoticed.
 - **Stale translations after English edits**: it checks key existence, not whether the text in `strings_ce.xml` reflects a changed English source string.
 - **Tone, register, and terminology consistency**: mismatched pronouns (such as `Ihr` vs `du` in #1021) or inconsistent nouns pass the script unnoticed.
 - **UI truncation and RTL layout**: narrow labels (such as the ~128 dp download status column in #113) and right-to-left rendering (`ar`, `iw`) require checking on an emulator or device.
@@ -83,6 +84,7 @@ python3 .claude/skills/start-work/scripts/check-guides-follow.py
 ```
 
 - Verify that every edited English string had all 36 `strings_ce.xml` files updated and that new sentences match neighbouring address forms and terminology.
+- For any added or edited `<plurals>` entry, compare placeholders (`%d`, `%s`, …) in each language's `strings_ce.xml` against the English source (`check-translations.py` validates placeholders only on `<string>` entries).
 - When layout, wrapping, or directionality is affected, inspect the screen on an emulator in at least one LTR locale (such as `nl`) and one RTL locale (`ar` or `iw`).
 
 ## Decisions and history
@@ -96,7 +98,7 @@ python3 .claude/skills/start-work/scripts/check-guides-follow.py
 ## Pitfalls
 
 - **Register and terminology drift across languages (#1021).** Translating a string in isolation can introduce formal address (`Ihr`, `teie`, `您的`) or inconsistent nouns ("device", "file", "limit") compared with adjacent rows on the same screen. Always check neighbouring strings in each language's `strings_ce.xml` and `strings.xml`.
-- **Changing English without updating `strings_ce.xml`.** `check-translations.py` passes as long as the key exists with matching placeholders, so stale translations silently stay behind unless every language file is updated too.
+- **Changing English without updating `strings_ce.xml`.** `check-translations.py` passes as long as the key exists (and, for `<string>` entries only, with matching placeholders—`<plurals>` placeholders are not checked), so stale translations and broken plural placeholders silently stay behind unless every language file is updated and checked too.
 - **Editing upstream's `values-<lang>/strings.xml` directly.** Weblate commits overwrite or conflict with direct edits during upstream syncs; use a `ce_` key in `strings_ce.xml` instead.
 - **Duplicate resource failure after an upstream sync.** When upstream adds a key that Ephyra already has in `strings_ce.xml`, AAPT fails on duplicate resources; remove the key from all 36 `strings_ce.xml` files.
 - **Translating only the 25 picker languages.** Eleven of the 36 languages are absent from [`locales_config.xml`](../../core/src/main/res/xml/locales_config.xml) (`ar`, `az`, `ca`, `da`, `et`, `fi`, `hi`, `in`, `ja`, `nn`, `tr`), yet Android still loads them from the system locale.
