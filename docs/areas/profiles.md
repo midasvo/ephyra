@@ -26,7 +26,7 @@ A profile may hold one local lock at a time (`User.pinHash`, `User.pinSalt`, `Us
 
 On a new process, `ProfileLock.isLockedOnStart` is true when the current user has a lock, `pinOnStart` is true (default), and `user.id !in unlockedUserIds`. Both `NavigationRoot`s render `ProfilePinGateScreen` / `TvProfilePinGateScreen` *instead of* Home while `setupComplete && profileLocked`, so Home loads nothing until unlocked (and on TV a Watch Next deep link waits on the back stack underneath). Cancelling at start (`ProfilePinGateAction.OnCancel` or Back) calls `SetupRepository.clearCurrentUser()`, dropping to `UsersRoute`.
 
-Settings → Users → Profile lock (phone) / Profile PIN (TV, switched by `AppVariant` in `SettingsViewModel`) opens `ProfilePinScreen` / `TvProfilePinScreen` backed by `ProfilePinSettingsViewModel`. Setting a new lock asks twice (`PinStep.New`, `PinStep.Confirm`); changing, switching type, or removing asks for the current lock first (`PinStep.Current`). A forgotten lock cannot be recovered: the user must remove the profile or sign in again, which clears the lock.
+Settings → Profile lock (phone) / Settings → Profile PIN (TV, switched by `AppVariant` in `SettingsViewModel`) opens `ProfilePinScreen` / `TvProfilePinScreen` backed by `ProfilePinSettingsViewModel`. Setting a new lock asks twice (`PinStep.New`, `PinStep.Confirm`); changing, switching type, or removing asks for the current lock first (`PinStep.Current`). A forgotten lock cannot be recovered: the user must remove the profile or sign in again, which clears the lock.
 
 ## Where the code is
 
