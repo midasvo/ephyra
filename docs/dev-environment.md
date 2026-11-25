@@ -246,6 +246,9 @@ with it.
 - **TV text fields ignore `adb shell input keyevent` D-pad keys**: they come from a virtual device.
   `scripts/tv-dpad.sh` sends them from a real one, and holds each key like a finger does:
   `scripts/tv-dpad.sh ce_tv_1080p down down ok`.
+- **TV server field scrambles a whole URL passed to `adb shell input text`**: typing a full URL
+  in one call drops or reorders characters; send it in short pieces (for example `http://`,
+  `10.0.2.2`, `:8096`) instead.
 - **A new emulator that never shows up in `adb devices`** is waiting on the crash-report dialog.
   `avds.sh start` passes `-crash-report-mode never -no-metrics`; pass them yourself when you start
   an emulator another way.
