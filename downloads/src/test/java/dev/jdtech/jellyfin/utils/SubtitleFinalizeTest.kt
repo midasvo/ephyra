@@ -390,6 +390,7 @@ class SubtitleFinalizeTest {
                     sources.values.filter { !it.path.endsWith(".download") }
                 "getActiveDownloadSources" ->
                     sources.values.filter { it.path.endsWith(".download") }
+                "getTrickplayInfo" -> null
                 "getAllItemIds" -> listOf(itemId)
                 else -> throw NotImplementedError("ServerDatabaseDao.${method.kotlinName}")
             }

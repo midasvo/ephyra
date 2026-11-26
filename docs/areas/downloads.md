@@ -57,7 +57,7 @@ Unit tests, pure modules first:
 
 ```bash
 ./gradlew :domain:test :application:test :architecture:test   # DownloadStateTest, R13, R15
-./gradlew :downloads:testDebugUnitTest                         # DownloadQueue*Test, MediaDownloadEngine*Test, ResumeValidatorsTest, SmartDownloadPlannerTest, OrphanSweep*Test
+./gradlew :downloads:testDebugUnitTest                         # DownloadQueue*Test, MediaDownloadEngine*Test, ResumeValidatorsTest, SmartDownloadPlannerTest, OrphanSweep*Test, DownloadTrickplayRestartTest
 ./gradlew :application:test                                    # StoredFallbackTest, MediaRepositoryImplTest (the repository over fakes)
 ./gradlew :data:testDebugUnitTest                              # StoredItemFallbackTest, UnfinishedDownloadPlaybackTest (the repository over Room)
 ./gradlew :modes:film:testDebugUnitTest                        # DownloadsViewModelUserSwitchTest, QueueCountsTest, EpisodeDownloadSelectionTest
@@ -114,6 +114,7 @@ Then on an emulator: start a download, cut the server off with `iptables` (see a
 - **One item id is stored for one server.** The item tables have the item id as primary key: a download of the same id from a second server replaces the first one's copy, and the queue dedups by item id ([#718](https://github.com/midasvo/ephyra/issues/718)).
 - **Re-downloading does not refresh metadata**: the item inserts in `ServerDatabaseDao` use `OnConflictStrategy.IGNORE` (data-02 in [`docs/open-decisions.md`](../open-decisions.md)).
 - **The engine is in-process.** It does not survive process death; `restoreAll` puts the partial downloads back as pending and resumes them by Range, and restores queued downloads whose start had not written a source row yet. Without `DownloadPumpService` the transfers stop when the app is closed.
+- **Trickplay across restarts and from lists**: `downloadTrickplayData` writes each sheet to disk before inserting the `trickplayInfos` row, and `DownloaderImpl` ensures missing trickplay on resume and finalization (resolving from `ItemCatalog` when the caller or Room copy lacked it, [#1015](https://github.com/midasvo/ephyra/issues/1015)).
 - **External subtitles** have their own `.download` name and finalize step ([#573](https://github.com/midasvo/ephyra/issues/573)); check them when you change finalizing.
 - **The orphan sweep deletes files**: a finished file with no row goes after 24 h (`ORPHAN_MIN_AGE_MS`). A path change that the rows do not follow loses downloads.
 - **`DownloadsViewModel`'s reads, sorting and storage walk run on `ioDispatcher`** (`Dispatchers.IO` in the app). A test passes its own test dispatcher, as `DownloadsViewModelUserSwitchTest` does: on the real IO threads a load the test had already left (cancelled by a newer one) went on after the test, and its return to `Dispatchers.Main` after `resetMain()` failed whichever `runTest` came next in the module, often `FavoritesViewModelUserSwitchTest` or `MediaViewModelUserSwitchTest` ([#921](https://github.com/midasvo/ephyra/issues/921)). A new test of a ViewModel in `modes/film` does the same: no real dispatcher, everything on the test scheduler.

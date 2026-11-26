@@ -89,9 +89,10 @@ class FakeDownloadUserData : DownloadUserData {
     }
 }
 
-/** #966: [DownloadSegmentsAndTrickplay] in memory: the segments per item; trickplay is not kept. */
+/** #966: [DownloadSegmentsAndTrickplay] in memory: segments per item and trickplay per source. */
 class FakeStoredSegments : DownloadSegmentsAndTrickplay {
     val segments = mutableMapOf<ItemId, List<Segment>>()
+    val trickplayInfos = mutableMapOf<MediaSourceId, ItemTrickplayInfo>()
 
     override suspend fun segments(itemId: ItemId): List<Segment> = segments[itemId].orEmpty()
 
@@ -103,8 +104,12 @@ class FakeStoredSegments : DownloadSegmentsAndTrickplay {
         segments.remove(itemId)
     }
 
-    override suspend fun insertTrickplayInfo(sourceId: MediaSourceId, info: ItemTrickplayInfo) =
-        Unit
+    override suspend fun trickplayInfo(sourceId: MediaSourceId): ItemTrickplayInfo? =
+        trickplayInfos[sourceId]
+
+    override suspend fun insertTrickplayInfo(sourceId: MediaSourceId, info: ItemTrickplayInfo) {
+        trickplayInfos[sourceId] = info
+    }
 }
 
 /**

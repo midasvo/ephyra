@@ -28,4 +28,13 @@ class SeasonEpisodeFieldsTest {
                 "loadSeason must request EpisodeField.CAN_DOWNLOAD, otherwise SeasonScreen can never show the season download button",
         )
     }
+
+    @Test
+    fun `season episode request includes Trickplay`() {
+        assertTrue(
+            seasonEpisodeFields.contains(EpisodeField.TRICKPLAY),
+            message =
+                "loadSeason must request EpisodeField.TRICKPLAY so downloaded episodes carry their trickplay layout",
+        )
+    }
 }
