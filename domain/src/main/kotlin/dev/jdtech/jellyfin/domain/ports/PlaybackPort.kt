@@ -5,6 +5,7 @@ import dev.jdtech.jellyfin.models.ItemSource
 import dev.jdtech.jellyfin.models.MediaSourceId
 import dev.jdtech.jellyfin.models.PlaybackTarget
 import dev.jdtech.jellyfin.models.Segment
+import dev.jdtech.jellyfin.player.DeviceDecoders
 import dev.jdtech.jellyfin.repository.ResumeThresholds
 
 /** What to ask the server for the sources of [itemId] (#757). */
@@ -24,6 +25,8 @@ data class PlaybackRequest(
      * URL it needs, ready for it to fetch without a session (token included), whatever this says.
      */
     val includePath: Boolean = false,
+    /** What this device can decode; read when [target] is a local ExoPlayer (#1012). */
+    val decoders: DeviceDecoders = DeviceDecoders(),
 )
 
 /**

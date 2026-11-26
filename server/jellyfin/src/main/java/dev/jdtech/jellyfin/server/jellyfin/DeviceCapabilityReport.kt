@@ -22,10 +22,10 @@ import android.content.Context
 import android.hardware.display.DisplayManager
 import android.os.Build
 import android.view.Display
-import dev.jdtech.jellyfin.domain.ports.DeviceCodecs
 import dev.jdtech.jellyfin.domain.ports.DeviceReportSource
 import dev.jdtech.jellyfin.models.PlaybackTarget
 import dev.jdtech.jellyfin.models.PlayerEngineId
+import dev.jdtech.jellyfin.player.DeviceDecoders
 import dev.jdtech.jellyfin.player.ProbedCodecs
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
@@ -103,7 +103,6 @@ data class ProbedCodecsReport(
  */
 class JellyfinDeviceReportSource(
     private val context: Context,
-    private val codecs: DeviceCodecs,
     private val profiles: JellyfinDeviceProfiles,
 ) : DeviceReportSource {
     override suspend fun buildJson(
@@ -111,10 +110,11 @@ class JellyfinDeviceReportSource(
         buildType: String,
         transcodeDolbyVision: Boolean,
         directPlayDolbyVision: Boolean,
+        decoders: DeviceDecoders,
     ): String =
         DeviceCapabilityReportBuilder.buildJson(
             context = context,
-            codecs = codecs,
+            decoders = decoders,
             profiles = profiles,
             findroidVersion = appVersion,
             findroidBuildType = buildType,
@@ -145,7 +145,7 @@ object DeviceCapabilityReportBuilder {
 
     fun build(
         context: Context,
-        codecs: DeviceCodecs,
+        decoders: DeviceDecoders,
         profiles: JellyfinDeviceProfiles,
         findroidVersion: String,
         findroidBuildType: String,
@@ -154,7 +154,7 @@ object DeviceCapabilityReportBuilder {
         clock: () -> Long = System::currentTimeMillis,
     ): DeviceCapabilityReport {
         val display = currentDisplay(context)
-        val probed = codecs.probedCodecsSnapshot()
+        val probed = decoders.probed
         return DeviceCapabilityReport(
             findroidVersion = findroidVersion,
             findroidBuildType = findroidBuildType,
@@ -190,6 +190,7 @@ object DeviceCapabilityReportBuilder {
                 profiles.profileFor(
                     PlaybackTarget.LocalPlayer(PlayerEngineId.EXOPLAYER, directPlayDolbyVision),
                     bitrateCapped = false,
+                    decoders = decoders,
                 ),
             directPlayProfile =
                 profiles.profileFor(
@@ -216,7 +217,7 @@ object DeviceCapabilityReportBuilder {
      */
     suspend fun buildJson(
         context: Context,
-        codecs: DeviceCodecs,
+        decoders: DeviceDecoders,
         profiles: JellyfinDeviceProfiles,
         findroidVersion: String,
         findroidBuildType: String,
@@ -228,7 +229,7 @@ object DeviceCapabilityReportBuilder {
             val report =
                 build(
                     context = context,
-                    codecs = codecs,
+                    decoders = decoders,
                     profiles = profiles,
                     findroidVersion = findroidVersion,
                     findroidBuildType = findroidBuildType,

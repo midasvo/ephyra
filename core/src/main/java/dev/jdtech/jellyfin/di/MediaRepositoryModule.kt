@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.jdtech.jellyfin.domain.ports.DeviceCodecs
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.repository.CurrentAccount
 import dev.jdtech.jellyfin.repository.CurrentServerId
@@ -63,6 +64,7 @@ object MediaRepositoryModule {
         syncRequester: UserDataSyncRequester,
         knownServerState: KnownServerState,
         storedLibraryNames: StoredLibraryNames,
+        deviceCodecs: DeviceCodecs,
     ): MediaRepositoryImpl =
         MediaRepositoryImpl(
             server = server,
@@ -82,6 +84,7 @@ object MediaRepositoryModule {
             storedLibraryNames = storedLibraryNames,
             fallbackLog = TimberFallbackLog,
             log = TimberRepositoryLog,
+            deviceCodecs = deviceCodecs,
         )
 
     // #967: one repository, bound as each of its roles. Each binding hands out the one instance

@@ -222,7 +222,7 @@ internal fun StandInServer.repository(
             api.update(baseUrl = baseUrl, accessToken = "token")
             userId = StandInServer.USER_ID.toUuid()
         }
-    val jellyfin = JellyfinMediaServer(api, JellyfinDeviceProfiles(DeviceCodecProbe(context)))
+    val jellyfin = JellyfinMediaServer(api, JellyfinDeviceProfiles())
     // #966: the repository is in application; the stores are data's, over [database].
     val downloads = RoomDownloadStore(database)
     val servers = RoomServerStore(database)
@@ -242,5 +242,6 @@ internal fun StandInServer.repository(
         currentServer = { preferences.currentServerId() },
         nextUpMaxDays = { preferences.getValue(preferences.homeNextUpMaxDays) },
         resumeThresholds = FakeResumeThresholdsStore(),
+        deviceCodecs = DeviceCodecProbe(context),
     )
 }

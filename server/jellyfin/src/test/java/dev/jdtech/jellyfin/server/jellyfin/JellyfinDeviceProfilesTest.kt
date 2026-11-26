@@ -1,8 +1,8 @@
 package dev.jdtech.jellyfin.server.jellyfin
 
-import dev.jdtech.jellyfin.domain.ports.DeviceCodecs
 import dev.jdtech.jellyfin.models.PlaybackTarget
 import dev.jdtech.jellyfin.models.PlayerEngineId
+import dev.jdtech.jellyfin.player.DeviceDecoders
 import dev.jdtech.jellyfin.player.DolbyVisionLimit
 import dev.jdtech.jellyfin.player.ProbedCodecs
 import kotlin.test.assertEquals
@@ -503,94 +503,94 @@ class JellyfinDeviceProfilesTest {
     }
 
     /** #752: [JellyfinDeviceProfiles.profileFor] picks the profile each caller picked before. */
-    private class FakeCodecs(val probed: ProbedCodecs, var displayDolbyVision: Boolean) :
-        DeviceCodecs {
-        var displayChecks = 0
-
-        override fun probedCodecsSnapshot() = probed
-
-        override fun displaySupportsDolbyVision(): Boolean {
-            displayChecks++
-            return displayDolbyVision
-        }
-    }
-
     private val dvCodecs = probedWithDolbyVision(5 to uhd60)
+    private val dvDecoders = DeviceDecoders(dvCodecs, displaySupportsDolbyVision = true)
+    private val profiles = JellyfinDeviceProfiles()
 
     private fun local(engine: PlayerEngineId, directPlayDolbyVision: Boolean = true) =
         PlaybackTarget.LocalPlayer(engine, directPlayDolbyVision)
 
     @Test
     fun `mpv gets the direct-play profile, with the transcode fallback under a cap`() {
-        val profiles = JellyfinDeviceProfiles(FakeCodecs(dvCodecs, displayDolbyVision = true))
-
         for (directPlayDolbyVision in listOf(true, false)) {
             val mpv = local(PlayerEngineId.MPV, directPlayDolbyVision)
             assertEquals(
                 JellyfinDeviceProfiles.buildDirectPlayProfile(),
-                profiles.profileFor(mpv, bitrateCapped = false),
+                profiles.profileFor(mpv, bitrateCapped = false, decoders = dvDecoders),
             )
             assertEquals(
                 JellyfinDeviceProfiles.buildDirectPlayTranscodeFallbackProfile(),
-                profiles.profileFor(mpv, bitrateCapped = true),
+                profiles.profileFor(mpv, bitrateCapped = true, decoders = dvDecoders),
             )
         }
     }
 
     @Test
     fun `ExoPlayer gets the probed profile, cap or not`() {
-        val codecs = FakeCodecs(dvCodecs, displayDolbyVision = true)
-        val profiles = JellyfinDeviceProfiles(codecs)
-
         for (bitrateCapped in listOf(false, true)) {
             assertEquals(
                 JellyfinDeviceProfiles.buildDeviceProfile(dvCodecs, directPlayDolbyVision = true),
-                profiles.profileFor(local(PlayerEngineId.EXOPLAYER), bitrateCapped),
+                profiles.profileFor(
+                    local(PlayerEngineId.EXOPLAYER),
+                    bitrateCapped,
+                    decoders = dvDecoders,
+                ),
             )
             assertEquals(
                 JellyfinDeviceProfiles.buildDeviceProfile(dvCodecs, directPlayDolbyVision = false),
-                profiles.profileFor(local(PlayerEngineId.EXOPLAYER, false), bitrateCapped),
+                profiles.profileFor(
+                    local(PlayerEngineId.EXOPLAYER, false),
+                    bitrateCapped,
+                    decoders = dvDecoders,
+                ),
             )
         }
     }
 
     @Test
-    fun `ExoPlayer direct-plays Dolby Vision only while the display takes it, asked on every call`() {
-        val codecs = FakeCodecs(dvCodecs, displayDolbyVision = true)
-        val profiles = JellyfinDeviceProfiles(codecs)
+    fun `ExoPlayer direct-plays Dolby Vision only while the display takes it`() {
         val exo = local(PlayerEngineId.EXOPLAYER)
 
         assertEquals(
             JellyfinDeviceProfiles.buildDeviceProfile(dvCodecs, directPlayDolbyVision = true),
-            profiles.profileFor(exo, bitrateCapped = false),
+            profiles.profileFor(exo, bitrateCapped = false, decoders = dvDecoders),
         )
-        codecs.displayDolbyVision = false
         assertEquals(
             JellyfinDeviceProfiles.buildDeviceProfile(dvCodecs, directPlayDolbyVision = false),
-            profiles.profileFor(exo, bitrateCapped = false),
+            profiles.profileFor(
+                exo,
+                bitrateCapped = false,
+                decoders = DeviceDecoders(dvCodecs, displaySupportsDolbyVision = false),
+            ),
         )
-        assertEquals(2, codecs.displayChecks)
-
-        // With the setting off the display is not asked, as before.
-        profiles.profileFor(local(PlayerEngineId.EXOPLAYER, false), bitrateCapped = false)
-        assertEquals(2, codecs.displayChecks)
     }
 
     @Test
     fun `a download gets the download profiles`() {
-        val profiles = JellyfinDeviceProfiles(FakeCodecs(dvCodecs, displayDolbyVision = true))
-
         for (bitrateCapped in listOf(false, true)) {
             assertEquals(
                 JellyfinDeviceProfiles.buildDownloadTranscodeProfile(),
-                profiles.profileFor(PlaybackTarget.Download(true), bitrateCapped),
+                profiles.profileFor(
+                    PlaybackTarget.Download(true),
+                    bitrateCapped,
+                    decoders = dvDecoders,
+                ),
             )
         }
         assertEquals(
             JellyfinDeviceProfiles.buildDirectPlayProfile(),
-            profiles.profileFor(PlaybackTarget.Download(false), bitrateCapped = false),
+            profiles.profileFor(
+                PlaybackTarget.Download(false),
+                bitrateCapped = false,
+                decoders = dvDecoders,
+            ),
         )
-        val capped = profiles.profileFor(PlaybackTarget.Download(false), bitrateCapped = true)
+        val capped =
+            profiles.profileFor(
+                PlaybackTarget.Download(false),
+                bitrateCapped = true,
+                decoders = dvDecoders,
+            )
         assertEquals("Direct play all", capped.name)
         assertEquals(MediaStreamProtocol.HTTP, capped.transcodingProfiles.single().protocol)
         assertTrue(capped.subtitleProfiles.none { it.method == SubtitleDeliveryMethod.ENCODE })
@@ -598,16 +598,26 @@ class JellyfinDeviceProfilesTest {
 
     @Test
     fun `a Cast receiver gets the Chromecast profile, with HEVC when it plays it`() {
-        val profiles = JellyfinDeviceProfiles(FakeCodecs(dvCodecs, displayDolbyVision = true))
-
         listOf(false, true).forEach { capped ->
             assertEquals(
                 "Chromecast Video Profile (H.264)",
-                profiles.profileFor(PlaybackTarget.CastReceiver(supportsHevc = false), capped).name,
+                profiles
+                    .profileFor(
+                        PlaybackTarget.CastReceiver(supportsHevc = false),
+                        capped,
+                        decoders = dvDecoders,
+                    )
+                    .name,
             )
             assertEquals(
                 "Chromecast Video Profile (HEVC)",
-                profiles.profileFor(PlaybackTarget.CastReceiver(supportsHevc = true), capped).name,
+                profiles
+                    .profileFor(
+                        PlaybackTarget.CastReceiver(supportsHevc = true),
+                        capped,
+                        decoders = dvDecoders,
+                    )
+                    .name,
             )
         }
     }

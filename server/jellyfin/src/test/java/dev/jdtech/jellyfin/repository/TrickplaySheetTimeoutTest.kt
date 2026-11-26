@@ -4,7 +4,6 @@ import android.app.Application
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.models.ServerException
 import dev.jdtech.jellyfin.models.toItemId
-import dev.jdtech.jellyfin.player.DeviceCodecProbe
 import dev.jdtech.jellyfin.server.jellyfin.JellyfinDeviceProfiles
 import dev.jdtech.jellyfin.server.jellyfin.JellyfinMediaServer
 import dev.jdtech.jellyfin.server.jellyfin.toUuid
@@ -44,7 +43,7 @@ class TrickplaySheetTimeoutTest {
                     api.update(baseUrl = server.baseUrl, accessToken = "token")
                     userId = StandInServer.USER_ID.toUuid()
                 }
-        JellyfinMediaServer(api, JellyfinDeviceProfiles(DeviceCodecProbe(context)))
+        JellyfinMediaServer(api, JellyfinDeviceProfiles())
     }
 
     @After

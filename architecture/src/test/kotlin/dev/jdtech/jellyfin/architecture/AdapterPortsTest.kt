@@ -21,15 +21,13 @@ import kotlin.test.assertTrue
  * single adapter and is left out. A file names a port when the name appears in its code, comments
  * removed.
  *
- * One exception, written here and not in a baseline file: `server/jellyfin` builds its device
- * profiles from `DeviceCodecs`, which `device` implements (#965). Moving that out touches the
- * device profile, which is player code: #1012. The exception is exact, like a baseline: once the
- * adapter no longer names it, the rule fails until the exception is deleted.
+ * No exceptions since #1012 handed `server/jellyfin` a `DeviceDecoders` value of `domain` instead
+ * of `DeviceCodecs`.
  */
 class AdapterPortsTest {
 
     @Test
-    fun `R22 no adapter file names a port of another adapter, but the Jellyfin adapter names DeviceCodecs until #1012`() {
+    fun `R22 no adapter file names a port of another adapter`() {
         val ports = portNames(ProjectTree.productionKotlinFiles.filterKeys(::isPortFile))
         val owners = ownersOf(ports)
         assertTrue(
@@ -38,20 +36,11 @@ class AdapterPortsTest {
                 "the wrong files: $owners",
         )
 
-        val named = ADAPTERS.flatMap { adapter ->
+        val found = ADAPTERS.flatMap { adapter ->
             adapterFiles(adapter).flatMap { (path, file) ->
                 namedPorts(file.readText(), owners, adapter).map { path to it }
             }
         }
-        val excepted = named.filter { (path, port) ->
-            EXCEPTIONS[port]?.let(path::startsWith) == true
-        }
-        assertEquals(
-            EXCEPTIONS.keys,
-            excepted.map { it.second }.toSet(),
-            "An exception of R22 no longer applies: delete it from AdapterPortsTest.EXCEPTIONS",
-        )
-        val found = named - excepted.toSet()
         assertTrue(
             found.isEmpty(),
             found.joinToString("\n") { (path, port) ->
@@ -84,13 +73,6 @@ class AdapterPortsTest {
 
     private companion object {
         val ADAPTERS = listOf("data", "server/jellyfin", "ratings/mdblist", "device")
-
-        /** Port to the adapter that may still name it, each with its issue. */
-        val EXCEPTIONS =
-            mapOf(
-                // #1012: the Jellyfin device profiles are built from the device's codecs.
-                "DeviceCodecs" to "server/jellyfin/"
-            )
 
         fun isPortFile(path: String): Boolean =
             path.startsWith("domain/src/main/kotlin/dev/jdtech/jellyfin/domain/ports/") ||

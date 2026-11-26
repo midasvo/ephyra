@@ -20,9 +20,9 @@
  */
 package dev.jdtech.jellyfin.server.jellyfin
 
-import dev.jdtech.jellyfin.domain.ports.DeviceCodecs
 import dev.jdtech.jellyfin.models.PlaybackTarget
 import dev.jdtech.jellyfin.models.PlayerEngineId
+import dev.jdtech.jellyfin.player.DeviceDecoders
 import dev.jdtech.jellyfin.player.DolbyVisionLimit
 import dev.jdtech.jellyfin.player.ProbedCodecs
 import dev.jdtech.jellyfin.server.jellyfin.cast.Chromecast
@@ -41,24 +41,32 @@ import org.jellyfin.sdk.model.api.SubtitleDeliveryMethod
 import org.jellyfin.sdk.model.api.SubtitleProfile
 import org.jellyfin.sdk.model.api.TranscodingProfile
 
-/** The Jellyfin device profile for each [PlaybackTarget], from what [codecs] can decode (#752). */
-class JellyfinDeviceProfiles(private val codecs: DeviceCodecs) {
+/**
+ * The Jellyfin device profile for each [PlaybackTarget], from what the device can decode (#752).
+ */
+class JellyfinDeviceProfiles {
 
     /**
-     * The profile for [target]; [bitrateCapped] is whether the request has a bitrate cap.
+     * The profile for [target]; [bitrateCapped] is whether the request has a bitrate cap, and
+     * [decoders] holds what this device decodes right now (#1012).
      *
      * mpv software-decodes practically everything, so it gets the permissive direct-play profile,
      * with the transcode fallback under a cap. ExoPlayer gets the honest, hardware-probed profile,
      * cap or not. A Cast receiver gets a Chromecast profile, with or without HEVC (#767).
      */
-    fun profileFor(target: PlaybackTarget, bitrateCapped: Boolean): DeviceProfile =
+    fun profileFor(
+        target: PlaybackTarget,
+        bitrateCapped: Boolean,
+        decoders: DeviceDecoders = DeviceDecoders(),
+    ): DeviceProfile =
         when (target) {
             is PlaybackTarget.LocalPlayer ->
                 when (target.engine) {
                     PlayerEngineId.MPV ->
                         if (bitrateCapped) getDirectPlayTranscodeFallbackProfile()
                         else getDirectPlayProfile()
-                    PlayerEngineId.EXOPLAYER -> getDeviceProfile(target.directPlayDolbyVision)
+                    PlayerEngineId.EXOPLAYER ->
+                        getDeviceProfile(target.directPlayDolbyVision, decoders)
                 }
             is PlaybackTarget.Download ->
                 getDownloadProfile(target.transcodeDolbyVision, bitrateCapped)
@@ -71,13 +79,15 @@ class JellyfinDeviceProfiles(private val codecs: DeviceCodecs) {
     /**
      * Honest, hardware-probed profile for ExoPlayer. Files the device cannot direct-play get a
      * server-side transcode. With [directPlayDolbyVision] off that includes all Dolby Vision,
-     * whatever the decoders advertise. The display is asked on every call (see
-     * [DeviceCodecs.displaySupportsDolbyVision]).
+     * whatever the decoders advertise.
      */
-    private fun getDeviceProfile(directPlayDolbyVision: Boolean): DeviceProfile =
+    private fun getDeviceProfile(
+        directPlayDolbyVision: Boolean,
+        decoders: DeviceDecoders,
+    ): DeviceProfile =
         buildDeviceProfile(
-            codecs.probedCodecsSnapshot(),
-            directPlayDolbyVision && codecs.displaySupportsDolbyVision(),
+            decoders.probed,
+            directPlayDolbyVision && decoders.displaySupportsDolbyVision,
         )
 
     /**

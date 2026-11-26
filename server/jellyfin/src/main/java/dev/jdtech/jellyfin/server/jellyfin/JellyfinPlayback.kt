@@ -86,7 +86,12 @@ class JellyfinPlayback(
                 // DV decoder (JellyfinDeviceProfiles.profileFor). A cap transcodes files above it;
                 // files below it still direct-play. mpv's plain profile has no transcoding
                 // profiles, so a cap switches it to the variant that carries the HLS fallback.
-                val deviceProfile = deviceProfiles.profileFor(target, bitrateCapped = capped)
+                val deviceProfile =
+                    deviceProfiles.profileFor(
+                        target,
+                        bitrateCapped = capped,
+                        decoders = request.decoders,
+                    )
                 val enableTranscoding = target.engine != PlayerEngineId.MPV || capped
                 PlaybackInfoDto(
                     userId = api.currentUserId,

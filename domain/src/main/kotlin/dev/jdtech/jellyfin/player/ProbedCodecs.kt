@@ -14,4 +14,17 @@ data class ProbedCodecs(
     val audioCodecs: Set<String>,
     /** Dolby Vision profile number -> the highest level a decoder advertises for it. */
     val dolbyVisionProfiles: Map<Int, DolbyVisionLimit> = emptyMap(),
+) {
+    companion object {
+        val EMPTY = ProbedCodecs(emptyMap(), emptySet())
+    }
+}
+
+/**
+ * What this device can decode at the moment a profile is built: the [probed] decoders and whether
+ * the display currently accepts Dolby Vision ([displaySupportsDolbyVision]).
+ */
+data class DeviceDecoders(
+    val probed: ProbedCodecs = ProbedCodecs.EMPTY,
+    val displaySupportsDolbyVision: Boolean = false,
 )

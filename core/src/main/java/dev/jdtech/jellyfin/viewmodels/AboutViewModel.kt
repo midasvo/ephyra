@@ -11,6 +11,7 @@ import dev.jdtech.jellyfin.about.AboutServer
 import dev.jdtech.jellyfin.core.AppVariant
 import dev.jdtech.jellyfin.domain.ports.DeviceCodecs
 import dev.jdtech.jellyfin.domain.ports.DeviceReportSource
+import dev.jdtech.jellyfin.domain.ports.snapshot
 import dev.jdtech.jellyfin.player.ProbedCodecs
 import dev.jdtech.jellyfin.repository.CurrentAccount
 import dev.jdtech.jellyfin.repository.StoredServers
@@ -119,14 +120,20 @@ constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(isExporting = true)
             try {
+                val directPlayDolbyVision =
+                    appPreferences.getValue(appPreferences.playerDirectPlayDolbyVision)
+                val decoders =
+                    withContext(Dispatchers.Default) {
+                        codecs.snapshot(checkDisplayDolbyVision = directPlayDolbyVision)
+                    }
                 val json =
                     deviceReport.buildJson(
                         appVersion = findroidVersion,
                         buildType = findroidBuildType,
                         transcodeDolbyVision =
                             appPreferences.getValue(appPreferences.downloadTranscodeDolbyVision),
-                        directPlayDolbyVision =
-                            appPreferences.getValue(appPreferences.playerDirectPlayDolbyVision),
+                        directPlayDolbyVision = directPlayDolbyVision,
+                        decoders = decoders,
                     )
                 eventsChannel.send(
                     when (target) {

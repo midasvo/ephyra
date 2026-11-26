@@ -10,7 +10,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.domain.ports.ActiveServerHolder
-import dev.jdtech.jellyfin.domain.ports.DeviceCodecs
 import dev.jdtech.jellyfin.domain.ports.DeviceReportSource
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.ServerConnector
@@ -30,9 +29,8 @@ import javax.inject.Singleton
 /**
  * #758: what the Jellyfin adapter provides, all over the app's one client. The apps, the only
  * modules that depend on the adapter, are the composition root; `core` provides what this takes
- * from outside: the [ActiveServerHolder] (with the saved session on it; `core` knows Room), the
- * probed [DeviceCodecs] and the user's [NetworkTimeouts] (#918: read once, when the client is
- * made).
+ * from outside: the [ActiveServerHolder] (with the saved session on it; `core` knows Room) and the
+ * user's [NetworkTimeouts] (#918: read once, when the client is made).
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -92,15 +90,13 @@ object JellyfinServerModule {
     /** CE (#752): the Jellyfin device profile for each playback target. */
     @Singleton
     @Provides
-    fun provideJellyfinDeviceProfiles(codecs: DeviceCodecs): JellyfinDeviceProfiles =
-        JellyfinDeviceProfiles(codecs)
+    fun provideJellyfinDeviceProfiles(): JellyfinDeviceProfiles = JellyfinDeviceProfiles()
 
     @Provides
     fun provideDeviceReportSource(
         application: Application,
-        codecs: DeviceCodecs,
         profiles: JellyfinDeviceProfiles,
-    ): DeviceReportSource = JellyfinDeviceReportSource(application, codecs, profiles)
+    ): DeviceReportSource = JellyfinDeviceReportSource(application, profiles)
 
     /**
      * CE (#756, #757): the Jellyfin server the repository talks to, with its ports. #770: the
