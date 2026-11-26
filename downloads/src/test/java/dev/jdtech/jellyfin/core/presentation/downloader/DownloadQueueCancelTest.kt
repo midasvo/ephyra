@@ -22,10 +22,12 @@ import dev.jdtech.jellyfin.utils.NetworkConnectivity
 import dev.jdtech.jellyfin.utils.download.DownloadStatus
 import dev.jdtech.jellyfin.utils.download.TestDownloadSettings
 import dev.jdtech.jellyfin.utils.download.TestDownloadTexts
+import java.util.Collections
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.fail
 import kotlinx.coroutines.CompletableDeferred
@@ -231,6 +233,46 @@ class DownloadQueueCancelTest {
         }
     }
 
+    @Test
+    fun `cancelling while persisting a wait-for-network retry drops the recreated pending row`() {
+        storedSources = emptyList()
+        val startEntered = CompletableDeferred<Unit>()
+        val releaseStart = CompletableDeferred<Unit>()
+        val saveEntered = CompletableDeferred<Unit>()
+        val releaseSave = CompletableDeferred<Unit>()
+        val saveCalls = AtomicInteger(0)
+
+        downloader.onDownloadItem = { _ ->
+            startEntered.complete(Unit)
+            releaseStart.await()
+            -1L to UiText.DynamicString("network lost")
+        }
+        downloader.onSavePendingDownload = {
+            if (saveCalls.incrementAndGet() == 2) {
+                saveEntered.complete(Unit)
+                releaseSave.await()
+            }
+        }
+
+        val queue = queue(maxConcurrent = 1)
+        runBlocking {
+            queue.enqueue(item, maxBitrate = 1_000_000)
+            withTimeout(TIMEOUT_MS) { startEntered.await() }
+
+            online = false
+            releaseStart.complete(Unit)
+            withTimeout(TIMEOUT_MS) { saveEntered.await() }
+
+            queue.remove(item.id)
+            awaitAbsent(queue)
+            releaseSave.complete(Unit)
+
+            awaitPumpIdle(queue)
+            assertEquals(emptyList(), queue.entries.value)
+            assertFalse(downloader.persistedPending.containsKey(item.id))
+        }
+    }
+
     private fun retried(queue: DownloadQueue) =
         queue.entries.value.firstOrNull { it.id == item.id }?.retryCount == 1
 
@@ -307,9 +349,11 @@ class DownloadQueueCancelTest {
         var active = emptyList<Downloader.ActiveDownload>()
         var startResult: Pair<Long, UiText?> = -1L to null
         var onDownloadItem: (suspend (maxBitrate: Int?) -> Pair<Long, UiText?>)? = null
+        var onSavePendingDownload: (suspend () -> Unit)? = null
         var progressStatus = DownloadStatus.RUNNING
         val cancelled = CopyOnWriteArrayList<Pair<ItemId, Long>>()
         val savedPending = CopyOnWriteArrayList<Pair<ItemId, Int?>>()
+        val persistedPending: MutableMap<ItemId, Int?> = Collections.synchronizedMap(mutableMapOf())
 
         override suspend fun downloadItem(
             item: Item,
@@ -348,10 +392,14 @@ class DownloadQueueCancelTest {
             maxBitrate: Int?,
             smartQueued: Boolean,
         ) {
+            onSavePendingDownload?.invoke()
             savedPending.add(item.id to maxBitrate)
+            persistedPending[item.id] = maxBitrate
         }
 
-        override suspend fun removePendingDownload(itemId: ItemId) = Unit
+        override suspend fun removePendingDownload(itemId: ItemId) {
+            persistedPending.remove(itemId)
+        }
 
         override suspend fun getPendingDownloads() = emptyList<Downloader.PendingDownload>()
 

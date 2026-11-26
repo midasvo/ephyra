@@ -913,17 +913,36 @@ constructor(
             _entries.value = sort(_entries.value.map { if (it === current) updated else it })
         }
         persistWaitForNetwork?.let { waitingEntry ->
+            var saved = false
             try {
                 downloader.savePendingDownload(
                     waitingEntry.item,
                     waitingEntry.maxBitrate,
                     waitingEntry.smartQueued,
                 )
+                saved = true
             } catch (e: Exception) {
                 Timber.e(
                     e,
                     "Failed to persist download ${waitingEntry.item.name} waiting for network",
                 )
+            }
+            if (saved) {
+                val dropped = mutex.withLock {
+                    _entries.value.none {
+                        it.id == waitingEntry.id && it.state is EntryState.Pending
+                    }
+                }
+                if (dropped) {
+                    try {
+                        downloader.removePendingDownload(waitingEntry.id)
+                    } catch (e: Exception) {
+                        Timber.e(
+                            e,
+                            "Failed to drop stale pending row for ${waitingEntry.item.name}",
+                        )
+                    }
+                }
             }
         }
         if (orphaned) {
