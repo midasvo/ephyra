@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadProgress
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadStatus
 import dev.jdtech.jellyfin.domain.ports.CurrentServerCapabilities
 import dev.jdtech.jellyfin.film.presentation.DownloadPrompt
@@ -18,11 +17,14 @@ import dev.jdtech.jellyfin.models.ItemId
 import dev.jdtech.jellyfin.models.ItemSourceType
 import dev.jdtech.jellyfin.models.isDownloaded
 import dev.jdtech.jellyfin.repository.DataChangeEvents
+import dev.jdtech.jellyfin.repository.DownloadDeleter
+import dev.jdtech.jellyfin.repository.DownloadEntry
+import dev.jdtech.jellyfin.repository.DownloadEntryState
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.repository.ItemCatalog
 import dev.jdtech.jellyfin.repository.ReloadPolicy
 import dev.jdtech.jellyfin.repository.UserDataUpdates
 import dev.jdtech.jellyfin.repository.serverOrStoredList
-import dev.jdtech.jellyfin.utils.Downloader
 import dev.jdtech.jellyfin.utils.TimberFallbackLog
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -50,8 +52,8 @@ constructor(
     private val catalog: ItemCatalog,
     private val userData: UserDataUpdates,
     private val capabilities: CurrentServerCapabilities,
-    private val downloader: Downloader,
-    private val downloadQueue: DownloadQueue,
+    private val downloadDeleter: DownloadDeleter,
+    private val downloadQueue: DownloadQueuePort,
     dataChanges: DataChangeEvents = DataChangeEvents(),
 ) : ViewModel() {
     private val _state = MutableStateFlow(SeasonState())
@@ -85,7 +87,7 @@ constructor(
     init {
         // Observe queue entries and merge into per-episode progress map.
         viewModelScope.launch {
-            downloadQueue.entries
+            downloadQueue.queueEntries
                 // Only this season's entries matter, and only their id, state and progress:
                 // the queue also re-emits for other downloads and for speed changes.
                 .map { entries ->
@@ -113,8 +115,8 @@ constructor(
                     val episodeIds = episodes.map { it.id }.toSet()
                     val isBusy = entries.any {
                         it.id in episodeIds &&
-                            (it.state is DownloadQueue.EntryState.Downloading ||
-                                it.state is DownloadQueue.EntryState.Pending)
+                            (it.state is DownloadEntryState.Downloading ||
+                                it.state is DownloadEntryState.Pending)
                     }
                     if (isBusy) {
                         wasBusy = true
@@ -218,7 +220,10 @@ constructor(
                             storedOnly = storedOnly,
                             seriesSeasons = seriesSeasons,
                             episodeDownloadProgress =
-                                buildDownloadProgressMap(episodes, downloadQueue.entries.value),
+                                buildDownloadProgressMap(
+                                    episodes,
+                                    downloadQueue.queueEntries.value,
+                                ),
                             isLoading = false,
                         )
                     )
@@ -268,7 +273,7 @@ constructor(
                     state.copy(
                         episodes = episodes,
                         episodeDownloadProgress =
-                            buildDownloadProgressMap(episodes, downloadQueue.entries.value),
+                            buildDownloadProgressMap(episodes, downloadQueue.queueEntries.value),
                     )
                 }
             } catch (e: CancellationException) {
@@ -359,7 +364,7 @@ constructor(
                 downloadQueue.remove(episode.id)
                 val localSource = episode.sources.firstOrNull { it.type == ItemSourceType.LOCAL }
                 if (localSource != null) {
-                    downloader.deleteItem(item = episode, source = localSource)
+                    downloadDeleter.deleteItem(item = episode, source = localSource)
                 }
             }
             loadSeason(seasonId)
@@ -368,28 +373,27 @@ constructor(
 
     private fun buildDownloadProgressMap(
         episodes: List<Episode>,
-        entries: List<DownloadQueue.Entry>,
+        entries: List<DownloadEntry>,
     ): Map<ItemId, DownloadProgress> {
         val byId = entries.associateBy { it.id }
         return episodes.associate { episode ->
             val entry = byId[episode.id]
             val progress =
-                when (val s = entry?.state) {
-                    is DownloadQueue.EntryState.Downloading ->
+                when (entry?.state) {
+                    is DownloadEntryState.Downloading ->
                         DownloadProgress(
                             status = DownloadStatus.DOWNLOADING,
                             progress = entry.progress / 100f,
                         )
-                    is DownloadQueue.EntryState.Pending ->
+                    is DownloadEntryState.Pending ->
                         DownloadProgress(status = DownloadStatus.QUEUED)
-                    is DownloadQueue.EntryState.Paused ->
+                    is DownloadEntryState.Paused ->
                         DownloadProgress(
                             status = DownloadStatus.PAUSED,
                             progress = entry.progress / 100f,
                         )
-                    is DownloadQueue.EntryState.Failed ->
-                        DownloadProgress(status = DownloadStatus.FAILED)
-                    is DownloadQueue.EntryState.Completed ->
+                    is DownloadEntryState.Failed -> DownloadProgress(status = DownloadStatus.FAILED)
+                    is DownloadEntryState.Completed ->
                         DownloadProgress(status = DownloadStatus.COMPLETED, progress = 1f)
                     null ->
                         if (episode.isDownloaded())
@@ -421,7 +425,7 @@ constructor(
                     downloadQueue.remove(item.id)
                     val localSource = item.sources.firstOrNull { it.type == ItemSourceType.LOCAL }
                     if (localSource != null) {
-                        downloader.deleteItem(item = item, source = localSource)
+                        downloadDeleter.deleteItem(item = item, source = localSource)
                     }
                     loadSeason(seasonId)
                 }

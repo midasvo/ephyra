@@ -5,8 +5,9 @@ import dev.jdtech.jellyfin.models.ItemId
 import dev.jdtech.jellyfin.models.ItemSource
 import dev.jdtech.jellyfin.models.MediaSourceId
 import dev.jdtech.jellyfin.models.UiText
+import dev.jdtech.jellyfin.repository.DownloadDeleter
 
-interface Downloader {
+interface Downloader : DownloadDeleter {
     /**
      * [maxBitrate] (bits/sec) is the user-selected download quality cap — files above it get a
      * progressive server-side transcode down to the cap, files below it download as the original.
@@ -45,7 +46,7 @@ interface Downloader {
      */
     suspend fun retryFailedMediaStreams(item: Item)
 
-    suspend fun deleteItem(item: Item, source: ItemSource)
+    override suspend fun deleteItem(item: Item, source: ItemSource)
 
     /** Snapshot from the OkHttp download engine for a single download id. */
     data class Progress(

@@ -1,10 +1,6 @@
 package dev.jdtech.jellyfin.film.presentation
 
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.SharedPreferences
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
-import dev.jdtech.jellyfin.di.AppPreferencesDownloadSettings
 import dev.jdtech.jellyfin.film.domain.VideoMetadataParser
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeState
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeViewModel
@@ -21,8 +17,9 @@ import dev.jdtech.jellyfin.models.PersonKind
 import dev.jdtech.jellyfin.models.ServerCapabilities
 import dev.jdtech.jellyfin.models.Show
 import dev.jdtech.jellyfin.models.toItemId
+import dev.jdtech.jellyfin.repository.DownloadDeleter
 import dev.jdtech.jellyfin.repository.DownloadList
-import dev.jdtech.jellyfin.repository.DownloadSources
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.repository.ItemCatalog
 import dev.jdtech.jellyfin.repository.ItemExtras
 import dev.jdtech.jellyfin.repository.UserDataUpdates
@@ -30,7 +27,6 @@ import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.testing.FakeRoles
 import dev.jdtech.jellyfin.testing.fakeProxy
 import dev.jdtech.jellyfin.testing.kotlinName
-import dev.jdtech.jellyfin.utils.CoreDownloadTexts
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -175,15 +171,8 @@ class CastAndCrewPreferenceTest {
                 extras = repository.role(),
                 capabilities = { ServerCapabilities.ALL },
                 appPreferences = preferences,
-                downloader = unused(),
-                downloadQueue =
-                    DownloadQueue(
-                        downloader = unused(),
-                        settings = AppPreferencesDownloadSettings(preferences),
-                        downloadSources = unused<DownloadSources>(),
-                        context = ContextWrapper(null) as Context,
-                        texts = CoreDownloadTexts,
-                    ),
+                downloadDeleter = DownloadDeleter.None,
+                downloadQueue = DownloadQueuePort.None,
                 downloadList = noDownloads(),
                 defaultDispatcher = dispatcher,
                 ioDispatcher = dispatcher,

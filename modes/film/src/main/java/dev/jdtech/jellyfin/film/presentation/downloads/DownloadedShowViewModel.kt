@@ -3,15 +3,15 @@ package dev.jdtech.jellyfin.film.presentation.downloads
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.models.AccountKey
 import dev.jdtech.jellyfin.models.Episode
 import dev.jdtech.jellyfin.models.ItemId
 import dev.jdtech.jellyfin.models.ItemSourceType
 import dev.jdtech.jellyfin.repository.CurrentAccount
+import dev.jdtech.jellyfin.repository.DownloadDeleter
 import dev.jdtech.jellyfin.repository.DownloadList
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
-import dev.jdtech.jellyfin.utils.Downloader
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -26,8 +26,8 @@ class DownloadedShowViewModel
 @Inject
 constructor(
     private val account: CurrentAccount,
-    private val downloadQueue: DownloadQueue,
-    private val downloader: Downloader,
+    private val downloadQueue: DownloadQueuePort,
+    private val downloadDeleter: DownloadDeleter,
     private val downloadList: DownloadList,
     private val appPreferences: AppPreferences,
 ) : ViewModel() {
@@ -80,7 +80,7 @@ constructor(
                 downloadQueue.remove(episode.id)
                 val source =
                     episode.sources.firstOrNull { it.type == ItemSourceType.LOCAL } ?: continue
-                downloader.deleteItem(episode, source)
+                downloadDeleter.deleteItem(episode, source)
             }
             loadEpisodes(showId)
         }

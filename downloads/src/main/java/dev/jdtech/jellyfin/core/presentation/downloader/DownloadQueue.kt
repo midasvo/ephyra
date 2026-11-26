@@ -16,8 +16,12 @@ import dev.jdtech.jellyfin.models.Playable
 import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.models.asString
 import dev.jdtech.jellyfin.repository.DataChangeEvents
+import dev.jdtech.jellyfin.repository.DownloadEntry
+import dev.jdtech.jellyfin.repository.DownloadEntryState
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.repository.DownloadSettings
 import dev.jdtech.jellyfin.repository.DownloadSources
+import dev.jdtech.jellyfin.repository.DownloadText
 import dev.jdtech.jellyfin.repository.ServerAvailability
 import dev.jdtech.jellyfin.utils.Downloader
 import dev.jdtech.jellyfin.utils.NetworkConnectivity
@@ -75,7 +79,7 @@ constructor(
     private val connectivity: NetworkConnectivity = AlwaysOnline,
     // CE (#912): a download that failed for want of the server goes on when the server is back.
     private val serverAvailability: ServerAvailability = ServerAvailability.NONE,
-) {
+) : DownloadQueuePort {
     sealed interface EntryState {
         data object Pending : EntryState
 
@@ -145,6 +149,14 @@ constructor(
     private val _entries = MutableStateFlow<List<Entry>>(emptyList())
     val entries: StateFlow<List<Entry>> = _entries.asStateFlow()
 
+    private val _queueEntries = MutableStateFlow<List<DownloadEntry>>(emptyList())
+    override val queueEntries: StateFlow<List<DownloadEntry>> = _queueEntries.asStateFlow()
+
+    private fun setEntries(entries: List<Entry>) {
+        _entries.value = entries
+        _queueEntries.value = entries.map { it.toDownloadEntry() }
+    }
+
     /**
      * CE (#560): true from the moment the pump is started until it finds no work left. Both ends
      * are decided under the mutex, so this is the one place that says whether the download service
@@ -185,7 +197,7 @@ constructor(
     /** Previous bytes + wall-clock (ms) sample per downloadId, for speed calc. */
     private val lastSamples = mutableMapOf<Long, Pair<Long, Long>>()
 
-    suspend fun enqueue(item: Item, maxBitrate: Int? = null, smartQueued: Boolean = false) {
+    override suspend fun enqueue(item: Item, maxBitrate: Int?, smartQueued: Boolean) {
         var persisted = false
         var claimed = false
         mutex.withLock {
@@ -199,10 +211,11 @@ constructor(
                 // The user asking for a download Smart Downloads already queued makes it theirs,
                 // so it is never removed automatically.
                 if (existing.smartQueued && !smartQueued) {
-                    _entries.value =
+                    setEntries(
                         _entries.value.map {
                             if (it === existing) it.copy(smartQueued = false) else it
                         }
+                    )
                     claimed = true
                 }
                 return@withLock
@@ -218,7 +231,7 @@ constructor(
                     maxBitrate = maxBitrate,
                     smartQueued = smartQueued,
                 )
-            _entries.value = sort(filtered + newEntry)
+            setEntries(sort(filtered + newEntry))
             persisted = true
         }
         if (persisted) {
@@ -240,7 +253,7 @@ constructor(
      * Re-attaches an in-flight download started in a previous app session. No-op if the item is
      * already tracked.
      */
-    suspend fun restore(item: Item, downloadId: Long) {
+    override suspend fun restore(item: Item, downloadId: Long) {
         mutex.withLock {
             val existing = _entries.value.firstOrNull { it.id == item.id }
             // If it's already live (pending/downloading), leave it alone.
@@ -263,7 +276,7 @@ constructor(
                     downloadId = downloadId,
                     startedAt = System.currentTimeMillis(),
                 )
-            _entries.value = sort(filtered + entry)
+            setEntries(sort(filtered + entry))
         }
         ensurePump()
     }
@@ -335,12 +348,12 @@ constructor(
                     }
             val added = addedActive + addedPending
             if (added.isEmpty()) return@withLock
-            _entries.value = sort(_entries.value + added)
+            setEntries(sort(_entries.value + added))
         }
         ensurePump()
     }
 
-    suspend fun enqueueAll(items: List<Item>, maxBitrate: Int? = null) {
+    override suspend fun enqueueAll(items: List<Item>, maxBitrate: Int?) {
         val persistedItems = mutableListOf<Item>()
         // Already queued by Smart Downloads; the user asking for them makes them theirs.
         val claimedIds = mutableSetOf<ItemId>()
@@ -356,10 +369,11 @@ constructor(
                     claimedIds.add(it.id)
             }
             if (claimedIds.isNotEmpty()) {
-                _entries.value =
+                setEntries(
                     _entries.value.map {
                         if (it.id in claimedIds) it.copy(smartQueued = false) else it
                     }
+                )
             }
             val now = System.currentTimeMillis()
             val newEntries =
@@ -377,7 +391,7 @@ constructor(
             if (newEntries.isEmpty()) return@withLock
             val newIds = newEntries.map { it.id }.toSet()
             val kept = _entries.value.filter { it.id !in newIds }
-            _entries.value = sort(kept + newEntries)
+            setEntries(sort(kept + newEntries))
             persistedItems.addAll(newEntries.map { it.item })
         }
         for (item in persistedItems) {
@@ -391,7 +405,7 @@ constructor(
      * Cancels a download that has not finished (its partial file and rows go too) or drops a
      * completed entry.
      */
-    fun remove(id: ItemId) {
+    override fun remove(id: ItemId) {
         scope.launch {
             var cancelEntry: Entry? = null
             mutex.withLock {
@@ -399,7 +413,7 @@ constructor(
                 if (target.state !is EntryState.Completed) {
                     cancelEntry = target
                 }
-                _entries.value = _entries.value.filter { it.id != id }
+                setEntries(_entries.value.filter { it.id != id })
             }
             syncPendingRow(id)
             cancelEntry?.let { entry ->
@@ -436,7 +450,7 @@ constructor(
     }
 
     /** Re-queues a failed entry. */
-    fun retry(id: ItemId) {
+    override fun retry(id: ItemId) {
         scope.launch { requeueFailed { it.id == id } }
     }
 
@@ -455,7 +469,7 @@ constructor(
     private suspend fun requeueFailed(matches: (Entry) -> Boolean): Boolean {
         val retried = mutableListOf<Entry>()
         mutex.withLock {
-            _entries.value =
+            setEntries(
                 sort(
                     _entries.value.map { entry ->
                         if (entry.state is EntryState.Failed && matches(entry)) {
@@ -475,6 +489,7 @@ constructor(
                         }
                     }
                 )
+            )
         }
         for (entry in retried) {
             syncPendingRow(entry.id)
@@ -487,7 +502,7 @@ constructor(
     fun clearCompleted() {
         scope.launch {
             mutex.withLock {
-                _entries.value = _entries.value.filter { it.state !is EntryState.Completed }
+                setEntries(_entries.value.filter { it.state !is EntryState.Completed })
             }
         }
     }
@@ -731,9 +746,7 @@ constructor(
                             exhausted.add(failed)
                         }
                     }
-                    mutex.withLock {
-                        _entries.value = sort(_entries.value.map { updates[it.id] ?: it })
-                    }
+                    mutex.withLock { setEntries(sort(_entries.value.map { updates[it.id] ?: it })) }
                     for (id in autoRetried) {
                         syncPendingRow(id)
                     }
@@ -808,7 +821,7 @@ constructor(
                     it.id == entry.id && it.state is EntryState.Pending && it.startAttemptId == null
                 } ?: return
             val marked = current.copy(startAttemptId = attemptId)
-            _entries.value = _entries.value.map { if (it === current) marked else it }
+            setEntries(_entries.value.map { if (it === current) marked else it })
             marked
         }
         val storageIndex = settings.downloadStorageIndex?.toIntOrNull() ?: 0
@@ -888,7 +901,7 @@ constructor(
                         startAttemptId = null,
                     )
                 }
-            _entries.value = sort(_entries.value.map { if (it === current) updated else it })
+            setEntries(sort(_entries.value.map { if (it === current) updated else it }))
         }
         if (dropPending) {
             syncPendingRow(activeEntry.id)
@@ -950,8 +963,9 @@ constructor(
             entry.state is EntryState.Pending && entry.waitingForNetwork != waiting
         if (_entries.value.none(::stale)) return
         mutex.withLock {
-            _entries.value =
+            setEntries(
                 _entries.value.map { if (stale(it)) it.copy(waitingForNetwork = waiting) else it }
+            )
         }
     }
 
@@ -1001,6 +1015,35 @@ constructor(
     }
 
     companion object {
+        private fun DownloadQueue.Entry.toDownloadEntry(): DownloadEntry =
+            DownloadEntry(
+                id = id,
+                item = item,
+                state =
+                    when (val s = state) {
+                        is DownloadQueue.EntryState.Pending -> DownloadEntryState.Pending
+                        is DownloadQueue.EntryState.Downloading -> DownloadEntryState.Downloading
+                        is DownloadQueue.EntryState.Paused -> DownloadEntryState.Paused
+                        is DownloadQueue.EntryState.Completed -> DownloadEntryState.Completed
+                        is DownloadQueue.EntryState.Failed ->
+                            DownloadEntryState.Failed(s.error?.toDownloadText())
+                    },
+                downloadId = downloadId,
+                progress = progress,
+                bytesDownloaded = bytesDownloaded,
+                totalBytes = totalBytes,
+                totalBytesEstimated = totalBytesEstimated,
+                isTranscode = isTranscode,
+                bytesPerSecond = bytesPerSecond,
+                waitingForNetwork = waitingForNetwork,
+            )
+
+        private fun UiText.toDownloadText(): DownloadText =
+            when (this) {
+                is UiText.DynamicString -> DownloadText.Dynamic(value)
+                is UiText.StringResource -> DownloadText.Resource(resId, *args)
+            }
+
         private const val FAILURE_CHANNEL_ID = "download_failures"
         private const val MAX_AUTO_RETRIES = 3
         /** Backoff delays: 30s, 2m, 10m. */

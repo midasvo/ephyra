@@ -38,7 +38,6 @@ android {
 
 dependencies {
     implementation(projects.application)
-    implementation(projects.downloads)
     implementation(projects.domain)
     implementation(projects.player.core)
     implementation(projects.settings)

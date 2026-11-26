@@ -7,8 +7,11 @@ import dev.jdtech.jellyfin.models.Item
 import dev.jdtech.jellyfin.models.ItemId
 import dev.jdtech.jellyfin.models.ItemSourceType
 import dev.jdtech.jellyfin.models.isDownloading
-import dev.jdtech.jellyfin.utils.Downloader
+import dev.jdtech.jellyfin.repository.DownloadDeleter
+import dev.jdtech.jellyfin.repository.DownloadEntryState
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.utils.download.DownloadStatus
+import dev.jdtech.jellyfin.utils.toUiText
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -20,8 +23,10 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class DownloaderViewModel
 @Inject
-constructor(private val downloader: Downloader, private val downloadQueue: DownloadQueue) :
-    ViewModel() {
+constructor(
+    private val downloadDeleter: DownloadDeleter,
+    private val downloadQueue: DownloadQueuePort,
+) : ViewModel() {
     private val _state = MutableStateFlow(DownloaderState())
     val state = _state.asStateFlow()
 
@@ -54,30 +59,33 @@ constructor(private val downloader: Downloader, private val downloadQueue: Downl
     private fun startObserving(itemId: ItemId) {
         observerJob?.cancel()
         observerJob = viewModelScope.launch {
-            downloadQueue.entries.collect { entries ->
+            downloadQueue.queueEntries.collect { entries ->
                 val entry = entries.firstOrNull { it.id == itemId }
                 val newState =
                     when (val s = entry?.state) {
-                        is DownloadQueue.EntryState.Pending ->
+                        is DownloadEntryState.Pending ->
                             DownloaderState(
                                 status =
                                     if (entry.waitingForNetwork) DownloadStatus.PAUSED
                                     else DownloadStatus.PENDING
                             )
-                        is DownloadQueue.EntryState.Downloading ->
+                        is DownloadEntryState.Downloading ->
                             DownloaderState(
                                 status = DownloadStatus.RUNNING,
                                 progress = entry.progress / 100f,
                             )
-                        is DownloadQueue.EntryState.Paused ->
+                        is DownloadEntryState.Paused ->
                             DownloaderState(
                                 status = DownloadStatus.PAUSED,
                                 progress = entry.progress / 100f,
                             )
-                        is DownloadQueue.EntryState.Completed ->
+                        is DownloadEntryState.Completed ->
                             DownloaderState(status = DownloadStatus.SUCCESSFUL, progress = 1f)
-                        is DownloadQueue.EntryState.Failed ->
-                            DownloaderState(status = DownloadStatus.FAILED, errorText = s.error)
+                        is DownloadEntryState.Failed ->
+                            DownloaderState(
+                                status = DownloadStatus.FAILED,
+                                errorText = s.error?.toUiText(),
+                            )
                         null -> DownloaderState()
                     }
                 if (newState.status == DownloadStatus.SUCCESSFUL && !wasCompleted) {
@@ -117,7 +125,7 @@ constructor(private val downloader: Downloader, private val downloadQueue: Downl
             downloadQueue.remove(item.id)
             val source =
                 item.sources.firstOrNull { it.type == ItemSourceType.LOCAL } ?: return@launch
-            downloader.deleteItem(item = item, source = source)
+            downloadDeleter.deleteItem(item = item, source = source)
             eventsChannel.send(DownloaderEvent.Deleted)
         }
     }

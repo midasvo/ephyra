@@ -10,7 +10,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.jdtech.jellyfin.core.Constants
 import dev.jdtech.jellyfin.core.R as CoreR
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadProgress
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.core.presentation.downloader.DownloadStatus
 import dev.jdtech.jellyfin.models.AccountKey
 import dev.jdtech.jellyfin.models.CollectionSection
@@ -24,11 +23,15 @@ import dev.jdtech.jellyfin.models.Show
 import dev.jdtech.jellyfin.models.UiText
 import dev.jdtech.jellyfin.models.UserId
 import dev.jdtech.jellyfin.repository.CurrentAccount
+import dev.jdtech.jellyfin.repository.DownloadDeleter
+import dev.jdtech.jellyfin.repository.DownloadEntry
+import dev.jdtech.jellyfin.repository.DownloadEntryState
 import dev.jdtech.jellyfin.repository.DownloadList
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.repository.DownloadSources
 import dev.jdtech.jellyfin.repository.ItemLists
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
-import dev.jdtech.jellyfin.utils.Downloader
+import dev.jdtech.jellyfin.utils.toUiText
 import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -57,8 +60,8 @@ internal constructor(
     private val lists: ItemLists,
     private val account: CurrentAccount,
     private val appPreferences: AppPreferences,
-    private val downloadQueue: DownloadQueue,
-    private val downloader: Downloader,
+    private val downloadQueue: DownloadQueuePort,
+    private val downloadDeleter: DownloadDeleter,
     private val downloadList: DownloadList,
     private val downloadSources: DownloadSources,
     /**
@@ -73,8 +76,8 @@ internal constructor(
         lists: ItemLists,
         account: CurrentAccount,
         appPreferences: AppPreferences,
-        downloadQueue: DownloadQueue,
-        downloader: Downloader,
+        downloadQueue: DownloadQueuePort,
+        downloadDeleter: DownloadDeleter,
         downloadList: DownloadList,
         downloadSources: DownloadSources,
     ) : this(
@@ -83,7 +86,7 @@ internal constructor(
         account,
         appPreferences,
         downloadQueue,
-        downloader,
+        downloadDeleter,
         downloadList,
         downloadSources,
         Dispatchers.IO,
@@ -140,7 +143,7 @@ internal constructor(
 
         // Observe queue entries -> queueItems
         viewModelScope.launch {
-            downloadQueue.entries.collect { entries ->
+            downloadQueue.queueEntries.collect { entries ->
                 val items = entries.map { it.toActiveDownload() }
                 // Rows only change when something they show changes, so an unchanged
                 // list does not need to reach the screen.
@@ -151,7 +154,7 @@ internal constructor(
                 // to show the check mark.
                 handledCompletions.retainAll(entries.map { it.id }.toSet())
                 val newlyCompleted = entries.filter {
-                    it.state is DownloadQueue.EntryState.Completed && handledCompletions.add(it.id)
+                    it.state is DownloadEntryState.Completed && handledCompletions.add(it.id)
                 }
                 if (newlyCompleted.isNotEmpty()) {
                     storageDirty = true
@@ -166,9 +169,9 @@ internal constructor(
                 // finalizes downloads (rename + DB update) before flipping to
                 // Completed, so a single reload is enough — no race window.
                 val isBusy = entries.any {
-                    it.state is DownloadQueue.EntryState.Downloading ||
-                        it.state is DownloadQueue.EntryState.Pending ||
-                        it.state is DownloadQueue.EntryState.Paused
+                    it.state is DownloadEntryState.Downloading ||
+                        it.state is DownloadEntryState.Pending ||
+                        it.state is DownloadEntryState.Paused
                 }
                 if (isBusy) {
                     wasBusy = true
@@ -334,21 +337,21 @@ internal constructor(
     private suspend fun deleteLocalCopy(item: Item) {
         downloadQueue.remove(item.id)
         val source = item.sources.firstOrNull { it.type == ItemSourceType.LOCAL } ?: return
-        downloader.deleteItem(item, source)
+        downloadDeleter.deleteItem(item, source)
     }
 
-    private fun DownloadQueue.Entry.toActiveDownload(): ActiveDownload {
+    private fun DownloadEntry.toActiveDownload(): ActiveDownload {
         val downloadStatus =
             when (state) {
                 // "Waiting for network", as a download the engine paused for it (#530).
-                is DownloadQueue.EntryState.Pending ->
+                is DownloadEntryState.Pending ->
                     if (waitingForNetwork) DownloadStatus.PAUSED else DownloadStatus.QUEUED
-                is DownloadQueue.EntryState.Downloading -> DownloadStatus.DOWNLOADING
-                is DownloadQueue.EntryState.Paused -> DownloadStatus.PAUSED
-                is DownloadQueue.EntryState.Completed -> DownloadStatus.COMPLETED
-                is DownloadQueue.EntryState.Failed -> DownloadStatus.FAILED
+                is DownloadEntryState.Downloading -> DownloadStatus.DOWNLOADING
+                is DownloadEntryState.Paused -> DownloadStatus.PAUSED
+                is DownloadEntryState.Completed -> DownloadStatus.COMPLETED
+                is DownloadEntryState.Failed -> DownloadStatus.FAILED
             }
-        val failureText = (state as? DownloadQueue.EntryState.Failed)?.error
+        val failureText = (state as? DownloadEntryState.Failed)?.error?.toUiText()
         // Smooth the measured rate so the time-left estimate settles instead of jumping
         // around with every poll.
         val smoothedBytesPerSecond =
