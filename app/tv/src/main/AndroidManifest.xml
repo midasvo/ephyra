@@ -3,8 +3,26 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+
+    <!--
+         CE (#1045): what libraries ask for and the TV app does not use. TvManifestTest pins the
+         list, so a permission a new dependency merges in fails the build until someone decides.
+
+         WorkManager uses WAKE_LOCK and FOREGROUND_SERVICE only for foreground work, and no worker
+         here calls setForeground or setExpedited. A worker that starts to needs them back, with
+         the SystemForegroundService removed below.
+    -->
+    <uses-permission
+        android:name="android.permission.WAKE_LOCK"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:node="remove" />
+    <!-- Watch Next reads and writes its own rows only, which WRITE_EPG_DATA covers. -->
+    <uses-permission
+        android:name="com.android.providers.tv.permission.READ_EPG_DATA"
+        tools:node="remove" />
 
     <uses-feature
         android:name="android.software.leanback"
@@ -82,6 +100,21 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <!-- CE (#1045): WorkManager's service for foreground work (see the permissions above). -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            tools:node="remove" />
+        <!-- CE (#1045): WorkManager's dump over adb, which a TV app has no use for. -->
+        <receiver
+            android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
+            tools:node="remove" />
+        <!--
+             Kept on purpose: Media3's BluetoothValidationActivity (Bluetooth media buttons find
+             the app through it on Android 16 and 17) and profileinstaller's ProfileInstallReceiver
+             (the baseline profile). The BLUETOOTH_PRIVILEGED and DUMP they carry guard those
+             components; the app does not ask for either.
+        -->
     </application>
 
 </manifest>
