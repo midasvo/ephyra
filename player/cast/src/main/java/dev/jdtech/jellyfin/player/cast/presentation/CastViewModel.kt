@@ -372,18 +372,32 @@ constructor(
      * receiver reported for the current item counts ([CastSegmentSkipper]).
      */
     private fun updateSegment(player: CastPlayerState) {
-        // Another load of the item, or a start the controller learned of: wait for its position.
-        if (player.load != segmentLoad) {
-            segmentLoad = player.load
-            segmentSkipper?.expectLoad(player.loadPositionMs)
-        }
+        val skipper = segmentSkipper
         val step =
-            segmentSkipper?.update(
-                player.positionItemId,
-                player.currentPosition,
-                player.duration,
-                fromSeek = player.positionFromSeek,
-            ) ?: CastSegmentStep.None
+            if (
+                skipper == null ||
+                    (player.positionItemId != null && player.positionItemId != skipper.itemId)
+            ) {
+                // This load belongs to another item; don't let it reset the old skipper or leak
+                // into the old item's later reports before currentItem catches up (#1027).
+                if (skipper != null && player.load != segmentLoad) {
+                    segmentLoad = player.load
+                }
+                CastSegmentStep.None
+            } else {
+                // Another load of the item, or a start the controller learned of: wait for its
+                // position.
+                if (player.load != segmentLoad) {
+                    segmentLoad = player.load
+                    skipper.expectLoad(player.loadPositionMs)
+                }
+                skipper.update(
+                    player.positionItemId,
+                    player.currentPosition,
+                    player.duration,
+                    fromSeek = player.positionFromSeek,
+                )
+            }
         val active =
             when (step) {
                 CastSegmentStep.None -> null

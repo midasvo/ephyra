@@ -5,6 +5,7 @@ import dev.jdtech.jellyfin.models.ItemId
 import dev.jdtech.jellyfin.models.MediaSourceId
 import dev.jdtech.jellyfin.models.Segment
 import dev.jdtech.jellyfin.models.SegmentType.INTRO
+import dev.jdtech.jellyfin.models.SegmentType.OUTRO
 import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toMediaSourceId
 import dev.jdtech.jellyfin.player.cast.CastPlayerController
@@ -75,7 +76,11 @@ class CastViewModelSegmentTest {
 
     private fun viewModel(): CastViewModel {
         val prefs = MemoryPreferences()
-        prefs.edit().putString("pref_player_media_segments_intro_action", "SKIP").apply()
+        prefs
+            .edit()
+            .putString("pref_player_media_segments_intro_action", "SKIP")
+            .putString("pref_player_media_segments_outro_action", "SKIP")
+            .apply()
         return CastViewModel(
             sessionManager = FakeSession(),
             playerController = controller,
@@ -223,6 +228,35 @@ class CastViewModelSegmentTest {
     }
 
     @Test
+    fun `a position at 0 with unknown duration after an item runs out does not skip its intro`() {
+        // #1027: after skipping the outro to near the end, the receiver transitions to the next
+        // queue item and briefly reports position 0 with duration 0 while still naming the old
+        // item.
+        segments = listOf(opening, Segment(OUTRO, startTicks = 690_000L, endTicks = 730_000L))
+        viewModel()
+        playing(itemA, playbackPosition = 690_000L)
+        controller.report(itemA, 690_000L)
+
+        controller.report(itemA, 0L, durationMs = 0L)
+        controller.report(itemA, 1_000L, durationMs = 0L)
+
+        assertEquals(listOf(duration - CastSegmentSkipper.END_MARGIN_MS), controller.seeks)
+    }
+
+    @Test
+    fun `a load for the next item before currentItem updates does not reset the old item's end guard`() {
+        segments = listOf(opening)
+        viewModel()
+        playing(itemA, playbackPosition = 700_000L)
+        controller.report(itemA, 718_000L)
+
+        controller.advanceLoad(itemB, 0L)
+        controller.report(itemA, 0L)
+
+        assertEquals(emptyList(), controller.seeks)
+    }
+
+    @Test
     fun `a user seek back into the skipped segment skips it again`() {
         val viewModel = viewModel()
         playing(itemA)
@@ -313,9 +347,23 @@ class CastViewModelSegmentTest {
         val seeks = mutableListOf<Long>()
 
         /** The receiver reports [positionMs] for [itemId]. */
-        fun report(itemId: ItemId?, positionMs: Long) {
+        fun report(itemId: ItemId?, positionMs: Long, durationMs: Long = duration) {
             playerState.update {
                 it.copy(
+                    currentPosition = positionMs,
+                    duration = durationMs,
+                    positionItemId = itemId,
+                    positionFromSeek = false,
+                )
+            }
+        }
+
+        /** The receiver moved on to [itemId] and incremented load before currentItem updated. */
+        fun advanceLoad(itemId: ItemId?, positionMs: Long) {
+            playerState.update {
+                it.copy(
+                    load = it.load + 1,
+                    loadPositionMs = positionMs,
                     currentPosition = positionMs,
                     positionItemId = itemId,
                     positionFromSeek = false,
