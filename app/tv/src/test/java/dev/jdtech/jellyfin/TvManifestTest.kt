@@ -24,13 +24,16 @@ import org.robolectric.annotation.Config
 class TvManifestTest {
     private val context = ApplicationProvider.getApplicationContext<Application>()
 
+    // MATCH_DISABLED_COMPONENTS: WorkManager declares its boot receiver disabled and switches it on
+    // at run time, so without the flag it would be absent here while still in the manifest.
     @Suppress("DEPRECATION")
     private val info =
         context.packageManager.getPackageInfo(
             context.packageName,
             PackageManager.GET_PERMISSIONS or
                 PackageManager.GET_SERVICES or
-                PackageManager.GET_RECEIVERS,
+                PackageManager.GET_RECEIVERS or
+                PackageManager.MATCH_DISABLED_COMPONENTS,
         )
 
     @Test
