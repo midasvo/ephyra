@@ -61,9 +61,18 @@ path limit; the README has the `subst` workaround.
 
 ## R8
 
-App classes are renamed by R8 except the navigation routes (`-keepnames` on `NavKey`
-implementations in `app/phone/proguard-rules.pro`). When a crash trace shows short names, retrace
-with the build's `mapping.txt`. A new class that is looked up by name needs its own rule.
+Both apps have the same two rules (`app/phone/proguard-rules.pro`, and `app/tv/proguard-rules.pro`
+since #1047): `-keepnames` on `NavKey` implementations, because the back stack is restored by class
+name, and `-keep,allowshrinking,allowoptimization` on `dev.jdtech.jellyfin.**`. App classes keep
+their names, so a crash trace is readable and WorkManager finds a worker it stored by class name
+after an update, while R8 still removes what is unused and inlines and merges the rest. Library
+classes are renamed: retrace those with the build's `mapping.txt`.
+
+What a rule does not name and no code reaches is removed. A class that is only reached by
+reflection (created from a name in a file or a string, not from the manifest, a serializer or a
+Hilt worker factory) needs a rule of its own. The TV app kept every class under `dev.jdtech` until
+#1047, which shipped the download engine, its notifications and the phone's playback service in an
+app that cannot run them.
 
 ## Measurements
 
