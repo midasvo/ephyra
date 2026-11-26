@@ -128,6 +128,39 @@ class MpvErrorRecoveryTest {
     }
 
     @Test
+    fun `a first load whose HTTP connection breaks while opening is a network error (#996)`() {
+        val failedToOpen = "stream: Failed to open http://10.0.2.2:8096/Videos/1/stream?static=true"
+        val httpLines =
+            listOf(
+                "ffmpeg: http: Error reading HTTP response: Connection reset by peer",
+                "ffmpeg: https: Error reading HTTP response: Connection reset by peer",
+                "ffmpeg: http: Error reading HTTP response: Connection timed out",
+                "ffmpeg: https: Error reading HTTP response: Operation timed out",
+                "ffmpeg: http: Error reading HTTP response: Broken pipe",
+                "ffmpeg: http: Error reading HTTP response: Software caused connection abort",
+                "ffmpeg: http: Error reading HTTP response: Connection refused",
+                "ffmpeg: http: Error reading HTTP response: Network is unreachable",
+                "ffmpeg: http: Error reading HTTP response: No route to host",
+                "ffmpeg: http: Error reading HTTP response: Host is unreachable",
+                "ffmpeg: http: Error reading HTTP response: End of file",
+                "ffmpeg: https: Error reading HTTP response: I/O error",
+                "ffmpeg: http: Error reading HTTP response: Input/output error",
+            )
+        for (line in httpLines) {
+            recovery.onPrepare(itemCount = 1)
+            assertEquals(
+                PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+                recovery.loadErrorCode(
+                    failedToOpen,
+                    listOf(line, failedToOpen),
+                    MpvError.MPV_ERROR_LOADING_FAILED,
+                ),
+                message = "Expected network error for: $line",
+            )
+        }
+    }
+
+    @Test
     fun `a first load the server answers with an error keeps its plain error`() {
         recovery.onPrepare(itemCount = 1)
 
@@ -137,17 +170,34 @@ class MpvErrorRecoveryTest {
             recovery.loadErrorCode("lavf: avformat_open_input() failed"),
         )
         val failedToOpen = "stream: Failed to open http://10.0.2.2:8096/videos/1/stream"
-        assertEquals(
-            PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
-            recovery.loadErrorCode(
-                failedToOpen,
-                listOf("ffmpeg: http: HTTP error 404 Not Found", failedToOpen),
-            ),
-        )
-        // A URL that only mentions tcp is no line from ffmpeg's TCP layer.
+        val nonConnectionHttpLines =
+            listOf(
+                "ffmpeg: http: HTTP error 404 Not Found",
+                "ffmpeg: https: HTTP error 404 Not Found",
+                "ffmpeg: http: HTTP error 403 Forbidden",
+                "ffmpeg: http: HTTP error 500 Internal Server Error",
+                "ffmpeg: http: HTTP error 502 Bad Gateway",
+                "ffmpeg: http: HTTP error 504 Gateway Timeout",
+                "ffmpeg: http: HTTP error 502 Connection reset by peer",
+                "ffmpeg: http: Stream ends prematurely at 1024, should be 2048",
+            )
+        for (line in nonConnectionHttpLines) {
+            assertEquals(
+                PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+                recovery.loadErrorCode(failedToOpen, listOf(line, failedToOpen)),
+                message = "Expected plain error for: $line",
+            )
+        }
+        // A URL that only mentions tcp or http is no line from ffmpeg's transport layer.
         assertEquals(
             PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
             recovery.loadErrorCode("stream: Failed to open http://host/ffmpeg: tcp: x"),
+        )
+        assertEquals(
+            PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+            recovery.loadErrorCode(
+                "stream: Failed to open http://host/ffmpeg: http: Connection reset by peer"
+            ),
         )
     }
 

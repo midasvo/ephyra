@@ -91,13 +91,41 @@ internal class MpvErrorRecovery {
                 PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
             )
 
+        private val HTTP_CONNECTION_ERROR_REASONS =
+            listOf(
+                "Connection reset",
+                "timed out",
+                "Connection refused",
+                "Network is unreachable",
+                "No route to host",
+                "Host is unreachable",
+                "Broken pipe",
+                "Software caused connection abort",
+                "End of file",
+                "I/O error",
+                "Input/output error",
+            )
+
         /**
          * #576: ffmpeg's TCP layer could not connect: "ffmpeg: tcp: Connection to tcp://host:8096
          * failed: Connection refused" with the server gone, "... failed: Network is unreachable"
-         * without a network, and its lines for a timeout or a host name that does not resolve. An
-         * answer from the server ("ffmpeg: http: HTTP error 404 Not Found") is no connection error,
-         * as ExoPlayer's bad HTTP status is none.
+         * without a network, and its lines for a timeout or a host name that does not resolve.
+         *
+         * #996: ffmpeg's HTTP/HTTPS layer also loses the connection after TCP connected (e.g.
+         * "ffmpeg: http: Error reading HTTP response: Connection reset by peer" or a timeout). An
+         * HTTP status answer from the server ("ffmpeg: http: HTTP error 404 Not Found") is no
+         * connection error, as ExoPlayer's bad HTTP status is none.
          */
-        fun isConnectionError(error: String): Boolean = error.startsWith("ffmpeg: tcp:")
+        fun isConnectionError(error: String): Boolean {
+            if (error.startsWith("ffmpeg: tcp:")) return true
+            val httpBody =
+                when {
+                    error.startsWith("ffmpeg: http:") -> error.removePrefix("ffmpeg: http:")
+                    error.startsWith("ffmpeg: https:") -> error.removePrefix("ffmpeg: https:")
+                    else -> return false
+                }.trimStart()
+            if (httpBody.startsWith("HTTP error")) return false
+            return HTTP_CONNECTION_ERROR_REASONS.any { httpBody.contains(it, ignoreCase = true) }
+        }
     }
 }
