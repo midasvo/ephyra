@@ -155,6 +155,10 @@ constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
+    // Serializes pending_downloads writes/deletes and reconciles them against _entries (#1002,
+    // #1003).
+    // Lock ordering: never acquire pendingRowMutex while holding mutex.
+    private val pendingRowMutex = Mutex()
 
     init {
         scope.launch {
@@ -218,11 +222,7 @@ constructor(
             persisted = true
         }
         if (persisted) {
-            try {
-                downloader.savePendingDownload(item, maxBitrate, smartQueued)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to persist pending download ${item.name}")
-            }
+            syncPendingRow(item.id)
         }
         if (claimed) claimSmartQueued(item.id)
         ensurePump()
@@ -381,11 +381,7 @@ constructor(
             persistedItems.addAll(newEntries.map { it.item })
         }
         for (item in persistedItems) {
-            try {
-                downloader.savePendingDownload(item, maxBitrate)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to persist pending download ${item.name}")
-            }
+            syncPendingRow(item.id)
         }
         claimedIds.forEach { claimSmartQueued(it) }
         ensurePump()
@@ -405,11 +401,7 @@ constructor(
                 }
                 _entries.value = _entries.value.filter { it.id != id }
             }
-            try {
-                downloader.removePendingDownload(id)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to drop persisted pending row for ${id.asString()}")
-            }
+            syncPendingRow(id)
             cancelEntry?.let { entry ->
                 for (dlId in unfinishedDownloadIds(entry)) {
                     try {
@@ -485,11 +477,7 @@ constructor(
                 )
         }
         for (entry in retried) {
-            try {
-                downloader.savePendingDownload(entry.item, entry.maxBitrate, entry.smartQueued)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to persist retried download ${entry.item.name}")
-            }
+            syncPendingRow(entry.id)
         }
         if (retried.isNotEmpty()) ensurePump()
         return retried.isNotEmpty()
@@ -723,6 +711,7 @@ constructor(
                     // Schedule auto-retry for eligible entries. CE (#560): they go straight to
                     // waiting for the retry, in the same update as everything else. Published as
                     // Failed first, a queue with nothing else in flight looked finished in between.
+                    val autoRetried = mutableListOf<ItemId>()
                     val exhausted = mutableListOf<Entry>()
                     for (failed in failedEntries) {
                         val next =
@@ -733,21 +722,10 @@ constructor(
                             )
                         if (next.state is EntryState.Pending) {
                             updates[failed.id] = next
+                            autoRetried.add(failed.id)
                             Timber.i(
                                 "Auto-retry #${next.retryCount} for ${failed.item.name} in ${retryBackoffMs(failed.retryCount) / 1000}s"
                             )
-                            try {
-                                downloader.savePendingDownload(
-                                    failed.item,
-                                    failed.maxBitrate,
-                                    failed.smartQueued,
-                                )
-                            } catch (e: Exception) {
-                                Timber.e(
-                                    e,
-                                    "Failed to re-persist auto-retried download ${failed.item.name}",
-                                )
-                            }
                         } else {
                             updates[failed.id] = next
                             exhausted.add(failed)
@@ -755,6 +733,9 @@ constructor(
                     }
                     mutex.withLock {
                         _entries.value = sort(_entries.value.map { updates[it.id] ?: it })
+                    }
+                    for (id in autoRetried) {
+                        syncPendingRow(id)
                     }
                     // CE (#912): the server was confirmed while these failures were being decided:
                     // that confirmation found them still running, so it is applied now.
@@ -910,50 +891,55 @@ constructor(
             _entries.value = sort(_entries.value.map { if (it === current) updated else it })
         }
         if (dropPending) {
-            try {
-                downloader.removePendingDownload(activeEntry.id)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to drop persisted pending row for ${activeEntry.item.name}")
-            }
+            syncPendingRow(activeEntry.id)
         }
-        persistWaitForNetwork?.let { waitingEntry ->
-            var saved = false
-            try {
-                downloader.savePendingDownload(
-                    waitingEntry.item,
-                    waitingEntry.maxBitrate,
-                    waitingEntry.smartQueued,
-                )
-                saved = true
-            } catch (e: Exception) {
-                Timber.e(
-                    e,
-                    "Failed to persist download ${waitingEntry.item.name} waiting for network",
-                )
-            }
-            if (saved) {
-                val dropped = mutex.withLock {
-                    _entries.value.none {
-                        it.id == waitingEntry.id && it.state is EntryState.Pending
-                    }
-                }
-                if (dropped) {
-                    try {
-                        downloader.removePendingDownload(waitingEntry.id)
-                    } catch (e: Exception) {
-                        Timber.e(
-                            e,
-                            "Failed to drop stale pending row for ${waitingEntry.item.name}",
-                        )
-                    }
-                }
-            }
-        }
+        persistWaitForNetwork?.let { waitingEntry -> syncPendingRow(waitingEntry.id) }
         if (orphaned) {
             try {
                 downloader.cancelDownload(activeEntry.item, downloadId)
             } catch (e: Exception) {
                 Timber.e(e, "Failed to clean up orphaned download ${activeEntry.item.name}")
+            }
+        }
+    }
+
+    private fun Entry.needsPendingRow(): Boolean =
+        state is EntryState.Pending || (state is EntryState.Failed && retryWhenServerReturns)
+
+    /**
+     * Reconciles the persisted `pending_downloads` row for [id] with the current queue entry.
+     * Serialized by [pendingRowMutex] so concurrent `enqueue`, `remove`, and `startDownload`
+     * completions cannot delete a newly queued row or leave a cancelled row behind (#1002, #1003).
+     */
+    private suspend fun syncPendingRow(id: ItemId) {
+        pendingRowMutex.withLock {
+            val entry = mutex.withLock { _entries.value.firstOrNull { it.id == id } }
+            if (entry != null && entry.needsPendingRow()) {
+                var saved = false
+                try {
+                    downloader.savePendingDownload(entry.item, entry.maxBitrate, entry.smartQueued)
+                    saved = true
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to persist pending download ${entry.item.name}")
+                }
+                if (saved) {
+                    val dropped = mutex.withLock {
+                        _entries.value.none { it.id == id && it.needsPendingRow() }
+                    }
+                    if (dropped) {
+                        try {
+                            downloader.removePendingDownload(id)
+                        } catch (e: Exception) {
+                            Timber.e(e, "Failed to drop stale pending row for ${entry.item.name}")
+                        }
+                    }
+                }
+            } else {
+                try {
+                    downloader.removePendingDownload(id)
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to drop persisted pending row for ${id.asString()}")
+                }
             }
         }
     }

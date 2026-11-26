@@ -26,6 +26,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.test.fail
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Test
@@ -172,12 +174,63 @@ class DownloadQueuePendingPersistenceTest {
 
             queue.remove(item.id)
             awaitAbsent(queue)
+            awaitPendingRemoved()
 
             queue.enqueue(item, maxBitrate = 2_000_000)
             releaseFirstStart.complete(Unit)
 
             withTimeout(TIMEOUT_MS) { secondStartEntered.await() }
             awaitCancelled(OLD_DOWNLOAD_ID)
+            assertEquals(2_000_000, downloader.persistedPending[item.id]?.maxBitrate)
+
+            releaseSecondStart.complete(Unit)
+            awaitEntry(queue) { it.state is DownloadQueue.EntryState.Downloading }
+            awaitPendingRemoved()
+        }
+    }
+
+    @Test
+    fun `removing and re-enqueueing while a start drops its pending row preserves the new pending row`() {
+        val removeEntered = CompletableDeferred<Unit>()
+        val releaseRemove = CompletableDeferred<Unit>()
+        val secondStartEntered = CompletableDeferred<Unit>()
+        val releaseSecondStart = CompletableDeferred<Unit>()
+        val startCalls = AtomicInteger(0)
+        val removeCalls = AtomicInteger(0)
+
+        downloader.onDownloadItem = {
+            when (startCalls.incrementAndGet()) {
+                1 -> OLD_DOWNLOAD_ID to null
+                else -> {
+                    secondStartEntered.complete(Unit)
+                    releaseSecondStart.await()
+                    DOWNLOAD_ID to null
+                }
+            }
+        }
+        downloader.onRemovePendingDownload = {
+            if (removeCalls.incrementAndGet() == 1) {
+                removeEntered.complete(Unit)
+                releaseRemove.await()
+            }
+        }
+
+        val queue = queue()
+        runBlocking {
+            queue.enqueue(item, maxBitrate = 1_000_000)
+            withTimeout(TIMEOUT_MS) { removeEntered.await() }
+
+            queue.remove(item.id)
+            awaitAbsent(queue)
+
+            val reEnqueue = async(Dispatchers.IO) { queue.enqueue(item, maxBitrate = 2_000_000) }
+            awaitEntry(queue) {
+                it.state is DownloadQueue.EntryState.Pending && it.maxBitrate == 2_000_000
+            }
+
+            releaseRemove.complete(Unit)
+            withTimeout(TIMEOUT_MS) { reEnqueue.await() }
+            withTimeout(TIMEOUT_MS) { secondStartEntered.await() }
             assertEquals(2_000_000, downloader.persistedPending[item.id]?.maxBitrate)
 
             releaseSecondStart.complete(Unit)
@@ -261,6 +314,7 @@ class DownloadQueuePendingPersistenceTest {
         @Volatile var active = emptyList<Downloader.ActiveDownload>()
         @Volatile var startResult: Pair<Long, UiText?> = -1L to null
         @Volatile var onDownloadItem: (suspend () -> Pair<Long, UiText?>)? = null
+        @Volatile var onRemovePendingDownload: (suspend () -> Unit)? = null
         val persistedPending = ConcurrentHashMap<ItemId, Downloader.PendingDownload>()
         val cancelled = CopyOnWriteArrayList<Pair<ItemId, Long>>()
 
@@ -313,6 +367,7 @@ class DownloadQueuePendingPersistenceTest {
         }
 
         override suspend fun removePendingDownload(itemId: ItemId) {
+            onRemovePendingDownload?.invoke()
             persistedPending.remove(itemId)
         }
 
