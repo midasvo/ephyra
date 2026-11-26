@@ -23,6 +23,14 @@
     <uses-permission
         android:name="com.android.providers.tv.permission.READ_EPG_DATA"
         tools:node="remove" />
+    <!--
+         WorkManager starts the app at boot to schedule its jobs again. The TV app does not start
+         by itself: the Watch Next sync is scheduled again when the app is next opened, and the
+         row keeps what it showed until then. The RescheduleReceiver is removed below.
+    -->
+    <uses-permission
+        android:name="android.permission.RECEIVE_BOOT_COMPLETED"
+        tools:node="remove" />
 
     <uses-feature
         android:name="android.software.leanback"
@@ -108,6 +116,14 @@
         <!-- CE (#1045): WorkManager's dump over adb, which a TV app has no use for. -->
         <receiver
             android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
+            tools:node="remove" />
+        <!--
+             CE (#1045): WorkManager's receiver for BOOT_COMPLETED (see the permissions above).
+             WorkManager tries to switch it on while work is unfinished and carries on when it is
+             not there.
+        -->
+        <receiver
+            android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver"
             tools:node="remove" />
         <!--
              Kept on purpose: Media3's BluetoothValidationActivity (Bluetooth media buttons find

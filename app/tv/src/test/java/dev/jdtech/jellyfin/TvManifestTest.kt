@@ -42,8 +42,6 @@ class TvManifestTest {
                 "android.permission.ACCESS_LOCAL_NETWORK",
                 // NetworkConnectivityImpl in `device`, and WorkManager's network constraint.
                 "android.permission.ACCESS_NETWORK_STATE",
-                // WorkManager schedules unfinished work again after a reboot (the Watch Next sync).
-                "android.permission.RECEIVE_BOOT_COMPLETED",
                 // The Watch Next row.
                 "com.android.providers.tv.permission.WRITE_EPG_DATA",
                 // androidx.core's own permission for receivers that are not exported.
@@ -54,7 +52,7 @@ class TvManifestTest {
     }
 
     @Test
-    fun `WorkManager's foreground service and its adb dump are left out`() {
+    fun `WorkManager's foreground service, adb dump and boot receiver are left out`() {
         val components =
             info.services.orEmpty().map { it.name } + info.receivers.orEmpty().map { it.name }
 
@@ -62,6 +60,8 @@ class TvManifestTest {
             listOf(
                 "androidx.work.impl.foreground.SystemForegroundService",
                 "androidx.work.impl.diagnostics.DiagnosticsReceiver",
+                // The app does not start at boot: the sync is scheduled again when it is opened.
+                "androidx.work.impl.background.systemalarm.RescheduleReceiver",
             )) {
             assertTrue(name !in components, message = "$name must not be in the TV manifest")
         }
