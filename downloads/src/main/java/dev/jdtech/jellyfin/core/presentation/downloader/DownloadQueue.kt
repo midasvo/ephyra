@@ -837,15 +837,6 @@ constructor(
         val isTranscode =
             activeEntry.maxBitrate != null ||
                 (settings.downloadTranscodeDolbyVision && activeEntry.item.hasDolbyVision())
-        // Drop the pending row *before* running setup. If the process dies
-        // mid-setup, restoreAll() on next launch would otherwise resurrect the
-        // pending entry and start a duplicate engine task + duplicate source row
-        // on top of whatever partial state setup left behind.
-        try {
-            downloader.removePendingDownload(activeEntry.id)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to drop persisted pending row for ${activeEntry.item.name}")
-        }
         val (downloadId, errorText) =
             try {
                 downloader.downloadItem(
@@ -867,6 +858,7 @@ constructor(
         // while online stays Failed, with Retry.
         val waitForNetwork = downloadId == -1L && !connectivity.isOnline()
         var orphaned = false
+        var dropPending = false
         var persistWaitForNetwork: Entry? = null
         mutex.withLock {
             val current =
@@ -883,6 +875,10 @@ constructor(
             }
             val updated =
                 if (downloadId != -1L) {
+                    // CE (#1002): only drop the pending row once the downloader has written (or
+                    // resumed) a source row. If the process crashes between the two writes,
+                    // restoreAll() skips any pending row whose item already has an active download.
+                    dropPending = true
                     current.copy(
                         state = EntryState.Downloading,
                         downloadId = downloadId,
@@ -904,6 +900,7 @@ constructor(
                     // because the server did not answer (also after an app restart, with
                     // the server still away): it goes on when the server is back. A start that
                     // fails for a local reason fails again at once, without a download.
+                    // CE (#1002): keep the pending row so restoreAll() recovers it on restart.
                     current.copy(
                         state = EntryState.Failed(errorText),
                         retryWhenServerReturns = true,
@@ -911,6 +908,13 @@ constructor(
                     )
                 }
             _entries.value = sort(_entries.value.map { if (it === current) updated else it })
+        }
+        if (dropPending) {
+            try {
+                downloader.removePendingDownload(activeEntry.id)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to drop persisted pending row for ${activeEntry.item.name}")
+            }
         }
         persistWaitForNetwork?.let { waitingEntry ->
             var saved = false
