@@ -109,7 +109,6 @@ model {
     appTv -> data
     appTv -> device
     appTv -> domain
-    appTv -> downloads
     appTv -> http
     appTv -> modesFilm
     appTv -> playerCore
@@ -126,7 +125,6 @@ model {
     core -> application
     core -[test]-> data
     core -> domain
-    core -> downloads
     core -> playerCore
     core -> settings
     core -[test]-> testing
@@ -144,7 +142,6 @@ model {
     modesFilm -> core
     modesFilm -[test]-> data
     modesFilm -> domain
-    modesFilm -> downloads
     modesFilm -> settings
     modesFilm -[test]-> testing
     playerCast -> application

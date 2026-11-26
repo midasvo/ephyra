@@ -67,7 +67,7 @@ app/phone, app/tv   (composition root, screens)
   decoders and the display, behind `DeviceCodecs` of `domain`, which the device profiles are built
   from) and `NetworkConnectivityImpl` (behind `NetworkConnectivity` of `application`), bound in its
   `DeviceModule`. They were in `data` and `core`; `data` is Room and nothing else since (R20).
-- `downloads`: the download engine and queue, out of `core`.
+- `downloads`: the download engine and queue, out of `core` and only linked by `app/phone` (`core` and `modes/film` use `DownloadQueuePort`, `DownloadDeleter`, and `SmartDownloadChecker` in `application`; `app/tv` binds no-ops, #1048).
 - `player/local`: ExoPlayer and mpv behind `PlayerEngine`; playback logic in
   `player/local/.../domain/` (`PlaybackReporter`, `ResolvePlayback`, `PlaylistManager`, …).
 - `testing`: `FakeMediaServer`, `FakeServerConnector` and the contract suites the Jellyfin adapter

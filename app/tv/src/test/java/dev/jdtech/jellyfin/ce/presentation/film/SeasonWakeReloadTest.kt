@@ -1,8 +1,6 @@
 package dev.jdtech.jellyfin.ce.presentation.film
 
 import android.app.Application
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
@@ -16,10 +14,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
 import dev.jdtech.jellyfin.core.presentation.dummy.dummySeason
-import dev.jdtech.jellyfin.di.AppPreferencesDownloadSettings
 import dev.jdtech.jellyfin.film.domain.VideoMetadataParser
 import dev.jdtech.jellyfin.film.presentation.episode.EpisodeViewModel
 import dev.jdtech.jellyfin.film.presentation.season.SeasonViewModel
@@ -30,7 +26,8 @@ import dev.jdtech.jellyfin.models.Ticks
 import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.repository.DataChangeEvents
-import dev.jdtech.jellyfin.repository.DownloadSources
+import dev.jdtech.jellyfin.repository.DownloadDeleter
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.repository.ItemCatalog
 import dev.jdtech.jellyfin.repository.UserDataUpdates
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
@@ -39,7 +36,6 @@ import dev.jdtech.jellyfin.testing.asItemId
 import dev.jdtech.jellyfin.testing.asItemIdOrNull
 import dev.jdtech.jellyfin.testing.fakeProxy
 import dev.jdtech.jellyfin.testing.kotlinName
-import dev.jdtech.jellyfin.utils.CoreDownloadTexts
 import java.util.UUID
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
@@ -108,15 +104,8 @@ class SeasonWakeReloadTest {
                 catalog = repository.role(),
                 userData = repository.role(),
                 capabilities = { ServerCapabilities.ALL },
-                downloader = unused(),
-                downloadQueue =
-                    DownloadQueue(
-                        downloader = unused(),
-                        settings = AppPreferencesDownloadSettings(appPreferences()),
-                        downloadSources = unused<DownloadSources>(),
-                        context = ContextWrapper(null) as Context,
-                        texts = CoreDownloadTexts,
-                    ),
+                downloadDeleter = DownloadDeleter.None,
+                downloadQueue = DownloadQueuePort.None,
                 dataChanges = dataChanges,
             )
         val episodeViewModel =

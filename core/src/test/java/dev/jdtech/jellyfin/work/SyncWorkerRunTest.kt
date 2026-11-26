@@ -8,14 +8,9 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
-import dev.jdtech.jellyfin.core.presentation.downloader.SmartDownloads
-import dev.jdtech.jellyfin.database.RoomDownloadStore
 import dev.jdtech.jellyfin.database.RoomPendingUserDataStore
 import dev.jdtech.jellyfin.database.ServerDatabase
 import dev.jdtech.jellyfin.database.ServerDatabaseDao
-import dev.jdtech.jellyfin.di.AppPreferencesCurrentServerId
-import dev.jdtech.jellyfin.di.AppPreferencesDownloadSettings
 import dev.jdtech.jellyfin.domain.ports.ServerUserData
 import dev.jdtech.jellyfin.domain.ports.UserDataSyncPort
 import dev.jdtech.jellyfin.domain.ports.UserDataSyncPorts
@@ -33,18 +28,11 @@ import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toServerAddressId
 import dev.jdtech.jellyfin.models.toServerId
 import dev.jdtech.jellyfin.models.toUserId
-import dev.jdtech.jellyfin.repository.CurrentAccount
 import dev.jdtech.jellyfin.repository.DataChangeEvents
-import dev.jdtech.jellyfin.repository.ItemCatalog
 import dev.jdtech.jellyfin.repository.PlaybackEvents
+import dev.jdtech.jellyfin.repository.SmartDownloadChecker
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
-import dev.jdtech.jellyfin.testing.fakeProxy
-import dev.jdtech.jellyfin.testing.kotlinName
-import dev.jdtech.jellyfin.utils.CoreDownloadTexts
-import dev.jdtech.jellyfin.utils.Downloader
-import dev.jdtech.jellyfin.utils.NetworkConnectivity
 import java.time.LocalDateTime
-import javax.inject.Provider
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -170,7 +158,7 @@ class SyncWorkerRunTest {
                                 workerParameters,
                                 RoomPendingUserDataStore(database),
                                 mapOf(ServerType.JELLYFIN to ports),
-                                smartDownloads(),
+                                SmartDownloadChecker.None,
                                 PlaybackEvents(),
                                 DataChangeEvents(),
                             )
@@ -179,37 +167,6 @@ class SyncWorkerRunTest {
                 .build()
         worker.doWork()
     }
-
-    /** Off, as it is by default: its check after the sync does nothing. */
-    private fun smartDownloads(): SmartDownloads {
-        val downloader = unused<Downloader>()
-        val connectivity = unused<NetworkConnectivity>()
-        return SmartDownloads(
-            DownloadQueue(
-                downloader,
-                AppPreferencesDownloadSettings(preferences),
-                RoomDownloadStore(database),
-                context,
-                CoreDownloadTexts,
-            ),
-            downloader,
-            AppPreferencesDownloadSettings(preferences),
-            AppPreferencesCurrentServerId(preferences),
-            RoomDownloadStore(database),
-            RoomDownloadStore(database),
-            RoomDownloadStore(database),
-            Provider { unused<ItemCatalog>() },
-            Provider { unused<CurrentAccount>() },
-            connectivity,
-            PlaybackEvents(),
-        )
-    }
-
-    private inline fun <reified T> unused(): T =
-        fakeProxy(T::class.java.classLoader, arrayOf(T::class.java)) { _, method, _ ->
-            throw NotImplementedError("${T::class.simpleName}.${method.kotlinName}")
-        }
-            as T
 
     @Test
     fun `a later play on the server replaces the row and nothing of it is sent`() = runBlocking {

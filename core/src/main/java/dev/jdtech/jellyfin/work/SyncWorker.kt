@@ -6,7 +6,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import dev.jdtech.jellyfin.core.presentation.downloader.SmartDownloads
 import dev.jdtech.jellyfin.core.server.forStoredType
 import dev.jdtech.jellyfin.domain.ports.ServerUserData
 import dev.jdtech.jellyfin.domain.ports.UserDataSyncPort
@@ -25,6 +24,7 @@ import dev.jdtech.jellyfin.repository.DataChangeEvents
 import dev.jdtech.jellyfin.repository.PendingUserData
 import dev.jdtech.jellyfin.repository.PendingUserDataStore
 import dev.jdtech.jellyfin.repository.PlaybackEvents
+import dev.jdtech.jellyfin.repository.SmartDownloadChecker
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -42,7 +42,7 @@ constructor(
     private val store: PendingUserDataStore,
     /** CE (#770): by server type; each server's users go through the ports of its type. */
     private val userDataSyncPorts: Map<ServerType, @JvmSuppressWildcards UserDataSyncPorts>,
-    private val smartDownloads: SmartDownloads,
+    private val smartDownloads: SmartDownloadChecker,
     private val playbackEvents: PlaybackEvents,
     private val dataChanges: DataChangeEvents,
 ) : CoroutineWorker(context, workerParams) {

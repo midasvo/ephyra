@@ -37,12 +37,10 @@ flowchart TD
     http["http"]
   end
   application --> domain
-  core --> downloads
   core --> playerCore
   core --> settings
   downloads --> settings
   modesFilm --> core
-  modesFilm --> downloads
   modesFilm --> settings
   playerCast --> core
   playerCast --> playerCore
@@ -60,18 +58,18 @@ flowchart TD
 | Module | Layer | What | Depends on | Test-only |
 |---|---|---|---|---|
 | `app/phone` | Apps (composition root) | The phone app: screens, navigation and layouts; with app/tv the composition root. | `application`, `baselineprofile`, `core`, `data`, `device`, `domain`, `downloads`, `http`, `modes/film`, `player/cast`, `player/core`, `player/local`, `ratings/mdblist`, `server/jellyfin`, `settings`, `setup` |  |
-| `app/tv` | Apps (composition root) | The Android TV app: its own screens in its ce package, next to upstream's (TV ADR 0001). | `application`, `core`, `data`, `device`, `domain`, `downloads`, `http`, `modes/film`, `player/core`, `player/local`, `ratings/mdblist`, `server/jellyfin`, `settings`, `setup` | `testing` |
+| `app/tv` | Apps (composition root) | The Android TV app: its own screens in its ce package, next to upstream's (TV ADR 0001). | `application`, `core`, `data`, `device`, `domain`, `http`, `modes/film`, `player/core`, `player/local`, `ratings/mdblist`, `server/jellyfin`, `settings`, `setup` | `testing` |
 | `application` | Application | Pure Kotlin: the repository's roles (ItemCatalog, ItemLists, PlaybackMedia, …) and their implementation MediaRepositoryImpl over the server's ports and the stores, the store ports (the roles of the server and download stores, PendingUserDataStore) and the event flows (DataChangeEvents, ReloadPolicy, …). | `domain` | `testing` |
 | `architecture` | Tests and tooling | The Konsist rules over the source tree, their allowlists in architecture/baseline/, and the generated architecture docs. |  |  |
 | `baselineprofile` | Tests and tooling | Macrobenchmark: the baseline profile and startup benchmark of app/phone. | `app/phone` |  |
 | `baselineprofile-tv` | Tests and tooling | Macrobenchmark: the baseline profile and startup benchmark of app/tv. | `app/tv` |  |
-| `core` | Features | Hilt modules, the server in use (CurrentMediaServer), its session keeper and reachability, the sync worker, DownloaderViewModel, MainViewModel and shared Composables. | `application`, `domain`, `downloads`, `player/core`, `settings` | `data`, `testing` |
+| `core` | Features | Hilt modules, the server in use (CurrentMediaServer), its session keeper and reachability, the sync worker, DownloaderViewModel, MainViewModel and shared Composables. | `application`, `domain`, `player/core`, `settings` | `data`, `testing` |
 | `data` | Adapters | Room: the database and the stores (Room*Store) behind the store ports, and the downloaded files (DownloadedFilesOnDisk); no SDK, and of Android only Room (R20). | `application`, `domain` | `testing` |
 | `device` | Adapters | The adapters over the device: the codec probe (DeviceCodecs, what the device profile is built from) and the connectivity check (NetworkConnectivity), with its own Hilt module. | `application`, `domain` |  |
 | `domain` | Domain | Pure Kotlin, no Android or SDK: the models (Item, Movie, ItemSource, …), the ids, PlayState, DownloadState, Ticks, ActiveServer and the server ports. |  |  |
 | `downloads` | Features | The download engine (Downloader, DownloaderImpl, MediaDownloadEngine), DownloadQueue, smart downloads and their workers. | `application`, `domain`, `settings` | `data`, `testing` |
 | `http` | Shared contracts | MediaHttpClient, the API's OkHttp client: provided by server/jellyfin, used by the player (ExoPlayer's media, mpv's subtitle files), so they share the API's connections. |  |  |
-| `modes/film` | Features | The view models with their State and Action classes for home, library, search, the item screens and downloads. | `application`, `core`, `domain`, `downloads`, `settings` | `data`, `testing` |
+| `modes/film` | Features | The view models with their State and Action classes for home, library, search, the item screens and downloads. | `application`, `core`, `domain`, `settings` | `data`, `testing` |
 | `player/cast` | Features | Google Cast: the session and playback on a receiver; real in the proprietary flavour, stubs in libre. | `application`, `core`, `domain`, `player/core`, `player/local`, `settings` | `testing` |
 | `player/core` | Features | The player models shared by the player and its callers: PlayerItem, Track, Trickplay. | `domain` |  |
 | `player/local` | Features | The player: PlayerViewModel and playback, on ExoPlayer or mpv behind PlayerEngine (in its engine package). | `application`, `core`, `domain`, `http`, `player/core`, `settings` | `data`, `testing` |

@@ -1,9 +1,10 @@
 package dev.jdtech.jellyfin.film.presentation
 
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.models.Episode
 import dev.jdtech.jellyfin.models.ItemId
 import dev.jdtech.jellyfin.models.isDownloaded
+import dev.jdtech.jellyfin.repository.DownloadEntryState
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,12 +64,12 @@ internal fun downloadChoiceFor(
  * skipped rather than queuing them again: enqueueAll dedupes too, but without this the "Started N
  * downloads" toast would overstate the count.
  */
-internal fun DownloadQueue.inFlightIds(): Set<ItemId> =
-    entries.value
+internal fun DownloadQueuePort.inFlightIds(): Set<ItemId> =
+    queueEntries.value
         .filter {
-            it.state is DownloadQueue.EntryState.Pending ||
-                it.state is DownloadQueue.EntryState.Downloading ||
-                it.state is DownloadQueue.EntryState.Paused
+            it.state is DownloadEntryState.Pending ||
+                it.state is DownloadEntryState.Downloading ||
+                it.state is DownloadEntryState.Paused
         }
         .map { it.id }
         .toSet()

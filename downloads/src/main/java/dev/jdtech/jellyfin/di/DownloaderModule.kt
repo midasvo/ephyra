@@ -6,11 +6,15 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
+import dev.jdtech.jellyfin.core.presentation.downloader.SmartDownloads
 import dev.jdtech.jellyfin.repository.CurrentAccount
 import dev.jdtech.jellyfin.repository.CurrentServerId
 import dev.jdtech.jellyfin.repository.DataChangeEvents
+import dev.jdtech.jellyfin.repository.DownloadDeleter
 import dev.jdtech.jellyfin.repository.DownloadList
 import dev.jdtech.jellyfin.repository.DownloadMediaStreams
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.repository.DownloadSegmentsAndTrickplay
 import dev.jdtech.jellyfin.repository.DownloadSettings
 import dev.jdtech.jellyfin.repository.DownloadSources
@@ -19,6 +23,7 @@ import dev.jdtech.jellyfin.repository.DownloadedItemRows
 import dev.jdtech.jellyfin.repository.ItemCatalog
 import dev.jdtech.jellyfin.repository.PlaybackMedia
 import dev.jdtech.jellyfin.repository.QueuedDownloads
+import dev.jdtech.jellyfin.repository.SmartDownloadChecker
 import dev.jdtech.jellyfin.utils.Downloader
 import dev.jdtech.jellyfin.utils.DownloaderImpl
 import dev.jdtech.jellyfin.utils.download.DownloadTexts
@@ -70,4 +75,12 @@ object DownloaderModule {
             dataChanges,
         )
     }
+
+    @Provides fun provideDownloadDeleter(downloader: Downloader): DownloadDeleter = downloader
+
+    @Provides fun provideDownloadQueuePort(queue: DownloadQueue): DownloadQueuePort = queue
+
+    @Provides
+    fun provideSmartDownloadChecker(smartDownloads: SmartDownloads): SmartDownloadChecker =
+        smartDownloads
 }

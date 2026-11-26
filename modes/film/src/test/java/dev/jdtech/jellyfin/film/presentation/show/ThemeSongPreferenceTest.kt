@@ -1,13 +1,10 @@
 package dev.jdtech.jellyfin.film.presentation.show
 
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.SharedPreferences
 import androidx.lifecycle.viewModelScope
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
-import dev.jdtech.jellyfin.di.AppPreferencesDownloadSettings
 import dev.jdtech.jellyfin.models.ServerCapabilities
-import dev.jdtech.jellyfin.repository.DownloadSources
+import dev.jdtech.jellyfin.repository.DownloadDeleter
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.testing.ContractLibrary
 import dev.jdtech.jellyfin.testing.FakeLibrary
@@ -15,7 +12,6 @@ import dev.jdtech.jellyfin.testing.FakeMediaServer
 import dev.jdtech.jellyfin.testing.FakeRepositoryStores
 import dev.jdtech.jellyfin.testing.fakeProxy
 import dev.jdtech.jellyfin.testing.kotlinName
-import dev.jdtech.jellyfin.utils.CoreDownloadTexts
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.Dispatchers
@@ -118,15 +114,8 @@ class ThemeSongPreferenceTest {
             extras = repository,
             capabilities = { server.capabilities },
             appPreferences = preferences,
-            downloader = unused(),
-            downloadQueue =
-                DownloadQueue(
-                    downloader = unused(),
-                    settings = AppPreferencesDownloadSettings(preferences),
-                    downloadSources = unused<DownloadSources>(),
-                    context = ContextWrapper(null) as Context,
-                    texts = CoreDownloadTexts,
-                ),
+            downloadDeleter = DownloadDeleter.None,
+            downloadQueue = DownloadQueuePort.None,
             downloadList = unused(),
         )
     }

@@ -3,9 +3,7 @@ package dev.jdtech.jellyfin.film.presentation.downloads
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyMovie
-import dev.jdtech.jellyfin.di.AppPreferencesDownloadSettings
 import dev.jdtech.jellyfin.models.CollectionSection
 import dev.jdtech.jellyfin.models.Item
 import dev.jdtech.jellyfin.models.ItemId
@@ -17,14 +15,15 @@ import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toMediaSourceId
 import dev.jdtech.jellyfin.models.toUserId
 import dev.jdtech.jellyfin.repository.CurrentAccount
+import dev.jdtech.jellyfin.repository.DownloadDeleter
 import dev.jdtech.jellyfin.repository.DownloadList
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.repository.DownloadSources
 import dev.jdtech.jellyfin.repository.ItemLists
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.testing.FakeRoles
 import dev.jdtech.jellyfin.testing.fakeProxy
 import dev.jdtech.jellyfin.testing.kotlinName
-import dev.jdtech.jellyfin.utils.CoreDownloadTexts
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -170,15 +169,8 @@ class DownloadsViewModelUserSwitchTest {
             lists = repository.role(),
             account = repository.role(),
             appPreferences = preferences,
-            downloadQueue =
-                DownloadQueue(
-                    downloader = unused(),
-                    settings = AppPreferencesDownloadSettings(preferences),
-                    downloadSources = downloadStore.role(),
-                    context = context,
-                    texts = CoreDownloadTexts,
-                ),
-            downloader = unused(),
+            downloadQueue = DownloadQueuePort.None,
+            downloadDeleter = DownloadDeleter.None,
             downloadList = downloadStore.role(),
             downloadSources = downloadStore.role(),
             ioDispatcher = dispatcher,

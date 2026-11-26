@@ -3,7 +3,6 @@ package dev.jdtech.jellyfin.film.presentation.show
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.domain.ports.CurrentServerCapabilities
 import dev.jdtech.jellyfin.film.presentation.DownloadPrompt
 import dev.jdtech.jellyfin.film.presentation.EpisodeDownloadPrompts
@@ -29,7 +28,9 @@ import dev.jdtech.jellyfin.models.Show
 import dev.jdtech.jellyfin.models.mergeDuplicateRoles
 import dev.jdtech.jellyfin.ratings.ExternalRatings
 import dev.jdtech.jellyfin.repository.DataChangeEvents
+import dev.jdtech.jellyfin.repository.DownloadDeleter
 import dev.jdtech.jellyfin.repository.DownloadList
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.repository.ItemCatalog
 import dev.jdtech.jellyfin.repository.ItemExtras
 import dev.jdtech.jellyfin.repository.ReloadPolicy
@@ -37,7 +38,6 @@ import dev.jdtech.jellyfin.repository.UserDataUpdates
 import dev.jdtech.jellyfin.repository.serverOrStored
 import dev.jdtech.jellyfin.repository.serverOrStoredList
 import dev.jdtech.jellyfin.settings.domain.AppPreferences
-import dev.jdtech.jellyfin.utils.Downloader
 import dev.jdtech.jellyfin.utils.TimberFallbackLog
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -70,8 +70,8 @@ internal constructor(
     private val extras: ItemExtras,
     private val capabilities: CurrentServerCapabilities,
     private val appPreferences: AppPreferences,
-    private val downloader: Downloader,
-    private val downloadQueue: DownloadQueue,
+    private val downloadDeleter: DownloadDeleter,
+    private val downloadQueue: DownloadQueuePort,
     private val downloadList: DownloadList,
     dataChanges: DataChangeEvents = DataChangeEvents(),
     externalRatings: ExternalRatings = ExternalRatings.None,
@@ -90,8 +90,8 @@ internal constructor(
         extras: ItemExtras,
         capabilities: CurrentServerCapabilities,
         appPreferences: AppPreferences,
-        downloader: Downloader,
-        downloadQueue: DownloadQueue,
+        downloadDeleter: DownloadDeleter,
+        downloadQueue: DownloadQueuePort,
         downloadList: DownloadList,
         dataChanges: DataChangeEvents = DataChangeEvents(),
         externalRatings: ExternalRatings = ExternalRatings.None,
@@ -101,7 +101,7 @@ internal constructor(
         extras,
         capabilities,
         appPreferences,
-        downloader,
+        downloadDeleter,
         downloadQueue,
         downloadList,
         dataChanges,
@@ -434,7 +434,7 @@ internal constructor(
                     val localSource =
                         episode.sources.firstOrNull { it.type == ItemSourceType.LOCAL }
                     if (localSource != null) {
-                        downloader.deleteItem(item = episode, source = localSource)
+                        downloadDeleter.deleteItem(item = episode, source = localSource)
                     }
                 }
             }

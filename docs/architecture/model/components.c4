@@ -80,6 +80,18 @@ model {
       description 'The download settings, implemented over AppPreferences in core. repository/DownloadSettings.kt'
       link https://github.com/midasvo/ephyra/blob/main/application/src/main/kotlin/dev/jdtech/jellyfin/repository/DownloadSettings.kt 'Source'
     }
+    downloadQueuePort = port 'DownloadQueuePort' {
+      description 'The download queue boundary for ViewModels; implemented in downloads and bound as no-op in app/tv. repository/DownloadQueuePort.kt'
+      link https://github.com/midasvo/ephyra/blob/main/application/src/main/kotlin/dev/jdtech/jellyfin/repository/DownloadQueuePort.kt 'Source'
+    }
+    downloadDeleter = port 'DownloadDeleter' {
+      description 'Deletes a downloaded item source; implemented by Downloader in downloads and bound as no-op in app/tv. repository/DownloadDeleter.kt'
+      link https://github.com/midasvo/ephyra/blob/main/application/src/main/kotlin/dev/jdtech/jellyfin/repository/DownloadDeleter.kt 'Source'
+    }
+    smartDownloadChecker = port 'SmartDownloadChecker' {
+      description 'Runs smart-download checks after sync; implemented by SmartDownloads in downloads and bound as no-op in app/tv. repository/SmartDownloadChecker.kt'
+      link https://github.com/midasvo/ephyra/blob/main/application/src/main/kotlin/dev/jdtech/jellyfin/repository/SmartDownloadChecker.kt 'Source'
+    }
   }
 
   extend ephyra.playerLocal {
@@ -289,9 +301,12 @@ model {
   ephyra.core.userDataSync -> ephyra.application.pendingUserDataStore 'anything waiting?'
   ephyra.core.syncWorker -> ephyra.application.pendingUserDataStore 'sends and clears the rows'
   ephyra.core.syncWorker -> ephyra.domain.playState 'merges with the server'
-  ephyra.core.syncWorker -> ephyra.downloads.smartDownloads 'checks after a sync'
-  ephyra.core.downloaderViewModel -> ephyra.downloads.downloadQueue 'entries, enqueue, remove'
-  ephyra.core.downloaderViewModel -> ephyra.downloads.downloader 'deletes'
+  ephyra.downloads.downloader -> ephyra.application.downloadDeleter 'extends'
+  ephyra.downloads.downloadQueue -> ephyra.application.downloadQueuePort 'implements'
+  ephyra.downloads.smartDownloads -> ephyra.application.smartDownloadChecker 'implements'
+  ephyra.core.syncWorker -> ephyra.application.smartDownloadChecker 'checks after a sync'
+  ephyra.core.downloaderViewModel -> ephyra.application.downloadQueuePort 'entries, enqueue, remove'
+  ephyra.core.downloaderViewModel -> ephyra.application.downloadDeleter 'deletes'
 
   extend ephyra.setup {
     link https://midasvo.nl/ephyra/dev/areas/setup-and-servers/ 'Guide: setup and servers'

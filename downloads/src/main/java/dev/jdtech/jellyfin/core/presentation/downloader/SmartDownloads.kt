@@ -14,6 +14,7 @@ import dev.jdtech.jellyfin.repository.DownloadSources
 import dev.jdtech.jellyfin.repository.DownloadUserData
 import dev.jdtech.jellyfin.repository.ItemCatalog
 import dev.jdtech.jellyfin.repository.PlaybackEvents
+import dev.jdtech.jellyfin.repository.SmartDownloadChecker
 import dev.jdtech.jellyfin.repository.StoredSource
 import dev.jdtech.jellyfin.utils.Downloader
 import dev.jdtech.jellyfin.utils.NetworkConnectivity
@@ -52,7 +53,7 @@ constructor(
     private val account: Provider<CurrentAccount>,
     private val networkConnectivity: NetworkConnectivity,
     private val playbackEvents: PlaybackEvents,
-) {
+) : SmartDownloadChecker {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
     private var started = false
@@ -84,7 +85,7 @@ constructor(
     }
 
     /** Runs [check] for every series that has a completed download. */
-    suspend fun checkAll() {
+    override suspend fun checkAll() {
         if (!isActive()) return
         // CE (#718): the current server's series; another server's downloads are not its to manage.
         val serverId = currentServerId.get() ?: return

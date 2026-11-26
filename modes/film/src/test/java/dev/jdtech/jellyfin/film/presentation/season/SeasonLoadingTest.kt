@@ -1,16 +1,13 @@
 package dev.jdtech.jellyfin.film.presentation.season
 
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.SharedPreferences
-import dev.jdtech.jellyfin.core.presentation.downloader.DownloadQueue
 import dev.jdtech.jellyfin.core.presentation.dummy.dummyEpisode
-import dev.jdtech.jellyfin.di.AppPreferencesDownloadSettings
 import dev.jdtech.jellyfin.models.ItemImages
 import dev.jdtech.jellyfin.models.Season
 import dev.jdtech.jellyfin.models.ServerCapabilities
 import dev.jdtech.jellyfin.models.toItemId
-import dev.jdtech.jellyfin.repository.DownloadSources
+import dev.jdtech.jellyfin.repository.DownloadDeleter
+import dev.jdtech.jellyfin.repository.DownloadQueuePort
 import dev.jdtech.jellyfin.repository.ItemCatalog
 import dev.jdtech.jellyfin.repository.ItemExtras
 import dev.jdtech.jellyfin.repository.UserDataUpdates
@@ -18,7 +15,6 @@ import dev.jdtech.jellyfin.settings.domain.AppPreferences
 import dev.jdtech.jellyfin.testing.FakeRoles
 import dev.jdtech.jellyfin.testing.fakeProxy
 import dev.jdtech.jellyfin.testing.kotlinName
-import dev.jdtech.jellyfin.utils.CoreDownloadTexts
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -148,20 +144,12 @@ class SeasonLoadingTest {
 
     private fun viewModel(): SeasonViewModel {
         val repository = repository()
-        val preferences = appPreferences()
         return SeasonViewModel(
             catalog = repository.role(),
             userData = repository.role(),
             capabilities = { ServerCapabilities.ALL },
-            downloader = unused(),
-            downloadQueue =
-                DownloadQueue(
-                    downloader = unused(),
-                    settings = AppPreferencesDownloadSettings(preferences),
-                    downloadSources = unused<DownloadSources>(),
-                    context = ContextWrapper(null) as Context,
-                    texts = CoreDownloadTexts,
-                ),
+            downloadDeleter = DownloadDeleter.None,
+            downloadQueue = DownloadQueuePort.None,
         )
     }
 

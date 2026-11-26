@@ -170,7 +170,6 @@ dependencies {
     baselineProfile(projects.baselineprofileTv)
     implementation(libs.androidx.profileinstaller)
     implementation(projects.core)
-    implementation(projects.downloads)
     implementation(projects.application)
     implementation(projects.data)
     // CE (#965): the adapters over the device (codec probe, connectivity).
