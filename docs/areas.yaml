@@ -271,6 +271,7 @@ areas:
       - baselineprofile-tv/src/main/kotlin/dev/jdtech/jellyfin/baselineprofile/tv/Journey.kt
       - app/phone/src/libreRelease/generated/baselineProfiles/
       - app/phone/proguard-rules.pro
+      - app/tv/proguard-rules.pro
       - app/phone/src/main/java/dev/jdtech/jellyfin/BaseApplication.kt
       - modes/film/src/main/java/dev/jdtech/jellyfin/film/presentation/home/HomeCache.kt
     docs: [docs/performance.md, baselineprofile/README.md, baselineprofile-tv/README.md]
