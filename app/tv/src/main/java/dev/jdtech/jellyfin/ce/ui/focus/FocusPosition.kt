@@ -45,6 +45,13 @@ class FocusPosition internal constructor(row: Int, column: Int, key: String?) {
     private var defaultRow = row
     private var defaultColumn = column
 
+    /**
+     * True while [RestoreFocus] has not yet restored focus on this entry into composition. An
+     * automatic focus gain before then (such as Android assigning initial window focus to the first
+     * focusable element after Activity recreation) must not overwrite the saved position.
+     */
+    internal var restoring = false
+
     internal fun setDefault(row: Int, column: Int) {
         defaultRow = row
         defaultColumn = column
@@ -129,7 +136,7 @@ fun Modifier.focusPosition(
         onDispose { position.unregister(row, column, requester) }
     }
     return this.focusRequester(requester).onFocusChanged {
-        if (it.hasFocus) position.save(row, column, key)
+        if (it.hasFocus && !position.restoring) position.save(row, column, key)
     }
 }
 
@@ -156,6 +163,10 @@ fun RestoreFocus(
 ) {
     // Not saveable on purpose: it has to run again after the screen comes back.
     var restored by remember { mutableStateOf(false) }
+    // Set during composition (before layout and initial window focus) so an automatic focus gain
+    // on the first focusable element cannot overwrite the saved position before this runs.
+    position.restoring = !restored
+    DisposableEffect(position) { onDispose { position.restoring = false } }
     val suppressed = LocalRestoreFocusSuppressed.current
     LaunchedEffect(ready) {
         if (!ready || restored) return@LaunchedEffect
@@ -166,16 +177,20 @@ fun RestoreFocus(
             // Read right before the request: the drawer may have taken focus meanwhile (#533).
             if (suppressed()) {
                 restored = true
+                position.restoring = false
                 return@LaunchedEffect
             }
+            position.restoring = false
             if (position.requestFocus()) {
                 restored = true
                 return@LaunchedEffect
             }
+            position.restoring = true
             // Halfway, give up on the saved element (it may be gone) and use the default one.
             if (attempt == RESTORE_ATTEMPTS / 2) position.resetToDefault()
         }
         restored = true
+        position.restoring = false
     }
 }
 
