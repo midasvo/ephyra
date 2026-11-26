@@ -59,6 +59,10 @@ internal class CastPlaybackReporter(
     private var heardAt = 0L
     private var heardPlaying = false
 
+    /** Explicit seek sent to the receiver so its landing at 0 is not read as the item ending. */
+    private var pendingSeekItemId: ItemId? = null
+    private var pendingSeekTargetMs: Long? = null
+
     private val durations = HashMap<ItemId, Long>()
 
     val isReporting: Boolean
@@ -93,14 +97,28 @@ internal class CastPlaybackReporter(
     /** The interval timer fired. */
     fun tick(state: CastReceiverState): List<CastReport> = progress(state, tick = true)
 
+    /** An explicit seek to [positionMs] was sent for [itemId]; its landing is not an end blip. */
+    fun seekRequested(itemId: ItemId, positionMs: Long) {
+        if (itemId != reportingItemId) return
+        pendingSeekItemId = itemId
+        pendingSeekTargetMs = positionMs.coerceAtLeast(0L)
+    }
+
+    /** A pending seek for [itemId] to [positionMs] failed or was cancelled before landing. */
+    fun seekFailed(itemId: ItemId, positionMs: Long) {
+        if (pendingSeekItemId == itemId && pendingSeekTargetMs == positionMs.coerceAtLeast(0L)) {
+            clearPendingSeek()
+        }
+    }
+
     /** The receiver's position and duration for [itemId], as they come in while it plays. */
     fun positionChanged(itemId: ItemId, positionMs: Long, durationMs: Long) {
         durationChanged(itemId, durationMs)
         val safePosition = positionMs.coerceAtLeast(0L)
-        if (
-            itemId == reportingItemId &&
-                !CastPositions.ranOut(this.positionMs, safePosition, durations[itemId])
-        ) {
+        if (itemId != reportingItemId) return
+        val fromSeek = matchesPendingSeek(itemId, safePosition)
+        if (fromSeek) clearPendingSeek()
+        if (fromSeek || !CastPositions.ranOut(this.positionMs, safePosition, durations[itemId])) {
             this.positionMs = safePosition
         }
     }
@@ -113,6 +131,7 @@ internal class CastPlaybackReporter(
     fun stop(): List<CastReport> {
         val itemId = reportingItemId ?: return emptyList()
         reportingItemId = null
+        clearPendingSeek()
         val playedPercentage =
             durations[itemId]?.let {
                 (positionMs.toFloat() / it.toFloat() * 100).toInt().coerceIn(0, 100)
@@ -153,9 +172,13 @@ internal class CastPlaybackReporter(
 
         val now = clock()
         val position = state.positionMs.coerceAtLeast(0L)
+        val fromSeek = matchesPendingSeek(itemId, position)
+        if (fromSeek) clearPendingSeek()
         // An item that runs out is at position 0 for a moment before the receiver moves on. That
         // is not a seek back to the start, and the stop that follows must not say it was.
-        if (CastPositions.ranOut(positionMs, position, durations[itemId])) return emptyList()
+        if (!fromSeek && CastPositions.ranOut(positionMs, position, durations[itemId])) {
+            return emptyList()
+        }
         val isPaused =
             when (state.status) {
                 CastPlaybackStatus.PLAYING -> false
@@ -173,6 +196,16 @@ internal class CastPlaybackReporter(
         paused = isPaused
         lastReportAt = now
         return listOf(CastReport.Progress(itemId, position, isPaused))
+    }
+
+    private fun clearPendingSeek() {
+        pendingSeekItemId = null
+        pendingSeekTargetMs = null
+    }
+
+    private fun matchesPendingSeek(itemId: ItemId, positionMs: Long): Boolean {
+        val target = pendingSeekTargetMs ?: return false
+        return pendingSeekItemId == itemId && abs(positionMs - target) <= SEEK_TOLERANCE_MS
     }
 
     private fun heard(positionMs: Long, at: Long, playing: Boolean) {

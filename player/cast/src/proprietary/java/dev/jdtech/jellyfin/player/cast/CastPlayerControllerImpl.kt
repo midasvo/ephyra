@@ -975,14 +975,22 @@ constructor(
     override fun seekTo(position: Long) {
         val safePosition = position.coerceAtLeast(0L)
         _playerState.update { it.copy(currentPosition = safePosition, positionFromSeek = true) }
+        val client = remoteMediaClient ?: return
+        val seekItemId = receiverItems().positionItemId.takeIf { !loadPending }
+        if (seekItemId != null) reporter.seekRequested(seekItemId, safePosition)
         try {
             val options =
                 MediaSeekOptions.Builder()
                     .setPosition(safePosition)
                     .setResumeState(MediaSeekOptions.RESUME_STATE_UNCHANGED)
                     .build()
-            remoteMediaClient?.seek(options)
+            client.seek(options).setResultCallback { result ->
+                if (!result.status.isSuccess && seekItemId != null) {
+                    reporter.seekFailed(seekItemId, safePosition)
+                }
+            }
         } catch (e: Exception) {
+            if (seekItemId != null) reporter.seekFailed(seekItemId, safePosition)
             Timber.e(e, "Failed to seek to $safePosition")
         }
     }
