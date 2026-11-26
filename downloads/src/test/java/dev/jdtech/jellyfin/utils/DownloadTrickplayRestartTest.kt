@@ -25,6 +25,7 @@ import dev.jdtech.jellyfin.models.Show
 import dev.jdtech.jellyfin.models.ShowEntity
 import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toItemTrickplayInfo
+import dev.jdtech.jellyfin.models.toItemTrickplayInfoEntity
 import dev.jdtech.jellyfin.models.toMediaSourceId
 import dev.jdtech.jellyfin.models.toServerId
 import dev.jdtech.jellyfin.models.toUserId
@@ -44,8 +45,10 @@ import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Provider
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -97,7 +100,9 @@ class DownloadTrickplayRestartTest {
         )
 
     private val requestedSheets = CopyOnWriteArrayList<Int>()
+    private val catalogCalls = CopyOnWriteArrayList<String>()
     @Volatile private var serverAvailable = true
+    @Volatile private var failTrickplaySheetAt: Int? = null
 
     @Before
     fun setUp() {
@@ -157,10 +162,69 @@ class DownloadTrickplayRestartTest {
 
         val storedInfo = runBlocking { dao.getTrickplayInfo(sourceId) }?.toItemTrickplayInfo()
         assertEquals(info, storedInfo)
+        assertTrue("getEpisode" in catalogCalls)
+        assertFalse("getItem" in catalogCalls)
         assertEquals(listOf("0", "1", "2"), storedSheets())
         for (sheet in 0..2) {
             assertEquals("sheet $sheet", readOffline(sheet))
         }
+    }
+
+    @Test
+    fun `stored trickplay layout with missing sheet files downloads the missing sheets`() {
+        val partialPath = File(root, "Show/S01/S01E01 - Ep.mkv.download")
+        File(root, "Show/S01/S01E01 - Ep.mkv").apply {
+            parentFile!!.mkdirs()
+            writeBytes(VIDEO)
+        }
+        seedActiveDownloadInRoom(partialPath)
+        runBlocking { dao.insertTrickplayInfo(info.toItemTrickplayInfoEntity(sourceId)) }
+        val trickplayDir =
+            File(context.filesDir, "trickplay/$episodeId/$sourceId").apply { mkdirs() }
+        File(trickplayDir, "0").writeText("sheet 0")
+
+        val active = runBlocking { newProcessDownloader().getActiveDownloads() }
+
+        assertEquals(emptyList(), active)
+        assertEquals(listOf(1, 2), requestedSheets.toList())
+        assertEquals(listOf("0", "1", "2"), storedSheets())
+        assertEquals(info, runBlocking { dao.getTrickplayInfo(sourceId) }?.toItemTrickplayInfo())
+    }
+
+    @Test
+    fun `finalizing interrupted mid-trickplay keeps source active so the next launch completes it`() {
+        val partialPath = File(root, "Show/S01/S01E01 - Ep.mkv.download")
+        val finalFile =
+            File(root, "Show/S01/S01E01 - Ep.mkv").apply {
+                parentFile!!.mkdirs()
+                writeBytes(VIDEO)
+            }
+        seedActiveDownloadInRoom(partialPath)
+        failTrickplaySheetAt = 1
+
+        val interrupted = runCatching {
+            runBlocking { newProcessDownloader().getActiveDownloads() }
+        }
+        assertTrue(interrupted.exceptionOrNull() is CancellationException)
+        assertEquals(
+            partialPath.absolutePath,
+            runBlocking { dao.getSources(episodeId).single().path },
+        )
+        assertEquals(1, runBlocking { dao.getActiveDownloadSources().size })
+        assertEquals(listOf("0"), storedSheets())
+
+        failTrickplaySheetAt = null
+        requestedSheets.clear()
+        val active = runBlocking { newProcessDownloader().getActiveDownloads() }
+
+        assertEquals(emptyList(), active)
+        assertEquals(
+            finalFile.absolutePath,
+            runBlocking { dao.getSources(episodeId).single().path },
+        )
+        assertEquals(listOf(1, 2), requestedSheets.toList())
+        assertEquals(listOf("0", "1", "2"), storedSheets())
+        assertEquals(info, runBlocking { dao.getTrickplayInfo(sourceId) }?.toItemTrickplayInfo())
     }
 
     @Test
@@ -363,6 +427,7 @@ class DownloadTrickplayRestartTest {
                     "getUserId" -> userId
                     "getItem",
                     "getEpisode" -> {
+                        catalogCalls.add(method.kotlinName)
                         if (!serverAvailable) throw IllegalStateException("server unreachable")
                         serverEpisode(trickplayInfo = mapOf(sourceId to info))
                     }
@@ -429,6 +494,9 @@ class DownloadTrickplayRestartTest {
                     "getTrickplayData" -> {
                         if (!serverAvailable) throw IllegalStateException("server unreachable")
                         val index = args[2] as Int
+                        if (failTrickplaySheetAt == index) {
+                            throw CancellationException("simulated process stop")
+                        }
                         requestedSheets.add(index)
                         "sheet $index".toByteArray()
                     }
