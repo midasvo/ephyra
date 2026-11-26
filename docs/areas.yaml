@@ -228,7 +228,7 @@ areas:
   - id: tv
     title: Android TV
     summary: "The TV app: its own screens next to upstream's, D-pad focus, the TV player, Watch Next and the screensaver."
-    keywords: [tv, android tv, google tv, fire tv, leanback, d-pad, dpad, remote, focus, focus jumps, focus lost, focus restore, watch next, screensaver, drawer, side navigation, theme music, EphyraFocus, FocusPosition, TvPlayerScreen, WatchNextPublisher]
+    keywords: [tv, android tv, google tv, fire tv, fire os, leanback, d-pad, dpad, remote, focus, focus jumps, focus lost, focus restore, overscan, safe area, watch next, screensaver, drawer, side navigation, theme music, up next, trickplay, EphyraFocus, FocusPosition, FocusHandOff, NoBringIntoView, TvSafeArea, TvPlayerScreen, TvPlayerKeyHandler, WatchNextPublisher, ScreensaverService, ThemeMusicSession, AppVariant]
     paths:
       - app/tv/src/main/java/dev/jdtech/jellyfin/NavigationRoot.kt
       - app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/main/MainScreen.kt
@@ -238,7 +238,8 @@ areas:
       - app/tv/src/main/java/dev/jdtech/jellyfin/ce/presentation/player/TvPlayerScreen.kt
       - app/tv/src/main/java/dev/jdtech/jellyfin/ce/watchnext/
       - scripts/tv-dpad.sh
-    docs: [docs/tv-research/adr/, docs/tv-research/adr/0003-focus-restore.md]
+    docs: [docs/tv-research/adr/, docs/tv-research/adr/0001-new-ce-screens-next-to-upstream.md, docs/tv-research/adr/0002-side-navigation-drawer.md, docs/tv-research/adr/0003-focus-restore.md, docs/tv-research/adr/0004-tv-player-ui.md]
+    rules: [R1, R2, R4, R10, R11]
     tests:
       - ./gradlew :app:tv:testLibreDebugUnitTest
 
