@@ -52,7 +52,7 @@ In `libre` builds, `CastSessionManagerImpl` and `CastPlayerControllerImpl` are n
 
 Unit tests in `player/cast`:
 - `src/test/`: `CastSegmentSkipperTest`, `CastViewModelSegmentTest` (runs in both `libre` and `proprietary` flavours using Robolectric and fakes).
-- `src/testProprietary/`: `CastCustomDataTest`, `CastItemIdTest`, `CastPlaybackReporterTest`, `CastPlaylistOrderTest`, `CastReceiverItemsTest`, `CastTracksTest`, `CastUrlsTest`, `LegacyPlaybackInfoTest`.
+- `src/testProprietary/`: `CastCustomDataTest`, `CastItemIdTest`, `CastPlaybackReporterTest`, `CastPlayerControllerSeekTest`, `CastPlaylistOrderTest`, `CastReceiverItemsTest`, `CastTracksTest`, `CastUrlsTest`, `LegacyPlaybackInfoTest`.
 
 On an emulator (`proprietary` debug build only): emulators find no real Cast receivers. Set the system property to enable the debug stand-in (`FakeCast.kt`):
 

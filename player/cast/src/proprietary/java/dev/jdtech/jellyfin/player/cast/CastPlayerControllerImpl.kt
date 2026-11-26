@@ -92,6 +92,12 @@ constructor(
 
     internal var mainDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate
     internal var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    internal var seekSender: ((MediaSeekOptions, (Boolean) -> Unit) -> Unit)? = null
+
+    internal fun setTestState(item: CastMediaItem?, state: CastPlayerState) {
+        _currentItem.value = item
+        _playerState.value = state
+    }
 
     private val _currentItem = MutableStateFlow<CastMediaItem?>(null)
     override val currentItem: StateFlow<CastMediaItem?> = _currentItem.asStateFlow()
@@ -194,7 +200,7 @@ constructor(
      * item it handed out and does not hand it out again, so one that outlived its playlist would
      * leave the next playlist's queue empty.
      */
-    private var playlistManager: PlaylistManager = playlistManagers.get()
+    private var playlistManager: PlaylistManager? = null
 
     /** What was built for each item in the receiver's queue. */
     private val itemCache = ConcurrentHashMap<ItemId, CastMediaItem>()
@@ -869,7 +875,8 @@ constructor(
         queueJob?.cancel()
         queueJob = scope.launch {
             try {
-                val manager = playlistManager
+                val manager =
+                    playlistManager ?: playlistManagers.get().also { playlistManager = it }
                 manager.setCurrentMediaItemIndex(itemId)
                 manager.loadQueue()
                 manager.setCurrentMediaItemIndex(itemId)
@@ -974,25 +981,43 @@ constructor(
 
     override fun seekTo(position: Long) {
         val safePosition = position.coerceAtLeast(0L)
-        _playerState.update { it.copy(currentPosition = safePosition, positionFromSeek = true) }
-        val client = remoteMediaClient ?: return
-        val seekItemId = receiverItems().positionItemId.takeIf { !loadPending }
-        val seekToken = seekItemId?.let { reporter.seekRequested(it, safePosition) } ?: 0L
-        try {
-            val options =
-                MediaSeekOptions.Builder()
-                    .setPosition(safePosition)
-                    .setResumeState(MediaSeekOptions.RESUME_STATE_UNCHANGED)
-                    .build()
-            client.seek(options).setResultCallback { result ->
-                if (!result.status.isSuccess && seekToken != 0L) {
-                    reporter.seekFailed(seekToken)
+        val client = remoteMediaClient
+        val sender =
+            seekSender
+                ?: client?.let { remote ->
+                    { options: MediaSeekOptions, onResult: (Boolean) -> Unit ->
+                        remote.seek(options).setResultCallback { result ->
+                            onResult(result.status.isSuccess)
+                        }
+                    }
                 }
+        if (sender != null) {
+            val seekItemId =
+                if (client != null) {
+                    receiverItems().positionItemId.takeIf { !loadPending }
+                } else {
+                    _playerState.value.positionItemId.takeIf { !loadPending }
+                }
+            val seekToken = seekItemId?.let { reporter.seekRequested(it, safePosition) } ?: 0L
+            try {
+                val options =
+                    MediaSeekOptions.Builder()
+                        .setPosition(safePosition)
+                        .setResumeState(MediaSeekOptions.RESUME_STATE_UNCHANGED)
+                        .build()
+                sender(options) { success ->
+                    if (!success && seekToken != 0L) {
+                        reporter.seekFailed(seekToken)
+                    }
+                }
+            } catch (e: Exception) {
+                if (seekToken != 0L) reporter.seekFailed(seekToken)
+                Timber.e(e, "Failed to seek to $safePosition")
             }
-        } catch (e: Exception) {
-            if (seekToken != 0L) reporter.seekFailed(seekToken)
-            Timber.e(e, "Failed to seek to $safePosition")
         }
+        // Update _playerState after dispatching client.seek so reactive collectors (e.g.
+        // CastViewModel segment auto-skip) issue any follow-up seek after this one (#1026).
+        _playerState.update { it.copy(currentPosition = safePosition, positionFromSeek = true) }
     }
 
     override fun seekToNext() {

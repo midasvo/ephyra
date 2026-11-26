@@ -269,6 +269,33 @@ class CastViewModelSegmentTest {
     }
 
     @Test
+    fun `a user seek back into a skip segment while paused skips once and updates state`() {
+        val viewModel = viewModel()
+        playing(itemA)
+        controller.report(itemA, 45_000L)
+        controller.playerState.update { it.copy(status = CastPlaybackStatus.PAUSED) }
+
+        viewModel.seekTo(20_000L)
+
+        assertEquals(listOf(20_000L, 40_000L), controller.seeks)
+        assertEquals(40_000L, viewModel.state.value.player.currentPosition)
+    }
+
+    @Test
+    fun `a user seek back into a skip segment does not skip again after SETTLE_MS`() {
+        val viewModel = viewModel()
+        playing(itemA)
+        controller.report(itemA, 45_000L)
+
+        viewModel.seekTo(20_000L)
+        controller.report(itemA, 40_000L)
+        ShadowSystemClock.advanceBy(Duration.ofMillis(CastSegmentSkipper.SETTLE_MS))
+        controller.report(itemA, 45_000L)
+
+        assertEquals(listOf(20_000L, 40_000L), controller.seeks)
+    }
+
+    @Test
     fun `a user seek elsewhere keeps the guard against a late report`() {
         val viewModel = viewModel()
         playing(itemA)
