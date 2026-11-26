@@ -1,0 +1,7 @@
+Fixes for the player, downloads, Cast and Android TV.
+
+- Android TV: asks only for the permissions it uses and no longer starts at boot.
+- mpv: https through a proxy asking for an optional client certificate plays again.
+- mpv: 22,050 Hz audio has sound.
+- Downloads queued while the server is away are no longer lost.
+- Cast skips segments set to skip.

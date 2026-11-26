@@ -1,0 +1,7 @@
+Fixes for the player and Android TV.
+
+- Asks only for the permissions it uses and no longer starts at boot.
+- Pages load again after standby, and the focus stays where it was.
+- mpv: https through a proxy asking for an optional client certificate plays again.
+- mpv: 22,050 Hz audio has sound.
+- ExoPlayer falls back from tunneling when the audio track cannot be opened.

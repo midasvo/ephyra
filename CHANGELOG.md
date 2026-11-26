@@ -13,6 +13,47 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v2.9.1] — 2026-11-26
+
+A release of fixes. The Android TV app asks only for the permissions it uses and no longer starts
+when the TV boots. On the mpv player, https through a reverse proxy that asks for
+an optional client certificate plays again, and so does audio at 22,050 Hz. Downloads, Cast and
+the TV pages after standby got fixes too. Nothing needs doing after the update: downloads, logins,
+resume positions and settings stay as they are.
+
+### Changed
+- Android TV: the app asks only for the permissions it uses (no notifications, wake lock or
+  foreground service) and does not start when the TV boots, and its release build no longer
+  carries the phone's download and playback-service code (#1045, #1047).
+- Streaming quality: the options are named by bitrate only, without a resolution they did not
+  deliver, and the setting says that files below the limit play unchanged (#1016).
+
+### Fixed
+- Player (mpv): https through a reverse proxy that asks for an optional client certificate plays
+  again (#960), and audio at 22,050 Hz has sound (#659).
+- Player (mpv): a connection reset while a stream opens counts as a network error, so the player
+  waits for the network instead of failing (#996), and a failed load is decided on mpv's own
+  reason (#786).
+- Player (ExoPlayer): when tunneling cannot open the audio track (mono audio on some TV boxes),
+  playback falls back to normal output instead of failing (#924).
+- Trickplay: previews of 4:3 and portrait videos are full size, and a preview that failed to load
+  is asked for again (#860).
+- Android TV: the movie, show and season pages load again when the TV wakes with the page open,
+  and after standby the focus stays on the episode it was on instead of jumping to the season
+  (#660, #1008).
+- Downloads: a queued download is no longer lost when its start fails while the server is away
+  and the app is closed, and cancelling and queuing a download again during its start no longer
+  mixes up the two (#1002, #1003).
+- Cast: a segment set to skip is skipped while casting, and when the receiver moves on to the next
+  item, the previous item's segments and progress are no longer applied to it (#851, #1027).
+- The live connection to the server survives a message it cannot read, instead of closing until
+  the app comes back to the foreground (#1011).
+- Servers: after signing in through a second address of a saved server, the app keeps using that
+  address after a restart, and a tap on the Addresses screen selects an address again (#984).
+
+### Maintenance
+- libmpv 1.4.0 (#960, #659).
+
 ## [v2.9.0] — 2026-11-24
 
 Movie and show pages can show the scores of IMDb, Rotten Tomatoes, Metacritic and Letterboxd,
@@ -1201,6 +1242,7 @@ Initial CE fork off findroid `1.0.2`. These rapid early iterations established t
 `nl.midasvo.findroid.ce` application ID, downloads and SD-card storage improvements, and ongoing
 tracking of upstream. See the git history between the corresponding tags for commit-level detail.
 
+[v2.9.1]: https://github.com/midasvo/ephyra/releases/tag/v2.9.1
 [v2.9.0]: https://github.com/midasvo/ephyra/releases/tag/v2.9.0
 [v2.8.0]: https://github.com/midasvo/ephyra/releases/tag/v2.8.0
 [v2.7.0]: https://github.com/midasvo/ephyra/releases/tag/v2.7.0
