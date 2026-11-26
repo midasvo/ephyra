@@ -310,6 +310,19 @@ class CastSegmentSkipperTest {
     }
 
     @Test
+    fun `the moment at 0 when an item runs out still counts when duration temporarily reads 0`() {
+        val opening = Segment(INTRO, startTicks = 0L, endTicks = 30_000L)
+        val skipper = skipper(segments = listOf(opening))
+        skipper.play(0L)
+        clockMs += CastSegmentSkipper.SETTLE_MS
+        skipper.onUserSeek(714_000L)
+        skipper.update(item, 718_000L, duration)
+
+        assertEquals(CastSegmentStep.None, skipper.update(item, 0L, 0L))
+        assertEquals(CastSegmentStep.None, skipper.update(item, 1_000L, 0L))
+    }
+
+    @Test
     fun `a new item forgets the skip`() {
         val skipper = skipper()
         skipper.play(10_000L)

@@ -165,6 +165,9 @@ constructor(
         _playerState.update {
             it.copy(
                 currentPosition = position,
+                duration =
+                    if (started) client.streamDuration.coerceAtLeast(0L)
+                    else client.streamDuration.takeIf { d -> d > 0L } ?: it.duration,
                 positionItemId = itemId,
                 positionFromSeek = false,
                 load = if (started) it.load + 1 else it.load,
@@ -237,7 +240,7 @@ constructor(
             override fun onQueueStatusUpdated() {
                 // The receiver moved on: the item that was playing is done, wherever the
                 // reports for the new one stand.
-                send(reporter.queueChanged(remoteItemId()))
+                send(reporter.queueChanged(receiverItems().receiverItemId))
             }
 
             override fun onMediaError(error: MediaError) {
@@ -255,17 +258,28 @@ constructor(
         RemoteMediaClient.ProgressListener { progressMs, durationMs ->
             val safeProgress = progressMs.coerceAtLeast(0L)
             val safeDuration = durationMs.coerceAtLeast(0L)
-            val itemId = remoteItemId()
+            val items = receiverItems()
+            // While a load is on its way the receiver still shows what it played before.
+            val positionItemId = items.positionItemId.takeIf { !loadPending }
             _playerState.update {
                 it.copy(
                     currentPosition = safeProgress,
-                    duration = safeDuration,
-                    // While a load is on its way the receiver still shows what it played before.
-                    positionItemId = itemId.takeIf { !loadPending },
+                    duration =
+                        if (
+                            safeDuration == 0L &&
+                                positionItemId != null &&
+                                positionItemId == it.positionItemId &&
+                                it.duration > 0L
+                        ) {
+                            it.duration
+                        } else {
+                            safeDuration
+                        },
+                    positionItemId = positionItemId,
                     positionFromSeek = false,
                 )
             }
-            itemId?.let { reporter.positionChanged(it, safeProgress, safeDuration) }
+            items.positionItemId?.let { reporter.positionChanged(it, safeProgress, safeDuration) }
         }
 
     private val castSessionListener =
@@ -371,6 +385,23 @@ constructor(
     private fun remoteItemId(): ItemId? =
         remoteMediaClient?.currentItem?.media?.customData?.optString("itemId")?.castItemIdOrNull()
 
+    private fun receiverItems(): ReceiverItems {
+        val status = remoteMediaClient?.mediaStatus ?: return ReceiverItems(null, null)
+        val currentItemId = status.getQueueItemById(status.currentItemId)?.media?.castItemId()
+        val loadingQueueId = status.loadingItemId
+        val loadingItemId =
+            loadingQueueId
+                .takeIf { it != MediaQueueItem.INVALID_ITEM_ID }
+                ?.let { status.getQueueItemById(it)?.media?.castItemId() }
+        return resolveReceiverItems(
+            currentQueueItemId = status.currentItemId,
+            loadingQueueItemId = loadingQueueId,
+            currentItemId = currentItemId,
+            loadingItemId = loadingItemId,
+            mediaInfoItemId = status.mediaInfo?.castItemId(),
+        )
+    }
+
     private fun CastMediaItem.isTranscoded(): Boolean = source?.transcoded == true
 
     private fun mapPlaybackStatus(client: RemoteMediaClient): CastPlaybackStatus {
@@ -397,7 +428,7 @@ constructor(
     ) =
         CastReceiverState(
             status = mapPlaybackStatus(client),
-            receiverItemId = remoteItemId(),
+            receiverItemId = receiverItems().receiverItemId,
             currentItemId = _currentItem.value?.item?.itemId,
             positionMs = positionMs,
             loadPending = loadPending,
@@ -406,16 +437,18 @@ constructor(
     private fun updatePlaybackStatus() {
         val client = remoteMediaClient ?: return
         val playbackStatus = mapPlaybackStatus(client)
+        val activePositionItemId = receiverItems().positionItemId.takeIf { !loadPending }
 
         _playerState.update {
             it.copy(
                 status = playbackStatus,
                 // An item that ended or failed has no position to act on (#851).
                 positionItemId =
-                    it.positionItemId.takeIf {
-                        playbackStatus == CastPlaybackStatus.PLAYING ||
-                            playbackStatus == CastPlaybackStatus.PAUSED ||
-                            playbackStatus == CastPlaybackStatus.BUFFERING
+                    it.positionItemId.takeIf { posItem ->
+                        posItem == activePositionItemId &&
+                            (playbackStatus == CastPlaybackStatus.PLAYING ||
+                                playbackStatus == CastPlaybackStatus.PAUSED ||
+                                playbackStatus == CastPlaybackStatus.BUFFERING)
                     },
             )
         }
@@ -1097,3 +1130,30 @@ constructor(
 private fun MediaInfo.castItemId(): ItemId? = customData?.optString("itemId")?.castItemIdOrNull()
 
 internal fun String.castItemIdOrNull(): ItemId? = takeIf { it.looksLikeJellyfinId() }?.toItemId()
+
+/**
+ * Which Jellyfin item the receiver's status points to (#1027):
+ * - [positionItemId]: the item whose position and duration the receiver is reporting, or `null`
+ *   while the receiver is transitioning to another queue item.
+ * - [receiverItemId]: the item the receiver is moving to or playing, for [CastPlaybackReporter].
+ */
+internal data class ReceiverItems(val positionItemId: ItemId?, val receiverItemId: ItemId?)
+
+internal fun resolveReceiverItems(
+    currentQueueItemId: Int,
+    loadingQueueItemId: Int,
+    currentItemId: ItemId?,
+    loadingItemId: ItemId?,
+    mediaInfoItemId: ItemId?,
+): ReceiverItems {
+    val loadingNext =
+        loadingQueueItemId != NO_QUEUE_ITEM && loadingQueueItemId != currentQueueItemId
+    if (loadingNext) {
+        val nextItemId = loadingItemId ?: mediaInfoItemId?.takeIf { it != currentItemId }
+        return ReceiverItems(positionItemId = null, receiverItemId = nextItemId)
+    }
+    if (mediaInfoItemId != null && mediaInfoItemId != currentItemId) {
+        return ReceiverItems(positionItemId = null, receiverItemId = mediaInfoItemId)
+    }
+    return ReceiverItems(positionItemId = currentItemId, receiverItemId = currentItemId)
+}

@@ -61,6 +61,9 @@ class CastSegmentSkipper(
     /** The last position reported for [itemId], or the user's last seek target. */
     private var lastPositionMs: Long? = null
 
+    /** The latest positive duration seen for [itemId], kept across brief 0-duration blips. */
+    private var knownDurationMs = 0L
+
     /**
      * The item was loaded again (the same item: an audio track switch, a second play), starting at
      * [positionMs]. Until the receiver is there, its reports are stale, as after the first load.
@@ -102,8 +105,10 @@ class CastSegmentSkipper(
     ): CastSegmentStep {
         if (positionItemId != itemId) return CastSegmentStep.None
         if (fromSeek && !settled) return CastSegmentStep.None
+        if (durationMs > 0L) knownDurationMs = durationMs
+        val effectiveDurationMs = if (durationMs > 0L) durationMs else knownDurationMs
         val previous = lastPositionMs
-        if (previous != null && CastPositions.ranOut(previous, positionMs, durationMs)) {
+        if (previous != null && CastPositions.ranOut(previous, positionMs, effectiveDurationMs)) {
             return CastSegmentStep.None
         }
         lastPositionMs = positionMs
@@ -139,7 +144,11 @@ class CastSegmentSkipper(
                 val segment = decision.segment
                 val end = (decision.target as? SkipTarget.SeekTo)?.positionMs ?: segment.endTicks
                 val target =
-                    if (durationMs > 0L) end.coerceAtMost(durationMs - END_MARGIN_MS) else end
+                    if (effectiveDurationMs > 0L) {
+                        end.coerceAtMost(effectiveDurationMs - END_MARGIN_MS)
+                    } else {
+                        end
+                    }
                 if (target <= positionMs) {
                     CastSegmentStep.None
                 } else {

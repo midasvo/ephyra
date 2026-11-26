@@ -515,4 +515,20 @@ class CastPlaybackReporterTest {
         assertEquals(none, status(PLAYING, 0L))
         assertEquals(listOf(CastReport.Stop(a, 438_000L, 100)), reporter.queueChanged(b))
     }
+
+    @Test
+    fun `positionChanged at 0 when an item runs out keeps the end position`() {
+        startA()
+        reporter.durationChanged(a, 720_023L)
+        now = 718_023L
+        reporter.positionChanged(a, 718_023L, 720_023L)
+        status(PLAYING, 718_023L)
+
+        // ProgressListener fires with 0, 0 while the item runs out before the queue moves on.
+        now = 720_500L
+        reporter.positionChanged(a, 0L, 0L)
+        assertEquals(none, status(PLAYING, 0L))
+        assertEquals(none, status(PLAYING, 500L))
+        assertEquals(listOf(CastReport.Stop(a, 718_023L, 99)), reporter.queueChanged(b))
+    }
 }

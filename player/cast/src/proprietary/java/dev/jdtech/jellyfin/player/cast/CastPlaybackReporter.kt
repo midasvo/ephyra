@@ -96,7 +96,13 @@ internal class CastPlaybackReporter(
     /** The receiver's position and duration for [itemId], as they come in while it plays. */
     fun positionChanged(itemId: ItemId, positionMs: Long, durationMs: Long) {
         durationChanged(itemId, durationMs)
-        if (itemId == reportingItemId) this.positionMs = positionMs.coerceAtLeast(0L)
+        val safePosition = positionMs.coerceAtLeast(0L)
+        if (
+            itemId == reportingItemId &&
+                !CastPositions.ranOut(this.positionMs, safePosition, durations[itemId])
+        ) {
+            this.positionMs = safePosition
+        }
     }
 
     fun durationChanged(itemId: ItemId, durationMs: Long) {
