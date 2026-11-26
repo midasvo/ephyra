@@ -26,6 +26,7 @@ import dev.jdtech.jellyfin.utils.download.DownloadTexts
 import dev.jdtech.jellyfin.utils.download.estimateCappedDownloadSize
 import dev.jdtech.jellyfin.utils.download.isPermanentHttpFailure
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -134,6 +135,11 @@ constructor(
          * opposed to refusing the download), so it goes on by itself when the server is back.
          */
         val retryWhenServerReturns: Boolean = false,
+        /**
+         * CE (#1003): attempt id held while [startDownload] is in flight, so a stale start's result
+         * never attaches to a newer entry for the same item.
+         */
+        val startAttemptId: Long? = null,
     )
 
     private val _entries = MutableStateFlow<List<Entry>>(emptyList())
@@ -170,6 +176,7 @@ constructor(
     // a network call.
     private val lastMediaStreamRetryCheck = ConcurrentHashMap<Long, Long>()
     private var pumpJob: Job? = null
+    private val nextStartAttemptId = AtomicLong(0L)
 
     /** Previous bytes + wall-clock (ms) sample per downloadId, for speed calc. */
     private val lastSamples = mutableMapOf<Long, Pair<Long, Long>>()
@@ -786,6 +793,7 @@ constructor(
                     _entries.value
                         .filter {
                             it.state is EntryState.Pending &&
+                                it.startAttemptId == null &&
                                 (it.retryAt == null || it.retryAt <= now)
                         }
                         .take(freeSlots)
@@ -812,32 +820,42 @@ constructor(
     }
 
     private suspend fun startDownload(entry: Entry) {
+        val attemptId = nextStartAttemptId.incrementAndGet()
+        val activeEntry = mutex.withLock {
+            val current =
+                _entries.value.firstOrNull {
+                    it.id == entry.id && it.state is EntryState.Pending && it.startAttemptId == null
+                } ?: return
+            val marked = current.copy(startAttemptId = attemptId)
+            _entries.value = _entries.value.map { if (it === current) marked else it }
+            marked
+        }
         val storageIndex = settings.downloadStorageIndex?.toIntOrNull() ?: 0
         // A Dolby Vision item (with the setting on) or a quality-capped download may
         // be transcoded server-side, which makes the download's length unknown up
         // front — flag it so the UI can say so.
         val isTranscode =
-            entry.maxBitrate != null ||
-                (settings.downloadTranscodeDolbyVision && entry.item.hasDolbyVision())
+            activeEntry.maxBitrate != null ||
+                (settings.downloadTranscodeDolbyVision && activeEntry.item.hasDolbyVision())
         // Drop the pending row *before* running setup. If the process dies
         // mid-setup, restoreAll() on next launch would otherwise resurrect the
         // pending entry and start a duplicate engine task + duplicate source row
         // on top of whatever partial state setup left behind.
         try {
-            downloader.removePendingDownload(entry.id)
+            downloader.removePendingDownload(activeEntry.id)
         } catch (e: Exception) {
-            Timber.e(e, "Failed to drop persisted pending row for ${entry.item.name}")
+            Timber.e(e, "Failed to drop persisted pending row for ${activeEntry.item.name}")
         }
         val (downloadId, errorText) =
             try {
                 downloader.downloadItem(
-                    item = entry.item,
+                    item = activeEntry.item,
                     storageIndex = storageIndex,
-                    maxBitrate = entry.maxBitrate,
-                    smartQueued = entry.smartQueued,
+                    maxBitrate = activeEntry.maxBitrate,
+                    smartQueued = activeEntry.smartQueued,
                 )
             } catch (e: Exception) {
-                Timber.e(e, "downloadItem threw for ${entry.item.name}")
+                Timber.e(e, "downloadItem threw for ${activeEntry.item.name}")
                 // Surface something to the Queue UI instead of a blank error — the
                 // raw exception message could leak URLs/stack info, so pick a
                 // generic localized string.
@@ -848,58 +866,71 @@ constructor(
         // waits for the network as the queue does and is not counted as a retry (#530). A failure
         // while online stays Failed, with Retry.
         val waitForNetwork = downloadId == -1L && !connectivity.isOnline()
-        if (waitForNetwork) {
-            try {
-                downloader.savePendingDownload(entry.item, entry.maxBitrate, entry.smartQueued)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to persist download ${entry.item.name} waiting for network")
-            }
-        }
-
         var orphaned = false
+        var persistWaitForNetwork: Entry? = null
         mutex.withLock {
-            val stillPresent = _entries.value.any { it.id == entry.id }
-            if (!stillPresent) {
-                // Entry was removed (user cancelled) while we were starting the
-                // download. The engine task is running but we no longer track it —
-                // cancel to avoid leaking.
+            val current =
+                _entries.value.firstOrNull {
+                    it.id == activeEntry.id && it.startAttemptId == attemptId
+                }
+            if (current == null) {
+                // Entry was removed (user cancelled) — possibly followed by a new enqueue —
+                // while we were starting the download (#1003). The engine task is running but
+                // does not belong to any live attempt, so cancel it instead of attaching it to
+                // a newer entry.
                 orphaned = downloadId != -1L
                 return@withLock
             }
-            _entries.value =
-                sort(
-                    _entries.value.map { e ->
-                        if (e.id != entry.id) {
-                            e
-                        } else if (downloadId != -1L) {
-                            e.copy(
-                                state = EntryState.Downloading,
-                                downloadId = downloadId,
-                                startedAt = System.currentTimeMillis(),
-                                isTranscode = isTranscode,
-                                waitingForNetwork = false,
-                            )
-                        } else if (waitForNetwork) {
-                            e.copy(state = EntryState.Pending, waitingForNetwork = true)
-                        } else {
-                            // CE (#912): the start failed while the network is there, most likely
-                            // because the server did not answer (also after an app restart, with
-                            // the
-                            // server still away): it goes on when the server is back. A start that
-                            // fails for a local reason fails again at once, without a download.
-                            e.copy(
-                                state = EntryState.Failed(errorText),
-                                retryWhenServerReturns = true,
-                            )
-                        }
-                    }
+            val updated =
+                if (downloadId != -1L) {
+                    current.copy(
+                        state = EntryState.Downloading,
+                        downloadId = downloadId,
+                        startedAt = System.currentTimeMillis(),
+                        isTranscode = isTranscode,
+                        waitingForNetwork = false,
+                        startAttemptId = null,
+                    )
+                } else if (waitForNetwork) {
+                    current
+                        .copy(
+                            state = EntryState.Pending,
+                            waitingForNetwork = true,
+                            startAttemptId = null,
+                        )
+                        .also { persistWaitForNetwork = it }
+                } else {
+                    // CE (#912): the start failed while the network is there, most likely
+                    // because the server did not answer (also after an app restart, with
+                    // the server still away): it goes on when the server is back. A start that
+                    // fails for a local reason fails again at once, without a download.
+                    current.copy(
+                        state = EntryState.Failed(errorText),
+                        retryWhenServerReturns = true,
+                        startAttemptId = null,
+                    )
+                }
+            _entries.value = sort(_entries.value.map { if (it === current) updated else it })
+        }
+        persistWaitForNetwork?.let { waitingEntry ->
+            try {
+                downloader.savePendingDownload(
+                    waitingEntry.item,
+                    waitingEntry.maxBitrate,
+                    waitingEntry.smartQueued,
                 )
+            } catch (e: Exception) {
+                Timber.e(
+                    e,
+                    "Failed to persist download ${waitingEntry.item.name} waiting for network",
+                )
+            }
         }
         if (orphaned) {
             try {
-                downloader.cancelDownload(entry.item, downloadId)
+                downloader.cancelDownload(activeEntry.item, downloadId)
             } catch (e: Exception) {
-                Timber.e(e, "Failed to clean up orphaned download ${entry.item.name}")
+                Timber.e(e, "Failed to clean up orphaned download ${activeEntry.item.name}")
             }
         }
     }
