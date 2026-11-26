@@ -26,6 +26,7 @@
         android:theme="@style/Theme.Findroid">
         <activity
             android:name=".MainActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation"
             android:exported="true"
             android:theme="@style/Theme.Findroid">
             <intent-filter>
