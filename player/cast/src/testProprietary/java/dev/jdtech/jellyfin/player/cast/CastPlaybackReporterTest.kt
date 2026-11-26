@@ -572,11 +572,28 @@ class CastPlaybackReporterTest {
         reporter.positionChanged(a, 718_000L, 720_000L)
         status(PLAYING, 718_000L)
 
-        reporter.seekRequested(a, 0L)
-        reporter.seekFailed(a, 0L)
+        val token = reporter.seekRequested(a, 0L)
+        reporter.seekFailed(token)
         now = 720_500L
         reporter.positionChanged(a, 0L, 0L)
         assertEquals(none, status(PLAYING, 0L))
         assertEquals(listOf(CastReport.Stop(a, 718_000L, 99)), reporter.queueChanged(b))
+    }
+
+    @Test
+    fun `a stale seekFailed token does not clear a newer seek to the same target`() {
+        startA()
+        reporter.durationChanged(a, 720_000L)
+        now = 718_000L
+        reporter.positionChanged(a, 718_000L, 720_000L)
+        status(PLAYING, 718_000L)
+
+        val firstToken = reporter.seekRequested(a, 0L)
+        reporter.seekRequested(a, 0L)
+        reporter.seekFailed(firstToken)
+        now = 718_500L
+        reporter.positionChanged(a, 0L, 720_000L)
+        assertEquals(listOf(CastReport.Progress(a, 0L, isPaused = false)), status(PLAYING, 0L))
+        assertEquals(listOf(CastReport.Stop(a, 0L, playedPercentage = 0)), reporter.stop())
     }
 }

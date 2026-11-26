@@ -60,6 +60,8 @@ internal class CastPlaybackReporter(
     private var heardPlaying = false
 
     /** Explicit seek sent to the receiver so its landing at 0 is not read as the item ending. */
+    private var nextSeekToken = 0L
+    private var pendingSeekToken = 0L
     private var pendingSeekItemId: ItemId? = null
     private var pendingSeekTargetMs: Long? = null
 
@@ -98,17 +100,18 @@ internal class CastPlaybackReporter(
     fun tick(state: CastReceiverState): List<CastReport> = progress(state, tick = true)
 
     /** An explicit seek to [positionMs] was sent for [itemId]; its landing is not an end blip. */
-    fun seekRequested(itemId: ItemId, positionMs: Long) {
-        if (itemId != reportingItemId) return
+    fun seekRequested(itemId: ItemId, positionMs: Long): Long {
+        if (itemId != reportingItemId) return 0L
+        val token = ++nextSeekToken
+        pendingSeekToken = token
         pendingSeekItemId = itemId
         pendingSeekTargetMs = positionMs.coerceAtLeast(0L)
+        return token
     }
 
-    /** A pending seek for [itemId] to [positionMs] failed or was cancelled before landing. */
-    fun seekFailed(itemId: ItemId, positionMs: Long) {
-        if (pendingSeekItemId == itemId && pendingSeekTargetMs == positionMs.coerceAtLeast(0L)) {
-            clearPendingSeek()
-        }
+    /** A pending seek identified by [token] failed or was cancelled before landing. */
+    fun seekFailed(token: Long) {
+        if (token != 0L && pendingSeekToken == token) clearPendingSeek()
     }
 
     /** The receiver's position and duration for [itemId], as they come in while it plays. */
@@ -199,6 +202,7 @@ internal class CastPlaybackReporter(
     }
 
     private fun clearPendingSeek() {
+        pendingSeekToken = 0L
         pendingSeekItemId = null
         pendingSeekTargetMs = null
     }
