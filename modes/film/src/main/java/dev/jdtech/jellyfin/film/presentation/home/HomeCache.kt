@@ -33,8 +33,9 @@ import timber.log.Timber
  * the refresh.
  */
 @Singleton
-class HomeCache @Inject constructor(@ApplicationContext context: Context) {
-    private val dir = File(context.filesDir, "home-cache")
+open class HomeCache internal constructor(private val dir: File) {
+    @Inject
+    constructor(@ApplicationContext context: Context) : this(File(context.filesDir, "home-cache"))
 
     private fun file(serverId: ServerId, userId: UserId) =
         File(dir, "${serverId.asString()}_${userId.asString()}.json")
@@ -48,7 +49,7 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
         val rowOrder: List<String>,
     )
 
-    suspend fun read(serverId: ServerId, userId: UserId): Rows? =
+    open suspend fun read(serverId: ServerId, userId: UserId): Rows? =
         withContext(Dispatchers.IO) {
             try {
                 val file = file(serverId, userId)
@@ -86,7 +87,7 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
             }
         }
 
-    suspend fun write(serverId: ServerId, userId: UserId, state: HomeState) =
+    open suspend fun write(serverId: ServerId, userId: UserId, state: HomeState) =
         withContext(Dispatchers.IO) {
             try {
                 val json =
@@ -126,7 +127,7 @@ class HomeCache @Inject constructor(@ApplicationContext context: Context) {
     /**
      * Drops every server's and user's rows: the Clear cache row in settings, or the setting off.
      */
-    suspend fun clear() =
+    open suspend fun clear() =
         withContext(Dispatchers.IO) {
             dir.listFiles()?.forEach { file -> file.delete() }
             Unit
