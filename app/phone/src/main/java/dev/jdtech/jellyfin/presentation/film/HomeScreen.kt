@@ -70,6 +70,8 @@ import dev.jdtech.jellyfin.presentation.film.components.TopContentScrim
 import dev.jdtech.jellyfin.presentation.film.components.showsServerOrErrorCard
 import dev.jdtech.jellyfin.presentation.theme.FindroidTheme
 import dev.jdtech.jellyfin.presentation.theme.spacings
+import dev.jdtech.jellyfin.presentation.utils.LocalServerStatus
+import dev.jdtech.jellyfin.presentation.utils.ReloadWhenServerAwayChanges
 import dev.jdtech.jellyfin.presentation.utils.rememberSafePadding
 import dev.jdtech.jellyfin.presentation.utils.showsServerIndicator
 import dev.jdtech.jellyfin.utils.ReloadOnResume
@@ -91,7 +93,15 @@ fun HomeScreen(
     // CE (#810): never a frame of the previous user's rows after a switch.
     val sessionUser = rememberSessionUser()
 
-    ReloadOnResume(shouldReload = { viewModel.shouldReload(stopEventFollows = true) }) {
+    val serverAway = LocalServerStatus.current.unreachable
+    ReloadWhenServerAwayChanges { away -> viewModel.onServerAwayChanged(away) }
+
+    ReloadOnResume(
+        shouldReload = {
+            viewModel.onServerAwayChanged(serverAway)
+            viewModel.shouldReload(stopEventFollows = true)
+        }
+    ) {
         viewModel.loadData(silent = true)
     }
 

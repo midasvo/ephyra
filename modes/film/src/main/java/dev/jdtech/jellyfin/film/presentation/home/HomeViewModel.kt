@@ -11,6 +11,7 @@ import dev.jdtech.jellyfin.film.domain.homerows.HomeRowsProfile
 import dev.jdtech.jellyfin.film.domain.homerows.HomeRowsStore
 import dev.jdtech.jellyfin.film.domain.homerows.LegacyHomeSwitches
 import dev.jdtech.jellyfin.film.domain.homerows.homeLibraries
+import dev.jdtech.jellyfin.film.presentation.ServerAwayReload
 import dev.jdtech.jellyfin.models.HomeItem
 import dev.jdtech.jellyfin.models.HomeSection
 import dev.jdtech.jellyfin.models.Item
@@ -66,7 +67,7 @@ internal constructor(
     private val appPreferences: AppPreferences,
     private val storedServers: StoredServers,
     private val storedUsers: StoredUsers,
-    dataChanges: DataChangeEvents = DataChangeEvents(),
+    private val dataChanges: DataChangeEvents = DataChangeEvents(),
     private val homeCache: HomeCache? = null,
     /**
      * CE (#809): where a load runs; the tests run it on their own dispatcher, so no load outlives
@@ -115,6 +116,9 @@ internal constructor(
     private val homeRowsStore = HomeRowsStore(appPreferences, storedServers)
 
     private val reloadPolicy = ReloadPolicy(dataChanges)
+    private val serverAwayReload = ServerAwayReload()
+    private var serverAway: Boolean? = null
+    private var loadStartedVersion = -1L
     private var loadJob: Job? = null
     /**
      * The last library list, with the server and user it is for. CE (#810): one value, so a load a
@@ -213,14 +217,42 @@ internal constructor(
     }
 
     /**
+     * Tells Home whether the server is unreachable. When the server goes away while Home has rows
+     * on screen, Home reloads so stale online rows clear to the unreachable state; when the server
+     * comes back, Home reloads its rows.
+     */
+    fun onServerAwayChanged(away: Boolean) {
+        val previous = serverAway
+        serverAway = away
+        val changed = serverAwayReload.onServerAway(away)
+        val recoveredFromError = previous == true && !away && _state.value.error != null
+        if (!changed && !recoveredFromError) return
+        // Already empty with an error (e.g. cold-start failure before reachability flipped):
+        // ErrorState updates from LocalServerStatus without firing another failing load.
+        if (away && _state.value.isEmpty && _state.value.error != null) return
+        loadData(silent = !_state.value.isEmpty)
+    }
+
+    /**
      * With [silent] the refresh indicator stays hidden, for reloads the user didn't ask for. The
      * returned job ends once every row has loaded, for screens that wait for that (TV Home puts
      * focus back only then, so it lands on the item in its new place). A load that starts while
-     * another is running replaces it (#251).
+     * another is running replaces it (#251), unless an identical load for the current reachability
+     * and data version is already running.
      */
     fun loadData(silent: Boolean = false): Job {
         Timber.i("Loading data")
+        if (
+            loadJob?.isActive == true &&
+                serverAwayReload.runningIsCurrent() &&
+                loadStartedVersion == dataChanges.version.value
+        ) {
+            if (!silent) _state.update { it.copy(isLoading = true, error = null) }
+            return loadJob!!
+        }
         loadJob?.cancel()
+        serverAwayReload.begin()
+        loadStartedVersion = dataChanges.version.value
         val job =
             viewModelScope.launch(loadDispatcher + LoadGeneration(generation.get())) {
                 runLoad(silent)
@@ -338,12 +370,32 @@ internal constructor(
                 results
             }
             val error = errorIfAllFailed(rows)
-            updateState { it.copy(error = error) }
+            updateState {
+                if (error != null) {
+                    it.copy(
+                        suggestionsSection = null,
+                        resumeSection = null,
+                        nextUpSection = null,
+                        views = emptyList(),
+                        error = error,
+                    )
+                } else {
+                    it.copy(error = null)
+                }
+            }
             loaded = error == null
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            updateState { it.copy(error = e) }
+            updateState {
+                it.copy(
+                    suggestionsSection = null,
+                    resumeSection = null,
+                    nextUpSection = null,
+                    views = emptyList(),
+                    error = e,
+                )
+            }
         }
         updateState { it.copy(isLoading = false) }
         // CE (#810): a load overtaken by a user switch neither counts as fresh nor is cached. The
@@ -391,7 +443,7 @@ internal constructor(
      */
     private suspend fun showCachedRows(serverId: ServerId, userId: UserId?) {
         val cache = homeCache ?: return
-        if (userId == null || cacheChecked || !_state.value.isEmpty) return
+        if (userId == null || cacheChecked || serverAway == true || !_state.value.isEmpty) return
         cacheChecked = true
         if (!appPreferences.getValue(appPreferences.homeCache)) {
             // Turned off: whatever an earlier start wrote goes, so nothing stale is kept around.
@@ -532,31 +584,35 @@ internal constructor(
         // right away and check the list alongside (#251).
         val key = _state.value.server?.id to _state.value.user?.id
         val known = cachedLibraries?.takeIf { it.first == key }?.second
+        var anyLatestRequested = false
         coroutineScope {
             val fresh = async { logFailure("libraries") { lists.homeLibraries() } }
             val libraries = known ?: fresh.await().getOrThrow()
             cachedLibraries = key to libraries
-            loadLatest(libraries, stored, legacy)
+            anyLatestRequested = loadLatest(libraries, stored, legacy)
             if (known != null) {
                 val now = fresh.await().getOrNull()
                 if (now != null && now.map { it.id } != known.map { it.id }) {
                     cachedLibraries = key to now
-                    loadLatest(now, stored, legacy)
+                    anyLatestRequested = loadLatest(now, stored, legacy) || anyLatestRequested
+                } else if (!anyLatestRequested) {
+                    fresh.await().getOrThrow()
                 }
             }
         }
-        return true
+        return anyLatestRequested
     }
 
     /**
      * The Latest row of each library. Every row shows as soon as it arrives, in the order of the
-     * libraries, so the slowest library holds back none of the others (#251).
+     * libraries, so the slowest library holds back none of the others (#251). Returns whether at
+     * least one library row was requested from the server.
      */
     private suspend fun loadLatest(
         libraries: List<Library>,
         stored: List<HomeRowConfig>?,
         legacy: LegacyHomeSwitches,
-    ) {
+    ): Boolean {
         // CE (#142): now that the libraries are known, new ones get their place and hidden ones go.
         val layout = HomeRows.resolve(stored, libraries.map { it.id }, legacy)
         updateState { it.copy(rowOrder = layout.map { row -> row.key }) }
@@ -565,7 +621,7 @@ internal constructor(
         if (views.isEmpty()) {
             // CE (#428): no Latest row to load, so none of the old ones may stay.
             updateState { it.copy(views = emptyList()) }
-            return
+            return false
         }
 
         val current = _state.value.views
@@ -606,6 +662,7 @@ internal constructor(
         if (results.isNotEmpty() && results.all { it?.isFailure == true }) {
             throw results.first()!!.exceptionOrNull()!!
         }
+        return true
     }
 
     /** The backdrop of a season, for the hero of an episode. Null when no server is set. */
