@@ -120,7 +120,7 @@ internal constructor(
     private var serverAway: Boolean? = null
     private var loadStartedVersion = -1L
     @Volatile private var loadingRows = false
-    private var loadJob: Job? = null
+    @Volatile private var loadJob: Job? = null
     /**
      * The last library list, with the server and user it is for. CE (#810): one value, so a load a
      * switch overtook cannot pair one user's list with another user's key.
@@ -401,7 +401,8 @@ internal constructor(
                 )
             }
         } finally {
-            loadingRows = false
+            // A replaced load must not clear the flag its replacement set.
+            if (loadJob === currentCoroutineContext()[Job]) loadingRows = false
         }
         updateState { it.copy(isLoading = false) }
         // CE (#810): a load overtaken by a user switch neither counts as fresh nor is cached. The
