@@ -1,0 +1,4 @@
+Fixes for offline Home rows and a cleaner Android TV build.
+
+- Home: clears cached and online rows when offline or when the server is unreachable.
+- Android TV: dropped unused download engine code from the TV build.

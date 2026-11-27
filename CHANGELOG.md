@@ -13,6 +13,24 @@ following the Findroid version they were based on.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [v2.9.2] — 2026-11-27
+
+A small patch release. The Home tab no longer keeps stale online rows on screen when the server is
+unreachable, seeking back into a skipped segment while casting skips once to the right place, and
+the Android TV and libre builds drop unused download and Google Cast references. Nothing needs
+doing after the update: downloads, logins, resume positions and settings stay as they are.
+
+### Changed
+- Android TV: the TV build no longer links the phone's download engine (#1048).
+- Libre builds: replaced the runtime Google Cast manifest metadata check in settings with a
+  build-time binding, removing the last Google Cast string reference from libre builds (#1056).
+
+### Fixed
+- Home: clears cached or previously loaded online rows when offline or when the server is
+  unreachable, showing the unreachable state instead (#1055).
+- Cast: seeking back into a segment set to skip dispatches the user's seek before the skip seek, so
+  playback lands past the segment instead of skipping twice (#1026).
+
 ## [v2.9.1] — 2026-11-26
 
 A release of fixes. The Android TV app asks only for the permissions it uses and no longer starts
@@ -1242,6 +1260,7 @@ Initial CE fork off findroid `1.0.2`. These rapid early iterations established t
 `nl.midasvo.findroid.ce` application ID, downloads and SD-card storage improvements, and ongoing
 tracking of upstream. See the git history between the corresponding tags for commit-level detail.
 
+[v2.9.2]: https://github.com/midasvo/ephyra/releases/tag/v2.9.2
 [v2.9.1]: https://github.com/midasvo/ephyra/releases/tag/v2.9.1
 [v2.9.0]: https://github.com/midasvo/ephyra/releases/tag/v2.9.0
 [v2.8.0]: https://github.com/midasvo/ephyra/releases/tag/v2.8.0
