@@ -35,12 +35,14 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
@@ -111,6 +113,7 @@ class HomeViewModelOfflineRowsTest {
 
     private var readCount = 0
     private var writeCount = 0
+    private var pendingWrite: CompletableDeferred<Unit>? = null
     private val fakeCache =
         object : HomeCache(File(".")) {
             override suspend fun read(serverId: ServerId, userId: UserId): Rows? {
@@ -120,6 +123,7 @@ class HomeViewModelOfflineRowsTest {
 
             override suspend fun write(serverId: ServerId, userId: UserId, state: HomeState) {
                 writeCount++
+                pendingWrite?.await()
             }
 
             override suspend fun clear() = Unit
@@ -280,6 +284,32 @@ class HomeViewModelOfflineRowsTest {
             assertFalse(recovered.isEmpty)
             assertNull(recovered.error)
             assertEquals(1, calls.count { it == "getResumeItems" } - 1)
+        }
+
+    @Test
+    fun `pull to refresh while HomeCache write is suspended starts a fresh load and resets isLoading`() =
+        runTest(dispatcher) {
+            val writeGate = CompletableDeferred<Unit>()
+            pendingWrite = writeGate
+            val viewModel = viewModel()
+            viewModel.onServerAwayChanged(false)
+            val firstLoad = viewModel.loadData()
+            runCurrent()
+
+            // Rows have loaded (isLoading = false) and saveRows is now suspended inside write().
+            assertFalse(viewModel.state.value.isLoading)
+            assertFalse(firstLoad.isCompleted)
+            assertEquals(1, writeCount)
+
+            // User pulls to refresh while saveRows is still suspended.
+            pendingWrite = null
+            val refresh = viewModel.loadData()
+            advanceUntilIdle()
+
+            assertTrue(refresh.isCompleted)
+            assertFalse(viewModel.state.value.isLoading)
+            assertEquals(2, calls.count { it == "getResumeItems" })
+            writeGate.complete(Unit)
         }
 
     private fun viewModel() =

@@ -119,6 +119,7 @@ internal constructor(
     private val serverAwayReload = ServerAwayReload()
     private var serverAway: Boolean? = null
     private var loadStartedVersion = -1L
+    @Volatile private var loadingRows = false
     private var loadJob: Job? = null
     /**
      * The last library list, with the server and user it is for. CE (#810): one value, so a load a
@@ -206,6 +207,7 @@ internal constructor(
             reloadPolicy.invalidate()
         }
         loadJob?.cancel()
+        loadingRows = false
         cacheChecked = false
         _state.value =
             HomeState(
@@ -243,7 +245,8 @@ internal constructor(
     fun loadData(silent: Boolean = false): Job {
         Timber.i("Loading data")
         if (
-            loadJob?.isActive == true &&
+            loadingRows &&
+                loadJob?.isActive == true &&
                 serverAwayReload.runningIsCurrent() &&
                 loadStartedVersion == dataChanges.version.value
         ) {
@@ -253,6 +256,7 @@ internal constructor(
         loadJob?.cancel()
         serverAwayReload.begin()
         loadStartedVersion = dataChanges.version.value
+        loadingRows = true
         val job =
             viewModelScope.launch(loadDispatcher + LoadGeneration(generation.get())) {
                 runLoad(silent)
@@ -396,6 +400,8 @@ internal constructor(
                     error = e,
                 )
             }
+        } finally {
+            loadingRows = false
         }
         updateState { it.copy(isLoading = false) }
         // CE (#810): a load overtaken by a user switch neither counts as fresh nor is cached. The
