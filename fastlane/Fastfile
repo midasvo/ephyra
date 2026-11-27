@@ -13,8 +13,14 @@ default_platform(:android)
 # Signing: the bundles are signed with the Play *upload* key, through the same KEYSTORE_* variables
 # that release.yml uses for the release key. Play re-signs them with the app signing key.
 #
+# Lanes: `deploy` builds the bundles and runs `upload`. `upload` only uploads bundles that are
+# already built; play.yml builds them with Gradle first, so they are kept even when it can't upload.
+#
+# R8 mappings: each bundle carries its own (BUNDLE-METADATA/com.android.tools.build.obfuscation/
+# proguard.map), which Play uses to deobfuscate crashes, so they are not uploaded separately.
+#
 # Environment:
-#   KEYSTORE_FILE, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD  upload key
+#   KEYSTORE_FILE, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD  upload key (deploy only)
 #   PLAY_API_CREDENTIALS                                      path to the service account JSON key
 #
 # Examples:
@@ -22,11 +28,14 @@ default_platform(:android)
 #   fastlane android deploy track:production
 #   fastlane android deploy tv:false                          phone only (before Android TV is enabled)
 #   fastlane android deploy release_status:draft              needed until the app's first release is live
+#   fastlane android upload tv:false release_status:draft     the same, without building
 platform :android do
+  # Paths from the repository root, where fastlane runs its actions.
+  PHONE_AAB = "app/phone/build/outputs/bundle/proprietaryRelease/phone-proprietary-release.aab"
+  TV_AAB = "app/tv/build/outputs/bundle/libreRelease/tv-libre-release.aab"
+
   desc "Build the phone and TV bundles and upload them to a Play track"
   lane :deploy do |options|
-    track = options.fetch(:track, "alpha")
-    release_status = options.fetch(:release_status, "completed")
     tv = options.fetch(:tv, true).to_s != "false"
 
     gradle(task: "clean")
@@ -35,10 +44,19 @@ platform :android do
       print_command: false,
     )
 
+    upload(options)
+  end
+
+  desc "Upload the built phone and TV bundles to a Play track"
+  lane :upload do |options|
+    track = options.fetch(:track, "alpha")
+    release_status = options.fetch(:release_status, "completed")
+    tv = options.fetch(:tv, true).to_s != "false"
+
     upload_to_play_store(
       track: track,
       release_status: release_status,
-      aab: "app/phone/build/outputs/bundle/proprietaryRelease/phone-proprietary-release.aab",
+      aab: PHONE_AAB,
       json_key: ENV["PLAY_API_CREDENTIALS"],
       sync_image_upload: true,
     )
@@ -47,7 +65,7 @@ platform :android do
       upload_to_play_store(
         track: "tv:#{track}",
         release_status: release_status,
-        aab: "app/tv/build/outputs/bundle/libreRelease/tv-libre-release.aab",
+        aab: TV_AAB,
         json_key: ENV["PLAY_API_CREDENTIALS"],
         # The listing is shared with the phone upload above.
         skip_upload_metadata: true,
