@@ -109,7 +109,7 @@ given in the PR.
 | R19 | `domain` and `application` import only Kotlin, kotlinx, the JDK and their own code, and declare no library but kotlinx (an allowlist, empty since #968 moved the library pagers to `modes/film`) |
 | R20 | `data` is Room and nothing else: of Android it imports only Room, SQLite and `android.content.Context` (an allowlist, empty since #968) |
 | R21 | No port (an interface in `domain/.../ports/` or in `application`) declares more than fifteen functions and properties, inherited ones included (#967: a wide port is split into roles) |
-| R22 | No file of an adapter (`data`, `server/jellyfin`, `ratings/mdblist`, `device`) names a port another adapter implements: what uses two adapters is in `application` (#966; one exception in the test, `DeviceCodecs` in `server/jellyfin`, #1012) |
+| R22 | No file of an adapter (`data`, `server/jellyfin`, `ratings/mdblist`, `device`) names a port another adapter implements: what uses two adapters is in `application` (#966; no exceptions since #1012) |
 
 ## Not done
 

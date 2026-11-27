@@ -9,7 +9,6 @@ import dev.jdtech.jellyfin.models.PlaybackTarget
 import dev.jdtech.jellyfin.models.asString
 import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toMediaSourceId
-import dev.jdtech.jellyfin.player.DeviceCodecProbe
 import dev.jdtech.jellyfin.repository.StandInServer
 import dev.jdtech.jellyfin.server.jellyfin.JellyfinDeviceProfiles
 import dev.jdtech.jellyfin.server.jellyfin.JellyfinMediaServer
@@ -45,7 +44,7 @@ class CastPlaybackRequestTest {
                 api.update(baseUrl = server.baseUrl, accessToken = "token")
                 userId = StandInServer.USER_ID.toUuid()
             }
-        JellyfinMediaServer(api, JellyfinDeviceProfiles(DeviceCodecProbe(context))).playback
+        JellyfinMediaServer(api, JellyfinDeviceProfiles()).playback
     }
 
     @After

@@ -6,7 +6,6 @@ import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.domain.ports.PlaybackReport
 import dev.jdtech.jellyfin.models.ServerException
 import dev.jdtech.jellyfin.models.isUnanswered
-import dev.jdtech.jellyfin.player.DeviceCodecProbe
 import java.util.UUID
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
@@ -37,7 +36,7 @@ class NoAddressTest {
     fun `every request fails as Unreachable`() = runBlocking {
         val catalog = JellyfinCatalog(api)
         val userData = JellyfinUserData(api)
-        val playback = JellyfinPlayback(api, JellyfinDeviceProfiles(DeviceCodecProbe(context)))
+        val playback = JellyfinPlayback(api, JellyfinDeviceProfiles())
         val session = JellyfinServerSession(api)
         for ((name, request) in
             listOf<Pair<String, suspend () -> Any?>>(

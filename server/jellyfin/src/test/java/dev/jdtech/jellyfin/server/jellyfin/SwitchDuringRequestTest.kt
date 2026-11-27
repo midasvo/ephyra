@@ -9,7 +9,6 @@ import dev.jdtech.jellyfin.models.ServerType
 import dev.jdtech.jellyfin.models.toItemId
 import dev.jdtech.jellyfin.models.toServerId
 import dev.jdtech.jellyfin.models.toUserId
-import dev.jdtech.jellyfin.player.DeviceCodecProbe
 import dev.jdtech.jellyfin.repository.StandInServer
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -62,8 +61,7 @@ class SwitchDuringRequestTest {
     private val active = ActiveServerHolder()
     private val context = StandInServer.context()
     private val api = JellyfinApi(context, activeServer = active)
-    private val jellyfin =
-        JellyfinMediaServer(api, JellyfinDeviceProfiles(DeviceCodecProbe(context)))
+    private val jellyfin = JellyfinMediaServer(api, JellyfinDeviceProfiles())
 
     @After
     fun stop() {

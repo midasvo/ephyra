@@ -4,7 +4,6 @@ import android.app.Application
 import dev.jdtech.jellyfin.api.JellyfinApi
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.ServerConnector
-import dev.jdtech.jellyfin.player.DeviceCodecProbe
 import dev.jdtech.jellyfin.repository.StandInServer
 import dev.jdtech.jellyfin.server.jellyfin.JellyfinDeviceProfiles
 import dev.jdtech.jellyfin.server.jellyfin.JellyfinMediaServer
@@ -38,7 +37,7 @@ private fun jellyfinAt(baseUrl: String): MediaServer {
             api.update(baseUrl = baseUrl, accessToken = LiveServer.FAKE_TOKEN)
             userId = ContractLibrary.userId.toUuid()
         }
-    return JellyfinMediaServer(api, JellyfinDeviceProfiles(DeviceCodecProbe(context)))
+    return JellyfinMediaServer(api, JellyfinDeviceProfiles())
 }
 
 /**

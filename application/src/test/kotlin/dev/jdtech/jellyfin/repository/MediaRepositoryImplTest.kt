@@ -1,12 +1,15 @@
 package dev.jdtech.jellyfin.repository
 
+import dev.jdtech.jellyfin.domain.ports.DeviceCodecs
 import dev.jdtech.jellyfin.domain.ports.ItemExtrasPort
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackPort
+import dev.jdtech.jellyfin.domain.ports.PlaybackRequest
 import dev.jdtech.jellyfin.domain.userdata.PlayState
 import dev.jdtech.jellyfin.models.ItemSourceType
 import dev.jdtech.jellyfin.models.Library
 import dev.jdtech.jellyfin.models.PlaybackTarget
+import dev.jdtech.jellyfin.models.PlayerEngineId
 import dev.jdtech.jellyfin.models.Segment
 import dev.jdtech.jellyfin.models.SegmentType
 import dev.jdtech.jellyfin.models.SeriesTrackPreference
@@ -14,6 +17,8 @@ import dev.jdtech.jellyfin.models.ServerException
 import dev.jdtech.jellyfin.models.ServerId
 import dev.jdtech.jellyfin.models.toServerId
 import dev.jdtech.jellyfin.models.toUserId
+import dev.jdtech.jellyfin.player.DeviceDecoders
+import dev.jdtech.jellyfin.player.ProbedCodecs
 import dev.jdtech.jellyfin.testing.ContractLibrary
 import dev.jdtech.jellyfin.testing.FakeMediaServer
 import dev.jdtech.jellyfin.testing.FakeRepositoryStores
@@ -176,6 +181,98 @@ class MediaRepositoryImplTest {
         repository.getPlaybackSources(movie.id, TARGET)
 
         assertTrue("sources" in server.calls)
+    }
+
+    @Test
+    fun `ExoPlayer playback hands the probed decoders to the server and checks the display on every call`() =
+        runBlocking {
+            val probed = ProbedCodecs(mapOf("hevc" to setOf("Main 10")), setOf("aac"))
+            var displayDolbyVision = true
+            var probeCalls = 0
+            var displayChecks = 0
+            val codecs =
+                object : DeviceCodecs {
+                    override fun probedCodecsSnapshot(): ProbedCodecs {
+                        probeCalls++
+                        return probed
+                    }
+
+                    override fun displaySupportsDolbyVision(): Boolean {
+                        displayChecks++
+                        return displayDolbyVision
+                    }
+                }
+            val recorded = mutableListOf<PlaybackRequest>()
+            val recordingServer =
+                object : MediaServer by server {
+                    override val playback: PlaybackPort =
+                        object : PlaybackPort by server.playback {
+                            override suspend fun sources(request: PlaybackRequest) =
+                                server.playback.sources(request).also { recorded += request }
+                        }
+                }
+            val repo =
+                stores.repository(
+                    recordingServer,
+                    currentServer = { current },
+                    deviceCodecs = codecs,
+                )
+
+            repo.getPlaybackSources(
+                movie.id,
+                PlaybackTarget.LocalPlayer(PlayerEngineId.EXOPLAYER, directPlayDolbyVision = true),
+            )
+            displayDolbyVision = false
+            repo.getPlaybackSources(
+                movie.id,
+                PlaybackTarget.LocalPlayer(PlayerEngineId.EXOPLAYER, directPlayDolbyVision = true),
+            )
+            repo.getPlaybackSources(
+                movie.id,
+                PlaybackTarget.LocalPlayer(PlayerEngineId.EXOPLAYER, directPlayDolbyVision = false),
+            )
+
+            assertEquals(3, probeCalls)
+            assertEquals(2, displayChecks)
+            assertEquals(
+                listOf(
+                    DeviceDecoders(probed, displaySupportsDolbyVision = true),
+                    DeviceDecoders(probed, displaySupportsDolbyVision = false),
+                    DeviceDecoders(probed, displaySupportsDolbyVision = false),
+                ),
+                recorded.map { it.decoders },
+            )
+        }
+
+    @Test
+    fun `mpv and finished downloads do not probe device codecs`() = runBlocking {
+        var calls = 0
+        val codecs =
+            object : DeviceCodecs {
+                override fun probedCodecsSnapshot(): ProbedCodecs {
+                    calls++
+                    return ProbedCodecs.EMPTY
+                }
+
+                override fun displaySupportsDolbyVision(): Boolean {
+                    calls++
+                    return false
+                }
+            }
+        val repo = stores.repository(server, currentServer = { current }, deviceCodecs = codecs)
+
+        repo.getPlaybackSources(
+            movie.id,
+            PlaybackTarget.LocalPlayer(PlayerEngineId.MPV, directPlayDolbyVision = true),
+        )
+        val local = movie.sources.first().copy(type = ItemSourceType.LOCAL, path = "/movie.mkv")
+        stores.sources.put(serverId, movie.id, local)
+        repo.getPlaybackSources(
+            movie.id,
+            PlaybackTarget.LocalPlayer(PlayerEngineId.EXOPLAYER, directPlayDolbyVision = true),
+        )
+
+        assertEquals(0, calls)
     }
 
     @Test

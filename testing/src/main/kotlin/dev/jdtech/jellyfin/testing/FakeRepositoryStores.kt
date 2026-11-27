@@ -1,5 +1,6 @@
 package dev.jdtech.jellyfin.testing
 
+import dev.jdtech.jellyfin.domain.ports.DeviceCodecs
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.userdata.PlayState
 import dev.jdtech.jellyfin.models.Item
@@ -141,6 +142,7 @@ class FakeRepositoryStores {
         fallbackLog: FallbackLog = FallbackLog.NONE,
         /** [files], or the real files of a test that downloaded some. */
         downloadedFiles: DownloadedFiles = files,
+        deviceCodecs: DeviceCodecs = DeviceCodecs.NONE,
     ): MediaRepositoryImpl =
         MediaRepositoryImpl(
             server = server,
@@ -159,5 +161,6 @@ class FakeRepositoryStores {
             knownServerState = knownServerState,
             storedLibraryNames = storedLibraryNames,
             fallbackLog = fallbackLog,
+            deviceCodecs = deviceCodecs,
         )
 }

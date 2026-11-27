@@ -1,10 +1,12 @@
 package dev.jdtech.jellyfin.repository
 
+import dev.jdtech.jellyfin.domain.ports.DeviceCodecs
 import dev.jdtech.jellyfin.domain.ports.ItemListPort
 import dev.jdtech.jellyfin.domain.ports.ItemQuery
 import dev.jdtech.jellyfin.domain.ports.MediaServer
 import dev.jdtech.jellyfin.domain.ports.PlaybackReport
 import dev.jdtech.jellyfin.domain.ports.PlaybackRequest
+import dev.jdtech.jellyfin.domain.ports.snapshot
 import dev.jdtech.jellyfin.domain.userdata.PlayState
 import dev.jdtech.jellyfin.domain.userdata.PlayStop
 import dev.jdtech.jellyfin.models.Episode
@@ -19,6 +21,7 @@ import dev.jdtech.jellyfin.models.MediaSourceId
 import dev.jdtech.jellyfin.models.Movie
 import dev.jdtech.jellyfin.models.Person
 import dev.jdtech.jellyfin.models.PlaybackTarget
+import dev.jdtech.jellyfin.models.PlayerEngineId
 import dev.jdtech.jellyfin.models.Season
 import dev.jdtech.jellyfin.models.Segment
 import dev.jdtech.jellyfin.models.SeriesTrackPreference
@@ -30,6 +33,7 @@ import dev.jdtech.jellyfin.models.SortBy
 import dev.jdtech.jellyfin.models.SortOrder
 import dev.jdtech.jellyfin.models.UserId
 import dev.jdtech.jellyfin.models.asString
+import dev.jdtech.jellyfin.player.DeviceDecoders
 import java.time.LocalDateTime
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -71,6 +75,7 @@ class MediaRepositoryImpl(
     /** Why a stored copy answered (#899: Timber in the app, as before), and what it reports. */
     private val fallbackLog: FallbackLog = FallbackLog.NONE,
     private val log: RepositoryLog = RepositoryLog.NONE,
+    private val deviceCodecs: DeviceCodecs = DeviceCodecs.NONE,
 ) :
     CurrentAccount,
     ItemCatalog,
@@ -535,6 +540,15 @@ class MediaRepositoryImpl(
                 return@withContext localSources
             }
 
+            val decoders =
+                if (
+                    target is PlaybackTarget.LocalPlayer &&
+                        target.engine == PlayerEngineId.EXOPLAYER
+                ) {
+                    deviceCodecs.snapshot(checkDisplayDolbyVision = target.directPlayDolbyVision)
+                } else {
+                    DeviceDecoders()
+                }
             val sources = mutableListOf<ItemSource>()
             sources.addAll(
                 server.playback.sources(
@@ -545,6 +559,7 @@ class MediaRepositoryImpl(
                         audioStreamIndex = audioStreamIndex,
                         maxBitrate = maxBitrate,
                         includePath = true,
+                        decoders = decoders,
                     )
                 )
             )
