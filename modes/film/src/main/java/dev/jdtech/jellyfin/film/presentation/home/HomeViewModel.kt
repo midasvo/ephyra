@@ -39,6 +39,7 @@ import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -258,10 +259,14 @@ internal constructor(
         loadStartedVersion = dataChanges.version.value
         loadingRows = true
         val job =
-            viewModelScope.launch(loadDispatcher + LoadGeneration(generation.get())) {
+            viewModelScope.launch(
+                context = loadDispatcher + LoadGeneration(generation.get()),
+                start = CoroutineStart.LAZY,
+            ) {
                 runLoad(silent)
             }
         loadJob = job
+        job.start()
         return job
     }
 
