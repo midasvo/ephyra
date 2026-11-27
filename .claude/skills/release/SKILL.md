@@ -161,6 +161,15 @@ Check that the release has twelve APKs, four ABIs each of `ephyra-v$next-libre-<
 `gh run rerun <run id> --failed`. If the code has to change, fix it on `main` and release the
 next patch version; the tag stays where it is.
 
+The same tag starts `play.yml`, which builds the Google Play bundles and uploads them with the
+options in the repository variables `PLAY_TRACK`, `PLAY_RELEASE_STATUS` and `PLAY_TV`
+(`docs/play-store.md`, "In CI"). It never holds up the release. Check its summary: uploaded,
+skipped for a missing secret, or failed.
+
+```bash
+gh run list --repo midasvo/ephyra --workflow play.yml --limit 1
+```
+
 ### 5. F-Droid
 
 Once the APKs are on the release, point the F-Droid inclusion merge request at it with the
@@ -170,8 +179,8 @@ pipeline takes a while; don't wait for it, report its link.
 ### 6. Report
 
 Tell the user the version, a link to the release, the APK count, the state of the F-Droid merge
-request, and anything that needs a follow-up (the Play upload in `docs/play-store.md`, a known
-issue).
+request, the result of the Google Play run, and anything that needs a follow-up (a Play draft to
+roll out in the Play Console, a known issue).
 
 ## Hard rules
 
