@@ -61,6 +61,7 @@ constructor(
     private val serverCapabilities: CurrentServerCapabilities = CurrentServerCapabilities {
         ServerCapabilities.ALL
     },
+    private val castBuild: CastBuild = CastBuild.None,
 ) : ViewModel() {
     private val _state = MutableStateFlow(SettingsState())
     val state = _state.asStateFlow()
@@ -114,7 +115,7 @@ constructor(
 
     /** CE (#626): only in a build that has Cast, see [CastBuild]. */
     private val castDeviceTypes =
-        if (appVariant == AppVariant.PHONE && CastBuild.isIncluded(context)) {
+        if (appVariant == AppVariant.PHONE && castBuild.isIncluded()) {
             listOf(DeviceType.PHONE)
         } else {
             emptyList()

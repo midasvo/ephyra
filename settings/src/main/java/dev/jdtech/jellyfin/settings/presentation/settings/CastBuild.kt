@@ -1,27 +1,15 @@
 package dev.jdtech.jellyfin.settings.presentation.settings
 
-import android.content.Context
-import android.content.pm.PackageManager
-
 /**
- * CE (#626): whether this build has Google Cast in it. Only the `proprietary` flavor of the phone
- * app does; the `libre` flavor has no Google code at all and must not show settings for it.
+ * CE (#626): whether this build includes Google Cast. Only the `proprietary` flavor of the phone
+ * app does; `libre` and `app/tv` have no Google code at all and must not show settings for it.
  *
- * The settings module cannot ask `:player:cast` (which depends on it), so it reads what the Cast
- * SDK itself needs to be there: the options provider that `:player:cast`'s proprietary manifest
- * declares.
+ * Bound per app/flavor via Hilt so `:settings` has no runtime dependency on Cast or GMS strings.
  */
-object CastBuild {
-    private const val OPTIONS_PROVIDER =
-        "com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+fun interface CastBuild {
+    fun isIncluded(): Boolean
 
-    fun isIncluded(context: Context): Boolean =
-        try {
-            context.packageManager
-                .getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
-                .metaData
-                ?.containsKey(OPTIONS_PROVIDER) == true
-        } catch (_: PackageManager.NameNotFoundException) {
-            false
-        }
+    companion object {
+        val None = CastBuild { false }
+    }
 }
