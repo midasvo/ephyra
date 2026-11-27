@@ -31,26 +31,75 @@ key can't be replaced.
 
 ## Building and uploading
 
-`fastlane android deploy` builds both bundles and uploads them (see the comments in
-`fastlane/Fastfile`). It signs with whatever the `KEYSTORE_*` variables point at, so point them at
-the **upload** key, and set `PLAY_API_CREDENTIALS` to a service account JSON key with release access
-to the app.
-
 Until the app has its first live release, the Play API only accepts drafts, and the TV track only
-exists once Android TV is added under *Test and release → Advanced settings → Form factors*:
+exists once Android TV is added under *Test and release → Advanced settings → Form factors*.
+
+The API can't create the app's first release: upload the first bundle by hand in the Play Console
+(the signing choice above is made there). After that, CI or fastlane can upload.
+
+### In CI
+
+`.github/workflows/play.yml` runs on every release tag (`vX.Y.Z`, the same tags as `release.yml`)
+and by hand. It builds both bundles signed with the upload key, keeps them and their R8 mappings
+as the run's `play-bundles` artifact, and uploads them with `fastlane android upload`. It is
+separate from `release.yml`, so a Play failure never holds up the GitHub release or F-Droid.
+
+Secrets (*Settings → Secrets and variables → Actions*), apart from the release key's `KEYSTORE_*`:
+
+| Secret | What |
+|---|---|
+| `PLAY_UPLOAD_KEYSTORE_BASE64` | `base64 -w0 ephyra-upload.jks` |
+| `PLAY_UPLOAD_KEYSTORE_PASSWORD` | its store password |
+| `PLAY_UPLOAD_KEY_ALIAS` | `upload` |
+| `PLAY_UPLOAD_KEY_PASSWORD` | its key password |
+| `PLAY_SERVICE_ACCOUNT_JSON` | the service account's JSON key, with release access to the app |
+
+Without the four upload key secrets a tag run builds nothing and says so in the run's summary,
+so a release stays green before Play is set up; a run by hand fails. Some of them but not all is
+always a failure. Without `PLAY_SERVICE_ACCOUNT_JSON` the bundles are built and kept, and the
+upload is skipped with a note in the summary. The summary also has the SHA-256 of the certificate
+each bundle is signed with: it must match the upload key under *Test and release → App integrity*.
+
+A tag run takes its options from repository variables (same page, *Variables*), so they change
+without a code change:
+
+| Variable | Unset | Values |
+|---|---|---|
+| `PLAY_TRACK` | `alpha` | the phone track; the TV bundle goes to `tv:<track>` |
+| `PLAY_RELEASE_STATUS` | `draft` | `draft` or `completed` |
+| `PLAY_TV` | `false` | `true` to upload the TV bundle too |
+
+Once the first release is live, set `PLAY_RELEASE_STATUS` to `completed`; once Android TV is
+enabled, set `PLAY_TV` to `true`. By hand, for a tag that is already out or a retry:
+
+```bash
+gh workflow run play.yml --ref v2.10.0 -f track=alpha -f release_status=draft -f tv=false
+```
+
+Play refuses a versionCode it already has, so a rerun only helps when the upload didn't get
+through.
+
+### On a laptop
+
+`fastlane android deploy` builds both bundles and uploads them (see the comments in
+`fastlane/Fastfile`); `fastlane android upload` uploads bundles that are already built. They sign
+with whatever the `KEYSTORE_*` variables point at, so point them at the **upload** key, and set
+`PLAY_API_CREDENTIALS` to the path of the service account JSON key.
 
 ```bash
 fastlane android deploy tv:false release_status:draft
 ```
 
-By hand, without fastlane:
+Without fastlane:
 
 ```bash
 ./gradlew :app:phone:bundleProprietaryRelease :app:tv:bundleLibreRelease
 ```
 
 The bundles are in `app/phone/build/outputs/bundle/proprietaryRelease/` and
-`app/tv/build/outputs/bundle/libreRelease/`.
+`app/tv/build/outputs/bundle/libreRelease/`. Each carries its R8 mapping
+(`BUNDLE-METADATA/com.android.tools.build.obfuscation/proguard.map`), which Play uses for its crash
+reports.
 
 ## Store listing
 

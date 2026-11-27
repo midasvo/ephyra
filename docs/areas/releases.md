@@ -1,11 +1,11 @@
 # Releases, stores and upstream sync
 
-Status: betas and releases are published by workflows; the F-Droid merge request and the Google Play upload are done by hand after each release. The latest release is v2.9.0. As of 2026-11-24 (`main` at `0412c8efc`).
+Status: betas and releases are published by workflows, and a release tag also builds the Google Play bundles and uploads them (#1058); the F-Droid merge request is done by hand after each release. The latest release is v2.9.0. As of 2026-11-24 (`main` at `0412c8efc`).
 
 ## Start here
 
 - The version is `EphyraVersion` in `buildSrc/src/main/kotlin/EphyraVersion.kt`: `NAME`, `CODE` and `TV_CODE`. Only a release PR changes them; the build fails when the three disagree.
-- A push to `main` publishes a beta through `.github/workflows/beta.yml`. A tag `vX.Y.Z` publishes a release through `.github/workflows/release.yml`. Nothing else publishes: F-Droid and Google Play are steps a person or the `release` skill takes afterwards.
+- A push to `main` publishes a beta through `.github/workflows/beta.yml`. A tag `vX.Y.Z` publishes a release through `.github/workflows/release.yml`, and starts `.github/workflows/play.yml`, which builds the Play bundles and uploads them to Google Play. Nothing else publishes: F-Droid is a step a person or the `release` skill takes afterwards.
 - The procedures are the skills, not this guide: `.claude/skills/release/SKILL.md`, `.claude/skills/fdroid-update/SKILL.md` and `.claude/skills/upstream-sync/SKILL.md`. Read the one you need before you change anything here; this guide says how the parts fit.
 - A beta is another app (`nl.midasvo.findroid.ce.staging`, "Ephyra Beta") that installs next to the stable one. It is the `staging` build type, minified like the release.
 - Test without releasing: `./gradlew :app:phone:assembleLibreStaging` builds what a beta builds, and `bash .claude/skills/release/scripts/next-version.sh` prints the next version. See "How to test it".
@@ -25,7 +25,7 @@ flowchart TD
     REL --> GH[GitHub release]
     NOTES --> GH
     GH --> FD[F-Droid: fdroid-update skill points the merge request at the tag]
-    GH --> PLAY[Google Play: fastlane android deploy, by hand]
+    TAG --> PLAY[play.yml: 2 bundles signed with the upload key, fastlane android upload to Google Play]
 ```
 
 ### From a merge to a beta
@@ -58,7 +58,8 @@ The `release` skill has every step. In short:
 4. Merge it with a merge commit. That push publishes no beta.
 5. Tag the merge commit `v<version>` and push the tag. Create the GitHub release at once, with the changelog section as its notes.
 6. `release.yml` starts on the tag (the pattern is `v[0-9]+.[0-9]+.[0-9]+`, matched against the whole tag, so a beta tag never starts it). It builds `:app:phone:assembleLibreRelease`, `:app:phone:assembleProprietaryRelease` and `:app:tv:assembleLibreRelease`, appends the "Which APK?" text to the notes and attaches the files, with a checksum file and a provenance attestation for the APKs (#977).
-7. Run the `fdroid-update` skill, then report. The Google Play upload is a follow-up in [`play-store.md`](../play-store.md).
+7. `play.yml` starts on the same tag. It builds `:app:phone:bundleProprietaryRelease` and `:app:tv:bundleLibreRelease` with the upload key, keeps them and their R8 mappings as the `play-bundles` artifact, and uploads them with `fastlane android upload` to the track, release status and TV choice in the repository variables `PLAY_TRACK`, `PLAY_RELEASE_STATUS` and `PLAY_TV`. It is a workflow of its own so that a Play failure never holds up the release; without the Play secrets it skips what it can't do and says so in its summary ([`play-store.md`](../play-store.md), "In CI").
+8. Run the `fdroid-update` skill, then report.
 
 ## The version
 
@@ -104,7 +105,7 @@ The flavours change neither the application ID nor the key, so `libre` and `prop
 | GitHub release | `libre` and `proprietary`, `release` | `libre`, `release` | `release.yml` |
 | GitHub beta (prerelease) | `libre` and `proprietary`, `staging` | `libre`, `staging` | `beta.yml` |
 | F-Droid | `libre`, `release`, `arm64-v8a` only | not on F-Droid | F-Droid, from the tag |
-| Google Play | `proprietary` bundle (#641) | `libre` bundle on the track `tv:<track>` | `fastlane android deploy` |
+| Google Play | `proprietary` bundle (#641) | `libre` bundle on the track `tv:<track>` | `play.yml` (#1058), or `fastlane android deploy` by hand |
 | Amazon Appstore | `libre` | `libre` | by hand; the repository has no upload step for it |
 
 **APK names.** For `release` and `staging` the build files set the name: `ephyra-v<versionName>-<flavour>-<abi>.apk` for the phone and `ephyra-v<versionName>-libre-tv-<abi>.apk` for TV. The ABI splits are `armeabi-v7a`, `arm64-v8a`, `x86` and `x86_64`, so a release has twelve APKs: four each of `-libre-`, `-proprietary-` and `-libre-tv-`. The R8 mappings are attached as `ephyra-<tag>-mapping.txt`, `-proprietary-mapping.txt` and `-tv-mapping.txt`. Debug builds keep the Android Gradle Plugin's default names. A bundle has no ABI splits: the build files turn them off when a task name contains "bundle".
@@ -122,7 +123,7 @@ With neither, no `release` signing config exists, and the `release` and `staging
 
 **In CI.** `beta.yml` and `release.yml` decode the secret `KEYSTORE_BASE64` to `findroid-ce.jks` in the workspace and pass the secrets `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD` to Gradle. Only the build jobs of those two workflows see them. `build.yaml` uses no secret: it builds debug variants.
 
-**Google Play** uses Play App Signing with the same release key, and the bundles are uploaded signed with a separate upload key through the same `KEYSTORE_*` variables ([`play-store.md`](../play-store.md), [`fastlane/Fastfile`](../../fastlane/Fastfile)). **F-Droid** builds the tag itself and compares the result with the `ephyra-v<version>-libre-arm64-v8a.apk` of the GitHub release, which carries our signature.
+**Google Play** uses Play App Signing with the same release key, and the bundles are uploaded signed with a separate upload key through the same `KEYSTORE_*` variables ([`play-store.md`](../play-store.md), [`fastlane/Fastfile`](../../fastlane/Fastfile)). In CI that key is in its own secrets, `PLAY_UPLOAD_KEYSTORE_BASE64`, `PLAY_UPLOAD_KEYSTORE_PASSWORD`, `PLAY_UPLOAD_KEY_ALIAS` and `PLAY_UPLOAD_KEY_PASSWORD`, which only `play.yml` reads; it decodes the key under `$RUNNER_TEMP`, not in the workspace, with the service account key `PLAY_SERVICE_ACCOUNT_JSON`. **F-Droid** builds the tag itself and compares the result with the `ephyra-v<version>-libre-arm64-v8a.apk` of the GitHub release, which carries our signature.
 
 **What a contributor can build.** Every debug variant, with no key: `./gradlew :app:phone:assembleLibreDebug`, and `:app:phone:assembleProprietaryDebug` or `:app:tv:assembleLibreDebug`. With a keystore of their own in `keystore.properties`, also `release` and `staging` builds, for example to test the minified app. What they cannot build is an APK that updates an installed Ephyra or Ephyra Beta: that needs the release key, which is only in the repository's secrets. For the same reason the Beta workflow never builds a fork's PR.
 
@@ -138,10 +139,11 @@ Ephyra stays 0 commits behind Findroid: every Findroid commit is in `main`'s his
 | [`app/phone/build.gradle.kts`](../../app/phone/build.gradle.kts), [`app/tv/build.gradle.kts`](../../app/tv/build.gradle.kts) | Flavours, build types, signing, ABI splits, the beta's version, the APK names |
 | [`.github/workflows/beta.yml`](../../.github/workflows/beta.yml) | The Beta workflow; its notes come from [`beta-changelog.sh`](../../.github/scripts/beta-changelog.sh) |
 | [`.github/workflows/release.yml`](../../.github/workflows/release.yml) | The Release workflow |
+| [`.github/workflows/play.yml`](../../.github/workflows/play.yml) | The Google Play workflow: the bundles and their upload |
 | [`.github/workflows/build.yaml`](../../.github/workflows/build.yaml) | The checks of a PR: translations, debug builds, unit tests |
 | [`.github/workflows/pages.yml`](../../.github/workflows/pages.yml) | The site, deployed on a push to `main` that changes it; not part of a release |
 | [`CHANGELOG.md`](../../CHANGELOG.md) | One section per release: a paragraph, then Added, Changed, Fixed, From Findroid, Maintenance |
-| [`fastlane/Fastfile`](../../fastlane/Fastfile), `fastlane/metadata/android/en-US/` | The Play upload lane; the listing and the changelog per version code |
+| [`fastlane/Fastfile`](../../fastlane/Fastfile), `fastlane/metadata/android/en-US/` | The Play lanes (`deploy` builds and uploads, `upload` only uploads); the listing and the changelog per version code |
 | `.claude/skills/release/`, `.claude/skills/fdroid-update/`, `.claude/skills/upstream-sync/` | The procedures and their scripts |
 | [`play-store.md`](../play-store.md), [`screenshots.md`](../screenshots.md), [`upstream-sync.md`](../upstream-sync.md), [`upstream-ledger.md`](../upstream-ledger.md) | Google Play, the screenshots, the sync |
 
@@ -174,6 +176,7 @@ python3 .claude/skills/start-work/scripts/check-docs.py
 
 - **A change to a build file** (signing, splits, names, version codes): build the staging variant and look at the file names in `app/phone/build/outputs/apk/libre/staging/`. Both workflows copy `*.apk` from that kind of folder and one `mapping.txt`, and the publish job fails when either is missing.
 - **A change to `beta.yml`:** `gh workflow run beta.yml --ref <branch>` runs the workflow file of that branch. It publishes a real prerelease and removes the oldest of the three kept betas, so say so first and do it once.
+- **A change to `play.yml` or the Fastfile:** `gh workflow run play.yml --ref <branch>` runs it with that branch's files. With the Play secrets set it uploads for real, and Play refuses a versionCode it already has, so the upload of a branch that has the released version fails; the build and the artifact still say whether the rest works. Without the secrets, `bundle exec fastlane lanes` checks that the Fastfile loads.
 - **A change to `release.yml`** has no dry run: it only starts on a release tag. Its build matrix and steps are the same as the Beta workflow's apart from the Gradle tasks and `BETA_BUILD`, so keep the two alike and test the shared part through a beta.
 - **A change to the listing:** a store changelog is plain text of at most 500 characters, one file per version code. The Pages workflow builds the site on a PR that touches `docs/`, `site/` or `devsite/`.
 - **Before a release**, the skill's smoke test (step 1b) plays items on the newest beta over http and https, on both player backends.
@@ -190,7 +193,7 @@ python3 .claude/skills/start-work/scripts/check-docs.py
 - [TV ADR 0005](../tv-research/adr/0005-application-id.md): one application ID for phone and TV, hence `TV_CODE`. [TV ADR 0006](../tv-research/adr/0006-release-tv-apk.md): the TV APK in betas and releases, with `-tv-` in its name.
 - [#626](https://github.com/midasvo/ephyra/issues/626), [#641](https://github.com/midasvo/ephyra/issues/641): the `proprietary` flavour with Cast; it is the Google Play phone bundle and a second phone APK on GitHub.
 - [#172](https://github.com/midasvo/ephyra/issues/172), [#174](https://github.com/midasvo/ephyra/issues/174): the app became Ephyra and the repository `midasvo/ephyra`. The application ID stayed, so installs update.
-- [#177](https://github.com/midasvo/ephyra/issues/177): Google Play.
+- [#177](https://github.com/midasvo/ephyra/issues/177): Google Play. [#1058](https://github.com/midasvo/ephyra/issues/1058): the Play bundles built and uploaded in CI, in a workflow of their own.
 - [#733](https://github.com/midasvo/ephyra/issues/733): merges of `refactor/` branches publish no beta.
 - [#960](https://github.com/midasvo/ephyra/issues/960): the smoke test before a release.
 
@@ -208,6 +211,7 @@ python3 .claude/skills/start-work/scripts/check-docs.py
 - **Minor and patch stay below 100**, or the version codes of two versions collide; `EphyraVersion` refuses such a `NAME`.
 - **A change to the build can break F-Droid's reproducible build** (Gradle, NDK, signing, ABI splits; `fdroid-update` skill). The licence list is built offline from `config/aboutlibraries` because a failed download made the v2.3.0 APK differ from F-Droid's rebuild.
 - **Artifacts live one day.** A failed build job rerun later than that leaves `publish` with part of the files; it then fails and asks to rerun all jobs.
+- **The Play API can't create the app's first release**, and until one is live it only accepts drafts; the TV track only exists once Android TV is a form factor. Hence the defaults `draft` and no TV in `play.yml`; change the repository variables, not the workflow, when that changes ([`play-store.md`](../play-store.md)).
 - **Google Play signing cannot be undone.** Choose the existing key on the first upload, or Play installs and GitHub or F-Droid installs can never update over each other ([`play-store.md`](../play-store.md)). The same page asks for a review of the Data safety form before the first `proprietary` upload.
 - **Listing screenshots come from the Jellyfin demo server only**, never a personal server: third-party artwork risks a rejection ([`play-store.md`](../play-store.md)).
 - **A sync PR is merged with a merge commit, never squashed.** A squash drops the upstream parent and the "behind" counter does not move. `git merge -s ours` marks translations as merged without taking them (`upstream-sync` skill).

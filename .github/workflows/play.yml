@@ -1,0 +1,283 @@
+name: Google Play
+
+# Builds the Google Play bundles, signed with the Play upload key (not the release key: Play
+# re-signs them with it, docs/play-store.md), keeps them and their R8 mappings as artifacts of the
+# run, and uploads them with `fastlane android upload`. The phone bundle is the `proprietary`
+# flavor, the TV bundle `libre` (#641).
+#
+# Separate from release.yml on purpose: a failed Play upload never holds up the GitHub release or
+# F-Droid.
+#
+# On a release tag the track, release status and TV upload come from the repository variables
+# PLAY_TRACK (alpha), PLAY_RELEASE_STATUS (draft) and PLAY_TV (false); by hand they are inputs:
+#   gh workflow run play.yml --ref v2.10.0 -f track=alpha -f release_status=draft -f tv=false
+#
+# Secrets: PLAY_UPLOAD_KEYSTORE_BASE64, PLAY_UPLOAD_KEYSTORE_PASSWORD, PLAY_UPLOAD_KEY_ALIAS and
+# PLAY_UPLOAD_KEY_PASSWORD (the upload key), PLAY_SERVICE_ACCOUNT_JSON (the Play API key).
+# - No upload key at all: a tag run skips the build with a note in the summary, so releases stay
+#   green before Play is set up; a manual run fails. Part of the upload key is always a failure.
+# - No service account: the bundles are built and kept, and the upload is skipped with a note.
+#
+# Jobs: `settings` resolves the options and checks which secrets exist, `bundles` builds, keeps
+# and uploads.
+
+on:
+  push:
+    tags:
+      # Releases only, the same filter as release.yml: betas (vX.Y.Z-beta.N) don't match.
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Play track of the phone bundle; the TV bundle goes to tv:<track>"
+        required: true
+        type: string
+        default: alpha
+      release_status:
+        description: "draft until the app's first release is live"
+        required: true
+        type: choice
+        options:
+          - draft
+          - completed
+        default: draft
+      tv:
+        description: "Also upload the TV bundle (needs the Android TV form factor in the Play Console)"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One upload at a time: two runs would race for the same tracks. `queue: max` keeps every waiting
+# run; by default a newer run would cancel the one already waiting.
+concurrency:
+  group: google-play
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  settings:
+    name: Settings
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      sign: ${{ steps.secrets.outputs.sign }}
+      upload: ${{ steps.secrets.outputs.upload }}
+      track: ${{ steps.options.outputs.track }}
+      release_status: ${{ steps.options.outputs.release_status }}
+      tv: ${{ steps.options.outputs.tv }}
+
+    steps:
+      - name: Resolve track, release status and TV
+        id: options
+        env:
+          TRACK: ${{ github.event_name == 'workflow_dispatch' && inputs.track || vars.PLAY_TRACK || 'alpha' }}
+          RELEASE_STATUS: ${{ github.event_name == 'workflow_dispatch' && inputs.release_status || vars.PLAY_RELEASE_STATUS || 'draft' }}
+          # format() turns a false input into the string 'false', which is truthy, so it is kept.
+          TV: ${{ github.event_name == 'workflow_dispatch' && format('{0}', inputs.tv) || vars.PLAY_TV || 'false' }}
+        run: |
+          case "$TRACK" in
+            "" | tv:*)
+              echo "::error::Track '$TRACK' is not a track of the phone bundle; the TV bundle's tv:<track> is derived from it."
+              exit 1
+              ;;
+          esac
+          case "$RELEASE_STATUS" in
+            draft | completed) ;;
+            *)
+              echo "::error::Release status must be draft or completed, got '$RELEASE_STATUS'."
+              exit 1
+              ;;
+          esac
+          case "$TV" in
+            true | false) ;;
+            *)
+              echo "::error::TV must be true or false, got '$TV'."
+              exit 1
+              ;;
+          esac
+          {
+            echo "track=$TRACK"
+            echo "release_status=$RELEASE_STATUS"
+            echo "tv=$TV"
+          } >> "$GITHUB_OUTPUT"
+
+      # Secrets can't be read in an `if:`, so this step says which ones are set.
+      - name: Check the Play secrets
+        id: secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.PLAY_UPLOAD_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PLAY_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PLAY_UPLOAD_KEY_PASSWORD }}
+          SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          missing=()
+          [ -n "$KEYSTORE_BASE64" ] || missing+=(PLAY_UPLOAD_KEYSTORE_BASE64)
+          [ -n "$KEYSTORE_PASSWORD" ] || missing+=(PLAY_UPLOAD_KEYSTORE_PASSWORD)
+          [ -n "$KEY_ALIAS" ] || missing+=(PLAY_UPLOAD_KEY_ALIAS)
+          [ -n "$KEY_PASSWORD" ] || missing+=(PLAY_UPLOAD_KEY_PASSWORD)
+
+          if [ "${#missing[@]}" -eq 4 ] && [ "$GITHUB_EVENT_NAME" = push ]; then
+            # Play is not set up yet: don't turn a release red for it.
+            echo "::warning::No Play upload key in the secrets; the Play bundles were not built."
+            {
+              echo "### Google Play: skipped"
+              echo
+              echo "The secrets of the Play upload key are not set, so no bundle was built and nothing was uploaded."
+              echo "See \`docs/play-store.md\`, \"In CI\"."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "sign=false" >> "$GITHUB_OUTPUT"
+            echo "upload=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Missing secrets of the Play upload key: ${missing[*]}. An unsigned bundle can't be uploaded to Play."
+            exit 1
+          fi
+          echo "sign=true" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$SERVICE_ACCOUNT_JSON" ]; then
+            echo "upload=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "upload=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  bundles:
+    name: Build and upload the bundles
+    needs: settings
+    if: needs.settings.outputs.sign == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      TRACK: ${{ needs.settings.outputs.track }}
+      RELEASE_STATUS: ${{ needs.settings.outputs.release_status }}
+      TV: ${{ needs.settings.outputs.tv }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Outside the workspace, so no later step can pick the keys up with the sources. Gradle reads
+      # KEYSTORE_FILE, fastlane PLAY_API_CREDENTIALS.
+      - name: Decode the upload key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 }}
+        run: |
+          {
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/ephyra-upload.jks"
+            echo "PLAY_API_CREDENTIALS=$RUNNER_TEMP/play-service-account.json"
+          } >> "$GITHUB_ENV"
+          KEYSTORE_FILE="$RUNNER_TEMP/ephyra-upload.jks"
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_FILE"
+          chmod 600 "$KEYSTORE_FILE"
+
+      # Both bundles, also when TV is not uploaded, so the artifact always has both. A name with
+      # "bundle" turns the ABI splits off (app/*/build.gradle.kts).
+      - name: Build the bundles
+        run: ./gradlew :app:phone:bundleProprietaryRelease :app:tv:bundleLibreRelease
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.PLAY_UPLOAD_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.PLAY_UPLOAD_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.PLAY_UPLOAD_KEY_PASSWORD }}
+
+      # The same paths as the lane in fastlane/Fastfile, which uploads them from where Gradle wrote
+      # them. Each bundle carries its R8 mapping for Play; the copies here are for us. The
+      # certificate's SHA-256 must match the upload key in the Play Console (App integrity).
+      - name: Collect the bundles and R8 mappings
+        run: |
+          mkdir -p dist/bundle dist/mapping
+          rows=()
+          # A manual run on a branch such as feat/x has a slash in the ref name.
+          ref="${GITHUB_REF_NAME//\//-}"
+          copy() { # bundle, mapping, name
+            local cert sha name="ephyra-$ref-$3"
+            cert=$(keytool -printcert -jarfile "$1" 2>&1 || true)
+            sha=$(sed -n 's/^[[:space:]]*SHA256: *//p' <<< "$cert" | sed -n 1p)
+            if [ -z "$sha" ]; then
+              echo "::error::$1 is not signed: $cert"
+              exit 1
+            fi
+            cp "$1" "dist/bundle/$name.aab"
+            cp "$2" "dist/mapping/$name-mapping.txt"
+            rows+=("| \`$name.aab\` | \`$sha\` |")
+          }
+          copy app/phone/build/outputs/bundle/proprietaryRelease/phone-proprietary-release.aab \
+            app/phone/build/outputs/mapping/proprietaryRelease/mapping.txt proprietary
+          copy app/tv/build/outputs/bundle/libreRelease/tv-libre-release.aab \
+            app/tv/build/outputs/mapping/libreRelease/mapping.txt libre-tv
+          ls -l dist/bundle dist/mapping
+          {
+            echo "### Google Play bundles of \`${GITHUB_REF_NAME}\`"
+            echo
+            echo "| Bundle | Signed by (SHA-256) |"
+            echo "|---|---|"
+            printf '%s\n' "${rows[@]}"
+            echo
+            echo "Track \`$TRACK\`, release status \`$RELEASE_STATUS\`, TV \`$TV\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the bundles and R8 mappings
+        uses: actions/upload-artifact@v7
+        with:
+          name: play-bundles
+          path: dist/
+          if-no-files-found: error
+
+      - name: Note the skipped upload
+        if: needs.settings.outputs.upload != 'true'
+        run: |
+          echo "::warning::No PLAY_SERVICE_ACCOUNT_JSON secret; the bundles were built but not uploaded to Google Play."
+          {
+            echo
+            echo "**Not uploaded:** the \`PLAY_SERVICE_ACCOUNT_JSON\` secret is not set. The bundles are in the \`play-bundles\` artifact."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Set up Ruby
+        if: needs.settings.outputs.upload == 'true'
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Write the service account key
+        if: needs.settings.outputs.upload == 'true'
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          printf '%s' "$SERVICE_ACCOUNT_JSON" > "$PLAY_API_CREDENTIALS"
+          chmod 600 "$PLAY_API_CREDENTIALS"
+
+      - name: Upload to Google Play
+        if: needs.settings.outputs.upload == 'true'
+        env:
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
+          FASTLANE_OPT_OUT_USAGE: "1"
+          LC_ALL: en_US.UTF-8
+          LANG: en_US.UTF-8
+        run: |
+          bundle exec fastlane android upload track:"$TRACK" release_status:"$RELEASE_STATUS" tv:"$TV"
+          {
+            echo
+            if [ "$TV" = true ]; then
+              echo "**Uploaded** to \`$TRACK\` (phone) and \`tv:$TRACK\` (TV) as \`$RELEASE_STATUS\`."
+            else
+              echo "**Uploaded** to \`$TRACK\` (phone) as \`$RELEASE_STATUS\`; the TV bundle was not uploaded."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the keys
+        if: always()
+        run: rm -f "$RUNNER_TEMP/ephyra-upload.jks" "$RUNNER_TEMP/play-service-account.json"

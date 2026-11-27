@@ -23,6 +23,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 Build the phone and TV bundles and upload them to a Play track
 
+### android upload
+
+```sh
+[bundle exec] fastlane android upload
+```
+
+Upload the built phone and TV bundles to a Play track
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
