@@ -408,7 +408,7 @@ internal constructor(
                 catalog.getEpisodes(
                     seriesId = showId,
                     seasonId = seasonId,
-                    fields = showEpisodeFields,
+                    fields = showEpisodeFields + EpisodeField.TRICKPLAY,
                 )
             }
             startDownload(episodes)

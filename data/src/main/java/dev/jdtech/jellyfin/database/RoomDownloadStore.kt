@@ -26,6 +26,7 @@ import dev.jdtech.jellyfin.models.toEpisode
 import dev.jdtech.jellyfin.models.toEpisodeEntity
 import dev.jdtech.jellyfin.models.toItemSource
 import dev.jdtech.jellyfin.models.toItemSourceEntity
+import dev.jdtech.jellyfin.models.toItemTrickplayInfo
 import dev.jdtech.jellyfin.models.toItemTrickplayInfoEntity
 import dev.jdtech.jellyfin.models.toMediaStreamEntity
 import dev.jdtech.jellyfin.models.toMovie
@@ -260,6 +261,9 @@ class RoomDownloadStore(private val database: ServerDatabaseDao) :
     override suspend fun deleteSegments(itemId: ItemId) {
         database.deleteSegments(itemId)
     }
+
+    override suspend fun trickplayInfo(sourceId: MediaSourceId): ItemTrickplayInfo? =
+        database.getTrickplayInfo(sourceId)?.toItemTrickplayInfo()
 
     override suspend fun insertTrickplayInfo(sourceId: MediaSourceId, info: ItemTrickplayInfo) {
         database.insertTrickplayInfo(info.toItemTrickplayInfoEntity(sourceId))

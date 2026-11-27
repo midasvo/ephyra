@@ -43,7 +43,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-internal val seasonEpisodeFields = setOf(EpisodeField.OVERVIEW, EpisodeField.CAN_DOWNLOAD)
+internal val seasonEpisodeFields =
+    setOf(EpisodeField.OVERVIEW, EpisodeField.CAN_DOWNLOAD, EpisodeField.TRICKPLAY)
 
 @HiltViewModel
 class SeasonViewModel

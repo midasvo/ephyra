@@ -129,8 +129,13 @@ constructor(
         val userId = account.get().getUserId()
         val episodes =
             catalog.getSeasons(seriesId).flatMap { season ->
-                // Without CanDownload every episode reads as not downloadable.
-                catalog.getEpisodes(seriesId, season.id, fields = setOf(EpisodeField.CAN_DOWNLOAD))
+                // Without CanDownload every episode reads as not downloadable; Trickplay keeps
+                // Smart Downloads from having to re-fetch each episode to get its trickplay layout.
+                catalog.getEpisodes(
+                    seriesId,
+                    season.id,
+                    fields = setOf(EpisodeField.CAN_DOWNLOAD, EpisodeField.TRICKPLAY),
+                )
             }
 
         // The server decides what counts as watched, so wait until our own progress has reached

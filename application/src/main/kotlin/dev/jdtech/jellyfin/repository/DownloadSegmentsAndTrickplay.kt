@@ -23,6 +23,9 @@ interface DownloadSegmentsAndTrickplay {
 
     suspend fun deleteSegments(itemId: ItemId)
 
+    /** The stored trickplay layout of source [sourceId], or null when none is stored. */
+    suspend fun trickplayInfo(sourceId: MediaSourceId): ItemTrickplayInfo?
+
     /** Stores [info], the trickplay layout of source [sourceId]. */
     suspend fun insertTrickplayInfo(sourceId: MediaSourceId, info: ItemTrickplayInfo)
 }

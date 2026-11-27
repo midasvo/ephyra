@@ -291,6 +291,12 @@ class DownloaderImpl(
                 // Resume external streams: restart any still-in-progress subtitle transfers.
                 val resolvedSource = downloadSources.itemSource(existingSource)
                 resumeExternalMediaStreams(item, resolvedSource, source, allowMetered, allowRoaming)
+                ensureTrickplayData(
+                    item.id,
+                    existingSource.id,
+                    item = item,
+                    useCallerTrickplay = false,
+                )
                 Pair(existingDownloadId, null)
             } catch (e: Exception) {
                 // On ANY exception in the RESUME branch: do NOT delete the item.
@@ -316,12 +322,6 @@ class DownloaderImpl(
             val showAndSeason =
                 (item as? Episode)?.let {
                     catalog.getShow(it.seriesId) to catalog.getSeason(it.seasonId)
-                }
-            val trickplayInfo =
-                if (item is Playable) {
-                    item.trickplayInfo?.get(sourceId)
-                } else {
-                    null
                 }
             val dirs = context.getExternalFilesDirs(null)
             val storageLocation =
@@ -427,9 +427,7 @@ class DownloaderImpl(
                 allowRoaming,
             )
 
-            if (trickplayInfo != null) {
-                downloadTrickplayData(item.id, sourceId, trickplayInfo)
-            }
+            ensureTrickplayData(item.id, sourceId, item)
 
             startImagesDownloader(item)
             return@coroutineScope Pair(downloadId, null)
@@ -893,39 +891,109 @@ class DownloaderImpl(
     }
 
     /**
+     * CE (#1015): ensures [sourceId] has its trickplay layout and sheets stored. Called on fresh
+     * starts, on resume after process death, and when finalizing, so a download interrupted before
+     * trickplay finished (or started from an item without trickplay metadata) still gets its
+     * scrubbing preview. Never fails the video transfer or finalization if the server cannot be
+     * reached.
+     */
+    private suspend fun ensureTrickplayData(
+        itemId: ItemId,
+        sourceId: MediaSourceId,
+        item: Item? = null,
+        useCallerTrickplay: Boolean = item != null,
+    ) {
+        try {
+            val stored = segmentsAndTrickplay.trickplayInfo(sourceId)
+            if (stored != null) {
+                if (!hasAllTrickplaySheets(itemId, sourceId, stored)) {
+                    downloadTrickplayData(itemId, sourceId, stored)
+                }
+                return
+            }
+            val trickplayInfo =
+                resolveTrickplayInfo(itemId, sourceId, item, useCallerTrickplay) ?: return
+            downloadTrickplayData(itemId, sourceId, trickplayInfo)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to ensure trickplay data for ${itemId.asString()}")
+        }
+    }
+
+    private fun hasAllTrickplaySheets(
+        itemId: ItemId,
+        sourceId: MediaSourceId,
+        trickplayInfo: ItemTrickplayInfo,
+    ): Boolean {
+        val baseDir = trickplayDir(itemId, sourceId)
+        for (index in 0 until trickplaySheetCount(trickplayInfo)) {
+            val sheetFile = File(baseDir, "$index")
+            if (!sheetFile.isFile || sheetFile.length() <= 0L) return false
+        }
+        return true
+    }
+
+    private fun trickplayDir(itemId: ItemId, sourceId: MediaSourceId): File =
+        File(context.filesDir, "trickplay/${itemId.asString()}/${sourceId.asString()}")
+
+    private suspend fun resolveTrickplayInfo(
+        itemId: ItemId,
+        sourceId: MediaSourceId,
+        item: Item?,
+        useCallerTrickplay: Boolean,
+    ): ItemTrickplayInfo? {
+        if (useCallerTrickplay) {
+            val callerTrickplay = (item as? Playable)?.trickplayInfo
+            if (callerTrickplay != null) {
+                return callerTrickplay[sourceId]
+            }
+        }
+        val serverItem =
+            when (item) {
+                is Movie -> catalog.getMovie(itemId)
+                is Episode -> catalog.getEpisode(itemId)
+                else -> catalog.getItem(itemId)
+            }
+        return (serverItem as? Playable)?.trickplayInfo?.get(sourceId)
+    }
+
+    /**
      * Downloads the trickplay sheets of [sourceId]. CE (#849): each sheet is stored under its own
      * index, the name the player asks for. A sheet the server did not give is left out, so the
      * sheets after it keep their index; the player gets no preview for that one sheet offline.
      * Internal for its tests.
      *
      * CE (#860): the sheets are asked for [sourceId], the version downloaded, whose layout
-     * [trickplayInfo] is.
+     * [trickplayInfo] is. CE (#1015): each sheet is written to disk before the layout row is
+     * inserted, so a restart mid-trickplay keeps finished sheets and resumes the rest.
      */
     internal suspend fun downloadTrickplayData(
         itemId: ItemId,
         sourceId: MediaSourceId,
         trickplayInfo: ItemTrickplayInfo,
     ) {
-        val sheets = mutableMapOf<Int, ByteArray>()
+        val baseDir = trickplayDir(itemId, sourceId)
+        baseDir.mkdirs()
         for (index in 0 until trickplaySheetCount(trickplayInfo)) {
-            media.getTrickplayData(itemId, trickplayInfo.width, index, sourceId)?.let {
-                sheets[index] = it
-            }
+            val sheetFile = File(baseDir, "$index")
+            if (sheetFile.isFile && sheetFile.length() > 0) continue
+            val bytes =
+                media.getTrickplayData(itemId, trickplayInfo.width, index, sourceId) ?: continue
+            writeTrickplaySheet(baseDir, sheetFile, bytes)
         }
-        saveTrickplayData(itemId, sourceId, trickplayInfo, sheets)
+        segmentsAndTrickplay.insertTrickplayInfo(sourceId, trickplayInfo)
     }
 
-    private suspend fun saveTrickplayData(
-        itemId: ItemId,
-        sourceId: MediaSourceId,
-        trickplayInfo: ItemTrickplayInfo,
-        sheets: Map<Int, ByteArray>,
-    ) {
-        val basePath = "trickplay/${itemId.asString()}/${sourceId.asString()}"
-        segmentsAndTrickplay.insertTrickplayInfo(sourceId, trickplayInfo)
-        File(context.filesDir, basePath).mkdirs()
-        for ((index, bytes) in sheets) {
-            File(context.filesDir, "$basePath/$index").writeBytes(bytes)
+    private fun writeTrickplaySheet(baseDir: File, sheetFile: File, bytes: ByteArray) {
+        val tempFile = File.createTempFile("sheet-${sheetFile.name}.", ".tmp", baseDir)
+        try {
+            tempFile.writeBytes(bytes)
+            if (!tempFile.renameTo(sheetFile)) {
+                sheetFile.writeBytes(bytes)
+            }
+        } finally {
+            tempFile.delete()
         }
     }
 
@@ -1013,6 +1081,8 @@ class DownloaderImpl(
                     // for the next start and never resumed: the `.download` file is gone.
                     try {
                         finalizeSource(source)
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         Timber.e(e, "Failed to finalize the download at ${source.path}")
                     }
@@ -1229,8 +1299,10 @@ class DownloaderImpl(
         val finalFile = File(finalPath)
 
         // If the rename already happened on disk (earlier finalize, manual recovery),
-        // just sync the DB and exit.
+        // ensure trickplay before marking the source downloaded so an interruption leaves it
+        // active.
         if (finalFile.exists() && finalFile.length() > 0 && !downloadFile.exists()) {
+            ensureTrickplayData(source.itemId, source.id)
             downloadSources.setSourceDownloaded(source.id, finalPath, System.currentTimeMillis())
             finalizeMediaStreamsOf(source)
             return true
@@ -1246,6 +1318,7 @@ class DownloaderImpl(
             Timber.e("Failed to rename download. path=${source.path}")
             return false
         }
+        ensureTrickplayData(source.itemId, source.id)
         try {
             downloadSources.setSourceDownloaded(source.id, finalPath, System.currentTimeMillis())
         } catch (e: Exception) {
