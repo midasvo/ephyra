@@ -50,10 +50,12 @@ on:
 permissions:
   contents: read
 
-# One upload at a time: two runs would race for the same tracks. A run that waits is not cancelled.
+# One upload at a time: two runs would race for the same tracks. `queue: max` keeps every waiting
+# run; by default a newer run would cancel the one already waiting.
 concurrency:
   group: google-play
   cancel-in-progress: false
+  queue: max
 
 jobs:
   settings:
@@ -198,8 +200,10 @@ jobs:
         run: |
           mkdir -p dist/bundle dist/mapping
           rows=()
+          # A manual run on a branch such as feat/x has a slash in the ref name.
+          ref="${GITHUB_REF_NAME//\//-}"
           copy() { # bundle, mapping, name
-            local cert sha name="ephyra-${GITHUB_REF_NAME}-$3"
+            local cert sha name="ephyra-$ref-$3"
             cert=$(keytool -printcert -jarfile "$1" 2>&1 || true)
             sha=$(sed -n 's/^[[:space:]]*SHA256: *//p' <<< "$cert" | sed -n 1p)
             if [ -z "$sha" ]; then
